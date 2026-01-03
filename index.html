@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.0.1 - 冒險大廳版</title>
+    <title>神殿試煉 v4.0.4 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -92,174 +92,204 @@
         input:checked + .slider { background-color: #d97706; }
         input:focus + .slider { box-shadow: 0 0 1px #d97706; }
         input:checked + .slider:before { transform: translateX(24px); }
-        
-       /* 登入過場 */
+        /* --- v4.0.1 新增樣式: 冒險大廳與管理員 --- */
+        .lobby-card { background: rgba(255, 255, 255, 0.95); border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(180, 83, 9, 0.2); border: 4px solid #d97706; transition: transform 0.3s; }
+        .lobby-card:hover { transform: translateY(-5px); }
+        .admin-gear { position: fixed; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; z-index: 60; background: rgba(255,255,255,0.8); padding: 0.5rem; border-radius: 50%; border: 2px solid #b45309; transition: all 0.3s; }
+        .admin-gear:hover { transform: rotate(90deg) scale(1.1); background: #fff; }
+        .room-item { background: white; border: 2px solid #fcd34d; border-radius: 1rem; padding: 1rem; transition: all 0.2s; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .room-item:hover { border-color: #d97706; background: #fffbeb; transform: translateX(5px); }
+        /* 隱藏不想顯示的元素但保留邏輯 */
+        .hidden-logic { display: none !important; }
+        /* 登入過場 */
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+/* --- v3.2.0 道具系統樣式 --- */
+        .item-slot { position: relative; cursor: pointer; transition: all 0.2s; }
+        .item-slot:hover { transform: scale(1.1); }
+        .item-icon { font-size: 2rem; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); }
+        .item-count { position: absolute; bottom: -5px; right: -5px; background: #dc2626; color: white; font-size: 0.7rem; font-weight: bold; width: 1.2rem; height: 1.2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+        .item-active { animation: pulse-gold 1.5s infinite; filter: drop-shadow(0 0 5px #fbbf24); }
+        @keyframes pulse-gold { 0% { transform: scale(1); } 50% { transform: scale(1.1); filter: drop-shadow(0 0 10px #fbbf24); } 100% { transform: scale(1); } }
+        /* 老師發放道具按鈕 */
+        .grant-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.5rem; border-radius: 0.5rem; border: 2px solid #e5e7eb; transition: all 0.2s; }
+        .grant-btn:hover { background-color: #fffbeb; border-color: #d97706; transform: translateY(-2px); }
+        .grant-btn:active { transform: scale(0.95); }
+        /* 學生組別按鈕 */
+        .team-btn { transition: all 0.2s; }
+        .team-btn.selected { ring: 4px; ring-color: #d97706; transform: scale(1.05); background-color: #fffbeb; }
 
-        /* v4.0.1 冒險大廳樣式 */
-        .lobby-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-        @media (min-width: 768px) { .lobby-grid { grid-template-columns: 300px 1fr; } }
+        /* v3.0.5 新增：按鈕鎖定狀態 */
+        .btn-disabled { background-color: #9ca3af !important; background-image: none !important; cursor: not-allowed; transform: none !important; box-shadow: none !important; opacity: 0.7; }
         
-        .profile-card { background: white; border-radius: 1rem; padding: 1.5rem; border: 2px solid #fbbf24; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); height: fit-content; }
-        .room-list-container { background: rgba(255, 255, 255, 0.6); border-radius: 1rem; padding: 1rem; border: 2px solid #d97706; min-height: 400px; max-height: 600px; overflow-y: auto; }
-        
-        .room-card { 
-            background: white; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 1rem; margin-bottom: 0.75rem; 
-            transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+        /* v3.0.5 新增：加大金字塔數字與邊框 */
+        .pyramid-num-lg { font-size: 2.5rem; line-height: 1; } 
+        @media (min-width: 768px) { .pyramid-num-lg { font-size: 3.5rem; } }
+
+        /* v3.0.8 新增樣式 */
+        /* 1. 模擬輸入框與游標 */
+        .fake-input-container {
+            min-height: 3.5rem;
+            display: flex; align-items: center; justify-content: center;
+            background-color: #f8fafc; border: 2px solid #c7d2fe; border-radius: 0.5rem;
+            font-size: 1.5rem; font-weight: 700; letter-spacing: 0.1em;
+            overflow-x: auto; white-space: nowrap; cursor: text;
         }
-        .room-card:hover { transform: translateY(-2px); border-color: #d97706; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15); }
-        .room-card.full { opacity: 0.7; filter: grayscale(0.5); cursor: not-allowed; }
+        .cursor-blink {
+            display: inline-block; width: 2px; height: 1.5em; background-color: #d97706;
+            margin: 0 2px; vertical-align: middle;
+            animation: blink-animation 1s step-end infinite;
+        }
+        @keyframes blink-animation { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* 2. 放大牌庫剩餘顯示 */
+        .deck-count-box { font-size: 1.1rem; padding: 0.5rem; }
+        .deck-count-num { font-size: 1.5rem; font-weight: 900; margin-left: 4px; }
+
+        /* 3. 老師介面擴充 (三欄佈局) */
+        .teacher-panel-grid { display: grid; gap: 1rem; height: 100%; }
+        @media (min-width: 1024px) {
+            /* 在大螢幕下，左邊控制台，右邊排行榜 */
+            .teacher-panel-grid { grid-template-columns: 3fr 2fr; }
+        }
+
+        /* 4. 小組詳情 Modal */
+        .team-detail-row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 8px 0; }
         
-        .avatar-circle { width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fcd34d; background: #fffbeb; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1rem; overflow: hidden; }
-        .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+        /* 5. 學生分數面板 */
+        .student-score-pill { background: #fffbeb; border: 2px solid #fcd34d; color: #92400e; padding: 4px 12px; border-radius: 999px; font-weight: bold; font-size: 0.9rem; display: inline-flex; items-center; gap: 4px; box-shadow: 0 2px 0 rgba(217,119,6,0.2); }
+		/* v3.0.9 新增：通關畫面與排行榜 */
+        .game-over-modal-content {
+            background: linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%);
+            border: 4px solid #b45309;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+        
+        .rank-badge { display: inline-flex; width: 2rem; height: 2rem; align-items: center; justify-content: center; border-radius: 50%; font-weight: 900; margin-right: 0.5rem; flex-shrink: 0; }
+        .rank-1 { background: #fcd34d; color: #78350f; border: 2px solid #b45309; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .rank-2 { background: #e2e8f0; color: #475569; border: 2px solid #94a3b8; }
+        .rank-3 { background: #ffedd5; color: #9a3412; border: 2px solid #c2410c; }
+        .rank-other { background: #f3f4f6; color: #6b7280; font-size: 0.8rem; width: 1.5rem; height: 1.5rem; }
+        
+        .confetti-piece { position: absolute; width: 10px; height: 10px; background-color: #ffd700; animation: confetti-fall 3s linear infinite; }
+        @keyframes confetti-fall { 0% { transform: translateY(-100%) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
     </style>
 	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 </head>
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.0.1 - 冒險大廳版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.0.4 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
         
-        <div id="page-role-select" class="max-w-5xl mx-auto fade-in">
-            <h2 class="text-2xl font-bold text-center mb-8 text-amber-900">請選擇你的身份</h2>
-            <div class="grid md:grid-cols-3 gap-6">
-                <div class="role-card bg-white rounded-3xl p-6 shadow-xl text-center" onclick="app.selectRole('teacher')">
-                    <div class="text-5xl mb-3">👑</div>
-                    <h3 class="text-xl font-bold text-amber-800 mb-2">我是法老王</h3>
-                    <p class="text-sm text-slate-600">傳統模式：老師開房</p>
-                </div>
-                <div class="role-card bg-gradient-to-br from-amber-100 to-orange-100 rounded-3xl p-6 shadow-xl text-center ring-4 ring-amber-400 transform scale-105" onclick="app.enterLobbyInit()">
-                    <div class="text-5xl mb-3">⚔️</div>
-                    <h3 class="text-xl font-bold text-amber-900 mb-2">冒險大廳</h3>
-                    <p class="text-sm text-slate-700 font-bold">連線對戰、自動配對</p>
-                </div>
-                <div class="role-card bg-white rounded-3xl p-6 shadow-xl text-center" onclick="app.selectRole('student')">
-                    <div class="text-5xl mb-3">🤠</div>
-                    <h3 class="text-xl font-bold text-amber-800 mb-2">我是冒險者</h3>
-                    <p class="text-sm text-slate-600">傳統模式：輸入代碼</p>
-                </div>
-            </div>
-        </div>
+        <div id="admin-gear-btn" class="admin-gear shadow-lg" onclick="app.openAdminAuth()" title="管理員設定">⚙️</div>
 
-        <div id="page-adventure-lobby" class="hidden max-w-6xl mx-auto fade-in">
-            <div class="flex justify-between items-center mb-6">
-                <button onclick="app.backToRole()" class="bg-amber-200 text-amber-900 px-4 py-2 rounded-full font-bold hover:bg-amber-300">⬅️ 返回首頁</button>
-                <h2 class="text-3xl font-black text-amber-900 drop-shadow-sm">⚔️ 冒險大廳</h2>
-                <div class="flex gap-2">
-                    <button onclick="app.openAdminPanel()" class="bg-slate-700 text-white p-2 rounded-full hover:bg-slate-600 shadow-lg" title="管理員設定">⚙️</button>
-                </div>
-            </div>
-
-            <div class="lobby-grid">
-                <div class="profile-card flex flex-col items-center">
-                    <div class="avatar-circle" id="user-avatar">👤</div>
-                    <h3 id="user-name-display" class="text-xl font-bold text-amber-900 mb-1">未登入</h3>
-                    <p class="text-sm text-gray-500 mb-4">累積積分: <span id="user-total-score" class="font-bold text-amber-600">0</span></p>
-                    
-                    <div id="login-section" class="w-full space-y-2">
-                        <button onclick="app.loginGoogle()" class="w-full bg-white border border-gray-300 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2 text-sm shadow-sm">
-                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5"> Google 登入
-                        </button>
-                        <div class="relative flex py-2 items-center">
-                            <div class="flex-grow border-t border-gray-200"></div>
-                            <span class="flex-shrink-0 mx-4 text-gray-400 text-xs">或</span>
-                            <div class="flex-grow border-t border-gray-200"></div>
+        <div id="page-lobby" class="max-w-6xl mx-auto fade-in">
+            <div class="grid md:grid-cols-12 gap-6">
+                <div class="md:col-span-4 space-y-6">
+                    <div class="lobby-card p-6 text-center">
+                        <div class="text-6xl mb-4">🤠</div>
+                        <h2 class="text-2xl font-black text-amber-900 mb-4">冒險者資料</h2>
+                        <div class="mb-4">
+                            <label class="block text-amber-800 font-bold mb-2 text-left ml-1">你的名字</label>
+                            <input type="text" id="lobby-player-name" class="w-full p-3 border-2 border-amber-300 rounded-xl text-center text-xl font-bold placeholder-amber-200" placeholder="輸入暱稱...">
                         </div>
-                        <input type="text" id="anon-name-input" placeholder="輸入暱稱" class="w-full p-2 border border-amber-300 rounded text-center mb-2">
-                        <button onclick="app.loginAnonymous()" class="w-full bg-amber-600 text-white font-bold py-2 rounded-lg hover:bg-amber-700 text-sm">匿名進入</button>
-                    </div>
-
-                    <div id="user-actions" class="w-full space-y-2 hidden">
-                        <button onclick="app.createLobbyRoom()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg hover:scale-105 transition-transform">🏠 建立新房間</button>
-                        <button onclick="app.logoutUser()" class="w-full bg-gray-200 text-gray-600 font-bold py-2 rounded-lg hover:bg-gray-300 text-sm mt-4">登出</button>
+                        <div class="bg-amber-50 rounded-xl p-3 mb-6 border border-amber-200">
+                             <div class="text-xs text-amber-600 font-bold mb-1">歷史最高分</div>
+                             <div class="text-2xl font-black text-amber-700" id="lobby-high-score">0</div>
+                        </div>
+                        <button onclick="app.createRoom()" class="w-full bg-gradient-to-r from-amber-600 to-amber-800 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-xl mb-3">🏰 建立新房間</button>
+                        <p class="text-xs text-gray-400">建立後將自動成為房主</p>
                     </div>
                 </div>
 
-                <div class="room-list-container relative">
-                    <div class="flex justify-between items-center mb-4 border-b border-amber-300 pb-2">
-                        <h3 class="font-bold text-amber-900 flex items-center gap-2">🌍 開放中的冒險 <span id="room-count-badge" class="bg-amber-600 text-white text-xs px-2 py-0.5 rounded-full">0</span></h3>
-                        <button onclick="app.refreshLobby()" class="text-sm text-amber-700 underline">🔄 重新整理</button>
-                    </div>
-                    <div id="lobby-room-list" class="space-y-2">
-                        <div class="text-center text-gray-500 py-10">載入中...</div>
+                <div class="md:col-span-8">
+                    <div class="lobby-card p-6 min-h-[500px] flex flex-col">
+                        <div class="flex justify-between items-center mb-6 border-b border-amber-200 pb-4">
+                            <h2 class="text-2xl font-black text-amber-900">🗺️ 冒險大廳</h2>
+                            <button onclick="app.refreshLobby()" class="text-amber-600 font-bold hover:text-amber-800 text-sm">🔄 重新整理</button>
+                        </div>
+                        
+                        <div id="lobby-room-list" class="space-y-3 flex-1 overflow-y-auto pr-2">
+                            <div class="text-center text-gray-400 py-10">
+                                <div class="text-4xl mb-2">🍃</div>
+                                <p>目前沒有活躍的冒險...</p>
+                                <p class="text-sm mt-2">你可以建立一個！</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="admin-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
-             <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border-4 border-slate-600 animate-[fadeIn_0.3s_ease-out]">
-                <div class="flex justify-between items-center mb-4 border-b pb-2">
-                    <h3 class="text-xl font-black text-slate-800">⚙️ 管理員控制台</h3>
-                    <button onclick="app.el('admin-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+        <div id="admin-auth-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
+            <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border-4 border-slate-600 animate-[fadeIn_0.3s_ease-out]">
+                <h3 class="text-xl font-black text-slate-800 mb-4 text-center">🛡️ 管理員驗證</h3>
+                <input type="password" id="admin-password-input" class="w-full p-3 border-2 border-slate-300 rounded-xl text-center text-lg mb-4" placeholder="請輸入通行密碼">
+                <div class="flex gap-2">
+                    <button onclick="app.el('admin-auth-modal').classList.add('hidden')" class="flex-1 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-100">取消</button>
+                    <button onclick="app.verifyAdmin()" class="flex-1 bg-slate-800 text-white py-2 rounded-lg font-bold shadow hover:bg-slate-900">確認</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-settings-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
+             <div class="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 shadow-2xl border-4 border-b-8 border-slate-700 animate-[fadeIn_0.3s_ease-out] max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h3 class="text-2xl font-black text-slate-900">⚙️ 全域遊戲設定</h3>
+                    <button onclick="app.el('admin-settings-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
                 </div>
                 
-                <div id="admin-login-view">
-                    <p class="text-sm text-gray-600 mb-2">請輸入管理密碼：</p>
-                    <input type="password" id="admin-password" class="w-full p-3 border-2 border-slate-300 rounded-xl text-center text-xl mb-4" placeholder="••••••">
-                    <button onclick="app.verifyAdmin()" class="w-full bg-slate-700 text-white font-bold py-3 rounded-xl hover:bg-slate-800">解鎖</button>
-                </div>
-
-                <div id="admin-panel-view" class="hidden space-y-4">
-                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                        <h4 class="font-bold text-slate-700 mb-2">全域設定</h4>
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm font-bold text-gray-600">自動擲骰 (預設)</span>
-                            <label class="switch"><input type="checkbox" id="admin-global-autoroll" checked><span class="slider"></span></label>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm font-bold text-gray-600">自動道具發放</span>
-                            <label class="switch"><input type="checkbox" id="admin-global-autogrant" checked><span class="slider"></span></label>
+                <div class="space-y-6">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">🎲 自動擲骰系統</h4>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">預設開啟自動擲骰 (各房主可手動關閉)</span>
+                            <label class="switch">
+                                <input type="checkbox" id="admin-auto-roll" checked>
+                                <span class="slider"></span>
+                            </label>
                         </div>
                     </div>
-                    <button onclick="app.saveAdminSettings()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700">💾 儲存全域設定</button>
-                    <div class="text-xs text-center text-gray-400 mt-2">v4.0.1 System Config</div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">🎁 自動道具分配排程</h4>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                             <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">間隔回合</label>
+                                <input type="number" id="admin-ag-interval" value="3" class="w-full border-2 border-slate-300 rounded-lg p-2 text-center font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">給倒數幾名?</label>
+                                <input type="number" id="admin-ag-target" value="2" class="w-full border-2 border-slate-300 rounded-lg p-2 text-center font-bold">
+                            </div>
+                        </div>
+                        <button class="w-full bg-slate-200 text-slate-600 font-bold py-2 rounded-lg text-sm mb-2 hover:bg-slate-300">進階道具權重設定</button>
+                    </div>
+
+                    <div class="bg-red-50 p-4 rounded-xl border border-red-200">
+                         <h4 class="font-bold text-red-800 mb-3">🗑️ 數據清理</h4>
+                         <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-gray-600">閒置 60 分鐘自動清空</span>
+                             <label class="switch">
+                                <input type="checkbox" checked disabled>
+                                <span class="slider"></span>
+                            </label>
+                         </div>
+                         <button onclick="app.clearAllRooms()" class="w-full border-2 border-red-300 text-red-600 font-bold py-2 rounded-lg hover:bg-red-100 transition-colors">⚠️ 強制清空所有房間數據</button>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-gray-100">
+                    <button onclick="app.saveAdminSettings()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-slate-900 active:scale-95 transition-transform">💾 儲存全域設定</button>
                 </div>
              </div>
         </div>
-
-        <div id="page-teacher-setup" class="hidden max-w-md mx-auto bg-amber-50 rounded-2xl p-8 shadow-xl border-4 border-amber-700 fade-in">
-            <h2 class="text-2xl font-bold text-center mb-6 text-amber-900">👑 法老王登基儀式</h2>
-            <div class="mb-6">
-                <label class="block text-amber-800 font-bold mb-2">設定班級代碼 (Class ID)</label>
-                <input type="text" id="setup-class-id" class="w-full p-4 border-2 border-amber-300 rounded-xl text-center text-2xl font-bold uppercase" placeholder="例如: 501" maxlength="6">
-            </div>
-            <button onclick="app.createClass()" class="w-full bg-amber-800 hover:bg-amber-900 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-xl">建立房間</button>
-            <button onclick="app.backToRole()" class="mt-4 w-full text-amber-700 font-bold py-2">⬅️ 返回</button>
-        </div>
-
-        <div id="page-student-login" class="hidden max-w-2xl mx-auto bg-amber-50 rounded-2xl p-8 shadow-xl border-4 border-amber-600 fade-in">
-           <h2 class="text-2xl font-bold text-center mb-6 text-amber-900">🤠 加入探險隊</h2>
-            
-            <div id="login-step-1">
-                <div class="mb-6">
-                    <label class="block text-amber-800 font-bold mb-2">輸入班級代碼</label>
-                    <input type="text" id="login-class-id" class="w-full p-4 border-2 border-amber-300 rounded-xl text-center text-2xl font-bold uppercase" placeholder="老師給的代碼">
-                </div>
-                <button onclick="app.checkClassExists()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg text-xl">下一步 ➡️</button>
-            </div>
-
-            <div id="login-step-2" class="hidden">
-                <div class="mb-4">
-                    <label class="block text-amber-800 font-bold mb-2">你的姓名 (座號+名字)</label>
-                    <input type="text" id="login-student-name" class="w-full p-3 border-2 border-amber-300 rounded-xl text-center text-xl" placeholder="例: 25小翰">
-                </div>
-                <div class="mb-6">
-                    <label class="block text-amber-800 font-bold mb-2">選擇探險小組</label>
-                    <div id="team-select-container" class="grid grid-cols-3 gap-3">
-                        </div>
-                </div>
-                <button onclick="app.joinGame()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg text-xl">🚀 開始冒險</button>
-            </div>
-            <button onclick="app.backToRole()" class="mt-4 w-full text-amber-700 font-bold py-2">⬅️ 返回</button>
-        </div>
-
         <div id="game-board" class="hidden fade-in">
             <div class="flex flex-wrap justify-between items-center mb-4 bg-white/80 backdrop-blur rounded-xl p-3 shadow border border-amber-200">
                 <div class="flex items-center gap-3">
@@ -396,24 +426,32 @@
                 提示訊息
             </div>
         </div>
-        <div id="game-over-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center modal-backdrop">
-             <div class="game-over-modal-content bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full mx-4 relative overflow-hidden flex flex-col max-h-[90vh]">
-                <div class="text-center mb-6 z-10">
-                    <div class="text-5xl mb-2">🎉</div>
-                    <h2 class="text-3xl md:text-4xl font-black text-amber-800 drop-shadow-sm">奪寶成功！</h2>
-                    <p class="text-amber-600 font-bold mt-2">法老王的試煉已結束</p>
+       <div id="game-over-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center modal-backdrop">
+             <div class="game-over-modal-content bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full mx-4 relative overflow-hidden flex flex-col max-h-[90vh]">
+                <div class="text-center mb-4 z-10">
+                    <div class="text-6xl mb-2 animate-bounce">🎉</div>
+                    <h2 class="text-3xl md:text-4xl font-black text-amber-800 drop-shadow-sm">冒險完成！</h2>
+                    
+                    <div class="mt-4 bg-gradient-to-r from-amber-100 to-orange-100 rounded-2xl p-4 border-2 border-amber-300 shadow-inner">
+                        <p class="text-amber-800 font-bold text-sm uppercase tracking-widest mb-1">Adventure Squad Score</p>
+                        <div class="text-5xl font-black text-amber-900 drop-shadow-sm flex justify-center items-center gap-2">
+                            <span class="text-3xl">🛡️</span>
+                            <span id="end-total-score">0</span>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="grid md:grid-cols-2 gap-6 overflow-y-auto z-10 px-2 pb-2">
-                    <div class="bg-amber-50 rounded-xl p-4 border border-amber-200">
-                        <h3 class="font-bold text-amber-900 border-b border-amber-300 pb-2 mb-3 text-center text-lg">🚩 冒險隊排名</h3>
-                        <div id="end-team-ranks" class="space-y-2"></div>
-                    </div>
-                    <div class="bg-white rounded-xl p-4 border border-amber-200 shadow-inner">
-                        <h3 class="font-bold text-amber-900 border-b border-amber-300 pb-2 mb-3 text-center text-lg">🏆 傳奇冒險家</h3>
-                        <div id="end-player-ranks" class="space-y-2"></div>
+                <div class="flex-1 overflow-y-auto z-10 px-1 py-2 custom-scrollbar">
+                    <div class="bg-amber-50/50 rounded-xl p-4 border border-amber-200">
+                        <h3 class="font-bold text-amber-900 border-b-2 border-amber-200 pb-2 mb-3 text-center text-lg flex justify-center items-center gap-2">
+                            <span>🏆</span> 傳奇冒險家
+                        </h3>
+                        <div id="end-player-ranks" class="space-y-2">
+                            </div>
                     </div>
                 </div>
+
+                <div class="mt-4 text-center z-10 pt-4 border-t border-amber-100">
 
                 <div class="mt-6 text-center z-10 pt-4 border-t border-amber-100">
                     <p class="text-sm text-gray-500 mb-3">老師確認後可開啟新的一局</p>
@@ -520,13 +558,13 @@
 	<script>
     // --- Firebase 配置 ---
     const firebaseConfig = {
-        apiKey: "AIzaSyDKTbUT8d2UidvZLJjgE8PJnWAJFI1MhLc",
-  authDomain: "pharaohrpg-code-v4.firebaseapp.com",
-  databaseURL: "https://pharaohrpg-code-v4-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "pharaohrpg-code-v4",
-  storageBucket: "pharaohrpg-code-v4.firebasestorage.app",
-  messagingSenderId: "727026967052",
-  appId: "1:727026967052:web:43e06e2863deee8121c429"
+        apiKey: "AIzaSyDPGUqIx8qWEmKDPaI5Pwnm6nSJ95KjpHg",
+        authDomain: "pharaoh-code-v3.firebaseapp.com",
+        projectId: "pharaoh-code-v3",
+        databaseURL: "https://pharaoh-code-v3-default-rtdb.asia-southeast1.firebasedatabase.app",
+        storageBucket: "pharaoh-code-v3.firebasestorage.app",
+        messagingSenderId: "884553648676",
+        appId: "1:884553648676:web:a30ca4b251a6f4f6da66b1"
     };
 
     // 初始化 Firebase
@@ -542,31 +580,24 @@
             myName: null,
             gameData: {},
             cards: {}, 
-            voiceEnabled: true,
+            voiceEnabled: true, // v3.2.4 修改：預設開啟語音
             localTimer: null,
             selectedCardIndex: null,
+            // v3.0.8 新增: 輸入狀態管理
             inputFormula: "", 
             inputCursorPos: 0,
             lastRoundProcessed: 0,
-            lastStatus: null,
-            lastWinnerTime: 0,
-            autoRollEnabled: false,
-            isResetting: false,
-            // v4.0.1 新增狀態
-            user: null, // { uid, name, photoURL, score, isAnonymous }
-            isAdmin: false,
-            globalSettings: {
-                autoRoll: true,
-                autoGrant: true
-            },
-            
-            // v3.5.0 自動發放設定 (保留相容性)
+            lastStatus: null, // v3.2.4 新增：用於偵測狀態改變以觸發語音
+            lastWinnerTime: 0, // v3.2.6 新增：用於判斷是否播放過廣播
+            autoRollEnabled: false, // v3.2.9 新增：自動擲骰開關
+            isResetting: false, // v3.1.2 新增：防止老師重置時自我登出
+            // v3.5.0 自動發放設定
             autoGrant: {
                 enabled: false,
-                interval: 4,
-                targetCount: 1,
-                itemCount: 1,
-                allowedTypes: ['hint', 'double', 'nile']
+                interval: 4,     // 幾回合一次
+                targetCount: 1,  // 給倒數幾名
+                itemCount: 1,    // 給幾個
+                allowedTypes: ['hint', 'double', 'nile'] // 預設允許清單
             }
         },
 
@@ -601,266 +632,132 @@
                 }, 1000);
             }
         },
-// --- v4.0.1 大廳與管理邏輯 ---
-        
-        enterLobbyInit: () => {
-            app.el('page-role-select').classList.add('hidden');
-            app.el('page-adventure-lobby').classList.remove('hidden');
-            app.state.role = 'lobby_user';
-            
-            // 檢查本地登入狀態
-            const savedUser = localStorage.getItem('pharaoh_v4_user');
-            if (savedUser) {
-                app.state.user = JSON.parse(savedUser);
-                app.updateProfileUI();
-            }
-            
-            app.listenToLobby();
-        },
 
-        loginGoogle: () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider).then((result) => {
-                const u = result.user;
-                app.setUser({
-                    uid: u.uid,
-                    name: u.displayName,
-                    photoURL: u.photoURL,
-                    score: 0, // 實際應從 DB 讀取
-                    isAnonymous: false
-                });
-            }).catch(error => app.toast('❌ 登入失敗: ' + error.message));
-        },
-
-        loginAnonymous: () => {
-            const name = app.el('anon-name-input').value.trim();
-            if(!name) return app.toast('請輸入暱稱');
-            app.setUser({
-                uid: 'anon_' + Date.now(),
-                name: name,
-                photoURL: null,
-                score: 0,
-                isAnonymous: true
-            });
-        },
-
-        setUser: (userData) => {
-            app.state.user = userData;
-            localStorage.setItem('pharaoh_v4_user', JSON.stringify(userData));
-            app.updateProfileUI();
-            
-            // 如果是 Google 用戶，同步到資料庫
-            if(!userData.isAnonymous) {
-                db.ref(`users/${userData.uid}`).update({
-                    name: userData.name,
-                    lastLogin: firebase.database.ServerValue.TIMESTAMP
-                });
-            }
-        },
-
-        logoutUser: () => {
-            app.state.user = null;
-            localStorage.removeItem('pharaoh_v4_user');
-            if(firebase.auth().currentUser) firebase.auth().signOut();
-            app.updateProfileUI();
-        },
-
-        updateProfileUI: () => {
-            const u = app.state.user;
-            if(u) {
-                app.el('user-name-display').textContent = u.name;
-                app.el('user-total-score').textContent = u.score || 0;
-                app.el('user-avatar').innerHTML = u.photoURL ? `<img src="${u.photoURL}" class="avatar-img">` : (u.isAnonymous ? '🕵️' : '👤');
-                app.el('login-section').classList.add('hidden');
-                app.el('user-actions').classList.remove('hidden');
-            } else {
-                app.el('user-name-display').textContent = '未登入';
-                app.el('user-total-score').textContent = '0';
-                app.el('user-avatar').innerHTML = '👤';
-                app.el('login-section').classList.remove('hidden');
-                app.el('user-actions').classList.add('hidden');
-            }
-        },
-
-        createLobbyRoom: () => {
-            if(!app.state.user) return;
-            const roomId = Math.floor(100000 + Math.random() * 900000).toString();
-            
-            // 建立房間資料 (使用全域設定)
-            const initialData = app.generateInitialGameData();
-            const roomData = {
-                host: app.state.user.name,
-                hostId: app.state.user.uid,
-                status: 'waiting',
-                dice: { d8: '-', d10: '-', d12: '-' },
-                round: 1,
-                timer: 30,
-                timerActive: false,
-                pyramid: initialData.pyramid,
-                decks: initialData.decks,
-                timestamp: firebase.database.ServerValue.TIMESTAMP,
-                isAdventureMode: true,
-                settings: app.state.globalSettings // 帶入全域設定
-            };
-
-            db.ref(`classes/${roomId}`).set(roomData).then(() => {
-                // 自動加入該局
-                app.state.classId = roomId;
-                app.state.role = 'teacher'; // 開房者自動視為類 Teacher 權限(可擲骰)
-                app.saveLocalState();
-                
-                // 為了讓開房者也參與，我們需要將他同時設為玩家
-                // 這裡自動分配到第1組，或讓他在裡面選
-                // 為了簡化，冒險模式直接進入遊戲板，保留原本介面
-                app.startGameInterface();
-                // 若開啟自動擲骰
-                if(app.state.globalSettings.autoRoll) {
-                    app.state.autoRollEnabled = true;
-                }
-            });
-        },
-
-        listenToLobby: () => {
-            // 監聽所有 classes 節點的變化 (注意：資料量大時需優化，此為教學用)
-            db.ref('classes').limitToLast(20).on('value', snapshot => {
-                const listEl = app.el('lobby-room-list');
-                const rooms = snapshot.val();
-                if(!rooms) {
-                    listEl.innerHTML = '<div class="text-center text-gray-400 py-4">目前沒有開放的房間</div>';
-                    app.el('room-count-badge').textContent = 0;
-                    return;
-                }
-
-                let html = '';
-                let count = 0;
-                Object.keys(rooms).forEach(key => {
-                    const r = rooms[key];
-                    // 只顯示冒險模式的房間 或 狀態為 waiting 的房間
-                    if (r.status !== 'ended') {
-                        count++;
-                        const isFull = false; // 暫無人數上限邏輯
-                        const statusBadge = r.status === 'waiting' ? '<span class="text-green-600 font-bold">等待中</span>' : '<span class="text-red-600 font-bold">進行中</span>';
-                        // 修正 innerHTML 空白節點問題，採用緊湊寫法
-                        html += `<div class="room-card ${isFull?'full':''}" onclick="app.joinLobbyRoom('${key}')"><div><div class="font-bold text-lg text-slate-800">Room ${key}</div><div class="text-xs text-gray-500">房主: ${r.host || '法老王'}</div></div><div class="text-right">${statusBadge}<div class="text-xs text-gray-400 mt-1">點擊加入 ➔</div></div></div>`;
-                    }
-                });
-                
-                listEl.innerHTML = html;
-                app.el('room-count-badge').textContent = count;
-            });
-        },
-
-        joinLobbyRoom: (roomId) => {
-            if(!app.state.user) return app.toast('請先登入或輸入暱稱');
-            
-            app.state.classId = roomId;
-            app.state.role = 'student'; // 加入者為學生
-            app.state.myName = app.state.user.name; // 使用大廳暱稱
-            
-            // 跳過原本的選組畫面，直接讓使用者在遊戲內選 (或這裡自動分配)
-            // 為了相容現有流程，我們模擬進入「選擇探險小組」步驟
-            app.el('page-adventure-lobby').classList.add('hidden');
-            app.el('page-student-login').classList.remove('hidden');
-            app.el('login-step-1').classList.add('hidden'); // 跳過輸入代碼
-            app.el('login-step-2').classList.remove('hidden');
-            
-            // 自動填入名字
-            app.el('login-student-name').value = app.state.user.name;
-            app.renderTeamButtons();
-        },
-        
-        refreshLobby: () => {
-            app.el('lobby-room-list').innerHTML = '<div class="text-center text-gray-500 py-4">重新載入中...</div>';
-            db.ref('classes').limitToLast(20).once('value'); // 強制重抓由 listenToLobby 處理
-        },
-
-        // --- 管理員邏輯 ---
-        openAdminPanel: () => {
-            app.el('admin-modal').classList.remove('hidden');
-            app.el('admin-login-view').classList.remove('hidden');
-            app.el('admin-panel-view').classList.add('hidden');
-            app.el('admin-password').value = '';
-        },
-
-        verifyAdmin: () => {
-            const pwd = app.el('admin-password').value;
-            if(pwd === '6317261') {
-                app.state.isAdmin = true;
-                app.el('admin-login-view').classList.add('hidden');
-                app.el('admin-panel-view').classList.remove('hidden');
-                app.toast('✅ 管理員身分已驗證');
-            } else {
-                app.toast('❌ 密碼錯誤');
-            }
-        },
-
-        saveAdminSettings: () => {
-            if(!app.state.isAdmin) return;
-            app.state.globalSettings.autoRoll = app.el('admin-global-autoroll').checked;
-            app.state.globalSettings.autoGrant = app.el('admin-global-autogrant').checked;
-            
-            // 同步修改自動發放設定的預設值
-            app.state.autoGrant.enabled = app.state.globalSettings.autoGrant;
-            
-            app.el('admin-modal').classList.add('hidden');
-            app.toast('✅ 全域設定已儲存 (將套用於新開房間)');
-        },
-
-        // --- 結束 ---
         // --- 1. 初始化與自動登入 ---
         init: () => {
             app.createPredefinedCards();
-            // v3.0.8: 自動重連機制
-            const savedState = localStorage.getItem('pharaoh_v3_state');
-            if (savedState) {
-                const parsed = JSON.parse(savedState);
-                // 簡單驗證資料完整性
-                if (parsed.classId && parsed.role) {
-                    console.log('🔄 偵測到斷線重連...', parsed);
-                    app.state.classId = parsed.classId;
-                    app.state.role = parsed.role;
-                    app.state.myTeam = parsed.team; // 老師此項可能為 null
-                    app.state.myName = parsed.name; // 老師此項可能為 null
-                    
-                    // 恢復介面
-                    app.el('page-role-select').classList.add('hidden');
-                    app.startGameInterface();
-                    app.toast('🔄 已自動恢復連線');
-                }
+            // v4.0.3: 監聽全域設定 (用於建立房間時的預設值)
+            db.ref('global_settings').on('value', snapshot => {
+                app.state.globalSettings = snapshot.val() || {};
+            });
+            // v4.0.1: 檢查本地儲存的玩家名稱與高分
+            const savedName = localStorage.getItem('pharaoh_player_name');
+            if (savedName) {
+                app.state.myName = savedName;
+                app.el('lobby-player-name').value = savedName;
             }
-        },
-
-        // --- 2. 角色與登入流程 ---
-        selectRole: (role) => {
-            app.state.role = role;
-            app.el('page-role-select').classList.add('hidden');
-            if (role === 'teacher') {
-                app.el('page-teacher-setup').classList.remove('hidden');
-            } else {
-                app.el('page-student-login').classList.remove('hidden');
-                app.el('login-step-1').classList.remove('hidden');
-            }
-        },
-
-        backToRole: () => {
-            app.el('page-teacher-setup').classList.add('hidden');
-            app.el('page-student-login').classList.add('hidden');
-            app.el('page-role-select').classList.remove('hidden');
-            app.state.role = null;
-            localStorage.removeItem('pharaoh_v3_state'); // 清除快取
-        },
-
-        createClass: () => {
-            const classId = app.el('setup-class-id').value.trim();
-            if (!classId) return app.toast('❌ 請輸入班級代碼');
             
-            app.state.classId = classId;
-            app.saveLocalState(); // 儲存狀態
+            // 讀取並顯示大廳房間 (暫時使用假資料測試 UI，後續步驟會實作 Firebase 連動)
+            app.refreshLobby();
+            
+            // 預設載入大廳，隱藏遊戲介面
+            app.el('page-lobby').classList.remove('hidden');
+            app.el('game-board').classList.add('hidden');
+            app.el('admin-gear-btn').classList.remove('hidden');
+        },
 
-            const classRef = db.ref(`classes/${classId}`);
+        // v4.0.2: 刷新大廳房間列表 (即時監聽 Firebase)
+        refreshLobby: () => {
+            const listEl = app.el('lobby-room-list');
+            const myName = localStorage.getItem('pharaoh_player_name') || '未命名';
+            app.el('lobby-high-score').textContent = localStorage.getItem('pharaoh_high_score') || '0';
+
+            // 監聽所有房間變化
+            db.ref('classes').on('value', snapshot => {
+                const rooms = snapshot.val();
+                if (!rooms) {
+                    listEl.innerHTML = '<div class="text-center text-gray-400 py-10"><div class="text-4xl mb-2">🍃</div><p>目前沒有房間，你可以建立一個！</p></div>';
+                    return;
+                }
+                app.renderRoomList(rooms);
+            });
+        },
+
+        // v4.0.2: 渲染房間列表 (過濾 5 分鐘內活躍)
+        renderRoomList: (rooms) => {
+            const listEl = app.el('lobby-room-list');
+            const now = Date.now();
+            let html = '';
+            let activeCount = 0;
+
+            // 轉陣列並排序 (最新的在上面)
+            const roomArr = Object.entries(rooms).map(([id, data]) => ({ id, ...data }));
+            roomArr.sort((a, b) => (b.lastActive || 0) - (a.lastActive || 0));
+
+            roomArr.forEach(room => {
+                // 篩選條件: 5分鐘內活躍 (5 * 60 * 1000 = 300000)
+                const isAlive = (now - (room.lastActive || 0)) < 300000;
+                
+                if (isAlive) {
+                    activeCount++;
+                    const isMyRoom = room.hostName === app.state.myName;
+                    const statusText = room.status === 'waiting' ? '等待中' : '冒險進行中';
+                    const statusClass = room.status === 'waiting' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
+                    
+                    // 壓縮 HTML 防止空白節點
+                    html += `<div onclick="app.joinLobbyRoom('${room.id}')" class="room-item"><div class="flex items-center gap-3"><div class="text-2xl">🏰</div><div><div class="font-bold text-amber-900">${room.roomName || '未命名房間'}</div><div class="text-xs text-gray-500 flex items-center gap-2"><span>房主: ${room.hostName}</span><span class="${statusClass} px-2 py-0.5 rounded-full text-[0.6rem] font-bold">${statusText}</span></div></div></div><div class="text-amber-600 font-bold text-sm">點擊加入 ➜</div></div>`;
+                }
+            });
+
+            if (activeCount === 0) {
+                html = '<div class="text-center text-gray-400 py-10"><div class="text-4xl mb-2">💤</div><p>所有房間都在休息中...</p></div>';
+            }
+            listEl.innerHTML = html;
+        },
+
+        // v4.0.2: 加入房間 (一鍵加入)
+        joinLobbyRoom: (roomId) => {
+            const name = app.el('lobby-player-name').value.trim();
+            if (!name) return app.toast('❌ 請先輸入你的冒險者名字');
+            
+            localStorage.setItem('pharaoh_player_name', name);
+            app.state.myName = name;
+            app.state.classId = roomId;
+            app.state.role = 'student';
+            app.state.isHost = false; // 加入者非房主
+            
+            // v4.0.2: 統一強制加入 team1 (冒險小隊)
+            app.state.myTeam = 'team1'; 
+
+            // 檢查房間是否存在並加入
+            const roomRef = db.ref(`classes/${roomId}`);
+            roomRef.once('value', snapshot => {
+                if (snapshot.exists()) {
+                    // 加入玩家資料
+                    db.ref(`classes/${roomId}/players/team1/${name}`).update({
+                        name: name,
+                        lastActive: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    
+                    app.enterGameMode();
+                    app.toast(`🚀 已加入 ${snapshot.val().hostName} 的冒險！`);
+                } else {
+                    app.toast('❌ 房間已不存在');
+                }
+            });
+        },
+
+        // v4.0.1: 建立新房間 (成為房主+主控者)
+        createRoom: () => {
+            const name = app.el('lobby-player-name').value.trim();
+            if (!name) return app.toast('❌ 請先輸入你的冒險者名字');
+            
+            // 儲存名字
+            localStorage.setItem('pharaoh_player_name', name);
+            app.state.myName = name;
+
+            // 生成隨機房間代碼 (6碼數字)
+            const roomId = Math.floor(100000 + Math.random() * 900000).toString();
+            app.state.classId = roomId;
+            app.state.role = 'student'; // 邏輯上是學生(玩家)
+            app.state.isHost = true;    // 新增：房主標記
+            app.state.myTeam = 'team1'; // 預設先給第1組，後續改版會改為"冒險小隊"
+
+            // 寫入 Firebase
             const initialData = app.generateInitialGameData();
-
-            classRef.set({
+            db.ref(`classes/${roomId}`).set({
+                hostName: name,
+                roomName: `${name} 的冒險`,
                 status: 'waiting', 
                 dice: { d8: '-', d10: '-', d12: '-' },
                 round: 1,
@@ -868,70 +765,110 @@
                 timerActive: false,
                 pyramid: initialData.pyramid,
                 decks: initialData.decks,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
+                lastActive: firebase.database.ServerValue.TIMESTAMP, // 用於判斷活躍
+                autoRoll: app.el('admin-auto-roll').checked // 繼承管理員設定
             }).then(() => {
-                app.startGameInterface();
+                // 加入自己為玩家
+                db.ref(`classes/${roomId}/players/team1/${name}`).set({
+                    name: name,
+                    score: 0,
+                    lastActive: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                app.enterGameMode();
+                app.toast(`🏰 房間建立成功！代碼：${roomId}`);
             });
         },
 
-        checkClassExists: () => {
-            const classId = app.el('login-class-id').value.trim();
-            if (!classId) return app.toast('❌ 請輸入班級代碼');
+        // v4.0.3: 進入遊戲介面 (房主權限控制)
+        enterGameMode: () => {
+            app.el('page-lobby').classList.add('hidden');
+            app.el('game-board').classList.remove('hidden');
+            app.el('admin-gear-btn').classList.add('hidden');
+            
+            app.el('display-class-id').textContent = app.state.classId;
+            const roleText = app.state.isHost ? '👑 房主 (主控)' : '🤠 冒險者';
+            app.el('user-identity').textContent = `${roleText} ${app.state.myName}`;
+            
+            // 所有人都能看到操作面板
+            app.el('panel-student').classList.remove('hidden');
 
-            db.ref(`classes/${classId}`).once('value', snapshot => {
-                if (snapshot.exists()) {
-                    app.state.classId = classId;
-                    app.el('login-step-1').classList.add('hidden');
-                    app.el('login-step-2').classList.remove('hidden');
-                    app.renderTeamButtons();
-                } else {
-                    app.toast('❌ 找不到此班級，請確認代碼');
-                }
+            // v4.0.3: 只有房主能看到控制面板 (原本的 teacher 面板)
+            if (app.state.isHost) {
+                app.el('panel-teacher').classList.remove('hidden');
+                // 房主介面調整：隱藏不需要的"老師專用"按鈕，只保留核心控制
+                // 這裡我們用 CSS class 動態控制顯示，或者保持原樣，因為原樣的功能房主都需要
+                
+                // 讀取全域設定來決定初始自動擲骰狀態
+                db.ref('global_settings/autoRollDefault').once('value', snap => {
+                    const defaultAuto = snap.val() !== false; // 預設 true
+                    app.state.autoRollEnabled = defaultAuto;
+                    app.el('auto-roll-toggle').checked = defaultAuto;
+                });
+            } else {
+                app.el('panel-teacher').classList.add('hidden');
+            }
+            
+            app.listenToGameData();
+        },
+
+        // --- 管理員相關 (v4.0.3 實作全域設定) ---
+        openAdminAuth: () => {
+            app.el('admin-auth-modal').classList.remove('hidden');
+            app.el('admin-password-input').value = '';
+            app.el('admin-password-input').focus();
+        },
+
+        verifyAdmin: () => {
+            const pwd = app.el('admin-password-input').value;
+            if (pwd === '6317261') {
+                app.el('admin-auth-modal').classList.add('hidden');
+                app.fetchGlobalSettingsToUI(); // 載入目前設定
+                app.el('admin-settings-modal').classList.remove('hidden');
+                app.toast('🔓 管理員驗證成功');
+            } else {
+                app.toast('❌ 密碼錯誤');
+            }
+        },
+
+        // 將資料庫設定填回管理員介面
+        fetchGlobalSettingsToUI: () => {
+            db.ref('global_settings').once('value', snapshot => {
+                const settings = snapshot.val() || {};
+                app.el('admin-auto-roll').checked = settings.autoRollDefault !== false; // 預設 true
+                
+                const ag = settings.autoGrant || {};
+                app.el('admin-ag-interval').value = ag.interval || 3;
+                app.el('admin-ag-target').value = ag.targetCount || 2;
             });
         },
 
-        renderTeamButtons: () => {
-            const container = app.el('team-select-container');
-            const teams = [
-                {id: 1, name: '第1組:阿努比斯', icon: '🐕'},
-                {id: 2, name: '第2組:荷魯斯', icon: '🦅'},
-                {id: 3, name: '第3組:巴斯泰特', icon: '🐱'},
-                {id: 4, name: '第4組:歐西里斯', icon: '🧟'},
-                {id: 5, name: '第5組:伊西斯', icon: '🦋'},
-                {id: 6, name: '第6組:太陽神拉', icon: '🌞'}
-            ];
-            let html = '';
-            teams.forEach(t => {
-                html += `<button onclick="app.selectTeam(${t.id}, this)" class="team-btn bg-white border-2 border-amber-300 text-amber-900 font-bold py-3 rounded-lg hover:bg-amber-50 flex flex-col items-center justify-center text-sm"><span>${t.icon}</span><span>${t.name}</span></button>`;
+        saveAdminSettings: () => {
+            const settings = {
+                autoRollDefault: app.el('admin-auto-roll').checked,
+                autoGrant: {
+                    enabled: true, // 管理員設定的一律視為啟用，由參數控制
+                    interval: parseInt(app.el('admin-ag-interval').value) || 3,
+                    targetCount: parseInt(app.el('admin-ag-target').value) || 2,
+                    itemCount: 1, // 預設給 1 個
+                    allowedTypes: ['hint', 'double', 'nile', 'time', 'shard', 'seal', 'anubis', 'horus', 'mummy']
+                },
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            db.ref('global_settings').set(settings).then(() => {
+                app.state.globalSettings = settings; // 更新本地狀態
+                app.el('admin-settings-modal').classList.add('hidden');
+                app.toast('💾 全域設定已儲存，新房間將套用此規則');
             });
-            container.innerHTML = html;
         },
-
-        selectTeam: (teamId, btnElement) => {
-            app.state.myTeam = `team${teamId}`;
-            document.querySelectorAll('.team-btn').forEach(b => b.classList.remove('selected', 'bg-amber-100', 'border-amber-600'));
-            btnElement.classList.add('selected', 'bg-amber-100', 'border-amber-600');
+        
+        clearAllRooms: () => {
+            if(confirm('⚠️ 警告：這將強制清除伺服器上所有房間數據，確定執行？')) {
+                // 實作清除邏輯
+                app.toast('🗑️ 清除指令已發送');
+            }
         },
-
-        joinGame: () => {
-            const name = app.el('login-student-name').value.trim();
-            if (!name) return app.toast('❌ 請輸入姓名 (座號+名字)');
-            if (!app.state.myTeam) return app.toast('❌ 請選擇探險小組');
-
-            app.state.myName = name;
-            app.saveLocalState(); // 儲存狀態
-
-            const playerRef = db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${name}`);
-            playerRef.update({
-                name: name,
-                score: 0,
-                lastActive: firebase.database.ServerValue.TIMESTAMP
-            });
-
-            app.startGameInterface();
-        },
-
-        // v3.0.8: 儲存登入狀態到 LocalStorage
         saveLocalState: () => {
             const data = {
                 role: app.state.role,
@@ -1144,171 +1081,159 @@
             }
         },
 
-        // v3.0.9: 修正後的計分與顯示邏輯
+        // v4.0.2: 修正後的計分與顯示邏輯 (單一小隊模式)
         calculateAndRenderScores: (players) => {
             if (!players) return;
 
-            const teamStats = {}; 
+            // 統計所有玩家 (不分組別，統一視為冒險小隊)
             let allPlayers = [];
+            let totalTeamScore = 0;
+            let totalMembers = 0;
 
-            for(let i=1; i<=6; i++) {
-                const teamKey = `team${i}`;
-                teamStats[teamKey] = {
-                    key: teamKey,
-                    name: app.getTeamName(teamKey),
-                    shortName: app.getTeamShortName(teamKey), // v3.0.9
-                    score: 0,
-                    count: 0,
-                    members: []
-                };
-            }
-
+            // 遍歷所有組別資料 (雖然現在只用 team1，但保留遍歷以防舊數據)
             Object.keys(players).forEach(teamKey => {
-                if(teamStats[teamKey]) {
-                    const membersObj = players[teamKey];
+                const membersObj = players[teamKey];
+                if (membersObj) {
                     Object.values(membersObj).forEach(p => {
-                        teamStats[teamKey].score += (p.score || 0);
-                        teamStats[teamKey].count += 1;
-                        teamStats[teamKey].members.push(p);
-                        allPlayers.push({...p, team: teamKey});
+                        allPlayers.push({...p, team: teamKey}); // 保留 teamKey 供內部邏輯使用
+                        totalTeamScore += (p.score || 0);
+                        totalMembers++;
                     });
                 }
             });
 
-            // v3.0.9: 學生端顯示優化 - 顯示名字與完整組名
-            if (app.state.role === 'student' && app.state.myTeam && app.state.myName) {
-                const myTeamData = players[app.state.myTeam];
-                const myData = myTeamData ? myTeamData[app.state.myName] : null;
+            // 學生端顯示優化: 顯示個人分數與團隊總分
+            if (app.state.myName) {
+                // 找出自己的分數
+                const myData = allPlayers.find(p => p.name === app.state.myName);
                 const myScore = myData ? (myData.score || 0) : 0;
                 
-                app.el('student-my-score-pill').textContent = `👤 ${app.state.myName} 得分: ${myScore}`;
-                app.el('student-team-score-pill').textContent = `🚩 ${teamStats[app.state.myTeam].name} 得分: ${teamStats[app.state.myTeam].score}`;
+                // 更新高分紀錄 (本地端)
+                const currentHigh = parseInt(localStorage.getItem('pharaoh_high_score') || '0');
+                if (myScore > currentHigh) {
+                    localStorage.setItem('pharaoh_high_score', myScore);
+                }
+
+                app.el('student-my-score-pill').textContent = `👤 ${app.state.myName}: ${myScore}分`;
+                app.el('student-team-score-pill').textContent = `🛡️ 冒險小隊總分: ${totalTeamScore}`;
             }
 
-            // 老師端渲染
-            if (app.state.role === 'teacher') {
-                let teamHtml = '';
-                for(let i=1; i<=6; i++) {
-                    const t = teamStats[`team${i}`];
-                    teamHtml += `<div onclick="app.showTeamModal('${t.key}')" class="flex justify-between items-center p-2 bg-slate-50 rounded border border-slate-200 cursor-pointer hover:bg-amber-100 transition-colors"><div class="flex items-center gap-2"><span class="font-bold text-gray-700">${t.name}</span><span class="text-xs bg-gray-200 text-gray-600 px-1 rounded">${t.count}人</span></div><span class="font-black text-amber-700 text-lg">${t.score}</span></div>`;
-                }
-                app.el('teacher-team-board').innerHTML = teamHtml;
-
+            // 更新老師端(或房主)的排行榜面板
+            // 這裡我們把 "小組列表" 改造成 "玩家排行榜"
+            if (app.el('teacher-team-board')) { // 確保元素存在
                 allPlayers.sort((a, b) => b.score - a.score);
+                
+                // 上方顯示總分摘要
+                app.el('teacher-team-board').innerHTML = `<div class="p-3 bg-amber-100 rounded-lg border border-amber-300 text-center mb-2"><div class="text-sm text-amber-800 font-bold">冒險小隊總積分</div><div class="text-3xl font-black text-amber-900">${totalTeamScore}</div></div>`;
+
+                // 下方顯示個人排行榜
                 let personalHtml = '';
                 allPlayers.forEach((p, index) => {
-                    const rankIcon = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : ''));
-                    const highlight = (index < 3) ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-slate-100';
-                    personalHtml += `<div class="flex justify-between items-center p-2 ${highlight} rounded border mb-1"><div class="truncate mr-2"><span class="font-bold mr-1 text-sm">${index+1}.</span>${p.name} <span class="text-xs text-gray-400">(${app.getTeamShortName(p.team)})</span></div><div class="font-bold text-amber-700 flex-shrink-0">${p.score}${rankIcon}</div></div>`;
+                    const rankIcon = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `<span class="inline-block w-5 text-center text-gray-400 font-bold">${index+1}.</span>`));
+                    const highlight = (p.name === app.state.myName) ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-100' : 'bg-white border-slate-100';
+                    
+                    personalHtml += `<div class="flex justify-between items-center p-2 ${highlight} rounded-lg border mb-1 shadow-sm"><div class="truncate mr-2 flex items-center gap-2">${rankIcon}<span class="font-bold text-slate-700">${p.name}</span></div><div class="font-bold text-amber-700 flex-shrink-0">${p.score}</div></div>`;
                 });
-                if(allPlayers.length === 0) personalHtml = '<div class="text-center text-gray-400 py-4 text-xs">暫無冒險者加入</div>';
-                app.el('teacher-personal-board').innerHTML = personalHtml;
                 
-                app.state.latestTeamStats = teamStats;
+                if(allPlayers.length === 0) personalHtml = '<div class="text-center text-gray-400 py-4 text-xs">等待冒險者加入...</div>';
+                
+                // 將個人榜單渲染到原本的 "teacher-personal-board" 位置
+                app.el('teacher-personal-board').innerHTML = personalHtml;
             }
         },
 
 // v3.3.3 新增：顯示學生戰況視窗
-        // v3.3.3 新增：顯示學生戰況視窗
+        // v4.0.4: 顯示學生戰況視窗 (全體排行榜模式)
         showStudentStats: () => {
             const players = app.state.gameData.players;
             if (!players) return app.toast('⚠️ 目前尚無戰況資料');
 
-            const myTeam = app.state.myTeam;
             const contentEl = app.el('student-stats-content');
             
-            // 1. 計算所有隊伍排名
-            const teams = [];
-            for (let i = 1; i <= 6; i++) {
-                const key = `team${i}`;
-                let score = 0;
-                if (players[key]) {
-                    Object.values(players[key]).forEach(p => score += (p.score || 0));
+            // 收集所有玩家
+            let allPlayers = [];
+            // 雖然現在只有 team1，但為了穩健性我們遍歷所有可能的 key
+            Object.keys(players).forEach(teamKey => {
+                if(players[teamKey]) {
+                    Object.values(players[teamKey]).forEach(p => {
+                        allPlayers.push(p);
+                    });
                 }
-                teams.push({ key: key, name: app.getTeamShortName(key), score: score });
-            }
-            teams.sort((a, b) => b.score - a.score);
-
-            // 2. 準備隊伍排行 HTML (壓縮格式以避免空白節點)
-            let ranksHtml = '';
-            teams.forEach((t, i) => {
-                const isMyTeam = t.key === myTeam;
-                const bgClass = isMyTeam ? 'bg-amber-100 border-amber-400' : 'bg-slate-50 border-gray-200';
-                const rankBadge = i < 3 ? ['🥇','🥈','🥉'][i] : `<span class="text-xs text-gray-500 font-bold ml-1">#${i+1}</span>`;
-                ranksHtml += `<div class="flex justify-between items-center p-2 rounded border ${bgClass} mb-1"><div class="flex items-center gap-2">${rankBadge}<span class="font-bold text-gray-700">${t.name}</span></div><span class="font-black text-amber-800">${t.score}</span></div>`;
             });
 
-            // 3. 準備我的隊友列表 HTML
-            let membersHtml = '';
-            if (myTeam && players[myTeam]) {
-                const myMembers = Object.values(players[myTeam]).sort((a, b) => b.score - a.score);
-                myMembers.forEach(m => {
-                    const isMe = m.name === app.state.myName;
-                    const highlight = isMe ? 'text-blue-700 bg-blue-50' : 'text-gray-700';
-                    // 顯示道具圖示
+            // 排序：分數高 -> 低
+            allPlayers.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+            // 生成排行榜 HTML
+            let listHtml = '';
+            if (allPlayers.length > 0) {
+                allPlayers.forEach((p, index) => {
+                    const isMe = p.name === app.state.myName;
+                    const rank = index + 1;
+                    const rankIcon = rank === 1 ? '🥇' : (rank === 2 ? '🥈' : (rank === 3 ? '🥉' : `<span class="text-gray-400 font-bold w-6 text-center">${rank}.</span>`));
+                    
+                    // 樣式：如果是自己，加強顯示
+                    const bgClass = isMe ? 'bg-amber-100 border-amber-300 ring-1 ring-amber-300' : 'bg-white border-slate-100';
+                    const textClass = isMe ? 'text-amber-900' : 'text-slate-700';
+
+                    // 道具圖示
                     let itemsBadge = '';
-                    if (m.items) {
-                        if (m.items.hint) itemsBadge += '📜';
-                        if (m.items.double) itemsBadge += '🦂';
-                        if (m.items.horus) itemsBadge += '👁️';
-                        if (m.items.nile) itemsBadge += '🌊';
-                        if (m.items.time) itemsBadge += '⏳';
-                        if (m.items.shard) itemsBadge += '🕒'; // v3.6.2
-                        if (m.items.seal) itemsBadge += '🔒';
-                        if (m.items.anubis) itemsBadge += '⚖️';
+                    if (p.items) {
+                         const i = p.items;
+                         if (i.hint) itemsBadge += '📜'; if (i.double) itemsBadge += '🦂';
+                         if (i.horus) itemsBadge += '👁️'; if (i.nile) itemsBadge += '🌊';
+                         if (i.time) itemsBadge += '⏳'; if (i.shard) itemsBadge += '🕒';
+                         if (i.seal) itemsBadge += '🔒'; if (i.anubis) itemsBadge += '⚖️';
+                         if (i.mummy) itemsBadge += '👻';
                     }
-                    membersHtml += `<div class="flex justify-between items-center p-2 border-b border-gray-100 ${highlight}"><div class="flex items-center gap-1"><span class="font-bold">${m.name}</span><span class="text-xs">${itemsBadge}</span></div><span class="font-bold">${m.score}</span></div>`;
+
+                    listHtml += `<div class="flex justify-between items-center p-3 rounded-lg border ${bgClass} shadow-sm transition-transform hover:scale-[1.01]"><div class="flex items-center gap-3"><div class="text-xl">${rankIcon}</div><div><div class="font-bold ${textClass}">${p.name}</div><div class="text-xs text-gray-500 tracking-wider">${itemsBadge}</div></div></div><div class="font-black text-xl text-amber-600">${p.score || 0}</div></div>`;
                 });
             } else {
-                membersHtml = '<div class="text-center text-gray-400 py-2">尚無組員資料</div>';
+                listHtml = '<div class="text-center text-gray-400 py-6">等待冒險者加入...</div>';
             }
 
-            // 4. 組合最終 HTML (嚴格無空白節點)
-            contentEl.innerHTML = `<div class="mb-4"><h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2"><span class="text-xl">🏆</span> 各組即時榜</h4><div class="space-y-1">${ranksHtml}</div></div><div><h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2"><span class="text-xl">🤠</span> 我的小隊 (${app.getTeamShortName(myTeam)})</h4><div class="bg-white rounded-xl border border-gray-200 shadow-sm">${membersHtml}</div></div>`;
+            // 渲染介面 (無空白節點)
+            contentEl.innerHTML = `<div class="bg-amber-50 p-4 rounded-xl border border-amber-200 mb-2"><h4 class="font-bold text-amber-800 flex items-center gap-2 mb-3"><span class="text-2xl">🏆</span> 冒險者排行榜</h4><div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">${listHtml}</div></div>`;
 
-            // 顯示視窗
             app.el('student-stats-modal').classList.remove('hidden');
         },
-        // v3.0.9: 產生遊戲結束的結算畫面內容
+        // v4.0.4: 產生遊戲結束的結算畫面內容 (單一小隊版)
         renderGameOverStats: (players) => {
             if (!players) return;
             
-            // 1. 計算小組排名
-            const teams = [];
-            for(let i=1; i<=6; i++) {
-                const key = `team${i}`;
-                if(players[key]) {
-                    let score = 0;
-                    Object.values(players[key]).forEach(p => score += (p.score||0));
-                    teams.push({ name: app.getTeamName(key), score: score });
-                } else {
-                    teams.push({ name: app.getTeamName(key), score: 0 });
-                }
-            }
-            teams.sort((a, b) => b.score - a.score);
-            
-            let teamHtml = '';
-            teams.forEach((t, i) => {
-                const rankClass = i===0 ? 'rank-1' : (i===1 ? 'rank-2' : (i===2 ? 'rank-3' : 'rank-other'));
-                teamHtml += `<div class="flex items-center justify-between p-2 rounded bg-white border border-gray-100"><div class="flex items-center"><span class="rank-badge ${rankClass}">${i+1}</span><span class="font-bold text-gray-700">${t.name}</span></div><span class="font-black text-amber-700">${t.score}分</span></div>`;
-            });
-            app.el('end-team-ranks').innerHTML = teamHtml;
-
-            // 2. 計算個人 MVP (前 3-5 名)
+            // 收集並統計
             let allPlayers = [];
+            let totalScore = 0;
+
             Object.keys(players).forEach(teamKey => {
-                Object.values(players[teamKey]).forEach(p => {
-                    allPlayers.push({...p, teamName: app.getTeamShortName(teamKey)});
-                });
+                if(players[teamKey]) {
+                    Object.values(players[teamKey]).forEach(p => {
+                        const score = p.score || 0;
+                        allPlayers.push({...p, score: score});
+                        totalScore += score;
+                    });
+                }
             });
+
+            // 排序個人分數
             allPlayers.sort((a, b) => b.score - a.score);
             
+            // 渲染：英雄榜 (前 10 名)
             let playerHtml = '';
-            allPlayers.slice(0, 5).forEach((p, i) => {
-                const rankClass = i===0 ? 'rank-1' : (i===1 ? 'rank-2' : (i===2 ? 'rank-3' : 'rank-other'));
-                playerHtml += `<div class="flex items-center justify-between p-2 rounded bg-slate-50 border border-slate-100"><div class="flex items-center"><span class="rank-badge ${rankClass}">${i+1}</span><div><div class="font-bold text-gray-800">${p.name}</div><div class="text-xs text-gray-500">${p.teamName}</div></div></div><span class="font-black text-amber-700">${p.score}分</span></div>`;
-            });
-            if(allPlayers.length === 0) playerHtml = '<div class="text-center text-gray-400">無數據</div>';
+            if (allPlayers.length > 0) {
+                allPlayers.slice(0, 10).forEach((p, i) => {
+                    const rankClass = i===0 ? 'rank-1' : (i===1 ? 'rank-2' : (i===2 ? 'rank-3' : 'rank-other'));
+                    const rowBg = i < 3 ? 'bg-white' : 'bg-slate-50';
+                    playerHtml += `<div class="flex items-center justify-between p-3 rounded-xl border border-amber-100 ${rowBg} shadow-sm mb-2"><div class="flex items-center gap-3"><span class="rank-badge ${rankClass} text-lg shadow-sm">${i+1}</span><span class="font-bold text-slate-700 text-lg">${p.name}</span></div><span class="font-black text-amber-700 text-xl">${p.score}</span></div>`;
+                });
+            } else {
+                playerHtml = '<div class="text-center text-gray-400 py-4">本次冒險無人得分</div>';
+            }
+
+            // 更新 HTML
+            // 我們直接操作 DOM 來改變 modal 的標題與內容，使其適應單欄佈局
+            app.el('end-total-score').textContent = totalScore;
             app.el('end-player-ranks').innerHTML = playerHtml;
         },
 
@@ -1848,8 +1773,8 @@
                      round: nextRound
                  });
                  
-                 // v3.5.0: 觸發自動發放檢查
-                 if(app.state.role === 'teacher') {
+                 // v4.0.3: 觸發自動發放檢查 (由房主執行)
+                 if(app.state.isHost) {
                      app.processAutoGrant(nextRound);
                  }
 
@@ -1869,17 +1794,14 @@
         
         
 
+        // v4.0.2: 統一名稱
         getTeamName: (key) => {
-            const map = {
-                team1: '第1組:阿努比斯', team2: '第2組:荷魯斯', team3: '第3組:巴斯泰特',
-                team4: '第4組:歐西里斯', team5: '第5組:伊西斯', team6: '第6組:太陽神拉'
-            };
-            return map[key] || key;
+            // 為了相容舊資料結構，將所有 teamKey 都顯示為同一名稱
+            return '🛡️ 冒險小隊';
         },
         
         getTeamShortName: (key) => {
-             const map = { team1: '阿努比斯', team2: '荷魯斯', team3: '巴斯泰特', team4: '歐西里斯', team5: '伊西斯', team6: '太陽神拉' };
-             return map[key] || '';
+             return '冒險者';
         },
 
         // --- 6. v3.0.8 強化版輸入控制 ---
@@ -2519,57 +2441,64 @@
             app.toast(enabled ? `✅ 自動平衡機制已啟動 (每${interval}局)` : '🛑 自動平衡機制已關閉');
         },
 
+        // v4.0.3: 自動道具分配 (依據全域設定)
         processAutoGrant: (round) => {
-            const cfg = app.state.autoGrant;
-            // 檢查開關與回合數 (排除第1回合)
-            if (!cfg.enabled || round <= 1 || (round - 1) % cfg.interval !== 0) return;
+            // 只有房主負責執行分配，避免重複發送
+            if (!app.state.isHost) return;
+
+            // 優先讀取全域設定，若無則使用預設值
+            const globalCfg = app.state.globalSettings?.autoGrant || { 
+                enabled: true, interval: 3, targetCount: 2, itemCount: 1, 
+                allowedTypes: ['hint', 'double', 'nile', 'time', 'shard', 'seal', 'anubis', 'horus', 'mummy']
+            };
+
+            // 檢查回合數 (排除第1回合)
+            if (round <= 1 || (round - 1) % globalCfg.interval !== 0) return;
 
             // 開始計算分數與排名
             const players = app.state.gameData.players || {};
-            const teamScores = [];
             
-            for(let i=1; i<=6; i++) {
-                const key = `team${i}`;
-                let score = 0;
-                let memberCount = 0;
-                if(players[key]) {
-                    Object.values(players[key]).forEach(p => {
-                        score += (p.score || 0);
-                        memberCount++;
+            // 將所有玩家視為同一池子進行比較 (因為現在是單一小隊模式，我們改成給"分數較低的玩家")
+            // 但為了相容舊邏輯，我們這裡改為：隨機挑選 N 名玩家給予獎勵
+            // 或者：如果有多個隊伍(未來擴充)，則維持原邏輯。
+            // v4.0.3 調整：直接找出所有玩家，分數最低的前 N 名
+            
+            let allPlayers = [];
+            Object.keys(players).forEach(teamKey => {
+                if(players[teamKey]) {
+                    Object.values(players[teamKey]).forEach(p => {
+                        allPlayers.push({...p, teamKey: teamKey}); // 需紀錄 teamKey 才能發道具
                     });
                 }
-                // 只將有成員的隊伍納入考量
-                if (memberCount > 0) {
-                    teamScores.push({ key: key, score: score, name: app.getTeamShortName(key) });
-                }
-            }
+            });
+
+            if (allPlayers.length === 0) return;
 
             // 分數由低到高排序
-            teamScores.sort((a, b) => a.score - b.score);
+            allPlayers.sort((a, b) => (a.score || 0) - (b.score || 0));
 
-            // 取出倒數 N 名
-            const targets = teamScores.slice(0, cfg.targetCount);
+            // 取出倒數 N 名 (分數最低的前 N 位)
+            const targets = allPlayers.slice(0, globalCfg.targetCount);
             
             if (targets.length === 0) return;
 
-            // 延遲執行，讓回合切換的 toast 先跑完
+            // 延遲執行
             setTimeout(() => {
-                let msg = `🎁 平衡機制觸發 (第${round}回合)：\n`;
+                let msg = `🎁 補給時間 (第${round}回合)：\n`;
                 
-                targets.forEach(team => {
-                    msg += `${team.name} 獲得 ${cfg.itemCount} 個道具\n`;
+                targets.forEach(p => {
+                    msg += `${p.name} 獲得支援\n`;
                     // 執行發放
-                    for(let i=0; i<cfg.itemCount; i++) {
-                        // 隨機選一個道具種類
-                        const randomType = cfg.allowedTypes[Math.floor(Math.random() * cfg.allowedTypes.length)];
-                        app.grantItem(team.key, randomType);
+                    for(let i=0; i<globalCfg.itemCount; i++) {
+                        const randomType = globalCfg.allowedTypes[Math.floor(Math.random() * globalCfg.allowedTypes.length)];
+                        app.grantItem(p.teamKey, randomType); // 使用原本的 grantItem (它有權重邏輯，這裡混合使用也無妨)
                     }
                 });
                 
                 app.toast(msg);
-                app.speak("戰場物資已投放，請確認背包");
+                app.speak("戰場物資已投放");
             }, 1500);
-        }
+        },
     };
 
     // 啟動
