@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.1.4 - 冒險模式版</title>
+    <title>神殿試煉 v4.1.5 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -189,12 +189,13 @@
         @keyframes confetti-fall { 0% { transform: translateY(-100%) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
     </style>
 	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.1.4 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.1.5 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -204,18 +205,53 @@
         <div id="page-lobby" class="max-w-6xl mx-auto fade-in">
             <div class="grid md:grid-cols-12 gap-6">
                 <div class="md:col-span-4 space-y-6">
-                    <div class="lobby-card p-6 text-center">
-                        <div class="text-6xl mb-4">🤠</div>
-                        <h2 class="text-2xl font-black text-amber-900 mb-4">冒險者資料</h2>
-                        <div class="mb-4">
-                            <label class="block text-amber-800 font-bold mb-2 text-left ml-1">你的名字</label>
-                            <input type="text" id="lobby-player-name" class="w-full p-3 border-2 border-amber-300 rounded-xl text-center text-xl font-bold placeholder-amber-200" placeholder="輸入暱稱...">
+                    <div class="lobby-card p-6 text-center relative overflow-hidden">
+                        <div id="auth-panel-logged-in" class="hidden flex-col items-center animate-[fadeIn_0.5s_ease-out]">
+                             <img id="user-avatar" src="" class="w-24 h-24 rounded-full border-4 border-amber-400 shadow-lg mb-4 object-cover" alt="Avatar">
+                             <div class="text-sm text-gray-500 font-bold mb-1">歡迎回來</div>
+                             <h2 id="user-display-name" class="text-2xl font-black text-amber-900 mb-4 truncate w-full">冒險者</h2>
+                             
+                             <div class="bg-amber-50 rounded-xl p-3 mb-4 border border-amber-200 w-full">
+                                 <div class="text-xs text-amber-600 font-bold mb-1">雲端歷史最高分</div>
+                                 <div class="text-3xl font-black text-amber-700 flex justify-center items-center gap-2">
+                                     <span>🏆</span>
+                                     <span id="lobby-high-score-auth">0</span>
+                                 </div>
+                             </div>
+                             
+                             <button onclick="app.logout()" class="text-sm text-red-500 font-bold hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-full transition-colors mb-4">登出 Google 帳號</button>
                         </div>
-                        <div class="bg-amber-50 rounded-xl p-3 mb-6 border border-amber-200">
-                             <div class="text-xs text-amber-600 font-bold mb-1">歷史最高分</div>
-                             <div class="text-2xl font-black text-amber-700" id="lobby-high-score">0</div>
+
+                        <div id="auth-panel-guest" class="flex flex-col items-center">
+                            <div class="text-6xl mb-4">🤠</div>
+                            <h2 class="text-2xl font-black text-amber-900 mb-2">冒險者資料</h2>
+                            <p class="text-xs text-gray-500 mb-4">登入 Google 以永久保存戰績</p>
+                            
+                            <button onclick="app.loginGoogle()" class="w-full bg-white border border-gray-300 text-gray-700 font-bold py-3 rounded-xl shadow-sm hover:bg-gray-50 hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-3 mb-4 group">
+                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6" alt="G">
+                                <span class="group-hover:text-blue-600 transition-colors">使用 Google 登入</span>
+                            </button>
+
+                            <div class="relative w-full text-center border-t border-gray-200 my-2">
+                                <span class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs text-gray-400 font-bold">或 匿名遊玩</span>
+                            </div>
+
+                            <div class="w-full mt-4">
+                                <label class="block text-amber-800 font-bold mb-2 text-left ml-1 text-sm">你的暱稱</label>
+                                <input type="text" id="lobby-player-name" class="w-full p-3 border-2 border-amber-300 rounded-xl text-center text-xl font-bold placeholder-amber-200 focus:outline-none focus:border-amber-500 transition-colors" placeholder="輸入暱稱...">
+                            </div>
+
+                            <div class="bg-amber-50 rounded-xl p-2 mt-4 border border-amber-200 w-full">
+                                 <div class="text-xs text-amber-600 font-bold">本機紀錄 (未同步)</div>
+                                 <div class="text-xl font-black text-amber-700" id="lobby-high-score">0</div>
+                            </div>
                         </div>
-                        <button onclick="app.createRoom()" class="w-full bg-gradient-to-r from-amber-600 to-amber-800 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-xl mb-3">🏰 建立新房間</button>
+
+                        <hr class="border-amber-200 my-4">
+                        
+                        <button onclick="app.createRoom()" class="w-full bg-gradient-to-r from-amber-600 to-amber-800 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-xl mb-2 flex items-center justify-center gap-2">
+                            <span>🏰</span> 建立新房間
+                        </button>
                         <p class="text-xs text-gray-400">建立後將自動成為房主</p>
                     </div>
                 </div>
@@ -596,63 +632,114 @@
 
     // 初始化 Firebase
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+   const db = firebase.database();
+    const auth = firebase.auth(); // v4.1.5 新增 Auth
 
     // --- 應用程式核心邏輯 ---
     const app = {
         state: {
+            user: null, // v4.1.5: 儲存 Google 使用者物件
             role: null, 
             classId: null,
             myTeam: null,
             myName: null,
             gameData: {},
             cards: {}, 
-            voiceEnabled: true, // v3.2.4 修改：預設開啟語音
+            voiceEnabled: true,
             localTimer: null,
             selectedCardIndex: null,
-            // v3.0.8 新增: 輸入狀態管理
             inputFormula: "", 
             inputCursorPos: 0,
             lastRoundProcessed: 0,
-            lastStatus: null, // v3.2.4 新增：用於偵測狀態改變以觸發語音
-            lastWinnerTime: 0, // v3.2.6 新增：用於判斷是否播放過廣播
-            autoRollEnabled: false, // v3.2.9 新增：自動擲骰開關
-            isResetting: false, // v3.1.2 新增：防止老師重置時自我登出
-            // v3.5.0 自動發放設定
+            lastStatus: null,
+            lastWinnerTime: 0,
+            autoRollEnabled: false,
+            isResetting: false,
             autoGrant: {
                 enabled: false,
-                interval: 4,     // 幾回合一次
-                targetCount: 1,  // 給倒數幾名
-                itemCount: 1,    // 給幾個
-                allowedTypes: ['hint', 'double', 'nile'] // 預設允許清單
+                interval: 4,
+                targetCount: 1,
+                itemCount: 1,
+                allowedTypes: ['hint', 'double', 'nile']
             }
         },
 
         el: (id) => document.getElementById(id),
 
-        // v3.2.9 新增：自動擲骰控制
+        // v4.1.5: Google 登入邏輯
+        loginGoogle: () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    app.toast(`🎉 歡迎回來，${result.user.displayName}`);
+                    // onAuthStateChanged 會自動處理 UI 更新
+                })
+                .catch((error) => {
+                    console.error(error);
+                    app.toast(`❌ 登入失敗：${error.message}`);
+                });
+        },
+
+        // v4.1.5: 處理登入後的 UI 與資料同步
+        handleAuthUser: (user) => {
+            app.state.user = user;
+            app.state.myName = user.displayName; // 自動使用 Google 名稱
+            
+            // UI 切換
+            app.el('auth-panel-guest').classList.add('hidden');
+            app.el('auth-panel-logged-in').classList.remove('hidden');
+            app.el('auth-panel-logged-in').classList.add('flex');
+            
+            // 填入資料
+            app.el('user-avatar').src = user.photoURL;
+            app.el('user-display-name').textContent = user.displayName;
+            app.el('lobby-player-name').value = user.displayName; // 同步更新輸入框，確保創房時用到
+
+            // 從 Firebase 讀取該用戶的歷史最高分
+            const userRef = db.ref(`users/${user.uid}`);
+            userRef.on('value', snapshot => {
+                const data = snapshot.val();
+                if (data && data.highScore) {
+                    app.el('lobby-high-score-auth').textContent = data.highScore;
+                    // 同步本地儲存，確保邏輯一致
+                    localStorage.setItem('pharaoh_high_score', data.highScore);
+                } else {
+                    // 若雲端無資料，初始化
+                    app.el('lobby-high-score-auth').textContent = '0';
+                }
+            });
+        },
+
+        // v4.1.5: 處理登出 (包含 Firebase 與 本地)
+        logout: () => {
+            if (app.state.user) {
+                auth.signOut().then(() => {
+                    app.toast('👋 已登出 Google 帳號');
+                    // UI 重置由 onAuthStateChanged 處理
+                });
+            } else {
+                // 匿名登出模式
+                localStorage.removeItem('pharaoh_v3_state');
+                location.reload();
+            }
+        },
+
+        // v3.2.9 自動擲骰相關 (保留)
         toggleAutoRoll: () => {
             app.state.autoRollEnabled = app.el('auto-roll-toggle').checked;
             const msg = app.state.autoRollEnabled ? '🤖 自動擲骰已開啟' : '🛑 自動擲骰已關閉';
             app.toast(msg);
-            // 如果開啟當下正好是等待狀態，嘗試觸發
             if (app.state.autoRollEnabled && app.state.gameData.status === 'waiting') {
                 app.triggerAutoRollQueue();
             }
         },
 
         triggerAutoRollQueue: () => {
-            // 安全檢查：若未開啟、非等待狀態，則取消
             if (!app.state.autoRollEnabled || app.state.gameData?.status !== 'waiting') return;
-
-            // 檢查是否正在講話 (例如「時間到...」)
             if (window.speechSynthesis.speaking) {
-                // 若正在講話，每 1 秒檢查一次
                 setTimeout(app.triggerAutoRollQueue, 1000);
             } else {
-                // 語音結束，延遲 1 秒後擲骰 (避免太快讓人反應不過來)
                 setTimeout(() => {
-                    // 再次確認狀態，避免在倒數時觸發
                     if (app.state.autoRollEnabled && app.state.gameData?.status === 'waiting') {
                         app.teacherRollDice();
                     }
@@ -663,21 +750,38 @@
         // --- 1. 初始化與自動登入 ---
         init: () => {
             app.createPredefinedCards();
-            // v4.0.3: 監聽全域設定 (用於建立房間時的預設值)
+            
+            // v4.1.5: 監聽 Google 登入狀態
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // 已登入 Google
+                    app.handleAuthUser(user);
+                } else {
+                    // 未登入/匿名
+                    app.state.user = null;
+                    app.el('auth-panel-guest').classList.remove('hidden');
+                    app.el('auth-panel-logged-in').classList.add('hidden');
+                    app.el('auth-panel-logged-in').classList.remove('flex');
+                    
+                    // 讀取本地舊資料
+                    const savedName = localStorage.getItem('pharaoh_player_name');
+                    if (savedName) {
+                        app.state.myName = savedName;
+                        app.el('lobby-player-name').value = savedName;
+                    }
+                    app.el('lobby-high-score').textContent = localStorage.getItem('pharaoh_high_score') || '0';
+                }
+            });
+
+            // 監聽全域設定
             db.ref('global_settings').on('value', snapshot => {
                 app.state.globalSettings = snapshot.val() || {};
             });
-            // v4.0.1: 檢查本地儲存的玩家名稱與高分
-            const savedName = localStorage.getItem('pharaoh_player_name');
-            if (savedName) {
-                app.state.myName = savedName;
-                app.el('lobby-player-name').value = savedName;
-            }
-            
-            // 讀取並顯示大廳房間 (暫時使用假資料測試 UI，後續步驟會實作 Firebase 連動)
+
+            // 讀取並顯示大廳房間
             app.refreshLobby();
             
-            // 預設載入大廳，隱藏遊戲介面
+            // 預設載入大廳
             app.el('page-lobby').classList.remove('hidden');
             app.el('game-board').classList.add('hidden');
             app.el('admin-gear-btn').classList.remove('hidden');
@@ -1195,12 +1299,30 @@
                 }
             });
 
-            // 更新本地高分紀錄
+            // 更新高分紀錄 (本地 + 雲端)
             if (app.state.myName) {
                 const myData = allPlayers.find(p => p.name === app.state.myName);
                 const myScore = myData ? (myData.score || 0) : 0;
                 const currentHigh = parseInt(localStorage.getItem('pharaoh_high_score') || '0');
-                if (myScore > currentHigh) localStorage.setItem('pharaoh_high_score', myScore);
+                
+                if (myScore > currentHigh) {
+                    localStorage.setItem('pharaoh_high_score', myScore);
+                    // v4.1.5: 若有登入 Google，同步更新雲端紀錄
+                    if (app.state.user) {
+                        db.ref(`users/${app.state.user.uid}`).update({
+                            highScore: myScore,
+                            lastActive: firebase.database.ServerValue.TIMESTAMP,
+                            displayName: app.state.user.displayName
+                        });
+                        // 即時更新大廳顯示
+                        const lobbyAuthScore = app.el('lobby-high-score-auth');
+                        if (lobbyAuthScore) lobbyAuthScore.textContent = myScore;
+                    } else {
+                        // 匿名更新
+                        const lobbyGuestScore = app.el('lobby-high-score');
+                        if (lobbyGuestScore) lobbyGuestScore.textContent = myScore;
+                    }
+                }
             }
 
             // v4.1.2 修改：不進行分數排序 (allPlayers.sort 被移除)，保持列表穩定
