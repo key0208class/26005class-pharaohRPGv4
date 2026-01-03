@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.1.5 - 冒險模式版</title>
+    <title>神殿試煉 v4.1.6 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -195,7 +195,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.1.5 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.1.6 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -209,7 +209,18 @@
                         <div id="auth-panel-logged-in" class="hidden flex-col items-center animate-[fadeIn_0.5s_ease-out]">
                              <img id="user-avatar" src="" class="w-24 h-24 rounded-full border-4 border-amber-400 shadow-lg mb-4 object-cover" alt="Avatar">
                              <div class="text-sm text-gray-500 font-bold mb-1">歡迎回來</div>
-                             <h2 id="user-display-name" class="text-2xl font-black text-amber-900 mb-4 truncate w-full">冒險者</h2>
+                             <div id="auth-name-display-area" class="flex items-center justify-center gap-2 mb-4 w-full">
+                                 <h2 id="user-display-name" class="text-2xl font-black text-amber-900 truncate max-w-[200px]">冒險者</h2>
+                                 <button onclick="app.toggleEditName()" class="text-gray-400 hover:text-amber-600 p-1 rounded-full transition-colors" title="修改名稱">✏️</button>
+                             </div>
+
+                             <div id="auth-name-edit-area" class="hidden flex-col items-center gap-2 mb-4 w-full animate-[fadeIn_0.2s_ease-out]">
+                                 <input type="text" id="edit-auth-name-input" class="w-full p-2 border-2 border-amber-300 rounded-lg text-center font-bold text-amber-900 placeholder-amber-200 focus:outline-none focus:border-amber-500" placeholder="輸入新暱稱">
+                                 <div class="flex gap-2 w-full justify-center">
+                                      <button onclick="app.saveAuthName()" class="bg-green-500 text-white px-4 py-1 rounded-lg text-sm font-bold shadow hover:bg-green-600 active:scale-95 transition-transform">儲存</button>
+                                      <button onclick="app.toggleEditName()" class="bg-gray-300 text-gray-700 px-4 py-1 rounded-lg text-sm font-bold hover:bg-gray-400 active:scale-95 transition-transform">取消</button>
+                                 </div>
+                             </div>
                              
                              <div class="bg-amber-50 rounded-xl p-3 mb-4 border border-amber-200 w-full">
                                  <div class="text-xs text-amber-600 font-bold mb-1">雲端歷史最高分</div>
@@ -683,33 +694,81 @@
         // v4.1.5: 處理登入後的 UI 與資料同步
         handleAuthUser: (user) => {
             app.state.user = user;
-            app.state.myName = user.displayName; // 自動使用 Google 名稱
+            // 預設先用 Google 名稱，稍後資料庫載入會覆蓋
+            app.state.myName = user.displayName; 
             
             // UI 切換
             app.el('auth-panel-guest').classList.add('hidden');
             app.el('auth-panel-logged-in').classList.remove('hidden');
             app.el('auth-panel-logged-in').classList.add('flex');
             
-            // 填入資料
+            // 填入基本資料
             app.el('user-avatar').src = user.photoURL;
-            app.el('user-display-name').textContent = user.displayName;
-            app.el('lobby-player-name').value = user.displayName; // 同步更新輸入框，確保創房時用到
+            // 這裡先不填 user-display-name，交由下方資料庫監聽器統一處理
 
-            // 從 Firebase 讀取該用戶的歷史最高分
+            // 從 Firebase 讀取該用戶的完整資料 (分數 + 自訂名稱)
             const userRef = db.ref(`users/${user.uid}`);
             userRef.on('value', snapshot => {
-                const data = snapshot.val();
-                if (data && data.highScore) {
+                const data = snapshot.val() || {};
+                
+                // 1. 處理名稱：優先使用資料庫中的 displayName，若無則用 Google 預設
+                const finalName = data.displayName || user.displayName;
+                app.state.myName = finalName;
+                app.el('user-display-name').textContent = finalName;
+                app.el('lobby-player-name').value = finalName; // 同步更新創房時的預設名稱
+                
+                // 2. 處理分數
+                if (data.highScore) {
                     app.el('lobby-high-score-auth').textContent = data.highScore;
-                    // 同步本地儲存，確保邏輯一致
                     localStorage.setItem('pharaoh_high_score', data.highScore);
                 } else {
-                    // 若雲端無資料，初始化
                     app.el('lobby-high-score-auth').textContent = '0';
                 }
             });
         },
+// v4.1.5: 切換修改名稱模式
+        toggleEditName: () => {
+            const displayArea = app.el('auth-name-display-area');
+            const editArea = app.el('auth-name-edit-area');
+            const input = app.el('edit-auth-name-input');
 
+            if (editArea.classList.contains('hidden')) {
+                // 開啟編輯
+                displayArea.classList.add('hidden');
+                editArea.classList.remove('hidden');
+                editArea.classList.add('flex');
+                input.value = app.state.myName; // 預帶入目前名稱
+                input.focus();
+            } else {
+                // 取消編輯
+                displayArea.classList.remove('hidden');
+                editArea.classList.add('hidden');
+                editArea.classList.remove('flex');
+            }
+        },
+
+        // v4.1.5: 儲存新名稱到資料庫
+        saveAuthName: () => {
+            const newName = app.el('edit-auth-name-input').value.trim();
+            if (!newName) return app.toast('❌ 名稱不能為空！');
+            if (newName.length > 12) return app.toast('❌ 名稱太長囉 (最多12字)');
+
+            if (app.state.user) {
+                // 寫入 Firebase
+                db.ref(`users/${app.state.user.uid}`).update({
+                    displayName: newName
+                }).then(() => {
+                    app.toast('✅ 名稱更新成功！');
+                    app.toggleEditName(); // 關閉編輯框
+                    // handleAuthUser 中的監聽器會自動更新 UI
+                }).catch(err => {
+                    console.error(err);
+                    app.toast('❌ 更新失敗，請稍後再試');
+                });
+            } else {
+                app.toast('❌ 請先登入 Google 帳號');
+            }
+        },
         // v4.1.5: 處理登出 (包含 Firebase 與 本地)
         logout: () => {
             if (app.state.user) {
