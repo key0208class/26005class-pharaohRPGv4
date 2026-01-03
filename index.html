@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.1.7 - 冒險模式版</title>
+    <title>神殿試煉 v4.1.8 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -170,6 +170,12 @@
         
         /* 5. 學生分數面板 */
         .student-score-pill { background: #fffbeb; border: 2px solid #fcd34d; color: #92400e; padding: 4px 12px; border-radius: 999px; font-weight: bold; font-size: 0.9rem; display: inline-flex; items-center; gap: 4px; box-shadow: 0 2px 0 rgba(217,119,6,0.2); }
+		/* v4.1.8 管理員分頁樣式 */
+        .admin-tab-btn { padding: 0.5rem 1rem; font-weight: bold; color: #64748b; border-bottom: 3px solid transparent; transition: all 0.3s; }
+        .admin-tab-btn:hover { color: #d97706; background-color: #fffbeb; border-radius: 0.5rem 0.5rem 0 0; }
+        .admin-tab-active { color: #b45309; border-bottom-color: #b45309; }
+        .admin-tab-content { display: none; animation: fadeIn 0.3s ease-out; }
+        .admin-tab-content.active { display: block; }
 		/* v3.0.9 新增：通關畫面與排行榜 */
         .game-over-modal-content {
             background: linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%);
@@ -195,7 +201,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.1.7 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.1.8 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -297,81 +303,106 @@
             </div>
         </div>
 
-        <div id="admin-settings-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
-             <div class="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 shadow-2xl border-4 border-b-8 border-slate-700 animate-[fadeIn_0.3s_ease-out] max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-6 border-b pb-4">
+        <di<div id="admin-settings-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
+             <div class="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 shadow-2xl border-4 border-b-8 border-slate-700 animate-[fadeIn_0.3s_ease-out] max-h-[90vh] overflow-y-auto flex flex-col">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
                     <h3 class="text-2xl font-black text-slate-900">⚙️ 全域遊戲設定</h3>
                     <button onclick="app.el('admin-settings-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
                 </div>
+
+                <div class="flex border-b border-slate-200 mb-4">
+                    <button onclick="app.switchAdminTab('flow')" id="tab-btn-flow" class="admin-tab-btn admin-tab-active flex-1">🎮 遊戲流程</button>
+                    <button onclick="app.switchAdminTab('items')" id="tab-btn-items" class="admin-tab-btn flex-1">🎁 道具發放</button>
+                </div>
                 
-                <div class="space-y-6">
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">🎲 自動擲骰系統</h4>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">預設開啟自動擲骰 (各房主可手動關閉)</span>
-                            <label class="switch">
-                                <input type="checkbox" id="admin-auto-roll" checked>
-                                <span class="slider"></span>
-                            </label>
+                <div class="space-y-6 flex-1 overflow-y-auto pr-1 custom-scrollbar">
+                    
+                    <div id="tab-content-flow" class="admin-tab-content active space-y-4">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">🎲 自動擲骰系統</h4>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">預設開啟自動擲骰 (各房主可手動關閉)</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-auto-roll" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                            <h4 class="font-bold text-amber-800 mb-3 flex items-center gap-2">♾️ 無盡戰鬥模式 (v4.1.8)</h4>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-sm text-amber-900 font-bold">開啟循環牌庫</div>
+                                    <div class="text-xs text-amber-700">牌庫用盡時自動洗牌重補，遊戲永不結束，適合打王戰。</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-endless-mode">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="bg-red-50 p-4 rounded-xl border border-red-200">
+                             <h4 class="font-bold text-red-800 mb-3">🗑️ 數據清理</h4>
+                             <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-gray-600">閒置 60 分鐘自動清空</span>
+                                 <label class="switch">
+                                    <input type="checkbox" checked disabled>
+                                    <span class="slider"></span>
+                                </label>
+                             </div>
+                             <button onclick="app.clearAllRooms()" class="w-full border-2 border-red-300 text-red-600 font-bold py-2 rounded-lg hover:bg-red-100 transition-colors">⚠️ 強制清空所有房間數據</button>
                         </div>
                     </div>
 
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">🎁 自動道具分配排程 (GM)</h4>
-                        
-                        <div class="flex justify-between items-center mb-4 bg-white p-2 rounded-lg border">
-                            <span class="text-sm font-bold text-slate-700">啟用自動發放</span>
-                            <label class="switch">
-                                <input type="checkbox" id="admin-ag-enable">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-2 mb-4">
-                             <div>
-                                <label class="block text-xs font-bold text-gray-500 mb-1">間隔回合</label>
-                                <input type="number" id="admin-ag-interval" value="3" class="w-full border-2 border-slate-300 rounded-lg p-2 text-center font-bold">
+                    <div id="tab-content-items" class="admin-tab-content space-y-4">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">🎁 自動道具分配排程 (GM)</h4>
+                            
+                            <div class="flex justify-between items-center mb-4 bg-white p-2 rounded-lg border">
+                                <span class="text-sm font-bold text-slate-700">啟用自動發放</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="admin-ag-enable">
+                                    <span class="slider"></span>
+                                </label>
                             </div>
+
+                            <div class="grid grid-cols-3 gap-2 mb-4">
+                                 <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">間隔回合</label>
+                                    <input type="number" id="admin-ag-interval" value="3" class="w-full border-2 border-slate-300 rounded-lg p-2 text-center font-bold">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">給倒數幾名?</label>
+                                    <input type="number" id="admin-ag-target" value="2" class="w-full border-2 border-slate-300 rounded-lg p-2 text-center font-bold">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">每人幾個?</label>
+                                    <input type="number" id="admin-ag-count" value="1" class="w-full border-2 border-slate-300 rounded-lg p-2 text-center font-bold">
+                                </div>
+                            </div>
+
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 mb-1">給倒數幾名?</label>
-                                <input type="number" id="admin-ag-target" value="2" class="w-full border-2 border-slate-300 rounded-lg p-2 text-center font-bold">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 mb-1">每人幾個?</label>
-                                <input type="number" id="admin-ag-count" value="1" class="w-full border-2 border-slate-300 rounded-lg p-2 text-center font-bold">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-2">允許發放的道具 (GM指定)</label>
-                            <div class="grid grid-cols-2 gap-2 text-xs text-slate-700 bg-white p-2 rounded-lg border border-slate-200">
-                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="hint" checked> 📜 提示</label>
-                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="double" checked> 🦂 聖甲蟲</label>
-                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="nile" checked> 🌊 尼羅河</label>
-                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="horus"> 👁️ 荷魯斯</label>
-                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="time"> ⏳ 時之沙</label>
-                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="seal"> 🔒 封印</label>
-                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="anubis"> ⚖️ 阿努比斯</label>
-                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="shard" checked> 🕒 碎片</label>
-                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="mummy"> 👻 木乃伊</label>
+                                <label class="block text-xs font-bold text-gray-500 mb-2">允許發放的道具 (GM指定)</label>
+                                <div class="grid grid-cols-2 gap-2 text-xs text-slate-700 bg-white p-2 rounded-lg border border-slate-200">
+                                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="hint" checked> 📜 提示</label>
+                                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="double" checked> 🦂 聖甲蟲</label>
+                                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="nile" checked> 🌊 尼羅河</label>
+                                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="horus"> 👁️ 荷魯斯</label>
+                                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="time"> ⏳ 時之沙</label>
+                                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="seal"> 🔒 封印</label>
+                                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="anubis"> ⚖️ 阿努比斯</label>
+                                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="shard" checked> 🕒 碎片</label>
+                                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="mummy"> 👻 木乃伊</label>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-red-50 p-4 rounded-xl border border-red-200">
-                         <h4 class="font-bold text-red-800 mb-3">🗑️ 數據清理</h4>
-                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm text-gray-600">閒置 60 分鐘自動清空</span>
-                             <label class="switch">
-                                <input type="checkbox" checked disabled>
-                                <span class="slider"></span>
-                            </label>
-                         </div>
-                         <button onclick="app.clearAllRooms()" class="w-full border-2 border-red-300 text-red-600 font-bold py-2 rounded-lg hover:bg-red-100 transition-colors">⚠️ 強制清空所有房間數據</button>
-                    </div>
                 </div>
 
-                <div class="mt-6 pt-4 border-t border-gray-100">
+                <div class="mt-4 pt-4 border-t border-gray-100">
                     <button onclick="app.saveAdminSettings()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-slate-900 active:scale-95 transition-transform">💾 儲存全域設定</button>
                 </div>
              </div>
@@ -954,7 +985,8 @@
                 pyramid: initialData.pyramid,
                 decks: initialData.decks,
                 lastActive: firebase.database.ServerValue.TIMESTAMP, // 用於判斷活躍
-                autoRoll: app.el('admin-auto-roll').checked // 繼承管理員設定
+                autoRoll: app.el('admin-auto-roll').checked, // 繼承管理員設定
+				endlessMode: app.el('admin-endless-mode').checked // [v4.1.8] 新增此行
             }).then(() => {
                 // 加入自己為玩家
                 db.ref(`classes/${roomId}/players/team1/${name}`).set({
@@ -1046,20 +1078,48 @@
                 app.toast('❌ 密碼錯誤');
             }
         },
+// v4.1.8: 管理員分頁切換
+        switchAdminTab: (tabName) => {
+            // 隱藏所有內容
+            document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('admin-tab-active'));
+            
+            // 顯示目標內容
+            app.el(`tab-content-${tabName}`).classList.add('active');
+            app.el(`tab-btn-${tabName}`).classList.add('admin-tab-active');
+        },
 
-       // 將資料庫設定填回管理員介面
+        // v4.1.8: 無盡模式 - 指定顏色牌庫回填 (過濾掉場上已有的牌)
+        refillSpecificDeck: (color) => {
+            // 1. 產生該顏色的完整新牌組
+            const fullDecks = app.createFullDeck();
+            const freshCards = fullDecks[color];
+            
+            // 2. 找出目前金字塔上「已經存在」的該色牌 (避免場上出現兩張一樣的牌)
+            const currentOnBoardNumbers = (app.state.gameData.pyramid || [])
+                .filter(c => c && c.color === color && !c.isTaken)
+                .map(c => c.number);
+
+            // 3. 過濾掉場上的牌，剩下的都放入牌庫
+            const newDeck = freshCards.filter(c => !currentOnBoardNumbers.includes(c.number));
+            
+            // 4. 洗牌並回填
+            app.state.gameData.decks[color] = app.shuffle(newDeck);
+            console.log(`♾️ [Endless] Refilled ${color} deck with ${newDeck.length} cards.`);
+        },
+       // 將資料庫設定填回管理員介面 (v4.1.8 更新：加入無盡模式)
         fetchGlobalSettingsToUI: () => {
             db.ref('global_settings').once('value', snapshot => {
                 const settings = snapshot.val() || {};
-                app.el('admin-auto-roll').checked = settings.autoRollDefault !== false; // 預設 true
+                app.el('admin-auto-roll').checked = settings.autoRollDefault !== false; 
+                app.el('admin-endless-mode').checked = settings.endlessMode || false; // v4.1.8
                 
                 const ag = settings.autoGrant || {};
-                app.el('admin-ag-enable').checked = ag.enabled || false; // 讀取啟用狀態
+                app.el('admin-ag-enable').checked = ag.enabled || false;
                 app.el('admin-ag-interval').value = ag.interval || 3;
                 app.el('admin-ag-target').value = ag.targetCount || 2;
                 app.el('admin-ag-count').value = ag.itemCount || 1;
 
-                // 讀取允許的道具
                 const allowed = ag.allowedTypes || ['hint', 'double', 'nile', 'shard'];
                 document.querySelectorAll('.admin-ag-item-check').forEach(chk => {
                     chk.checked = allowed.includes(chk.value);
@@ -1080,6 +1140,7 @@
 
             const settings = {
                 autoRollDefault: app.el('admin-auto-roll').checked,
+                endlessMode: app.el('admin-endless-mode').checked, // v4.1.8 儲存無盡模式設定
                 autoGrant: {
                     enabled: app.el('admin-ag-enable').checked,
                     interval: parseInt(app.el('admin-ag-interval').value) || 3,
@@ -1091,9 +1152,15 @@
             };
 
             db.ref('global_settings').set(settings).then(() => {
-                app.state.globalSettings = settings; // 更新本地狀態
+                app.state.globalSettings = settings; 
                 app.el('admin-settings-modal').classList.add('hidden');
-                app.toast('💾 GM全域設定已儲存 (所有新局生效)');
+                
+                // 若開啟無盡模式，即時更新當前房間設定 (選擇性)
+                if (app.state.isHost) {
+                     db.ref(`classes/${app.state.classId}/endlessMode`).set(settings.endlessMode);
+                }
+
+                app.toast('💾 GM全域設定已儲存 (無盡模式: ' + (settings.endlessMode ? '開' : '關') + ')');
             });
         },
         
@@ -2038,19 +2105,23 @@
              const gameData = app.state.gameData;
              if (!gameData || !gameData.decks) return;
 
+             // v4.1.8: 讀取房間的無盡模式設定 (若無則預設為 false)
+             const isEndless = gameData.endlessMode === true;
+
              const newPyramid = [...(gameData.pyramid || [])];
+             // 注意：因為要修改 decks，這裡我們直接參照 app.state.gameData.decks 進行操作，稍後會寫回 DB
+             // 但為了安全，先 parse/stringify 深拷貝
              const newDecks = JSON.parse(JSON.stringify(gameData.decks));
+             
              let hasRefilled = false;
              let cannotRefill = false;
+             let endlessRefilledMsg = "";
 
-             // v3.7.1 新增：處理木乃伊詛咒的倒數計時 (回合遞減)
+             // v3.7.1 木乃伊詛咒倒數
              newPyramid.forEach(card => {
                  if (card && !card.isTaken && card.curseData) {
                      card.curseData.roundsLeft -= 1;
-                     // 如果回合歸零，移除詛咒
-                     if (card.curseData.roundsLeft <= 0) {
-                         delete card.curseData;
-                     }
+                     if (card.curseData.roundsLeft <= 0) delete card.curseData;
                  }
              });
 
@@ -2061,11 +2132,31 @@
              ];
 
              slots.forEach(slot => {
+                 // 若該位置是空的，需要補牌
                  if (!newPyramid[slot.idx] || newPyramid[slot.idx].isTaken) {
+                     
+                     // 檢查牌庫是否夠用
+                     if (!newDecks[slot.color] || newDecks[slot.color].length === 0) {
+                         // [v4.1.8 無盡模式核心邏輯]
+                         if (isEndless) {
+                             // 呼叫回填函式 (這裡直接操作 newDecks)
+                             // 邏輯重寫：我們在本地模擬回填，以確保這次補牌能成功
+                             const fullDecks = app.createFullDeck();
+                             const freshCards = fullDecks[slot.color];
+                             const currentOnBoard = newPyramid.filter(c => c && c.color === slot.color && !c.isTaken).map(c => c.number);
+                             const refilledDeck = app.shuffle(freshCards.filter(c => !currentOnBoard.includes(c.number)));
+                             
+                             newDecks[slot.color] = refilledDeck;
+                             endlessRefilledMsg = `♾️ ${slot.color} 牌庫時光回溯！`;
+                         }
+                     }
+
+                     // 再次檢查 (如果剛剛有回填，現在應該有牌了)
                      if (newDecks[slot.color] && newDecks[slot.color].length > 0) {
                          newPyramid[slot.idx] = newDecks[slot.color].pop(); 
                          hasRefilled = true;
                      } else {
+                         // 真的沒牌了 (非無盡模式，或回填發生異常)
                          newPyramid[slot.idx] = null;
                          cannotRefill = true;
                      }
@@ -2077,21 +2168,24 @@
                  app.toast('🏁 牌庫耗盡，冒險結束！');
              } else {
                  const nextRound = (gameData.round || 1) + 1;
-                 db.ref(`classes/${app.state.classId}`).update({
+                 const updates = {
                      status: 'waiting',
                      dice: {d8:'-', d10:'-', d12:'-'},
                      timerActive: false,
                      pyramid: newPyramid,
                      decks: newDecks,
                      round: nextRound
-                 });
+                 };
+
+                 db.ref(`classes/${app.state.classId}`).update(updates);
                  
-                 // v4.0.3: 觸發自動發放檢查 (由房主執行)
+                 // 觸發自動發放
                  if(app.state.isHost) {
                      app.processAutoGrant(nextRound);
                  }
 
-                 app.toast(hasRefilled ? '已進入下一回合並補牌' : '已進入下一回合');
+                 if (endlessRefilledMsg) app.toast(endlessRefilledMsg);
+                 else app.toast(hasRefilled ? '已進入下一回合並補牌' : '已進入下一回合');
              }
         },
 
