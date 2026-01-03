@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.1.1 - 冒險模式版</title>
+    <title>神殿試煉 v4.1.4 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -146,11 +146,23 @@
         .deck-count-box { font-size: 1.1rem; padding: 0.5rem; }
         .deck-count-num { font-size: 1.5rem; font-weight: 900; margin-left: 4px; }
 
-        /* 3. 老師介面擴充 (三欄佈局) */
-        .teacher-panel-grid { display: grid; gap: 1rem; height: 100%; }
+       /* 3. 老師介面擴充 (三欄佈局) */
+        /* [v4.1.4] 加入 min-height 讓主控者可以看到更長的名單 */
+        .teacher-panel-grid { display: grid; gap: 1rem; height: 100%; min-height: 240px; /* [可修改] 調整此數值可拉長列表高度 */ }
         @media (min-width: 1024px) {
-            /* 在大螢幕下，左邊控制台，右邊排行榜 */
-            .teacher-panel-grid { grid-template-columns: 3fr 2fr; }
+            /* [可修改] 在大螢幕下，左邊(控制台) 2fr，右邊(冒險小隊) 3fr -> 若要更寬可改為 1.5fr 3.5fr */
+            .teacher-panel-grid { grid-template-columns: 2fr 3fr; }
+        }
+        
+        /* [新增] 冒險小隊列表容器樣式 - 控制顯示高度 */
+        /* height: 200px 大約是可以顯示 3 人的高度，超過會出現卷軸 */
+        .squad-board-container { 
+            height: 170px; 
+            overflow-y: auto;
+            overflow-x: hidden; /* [v4.1.4] 強制隱藏橫向捲軸 */
+            background-color: rgba(255, 255, 255, 0.5); 
+            border-radius: 0.75rem;
+            border: 1px solid #fcd34d;
         }
 
         /* 4. 小組詳情 Modal */
@@ -182,7 +194,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.1.1 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.1.4 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -356,9 +368,9 @@
                             
                             <div class="flex flex-col gap-2 h-full overflow-y-auto">
                                 <div class="flex justify-between items-center mb-2 border-b pb-2 flex-shrink-0">
-                                    <h3 class="text-xl font-bold text-amber-900">🧙 法老王試煉</h3>
+                                    <h3 class="text-1x1 font-bold text-amber-900">🏛️ 神殿試煉</h3>
                                     <div class="flex items-center gap-2 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
-                                        <span class="text-xs font-bold text-amber-900">🤖 自動擲骰</span>
+                                        <span class="text-1x1 font-bold text-amber-900">🤖 擲骰</span>
                                         <label class="switch scale-75">
                                             <input type="checkbox" id="auto-roll-toggle" onchange="app.toggleAutoRoll()">
                                             <span class="slider"></span>
@@ -385,6 +397,15 @@
 
                    <div id="panel-student" class="hidden flex flex-col h-full gap-3">
                         
+                        <div id="student-squad-section" class="bg-white/80 rounded-xl p-2 border-2 border-amber-400 shadow-sm w-full">
+                            <div class="flex justify-between items-center mb-1 border-b border-amber-200 pb-1">
+                                <span class="font-black text-amber-800 text-base">⚔️ 冒險小隊狀況</span>
+                                <span class="text-xs text-gray-500">道具持有中</span>
+                            </div>
+                            <div id="student-team-board" class="squad-board-container custom-scrollbar" style="height: 160px;">
+                                </div>
+                        </div>
+
                         <div id="student-inventory" class="hidden flex items-center justify-between bg-amber-100/50 p-2 rounded-lg border border-amber-200 mx-2">
                             <span class="text-1xl font-black text-amber-900 mr-4 flex items-center shadow-sm bg-amber-200 px-2 rounded-lg">🎒 背包</span>
                             <div id="inventory-list" class="flex gap-3 flex-1 justify-end"></div>
@@ -807,6 +828,10 @@
                 app.el('panel-teacher').classList.remove('hidden');
                 app.el('voice-toggle-btn').classList.remove('hidden'); // 修正：顯示語音按鈕
                 
+                // [v4.1.2 修正] 房主已有上方大看板，隱藏學生面板內的重複小隊區塊，避免擁擠
+                const studentSection = app.el('student-squad-section');
+                if (studentSection) studentSection.classList.add('hidden');
+
                 // 讀取全域設定來決定初始自動擲骰狀態
                 db.ref('global_settings/autoRollDefault').once('value', snap => {
                     const defaultAuto = snap.val() !== false; // 預設 true
@@ -1138,11 +1163,10 @@
             }
         },
 
-        // v4.0.2: 修正後的計分與顯示邏輯 (單一小隊模式) - v4.0.8 修正 GM 發道具依賴
+       // v4.1.2: 修正後的計分與顯示邏輯 (支援老師與學生雙介面、道具顯示、人物頭像)
         calculateAndRenderScores: (players) => {
             if (!players) return;
 
-            // v4.0.8: 重建 latestTeamStats 以支援道具發放邏輯
             app.state.latestTeamStats = {};
 
             let allPlayers = [];
@@ -1150,7 +1174,6 @@
 
             Object.keys(players).forEach(teamKey => {
                 const membersObj = players[teamKey];
-                // 初始化隊伍統計結構
                 if (!app.state.latestTeamStats[teamKey]) {
                     app.state.latestTeamStats[teamKey] = {
                         name: app.getTeamName(teamKey),
@@ -1165,7 +1188,6 @@
                         allPlayers.push({...p, team: teamKey});
                         totalTeamScore += (p.score || 0);
                         
-                        // v4.0.8: 填充隊伍統計資料
                         app.state.latestTeamStats[teamKey].score += (p.score || 0);
                         app.state.latestTeamStats[teamKey].count++;
                         app.state.latestTeamStats[teamKey].members.push(p);
@@ -1181,28 +1203,69 @@
                 if (myScore > currentHigh) localStorage.setItem('pharaoh_high_score', myScore);
             }
 
-            // 更新主控者面板 (v4.0.6: 整合總分與列表)
-            const teacherBoard = app.el('teacher-personal-board');
-            if (teacherBoard) { 
-                allPlayers.sort((a, b) => b.score - a.score);
-                
-                // 標題列：顯示冒險隊總分 (使用無空白節點寫法)
-                let finalHtml = `<div class="sticky top-0 bg-white border-b border-amber-200 pb-2 mb-2 z-10 flex justify-between items-center"><span class="font-black text-amber-800 text-lg">🛡️ 冒險隊分數</span><span class="bg-amber-100 text-amber-900 px-3 py-1 rounded-full font-black text-xl border border-amber-300 shadow-sm">${totalTeamScore}</span></div>`;
+            // v4.1.2 修改：不進行分數排序 (allPlayers.sort 被移除)，保持列表穩定
+            // 若想要稍微有點順序，可以依名字排序： allPlayers.sort((a, b) => a.name.localeCompare(b.name));
 
+            // 共用渲染邏輯：產生無空白節點的 HTML 字串
+            const generateBoardHtml = (isCompact) => {
+                // 角色頭像庫 (依序循環使用)
+                const avatars = ['💂','👸','🧙','🧝','🧛','🧚','🧞','🧜','🧟','🕵️'];
+                
+                let listHtml = '';
+                
                 if (allPlayers.length === 0) {
-                    finalHtml += `<div class="text-center text-gray-400 py-4 text-xs">等待冒險者加入...</div>`;
+                    listHtml = `<div class="text-center text-gray-400 py-4 text-xs">等待冒險者加入...</div>`;
                 } else {
                     allPlayers.forEach((p, index) => {
-                        const rankIcon = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `<span class="inline-block w-5 text-center text-gray-400 font-bold">${index+1}.</span>`));
-                        const highlight = (p.name === app.state.myName) ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-100';
-                        // 列表項目 (無空白節點)
-                        finalHtml += `<div class="flex justify-between items-center p-2 ${highlight} rounded-lg border mb-1 shadow-sm"><div class="truncate mr-2 flex items-center gap-2">${rankIcon}<span class="font-bold text-slate-700">${p.name}</span></div><div class="font-bold text-amber-700 flex-shrink-0">${p.score}</div></div>`;
+                        // 1. 決定頭像 (使用 index 循環取用)
+                        const avatar = avatars[index % avatars.length];
+                        
+                        // 2. 判斷是否為自己
+                        const isMe = (p.name === app.state.myName);
+                        const highlightClass = isMe ? 'bg-amber-100 border-amber-300' : 'bg-white border-slate-100';
+                        const nameClass = isMe ? 'text-amber-900' : 'text-slate-700';
+
+                        // 3. 生成道具圖示字串 (無空白)
+                        let itemsBadge = '';
+                        if (p.items) {
+                            if (p.items.hint > 0) itemsBadge += '📜'; 
+                            if (p.items.double > 0) itemsBadge += '🦂';
+                            if (p.items.horus > 0) itemsBadge += '👁️'; 
+                            if (p.items.nile > 0) itemsBadge += '🌊';
+                            if (p.items.time > 0) itemsBadge += '⏳'; 
+                            if (p.items.shard > 0) itemsBadge += '🕒';
+                            if (p.items.seal > 0) itemsBadge += '🔒'; 
+                            if (p.items.anubis > 0) itemsBadge += '⚖️';
+                            if (p.items.mummy > 0) itemsBadge += '👻';
+                        }
+                        // 若無道具顯示空位，保持排版 (可選)
+                        // if(itemsBadge === '') itemsBadge = '<span class="opacity-0">.</span>';
+
+                        // 4. 組合單行 HTML (嚴格無空白)
+                        listHtml += `<div class="flex justify-between items-center p-2 ${highlightClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01]"><div class="truncate mr-2 flex items-center gap-2 overflow-hidden"><span class="text-xl filter drop-shadow-sm grayscale-[0.2]">${avatar}</span><div class="flex flex-col"><span class="font-bold ${nameClass} text-sm leading-tight">${p.name}</span><span class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden">${itemsBadge}</span></div></div><div class="font-black text-amber-700 flex-shrink-0 text-lg">${p.score}</div></div>`;
                     });
                 }
-                
-                teacherBoard.innerHTML = finalHtml;
+                return listHtml;
+            };
+
+            // 渲染：老師端面板
+            const teacherBoard = app.el('teacher-personal-board');
+            if (teacherBoard) {
+                const content = generateBoardHtml(false);
+                // 加上總分標題列
+                const header = `<div class="sticky top-0 bg-white border-b border-amber-200 pb-2 mb-2 z-10 flex justify-between items-center"><span class="font-black text-amber-800 text-lg">⚔️ 冒險小隊</span><span class="bg-amber-100 text-amber-900 px-3 py-1 rounded-full font-black text-xl border border-amber-300 shadow-sm">${totalTeamScore}</span></div>`;
+                teacherBoard.innerHTML = header + content;
+            }
+
+            // 渲染：學生端面板 (v4.1.2 新增)
+            const studentBoard = app.el('student-team-board');
+            if (studentBoard) {
+                 // 學生端直接顯示列表內容即可，外框已在 HTML 定義
+                 studentBoard.innerHTML = generateBoardHtml(true);
             }
         },
+
+        // v3.3.3 新增：顯示學生戰況視窗
 
 // v3.3.3 新增：顯示學生戰況視窗
         // v4.0.4: 顯示學生戰況視窗 (全體排行榜模式)
