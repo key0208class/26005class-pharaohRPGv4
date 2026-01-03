@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.0.4 - 冒險模式版</title>
+    <title>神殿試煉 v4.0.7 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -182,7 +182,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.0.4 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.0.7 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -258,8 +258,17 @@
                     </div>
 
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">🎁 自動道具分配排程</h4>
-                        <div class="grid grid-cols-2 gap-4 mb-4">
+                        <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">🎁 自動道具分配排程 (GM)</h4>
+                        
+                        <div class="flex justify-between items-center mb-4 bg-white p-2 rounded-lg border">
+                            <span class="text-sm font-bold text-slate-700">啟用自動發放</span>
+                            <label class="switch">
+                                <input type="checkbox" id="admin-ag-enable">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 mb-4">
                              <div>
                                 <label class="block text-xs font-bold text-gray-500 mb-1">間隔回合</label>
                                 <input type="number" id="admin-ag-interval" value="3" class="w-full border-2 border-slate-300 rounded-lg p-2 text-center font-bold">
@@ -268,8 +277,26 @@
                                 <label class="block text-xs font-bold text-gray-500 mb-1">給倒數幾名?</label>
                                 <input type="number" id="admin-ag-target" value="2" class="w-full border-2 border-slate-300 rounded-lg p-2 text-center font-bold">
                             </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">每人幾個?</label>
+                                <input type="number" id="admin-ag-count" value="1" class="w-full border-2 border-slate-300 rounded-lg p-2 text-center font-bold">
+                            </div>
                         </div>
-                        <button class="w-full bg-slate-200 text-slate-600 font-bold py-2 rounded-lg text-sm mb-2 hover:bg-slate-300">進階道具權重設定</button>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-2">允許發放的道具 (GM指定)</label>
+                            <div class="grid grid-cols-2 gap-2 text-xs text-slate-700 bg-white p-2 rounded-lg border border-slate-200">
+                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="hint" checked> 📜 提示</label>
+                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="double" checked> 🦂 聖甲蟲</label>
+                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="nile" checked> 🌊 尼羅河</label>
+                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="horus"> 👁️ 荷魯斯</label>
+                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="time"> ⏳ 時之沙</label>
+                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="seal"> 🔒 封印</label>
+                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="anubis"> ⚖️ 阿努比斯</label>
+                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="shard" checked> 🕒 碎片</label>
+                                <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="admin-ag-item-check" value="mummy"> 👻 木乃伊</label>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="bg-red-50 p-4 rounded-xl border border-red-200">
@@ -324,51 +351,35 @@
 
                <div class="tablet-right flex flex-col h-full">
                     
-                    <div id="panel-teacher" class="hidden bg-white rounded-2xl p-4 shadow-lg border-2 border-amber-600 h-full overflow-hidden">
+                   <div id="panel-teacher" class="hidden bg-white rounded-2xl p-4 shadow-lg border-2 border-amber-600 h-full overflow-hidden">
                         <div class="teacher-panel-grid h-full">
-                            <div class="flex flex-col h-full overflow-y-auto pr-1">
-                                <h3 class="text-xl font-bold text-amber-900 mb-4 border-b pb-2 sticky top-0 bg-white z-10">🧙 法老王試煉</h3>
+                            
+                            <div class="flex flex-col gap-2 h-full overflow-y-auto">
+                                <div class="flex justify-between items-center mb-2 border-b pb-2 flex-shrink-0">
+                                    <h3 class="text-xl font-bold text-amber-900">🧙 法老王試煉</h3>
+                                    <div class="flex items-center gap-2 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+                                        <span class="text-xs font-bold text-amber-900">🤖 自動擲骰</span>
+                                        <label class="switch scale-75">
+                                            <input type="checkbox" id="auto-roll-toggle" onchange="app.toggleAutoRoll()">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3 mb-2 flex-shrink-0">
+                                    <button id="btn-roll" onclick="app.teacherRollDice()" class="col-span-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white py-4 rounded-xl font-bold text-2xl shadow hover:scale-105 transition-transform active:scale-95">🎲 擲骰子</button>
+                                    <button onclick="app.forceNextRound()" class="bg-slate-600 text-white py-3 rounded-xl font-bold shadow hover:bg-slate-700 text-base active:scale-95">下一局</button>
+                                    <button onclick="app.triggerEndGame()" class="bg-red-700 text-white py-3 rounded-xl font-bold shadow hover:bg-red-800 text-base active:scale-95">🏁 冒險結束</button>
+                                </div>
                                 
-                                <div class="mb-4 p-3 bg-amber-50 rounded-xl border border-amber-200">
-                                    <div class="flex justify-between items-center mb-2 px-1">
-                                        <span class="text-xs font-bold text-amber-800 uppercase tracking-wider">Current Dice</span>
-                                        <div class="flex items-center gap-2" title="開啟後，語音播報完畢將自動擲骰">
-                                            <span class="text-xs font-bold text-amber-900">🤖 自動擲骰</span>
-                                            <label class="switch">
-                                                <input type="checkbox" id="auto-roll-toggle" onchange="app.toggleAutoRoll()">
-                                                <span class="slider"></span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="flex justify-center gap-2">
-                                        <div id="t-dice-8" class="w-14 h-14 bg-white border-2 border-amber-400 rounded-lg flex items-center justify-center text-2xl font-black shadow">-</div>
-                                        <div id="t-dice-10" class="w-14 h-14 bg-white border-2 border-amber-400 rounded-lg flex items-center justify-center text-2xl font-black shadow">-</div>
-                                        <div id="t-dice-12" class="w-14 h-14 bg-white border-2 border-amber-400 rounded-lg flex items-center justify-center text-2xl font-black shadow">-</div>
-                                    </div>
-                                </div>
+                                
+                            </div>
 
-                                <div class="grid grid-cols-2 gap-3 mb-4">
-                                    <button id="btn-roll" onclick="app.teacherRollDice()" class="col-span-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white py-3 rounded-xl font-bold text-lg shadow hover:scale-105 transition-transform">🎲 擲骰子</button>
-                                    <button onclick="app.teacherGetHint()" class="bg-indigo-600 text-white py-2 rounded-xl font-bold shadow hover:bg-indigo-700 text-sm">🔮 提示</button>
-                                    <button onclick="app.forceNextRound()" class="bg-slate-600 text-white py-2 rounded-xl font-bold shadow hover:bg-slate-700 text-sm">下一局</button>
-                                    <button onclick="app.openAutoGrantModal()" class="col-span-2 bg-teal-600 text-white py-2 rounded-xl font-bold shadow hover:bg-teal-700 text-sm flex items-center justify-center gap-1">💫自動道具配置 <span id="ag-status-indicator" class="w-2 h-2 rounded-full bg-red-400"></span></button>
-                                    <button onclick="app.triggerEndGame()" class="col-span-2 bg-red-700 text-white py-2 rounded-xl font-bold shadow hover:bg-red-800 text-sm">🏁 冒險結束</button>
-                                </div>
-
-                                <div class="mt-2">
-                                    <h4 class="font-bold text-amber-800 mb-2 flex justify-between items-center">
-                                        <span>🚩 冒險隊得分</span>
-                                        <span class="text-xs text-gray-500 font-normal">(點擊隊名看詳情)</span>
-                                    </h4>
-                                    <div id="teacher-team-board" class="space-y-2 text-sm"></div>
+                            <div class="flex flex-col h-full overflow-hidden bg-amber-50/50 rounded-xl border border-amber-100 relative">
+                                <div id="teacher-personal-board" class="overflow-y-auto flex-1 p-2 space-y-1 custom-scrollbar absolute inset-0">
                                 </div>
                             </div>
 
-                            <div class="border-l pl-2 flex flex-col h-full overflow-hidden">
-                                <h3 class="text-lg font-bold text-amber-900 mb-2 border-b pb-2 sticky top-0 bg-white z-10">🏆 個人英雄榜</h3>
-                                <div id="teacher-personal-board" class="overflow-y-auto flex-1 pr-1 space-y-1 text-sm">
-                                    </div>
-                            </div>
                         </div>
                     </div>
 
@@ -377,12 +388,6 @@
                         <div id="student-inventory" class="hidden flex items-center justify-between bg-amber-100/50 p-2 rounded-lg border border-amber-200 mx-2">
                             <span class="text-xs font-bold text-amber-800 mr-2">🎒 背包:</span>
                             <div id="inventory-list" class="flex gap-3 flex-1 justify-end"></div>
-                        </div>
-
-                        <div class="flex flex-col md:flex-row gap-2 px-2 mb-2 items-stretch">
-                            <div id="student-my-score-pill" class="student-score-pill w-full md:w-auto justify-center flex-1">👤 載入中...</div>
-                            <div id="student-team-score-pill" class="student-score-pill w-full md:w-auto justify-center flex-1">🚩 載入中...</div>
-                            <button onclick="app.showStudentStats()" class="bg-amber-600 text-white px-3 py-1 rounded-full font-bold shadow hover:bg-amber-700 active:scale-95 transition-all text-sm w-full md:w-auto border-2 border-amber-700">📊 戰況</button>
                         </div>
 
                         <div class="bg-white rounded-xl p-4 shadow border-2 border-amber-300">
@@ -831,27 +836,45 @@
             }
         },
 
-        // 將資料庫設定填回管理員介面
+       // 將資料庫設定填回管理員介面
         fetchGlobalSettingsToUI: () => {
             db.ref('global_settings').once('value', snapshot => {
                 const settings = snapshot.val() || {};
                 app.el('admin-auto-roll').checked = settings.autoRollDefault !== false; // 預設 true
                 
                 const ag = settings.autoGrant || {};
+                app.el('admin-ag-enable').checked = ag.enabled || false; // 讀取啟用狀態
                 app.el('admin-ag-interval').value = ag.interval || 3;
                 app.el('admin-ag-target').value = ag.targetCount || 2;
+                app.el('admin-ag-count').value = ag.itemCount || 1;
+
+                // 讀取允許的道具
+                const allowed = ag.allowedTypes || ['hint', 'double', 'nile', 'shard'];
+                document.querySelectorAll('.admin-ag-item-check').forEach(chk => {
+                    chk.checked = allowed.includes(chk.value);
+                });
             });
         },
 
         saveAdminSettings: () => {
+            // 收集允許的道具類型
+            const allowedTypes = [];
+            document.querySelectorAll('.admin-ag-item-check:checked').forEach(chk => {
+                allowedTypes.push(chk.value);
+            });
+
+            if (app.el('admin-ag-enable').checked && allowedTypes.length === 0) {
+                return app.toast('⚠️ 開啟自動發放時，至少要勾選一種道具！');
+            }
+
             const settings = {
                 autoRollDefault: app.el('admin-auto-roll').checked,
                 autoGrant: {
-                    enabled: true, // 管理員設定的一律視為啟用，由參數控制
+                    enabled: app.el('admin-ag-enable').checked,
                     interval: parseInt(app.el('admin-ag-interval').value) || 3,
                     targetCount: parseInt(app.el('admin-ag-target').value) || 2,
-                    itemCount: 1, // 預設給 1 個
-                    allowedTypes: ['hint', 'double', 'nile', 'time', 'shard', 'seal', 'anubis', 'horus', 'mummy']
+                    itemCount: parseInt(app.el('admin-ag-count').value) || 1,
+                    allowedTypes: allowedTypes
                 },
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             };
@@ -859,7 +882,7 @@
             db.ref('global_settings').set(settings).then(() => {
                 app.state.globalSettings = settings; // 更新本地狀態
                 app.el('admin-settings-modal').classList.add('hidden');
-                app.toast('💾 全域設定已儲存，新房間將套用此規則');
+                app.toast('💾 GM全域設定已儲存 (所有新局生效)');
             });
         },
         
@@ -1085,60 +1108,47 @@
         calculateAndRenderScores: (players) => {
             if (!players) return;
 
-            // 統計所有玩家 (不分組別，統一視為冒險小隊)
             let allPlayers = [];
             let totalTeamScore = 0;
-            let totalMembers = 0;
 
-            // 遍歷所有組別資料 (雖然現在只用 team1，但保留遍歷以防舊數據)
             Object.keys(players).forEach(teamKey => {
                 const membersObj = players[teamKey];
                 if (membersObj) {
                     Object.values(membersObj).forEach(p => {
-                        allPlayers.push({...p, team: teamKey}); // 保留 teamKey 供內部邏輯使用
+                        allPlayers.push({...p, team: teamKey});
                         totalTeamScore += (p.score || 0);
-                        totalMembers++;
                     });
                 }
             });
 
-            // 學生端顯示優化: 顯示個人分數與團隊總分
+            // 更新本地高分紀錄
             if (app.state.myName) {
-                // 找出自己的分數
                 const myData = allPlayers.find(p => p.name === app.state.myName);
                 const myScore = myData ? (myData.score || 0) : 0;
-                
-                // 更新高分紀錄 (本地端)
                 const currentHigh = parseInt(localStorage.getItem('pharaoh_high_score') || '0');
-                if (myScore > currentHigh) {
-                    localStorage.setItem('pharaoh_high_score', myScore);
-                }
-
-                app.el('student-my-score-pill').textContent = `👤 ${app.state.myName}: ${myScore}分`;
-                app.el('student-team-score-pill').textContent = `🛡️ 冒險小隊總分: ${totalTeamScore}`;
+                if (myScore > currentHigh) localStorage.setItem('pharaoh_high_score', myScore);
             }
 
-            // 更新老師端(或房主)的排行榜面板
-            // 這裡我們把 "小組列表" 改造成 "玩家排行榜"
-            if (app.el('teacher-team-board')) { // 確保元素存在
+            // 更新主控者面板 (v4.0.6: 整合總分與列表)
+            const teacherBoard = app.el('teacher-personal-board');
+            if (teacherBoard) { 
                 allPlayers.sort((a, b) => b.score - a.score);
                 
-                // 上方顯示總分摘要
-                app.el('teacher-team-board').innerHTML = `<div class="p-3 bg-amber-100 rounded-lg border border-amber-300 text-center mb-2"><div class="text-sm text-amber-800 font-bold">冒險小隊總積分</div><div class="text-3xl font-black text-amber-900">${totalTeamScore}</div></div>`;
+                // 標題列：顯示冒險隊總分 (使用無空白節點寫法)
+                let finalHtml = `<div class="sticky top-0 bg-white border-b border-amber-200 pb-2 mb-2 z-10 flex justify-between items-center"><span class="font-black text-amber-800 text-lg">🛡️ 冒險隊分數</span><span class="bg-amber-100 text-amber-900 px-3 py-1 rounded-full font-black text-xl border border-amber-300 shadow-sm">${totalTeamScore}</span></div>`;
 
-                // 下方顯示個人排行榜
-                let personalHtml = '';
-                allPlayers.forEach((p, index) => {
-                    const rankIcon = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `<span class="inline-block w-5 text-center text-gray-400 font-bold">${index+1}.</span>`));
-                    const highlight = (p.name === app.state.myName) ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-100' : 'bg-white border-slate-100';
-                    
-                    personalHtml += `<div class="flex justify-between items-center p-2 ${highlight} rounded-lg border mb-1 shadow-sm"><div class="truncate mr-2 flex items-center gap-2">${rankIcon}<span class="font-bold text-slate-700">${p.name}</span></div><div class="font-bold text-amber-700 flex-shrink-0">${p.score}</div></div>`;
-                });
+                if (allPlayers.length === 0) {
+                    finalHtml += `<div class="text-center text-gray-400 py-4 text-xs">等待冒險者加入...</div>`;
+                } else {
+                    allPlayers.forEach((p, index) => {
+                        const rankIcon = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `<span class="inline-block w-5 text-center text-gray-400 font-bold">${index+1}.</span>`));
+                        const highlight = (p.name === app.state.myName) ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-100';
+                        // 列表項目 (無空白節點)
+                        finalHtml += `<div class="flex justify-between items-center p-2 ${highlight} rounded-lg border mb-1 shadow-sm"><div class="truncate mr-2 flex items-center gap-2">${rankIcon}<span class="font-bold text-slate-700">${p.name}</span></div><div class="font-bold text-amber-700 flex-shrink-0">${p.score}</div></div>`;
+                    });
+                }
                 
-                if(allPlayers.length === 0) personalHtml = '<div class="text-center text-gray-400 py-4 text-xs">等待冒險者加入...</div>';
-                
-                // 將個人榜單渲染到原本的 "teacher-personal-board" 位置
-                app.el('teacher-personal-board').innerHTML = personalHtml;
+                teacherBoard.innerHTML = finalHtml;
             }
         },
 
@@ -1370,9 +1380,10 @@
         },
 
         updateDiceUI: (dice) => {
+            // v4.0.6: 只更新輸入面板的骰子按鈕，主控者介面已移除視覺骰子
             ['d8', 'd10', 'd12'].forEach(k => {
-                app.el(`t-dice-${k.slice(1)}`).textContent = dice[k];
-                app.el(`s-dice-${k.slice(1)}`).textContent = dice[k];
+                const sEl = app.el(`s-dice-${k.slice(1)}`);
+                if(sEl) sEl.textContent = dice[k];
             });
             app.state.dice = dice;
         },
@@ -2441,18 +2452,19 @@
             app.toast(enabled ? `✅ 自動平衡機制已啟動 (每${interval}局)` : '🛑 自動平衡機制已關閉');
         },
 
-        // v4.0.3: 自動道具分配 (依據全域設定)
+       // v4.0.5: 自動道具分配 (GM全域設定版)
         processAutoGrant: (round) => {
             // 只有房主負責執行分配，避免重複發送
             if (!app.state.isHost) return;
 
-            // 優先讀取全域設定，若無則使用預設值
-            const globalCfg = app.state.globalSettings?.autoGrant || { 
-                enabled: true, interval: 3, targetCount: 2, itemCount: 1, 
-                allowedTypes: ['hint', 'double', 'nile', 'time', 'shard', 'seal', 'anubis', 'horus', 'mummy']
-            };
+            // 讀取全域設定 (若無則預設不啟用，避免干擾)
+            const globalCfg = app.state.globalSettings?.autoGrant;
+            
+            // 1. 檢查是否啟用
+            if (!globalCfg || !globalCfg.enabled) return;
 
-            // 檢查回合數 (排除第1回合)
+            // 2. 檢查回合數 (排除第1回合，符合間隔才發)
+            // 例如 interval=3，則在 round 4 (3+1), 7 (6+1), 10... 發放
             if (round <= 1 || (round - 1) % globalCfg.interval !== 0) return;
 
             // 開始計算分數與排名
