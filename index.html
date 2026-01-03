@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.1.6 - 冒險模式版</title>
+    <title>神殿試煉 v4.1.7 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -195,7 +195,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.1.6 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.1.7 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -410,7 +410,7 @@
 
                <div class="tablet-right flex flex-col h-full">
                     
-                   <div id="panel-teacher" class="hidden bg-white rounded-2xl p-4 shadow-lg border-2 border-amber-600 h-full overflow-hidden">
+                   <div id="panel-teacher" class="hidden bg-white rounded-2xl p-4 shadow-lg border-2 border-amber-600 flex-shrink-0 overflow-hidden max-h-[40vh] transition-all">
                         <div class="teacher-panel-grid h-full">
                             
                             <div class="flex flex-col gap-2 h-full overflow-y-auto">
@@ -483,12 +483,10 @@
                             <button id="btn-op-mul" onclick="app.inputChar('×')" class="cursor-control-btn bg-indigo-100 text-indigo-900 rounded-lg font-bold text-2xl shadow border-b-4 border-indigo-200 transition-colors duration-300">×</button>
                             <button id="btn-op-div" onclick="app.inputChar('÷')" class="cursor-control-btn bg-indigo-100 text-indigo-900 rounded-lg font-bold text-2xl shadow border-b-4 border-indigo-200 transition-colors duration-300">÷</button>
                             
-                            <button onclick="app.inputChar('(')" class="cursor-control-btn bg-indigo-50 text-indigo-800 rounded-lg font-bold text-xl shadow border-b-4 border-indigo-200 col-span-2">(</button>
-                            <button onclick="app.inputChar(')')" class="cursor-control-btn bg-indigo-50 text-indigo-800 rounded-lg font-bold text-xl shadow border-b-4 border-indigo-200 col-span-2">)</button>
-
-                            <button onclick="app.moveCursor(-1)" class="cursor-control-btn bg-amber-200 text-amber-900 rounded-lg font-black text-2xl shadow border-b-4 border-amber-300 col-span-2 active:bg-amber-300">⬅️</button>
-                            <button onclick="app.moveCursor(1)" class="cursor-control-btn bg-amber-200 text-amber-900 rounded-lg font-black text-2xl shadow border-b-4 border-amber-300 col-span-2 active:bg-amber-300">➡️</button>
-
+                            <button onclick="app.inputChar('(')" class="cursor-control-btn bg-indigo-50 text-indigo-800 rounded-lg font-bold text-xl shadow border-b-4 border-indigo-200 active:scale-95">(</button>
+                            <button onclick="app.inputChar(')')" class="cursor-control-btn bg-indigo-50 text-indigo-800 rounded-lg font-bold text-xl shadow border-b-4 border-indigo-200 active:scale-95">)</button>
+                            <button onclick="app.moveCursor(-1)" class="cursor-control-btn bg-amber-200 text-amber-900 rounded-lg font-black text-2xl shadow border-b-4 border-amber-300 active:scale-95 active:bg-amber-300">⬅️</button>
+                            <button onclick="app.moveCursor(1)" class="cursor-control-btn bg-amber-200 text-amber-900 rounded-lg font-black text-2xl shadow border-b-4 border-amber-300 active:scale-95 active:bg-amber-300">➡️</button>
                             <button onclick="app.submitAnswer()" id="btn-submit" class="col-span-4 bg-green-600 text-white rounded-xl font-bold text-xl shadow-lg border-b-4 border-green-800 active:scale-95 active:border-b-0 transition-all mt-2 py-3 disabled:opacity-50 disabled:grayscale">✨ 驗證答案</button>
                         </div>
                     </div>
@@ -2692,11 +2690,13 @@
         },
 
         // v3.3.1 新增：渲染荷魯斯之眼按鈕 (1, 2, 3)
+        // [v4.1.7 修改] 渲染荷魯斯之眼按鈕 (緊湊版 1, 2, 3)
         renderHorusButtons: () => {
             const area = app.el('horus-input-area');
             if (app.state.activeItem === 'horus') {
-                // 綠色底色，粗黑字體
-                const btnClass = "cursor-control-btn bg-green-400 hover:bg-green-500 text-black border-b-4 border-green-700 active:border-b-0 active:translate-y-1 rounded-lg font-black text-2xl shadow py-2 transition-all";
+                // 綠色底色，調整高度與字體大小以節省空間
+                const btnClass = "cursor-control-btn bg-green-400 hover:bg-green-500 text-black border-b-4 border-green-700 active:border-b-0 active:translate-y-1 rounded-lg font-black text-lg shadow h-10 flex items-center justify-center transition-all";
+                // 使用無空白節點寫法
                 area.innerHTML = `<button onclick="app.inputChar('1')" class="${btnClass}">1</button><button onclick="app.inputChar('2')" class="${btnClass}">2</button><button onclick="app.inputChar('3')" class="${btnClass}">3</button>`;
                 area.classList.remove('hidden');
             } else {
