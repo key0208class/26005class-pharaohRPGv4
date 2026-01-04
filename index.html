@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.2.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.1.9 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -201,7 +201,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.2.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.1.9 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -415,7 +415,7 @@
                 </div>
                 <div class="flex items-center gap-3 mt-2 md:mt-0">
                     <button id="voice-toggle-btn" class="hidden bg-gray-200 px-3 py-1 rounded-full text-sm font-bold" onclick="app.toggleVoice()">🔊 語音開</button>
-                    <button class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-bold border border-red-200" onclick="app.leaveRoom()">🚪 返回大廳</button>
+                    <button class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-bold border border-red-200" onclick="app.logout()">🚪 登出</button>
                 </div>
             </div>
 
@@ -706,9 +706,14 @@
 
         el: (id) => document.getElementById(id),
 
-        // v4.1.5: Google 登入邏輯
+        // v4.1.5: Google 登入邏輯 (修正版：強制顯示帳號選擇)
         loginGoogle: () => {
             const provider = new firebase.auth.GoogleAuthProvider();
+            // ✨ 關鍵修改：強制 Google 每次都跳出「選擇帳號」視窗
+            provider.setCustomParameters({
+                prompt: 'select_account'
+            });
+            
             auth.signInWithPopup(provider)
                 .then((result) => {
                     app.toast(`🎉 歡迎回來，${result.user.displayName}`);
@@ -798,73 +803,26 @@
                 app.toast('❌ 請先登入 Google 帳號');
             }
         },
-        // v4.2.0: 修正 Google 登出邏輯 (強制清除狀態並重新載入)
-        // v4.2.0: 離開房間功能（從遊戲返回大廳）
-        leaveRoom: () => {
-            if (!confirm('🚪 確定要離開房間返回大廳嗎？\n\n⚠️ 您的遊戲進度將不會保存。')) {
-                return;
-            }
-            
-            // 清除房間相關狀態
-            app.state.classId = null;
-            app.state.role = null;
-            app.state.isHost = false;
-            app.state.myTeam = null;
-            app.state.gameData = {};
-            
-            // 停止計時器
-            if (app.state.hostTimerInterval) {
-                clearInterval(app.state.hostTimerInterval);
-                app.state.hostTimerInterval = null;
-            }
-            
-            // 清除本地房間記錄
-            localStorage.removeItem('pharaoh_v3_state');
-            
-            // 顯示大廳，隱藏遊戲畫面
-            app.el('game-board').classList.add('hidden');
-            app.el('page-lobby').classList.remove('hidden');
-            app.el('admin-gear-btn').classList.remove('hidden');
-            
-            app.toast('👋 已返回冒險大廳');
-        },
-
-        // v4.2.0: 修正 Google 登出邏輯（僅在大廳使用）
+        // v4.1.5: 處理登出 (包含 Firebase 與 本地)
         logout: () => {
             if (app.state.user) {
-                // 已登入 Google：執行完整登出流程
-                if (!confirm('👋 確定要登出 Google 帳號嗎？')) {
-                    return;
-                }
-                
-                console.log('🔄 開始 Google 登出流程...');
-                
-                // 1. 立即清除本地狀態
-                app.state.user = null;
-                localStorage.removeItem('pharaoh_v3_state');
-                localStorage.removeItem('pharaoh_player_name');
-                
-                // 2. 執行 Firebase 登出
-                auth.signOut()
-                    .then(() => {
-                        console.log('✅ Firebase 登出成功');
-                        app.toast('👋 已登出 Google 帳號');
-                        // 3. 短暫延遲後重新載入
-                        setTimeout(() => {
-                            location.reload(true);
-                        }, 500);
-                    })
-                    .catch((error) => {
-                        console.error('❌ 登出失敗:', error);
-                        alert('登出時發生錯誤，即將重新整理頁面');
-                        location.reload(true);
-                    });
+                // 顯示確認對話框 (優化使用者體驗)
+                if(!confirm('👋 確定要登出 Google 帳號嗎？')) return;
+
+                auth.signOut().then(() => {
+                    app.state.user = null; // 立即清除本地狀態引用
+                    app.toast('👋 已登出 Google 帳號');
+                    // 注意：不需要 location.reload()，auth.onAuthStateChanged 會自動切換回「遊客面板」
+                }).catch(err => {
+                    console.error(err);
+                    app.toast('❌ 登出發生錯誤，請重試');
+                });
             } else {
                 // 匿名登出模式
-                localStorage.removeItem('pharaoh_v3_state');
-                localStorage.removeItem('pharaoh_player_name');
-                app.toast('👋 已清除本地資料');
-                setTimeout(() => location.reload(true), 500);
+                if(confirm('👋 確定要登出並清除本機紀錄嗎？')) {
+                    localStorage.removeItem('pharaoh_v3_state');
+                    location.reload(); // 匿名模式才需要重整以清除記憶體變數
+                }
             }
         },
 
