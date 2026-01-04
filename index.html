@@ -706,14 +706,9 @@
 
         el: (id) => document.getElementById(id),
 
-        // v4.1.5: Google 登入邏輯 (修正版：強制顯示帳號選擇)
+        // v4.1.5: Google 登入邏輯
         loginGoogle: () => {
             const provider = new firebase.auth.GoogleAuthProvider();
-            // ✨ 關鍵修改：強制 Google 每次都跳出「選擇帳號」視窗
-            provider.setCustomParameters({
-                prompt: 'select_account'
-            });
-            
             auth.signInWithPopup(provider)
                 .then((result) => {
                     app.toast(`🎉 歡迎回來，${result.user.displayName}`);
@@ -728,6 +723,13 @@
         // v4.1.5: 處理登入後的 UI 與資料同步
         handleAuthUser: (user) => {
             app.state.user = user;
+            
+            // [修正] 如果有舊的監聽器，先移除，防止重複綁定或登出後殘留
+            if (app.state.userListener) {
+                app.state.userListener.off();
+                app.state.userListener = null;
+            }
+
             // 預設先用 Google 名稱，稍後資料庫載入會覆蓋
             app.state.myName = user.displayName; 
             
@@ -742,7 +744,14 @@
 
             // 從 Firebase 讀取該用戶的完整資料 (分數 + 自訂名稱)
             const userRef = db.ref(`users/${user.uid}`);
+            
+            // [修正] 將監聽器參照存入全域狀態，以便登出時移除
+            app.state.userListener = userRef;
+
             userRef.on('value', snapshot => {
+                // [修正] 安全檢查：如果 app.state.user 為空(已登出)，則不執行後續 UI 更新
+                if (!app.state.user) return;
+
                 const data = snapshot.val() || {};
                 
                 // 1. 處理名稱：優先使用資料庫中的 displayName，若無則用 Google 預設
@@ -806,23 +815,14 @@
         // v4.1.5: 處理登出 (包含 Firebase 與 本地)
         logout: () => {
             if (app.state.user) {
-                // 顯示確認對話框 (優化使用者體驗)
-                if(!confirm('👋 確定要登出 Google 帳號嗎？')) return;
-
                 auth.signOut().then(() => {
-                    app.state.user = null; // 立即清除本地狀態引用
                     app.toast('👋 已登出 Google 帳號');
-                    // 注意：不需要 location.reload()，auth.onAuthStateChanged 會自動切換回「遊客面板」
-                }).catch(err => {
-                    console.error(err);
-                    app.toast('❌ 登出發生錯誤，請重試');
+                    // UI 重置由 onAuthStateChanged 處理
                 });
             } else {
                 // 匿名登出模式
-                if(confirm('👋 確定要登出並清除本機紀錄嗎？')) {
-                    localStorage.removeItem('pharaoh_v3_state');
-                    location.reload(); // 匿名模式才需要重整以清除記憶體變數
-                }
+                localStorage.removeItem('pharaoh_v3_state');
+                location.reload();
             }
         },
 
@@ -859,6 +859,12 @@
                     // 已登入 Google
                     app.handleAuthUser(user);
                 } else {
+                    // [修正] 偵測到登出：強制移除資料庫監聽器，防止幽靈讀取
+                    if (app.state.userListener) {
+                        app.state.userListener.off(); // 關閉 Firebase 監聽
+                        app.state.userListener = null;
+                    }
+
                     // 未登入/匿名
                     app.state.user = null;
                     app.el('auth-panel-guest').classList.remove('hidden');
