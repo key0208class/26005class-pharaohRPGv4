@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.2.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.2.1 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -201,7 +201,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.2.0 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.2.1 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -821,11 +821,30 @@
             }
         },
 
-        // [v4.2.0 新增] 離開遊戲返回大廳 (不登出 Google)
+        // [v4.3.0] 離開遊戲邏輯 (房主解散房間 vs 玩家個人離開)
         leaveGame: () => {
-            if(!confirm('🔙 確定要離開目前的冒險並返回大廳嗎？')) return;
-            // 重新整理頁面，Firebase 會自動偵測登入狀態並導回大廳，同時清除遊戲暫存與監聽器
-            window.location.reload();
+            const isHost = app.state.isHost;
+            const msg = isHost 
+                ? '⚠️ 警告：您是房主！\n離開將會「解散整個房間」，所有人的連線將中斷。\n確定要結束並返回大廳嗎？' 
+                : '🔙 確定要離開目前的冒險並返回大廳嗎？';
+
+            if(!confirm(msg)) return;
+
+            // 1. 清除本地 Session 記憶 (防止自動重連)
+            localStorage.removeItem('pharaoh_current_room_id');
+            localStorage.removeItem('pharaoh_is_host');
+            localStorage.removeItem('pharaoh_role');
+
+            if (isHost && app.state.classId) {
+                // [關鍵] 房主離開 -> 物理刪除房間
+                // 這會觸發其他人的 listenToGameData (data=null)，讓他們被迫離開
+                db.ref(`classes/${app.state.classId}`).remove()
+                    .then(() => window.location.reload())
+                    .catch(e => { console.error(e); window.location.reload(); });
+            } else {
+                // 玩家離開 -> 只重整頁面 (或是可選擇從 players 移除自己，這邊選擇保留數據但切斷連結)
+                window.location.reload();
+            }
         },
 
         // v3.2.9 自動擲骰相關 (保留)
@@ -850,24 +869,60 @@
                 }, 1000);
             }
         },
+// [v4.3.0 新增] 檢查並恢復連線
+        checkPreviousSession: () => {
+            const savedRoomId = localStorage.getItem('pharaoh_current_room_id');
+            const savedMyName = localStorage.getItem('pharaoh_player_name');
+            const savedIsHost = localStorage.getItem('pharaoh_is_host') === 'true';
 
-        // --- 1. 初始化與自動登入 ---
+            // 只有當本地有紀錄時才執行
+            if (savedRoomId && savedMyName) {
+                console.log("🔄 偵測到斷線重連需求...", savedRoomId);
+                
+                // 檢查 Firebase 該房間是否還活著
+                db.ref(`classes/${savedRoomId}`).once('value', snapshot => {
+                    if (snapshot.exists()) {
+                        // 房間還在 -> 恢復狀態
+                        app.state.classId = savedRoomId;
+                        app.state.myName = savedMyName;
+                        app.state.role = 'student';
+                        app.state.isHost = savedIsHost;
+                        app.state.myTeam = 'team1';
+                        
+                        // [v4.3.1] 房主回歸心跳：更新活躍時間，確保房間在大廳繼續顯示
+                        if (savedIsHost) {
+                            db.ref(`classes/${savedRoomId}`).update({
+                                lastActive: firebase.database.ServerValue.TIMESTAMP
+                            });
+                        }
+
+                        app.toast('⚡ 網路閃斷，已自動幫您連回冒險！');
+                        app.enterGameMode();
+                    } else {
+                        // 房間已不存在 (房主已解散) -> 清除垃圾紀錄
+                        console.log("房間已關閉，清除本地紀錄");
+                        localStorage.removeItem('pharaoh_current_room_id');
+                        localStorage.removeItem('pharaoh_is_host');
+                        localStorage.removeItem('pharaoh_role');
+                    }
+                });
+            }
+        },
+
+        // --- 1. 初始化與自動登入 [v4.3.0 更新] ---
         init: () => {
             app.createPredefinedCards();
             
-            // v4.1.5: 監聽 Google 登入狀態
+            // 監聽 Google 登入狀態
             auth.onAuthStateChanged((user) => {
                 if (user) {
-                    // 已登入 Google
                     app.handleAuthUser(user);
                 } else {
-                    // 未登入/匿名
                     app.state.user = null;
                     app.el('auth-panel-guest').classList.remove('hidden');
                     app.el('auth-panel-logged-in').classList.add('hidden');
                     app.el('auth-panel-logged-in').classList.remove('flex');
                     
-                    // 讀取本地舊資料
                     const savedName = localStorage.getItem('pharaoh_player_name');
                     if (savedName) {
                         app.state.myName = savedName;
@@ -875,6 +930,9 @@
                     }
                     app.el('lobby-high-score').textContent = localStorage.getItem('pharaoh_high_score') || '0';
                 }
+                
+                // [關鍵] 登入狀態確認後，執行斷線重連檢查
+                app.checkPreviousSession();
             });
 
             // 監聽全域設定
@@ -921,9 +979,11 @@
 
             roomArr.forEach(room => {
                 // 篩選條件: 5分鐘內活躍 (5 * 60 * 1000 = 300000)
+                // [v4.3.1] 新增過濾條件：必須是活躍且「非結束」狀態的房間才顯示
                 const isAlive = (now - (room.lastActive || 0)) < 300000;
+                const isNotEnded = room.status !== 'ended'; // 確保冒險結束的房間不顯示
                 
-                if (isAlive) {
+                if (isAlive && isNotEnded) {
                     activeCount++;
                     const isMyRoom = room.hostName === app.state.myName;
                     const statusText = room.status === 'waiting' ? '等待中' : '冒險進行中';
@@ -940,25 +1000,29 @@
             listEl.innerHTML = html;
         },
 
-        // v4.0.2: 加入房間 (一鍵加入)
+        // v4.0.2: 加入房間 (一鍵加入) - [v4.3.0] 新增 Session 記憶與斷線保護
         joinLobbyRoom: (roomId) => {
             const name = app.el('lobby-player-name').value.trim();
             if (!name) return app.toast('❌ 請先輸入你的冒險者名字');
             
+            // 寫入本地記憶
             localStorage.setItem('pharaoh_player_name', name);
+            localStorage.setItem('pharaoh_current_room_id', roomId);
+            localStorage.setItem('pharaoh_is_host', 'false');
+            localStorage.setItem('pharaoh_role', 'student');
+
             app.state.myName = name;
             app.state.classId = roomId;
             app.state.role = 'student';
-            app.state.isHost = false; // 加入者非房主
-            
-            // v4.0.2: 統一強制加入 team1 (冒險小隊)
+            app.state.isHost = false; 
             app.state.myTeam = 'team1'; 
 
             // 檢查房間是否存在並加入
             const roomRef = db.ref(`classes/${roomId}`);
             roomRef.once('value', snapshot => {
                 if (snapshot.exists()) {
-                    // 加入玩家資料
+                    // [關鍵] 使用 update 更新最後活動時間，且不設定 onDisconnect().remove()
+                    // 這樣玩家閃退再連回來，分數還在
                     db.ref(`classes/${roomId}/players/team1/${name}`).update({
                         name: name,
                         lastActive: firebase.database.ServerValue.TIMESTAMP
@@ -968,25 +1032,32 @@
                     app.toast(`🚀 已加入 ${snapshot.val().hostName} 的冒險！`);
                 } else {
                     app.toast('❌ 房間已不存在');
+                    // 清除無效記憶
+                    localStorage.removeItem('pharaoh_current_room_id');
                 }
             });
         },
 
-        // v4.0.1: 建立新房間 (成為房主+主控者)
+        // v4.0.1: 建立新房間 (成為房主+主控者) - [v4.3.0] 新增 Session 記憶
         createRoom: () => {
             const name = app.el('lobby-player-name').value.trim();
             if (!name) return app.toast('❌ 請先輸入你的冒險者名字');
             
-            // 儲存名字
+            // 儲存名字與身分標記
             localStorage.setItem('pharaoh_player_name', name);
             app.state.myName = name;
 
             // 生成隨機房間代碼 (6碼數字)
             const roomId = Math.floor(100000 + Math.random() * 900000).toString();
             app.state.classId = roomId;
-            app.state.role = 'student'; // 邏輯上是學生(玩家)
-            app.state.isHost = true;    // 新增：房主標記
-            app.state.myTeam = 'team1'; // 預設先給第1組，後續改版會改為"冒險小隊"
+            app.state.role = 'student'; 
+            app.state.isHost = true;    
+            app.state.myTeam = 'team1'; 
+
+            // [關鍵] 寫入 Session，做為斷線重連的憑證
+            localStorage.setItem('pharaoh_current_room_id', roomId);
+            localStorage.setItem('pharaoh_is_host', 'true');
+            localStorage.setItem('pharaoh_role', 'student');
 
             // 寫入 Firebase
             const initialData = app.generateInitialGameData();
@@ -1000,9 +1071,9 @@
                 timerActive: false,
                 pyramid: initialData.pyramid,
                 decks: initialData.decks,
-                lastActive: firebase.database.ServerValue.TIMESTAMP, // 用於判斷活躍
-                autoRoll: app.el('admin-auto-roll').checked, // 繼承管理員設定
-				endlessMode: app.el('admin-endless-mode').checked // [v4.1.8] 新增此行
+                lastActive: firebase.database.ServerValue.TIMESTAMP, 
+                autoRoll: app.el('admin-auto-roll').checked, 
+				endlessMode: app.el('admin-endless-mode').checked 
             }).then(() => {
                 // 加入自己為玩家
                 db.ref(`classes/${roomId}/players/team1/${name}`).set({
@@ -1010,11 +1081,12 @@
                     score: 0,
                     lastActive: firebase.database.ServerValue.TIMESTAMP
                 });
+
+                // 設定房主斷線後的行為：保留資料 (因為我們要支援重連)，只有主動離開才刪除
                 
                 app.enterGameMode();
                 app.toast(`🏰 冒險小隊建立成功！代碼：${roomId}`);
 				app.speak('冒險小隊建立成功！');
-				
             });
         },
 
@@ -1243,30 +1315,46 @@
             
             classRef.on('value', snapshot => {
                 const data = snapshot.val();
+
+                // [v4.3.0] 房主已解散房間 (data 為 null)
+                if (!data) {
+                    // 清除本地紀錄，避免重整後又試圖重連
+                    localStorage.removeItem('pharaoh_current_room_id');
+                    localStorage.removeItem('pharaoh_is_host');
+
+                    // 顯示強制結束遮罩
+                    app.el('game-board').classList.add('hidden');
+                    app.el('reset-overlay').classList.remove('hidden');
+                    
+                    // 修改遮罩文字內容 (動態修改，不需改 HTML)
+                    const overlayTitle = document.querySelector('#reset-overlay h2');
+                    const overlayDesc = document.querySelector('#reset-overlay p');
+                    if(overlayTitle) overlayTitle.textContent = "冒險已結束";
+                    if(overlayDesc) overlayDesc.textContent = "房主已解散房間，請返回大廳";
+                    
+                    return;
+                }
                 
-                // [v3.1.5] 修正：偵測到房間被重置 -> 顯示「回到初始之地」遮罩
-                if (!data || data.status === 'restarting' || data.status === 'reset_completed') {
-                    // 隱藏遊戲介面，顯示重置遮罩
+                // [v3.1.5] 偵測到房間被重置
+                if (data.status === 'restarting' || data.status === 'reset_completed') {
                     app.el('game-board').classList.add('hidden');
                     app.el('game-over-modal').classList.add('hidden');
                     app.el('reset-overlay').classList.remove('hidden');
                     
-                    // 如果我是正在操作重置的老師，就不跳出 Toast 了
-                    if (!app.state.isResetting) {
-                        // 這裡不自動 logout，而是等待使用者點擊按鈕
-                    }
+                    const overlayTitle = document.querySelector('#reset-overlay h2');
+                    const overlayDesc = document.querySelector('#reset-overlay p');
+                    if(overlayTitle) overlayTitle.textContent = "冒險已重置";
+                    if(overlayDesc) overlayDesc.textContent = "法老王已開啟新的篇章";
                     return;
                 }
 
                 // [v3.0.8] 偵測回合切換,清空輸入
-                // [v3.0.8] 偵測回合切換
                 if (data.round && data.round > app.state.lastRoundProcessed) {
                     app.state.lastRoundProcessed = data.round;
                     if (app.state.role === 'student') {
                         app.resetInput();
-                        // v3.3.1: 新回合強制清除所有道具效果 (包含尼羅河)
+                        // v3.3.1: 新回合強制清除所有道具效果
                         app.state.activeItem = null;
-                        // 重新渲染道具列以移除狀態框
                         app.renderStudentInventory(data.players); 
                         app.toast('🔔 新回合開始，道具效果已重置');
                     }
@@ -1274,14 +1362,8 @@
 
                 // v3.2.6 新增：老師端監聽贏家並廣播
                 if (app.state.role === 'teacher' && data.lastWinner && data.lastWinner.timestamp > app.state.lastWinnerTime) {
-                    // 更新本地紀錄的時間，避免重複播放
                     app.state.lastWinnerTime = data.lastWinner.timestamp;
-                    
-                    // 只有當這個訊息是「新的」（例如現在發生的，而不是剛登入時載入的舊紀錄）才播放
-                    // 這裡做一個簡單判斷：如果距離現在超過 10 秒的舊資料就不念了（避免重整頁面時狂念）
                     const now = Date.now();
-                    // 注意: firebase timestamp 是伺服器時間，與本地可能有誤差，但通常不會差太多
-                    // 如果 timestamp 是一個很大的數字才檢查
                     if (now - data.lastWinner.timestamp < 10000) {
                          app.speak(`恭喜${data.lastWinner.name}奪寶成功！`);
                          app.toast(`🎉 恭喜 ${data.lastWinner.name} 奪寶成功！`);
@@ -2091,6 +2173,7 @@
                  
                  // 2. 設定資料庫狀態為 reset_completed，並重置所有資料
                  // 這樣所有客戶端收到通知後，就會顯示全螢幕的按鈕
+                 // [v4.3.1] 重置時更新 lastActive，確保房間重新出現在大廳
                  await db.ref(`classes/${app.state.classId}`).set({
                     status: 'reset_completed', 
                     dice: { d8: '-', d10: '-', d12: '-' },
@@ -2099,7 +2182,9 @@
                     timerActive: false,
                     pyramid: initialData.pyramid,
                     decks: initialData.decks,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                    lastActive: firebase.database.ServerValue.TIMESTAMP, // 關鍵：讓房間再次浮上大廳
+                    autoRoll: app.el('admin-auto-roll').checked,
+                    endlessMode: app.el('admin-endless-mode').checked
                  });
                  
                  app.toast('🔄 遊戲已重置，等待冒險者回歸...');
