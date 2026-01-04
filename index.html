@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.1.10 - 冒險模式版</title>
+    <title>神殿試煉 v4.2.0 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -201,7 +201,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.1.9 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.2.0 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -414,8 +414,8 @@
                     <span class="bg-blue-100 text-blue-900 px-3 py-1 rounded-full font-bold" id="user-identity">--</span>
                 </div>
                 <div class="flex items-center gap-3 mt-2 md:mt-0">
-                    <button id="voice-toggle-btn" class="hidden bg-gray-200 px-3 py-1 rounded-full text-sm font-bold" onclick="app.toggleVoice()">🔊 語音開</button>
-                    <button class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-bold border border-red-200" onclick="app.logout()">🚪 登出</button>
+                    <button <button id="voice-toggle-btn" class="hidden bg-gray-200 px-3 py-1 rounded-full text-sm font-bold" onclick="app.toggleVoice()">🔊 語音開</button>
+                    <button class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-bold border border-amber-200 hover:bg-amber-200 transition-colors" onclick="app.leaveGame()">🔙 返回大廳</button>
                 </div>
             </div>
 
@@ -558,7 +558,7 @@
                 <div class="mt-6 text-center z-10 pt-4 border-t border-amber-100">
                     <p class="text-sm text-gray-500 mb-3">老師確認後可開啟新的一局</p>
                     <div class="flex flex-col md:flex-row justify-center gap-3">
-                        <button onclick="app.logout()" class="bg-slate-500 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg hover:bg-slate-600 transition-transform">🚪 返回大廳</button>
+                        <button onclick="app.leaveGame()" class="bg-slate-500 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg hover:bg-slate-600 transition-transform">🔙 返回大廳</button>
                         <button id="btn-download-report" onclick="app.downloadGameData()" class="hidden bg-green-600 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg hover:bg-green-700 transition-transform">📥 下載戰績表</button>
                         <button id="btn-restart-game" onclick="(async () => { try { await app.resetGame(); } catch(e) { console.error(e); } })()" class="hidden bg-gradient-to-r from-amber-600 to-amber-800 text-white px-8 py-3 rounded-full font-bold text-xl shadow-lg hover:scale-105 transition-transform">🔄 開啟新冒險</button>
                     </div>
@@ -650,7 +650,7 @@
             <div class="text-6xl mb-6 animate-bounce">🏺</div>
             <h2 class="text-3xl md:text-5xl font-black mb-4 text-amber-400 tracking-widest">冒險已重置</h2>
             <p class="text-xl text-gray-300 mb-12">法老王已開啟新的篇章</p>
-            <button onclick="app.logout()" class="group relative px-8 py-4 bg-transparent overflow-hidden rounded-full transition-all hover:scale-105">
+            <button onclick="app.leaveGame()" class="group relative px-8 py-4 bg-transparent overflow-hidden rounded-full transition-all hover:scale-105">
                 <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-amber-500 to-amber-700 opacity-90 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative flex items-center gap-3">
                     <span class="text-2xl font-bold text-white shadow-sm">🔙 回到初始之地</span>
@@ -819,6 +819,13 @@
                 // 匿名登出模式：直接重整
                 location.reload();
             }
+        },
+
+        // [v4.2.0 新增] 離開遊戲返回大廳 (不登出 Google)
+        leaveGame: () => {
+            if(!confirm('🔙 確定要離開目前的冒險並返回大廳嗎？')) return;
+            // 重新整理頁面，Firebase 會自動偵測登入狀態並導回大廳，同時清除遊戲暫存與監聽器
+            window.location.reload();
         },
 
         // v3.2.9 自動擲骰相關 (保留)
