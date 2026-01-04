@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.1.8 - 冒險模式版</title>
+    <title>神殿試煉 v4.1.9 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -201,7 +201,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.1.8 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.1.9 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -2105,8 +2105,18 @@
              const gameData = app.state.gameData;
              if (!gameData || !gameData.decks) return;
 
-             // v4.1.8: 讀取房間的無盡模式設定 (若無則預設為 false)
-             const isEndless = gameData.endlessMode === true;
+             // [v4.1.9 修正] 雙重檢查無盡模式設定
+             // 1. 優先讀取房間本身的設定
+             let isEndless = gameData.endlessMode;
+             
+             // 2. 如果房間沒有設定 (undefined)，則讀取 GM 全域設定作為備案
+             if (isEndless === undefined || isEndless === null) {
+                 if (app.state.globalSettings && app.state.globalSettings.endlessMode === true) {
+                     isEndless = true;
+                 } else {
+                     isEndless = false;
+                 }
+             }
 
              const newPyramid = [...(gameData.pyramid || [])];
              // 注意：因為要修改 decks，這裡我們直接參照 app.state.gameData.decks 進行操作，稍後會寫回 DB
@@ -2138,7 +2148,7 @@
                      // 檢查牌庫是否夠用
                      if (!newDecks[slot.color] || newDecks[slot.color].length === 0) {
                          // [v4.1.8 無盡模式核心邏輯]
-                         if (isEndless) {
+                         if (isEndless === true) {
                              // 呼叫回填函式 (這裡直接操作 newDecks)
                              // 邏輯重寫：我們在本地模擬回填，以確保這次補牌能成功
                              const fullDecks = app.createFullDeck();
@@ -2174,7 +2184,8 @@
                      timerActive: false,
                      pyramid: newPyramid,
                      decks: newDecks,
-                     round: nextRound
+                     round: nextRound,
+                     endlessMode: isEndless // [v4.1.9] 將正確的設定寫回房間，確保狀態同步
                  };
 
                  db.ref(`classes/${app.state.classId}`).update(updates);
@@ -2184,8 +2195,12 @@
                      app.processAutoGrant(nextRound);
                  }
 
-                 if (endlessRefilledMsg) app.toast(endlessRefilledMsg);
-                 else app.toast(hasRefilled ? '已進入下一回合並補牌' : '已進入下一回合');
+                 if (endlessRefilledMsg) {
+                     app.toast(endlessRefilledMsg);
+                     app.speak('時光回溯，牌庫已重置');
+                 } else {
+                     app.toast(hasRefilled ? '已進入下一回合並補牌' : '已進入下一回合');
+                 }
              }
         },
 
@@ -2429,7 +2444,7 @@
                         updates['timer'] = 30;
                         app.speak(successMsg + " 倒數計時！");
                     } else {
-                        app.speak(successMsg + " 再拿一張！");
+                        app.speak(successMsg + " 攻擊翻倍！");
                     }
 
                     db.ref(`classes/${app.state.classId}`).update(updates);
