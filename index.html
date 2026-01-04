@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.2.1 - 冒險模式版</title>
+    <title>神殿試煉 v4.2.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -201,7 +201,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.2.1 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.2.3 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -304,15 +304,19 @@
         </div>
 
         <di<div id="admin-settings-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
-             <div class="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 shadow-2xl border-4 border-b-8 border-slate-700 animate-[fadeIn_0.3s_ease-out] max-h-[90vh] overflow-y-auto flex flex-col">
+             <div class="bg-white rounded-2xl p-6 max-w-5xl w-full mx-4 shadow-2xl border-4 border-b-8 border-slate-700 animate-[fadeIn_0.3s_ease-out] max-h-[90vh] overflow-y-auto flex flex-col">
                 <div class="flex justify-between items-center mb-4 border-b pb-2">
                     <h3 class="text-2xl font-black text-slate-900">⚙️ 全域遊戲設定</h3>
-                    <button onclick="app.el('admin-settings-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+                    <div class="flex items-center gap-3">
+                        <button onclick="app.logoutAdmin()" class="bg-slate-200 text-slate-600 px-3 py-1 rounded-lg text-sm font-bold hover:bg-red-100 hover:text-red-600 transition-colors">🔒 登出</button>
+                        <button onclick="app.el('admin-settings-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 font-bold text-xl px-2">✕</button>
+                    </div>
                 </div>
 
                 <div class="flex border-b border-slate-200 mb-4">
                     <button onclick="app.switchAdminTab('flow')" id="tab-btn-flow" class="admin-tab-btn admin-tab-active flex-1">🎮 遊戲流程</button>
                     <button onclick="app.switchAdminTab('items')" id="tab-btn-items" class="admin-tab-btn flex-1">🎁 道具發放</button>
+                    <button onclick="app.switchAdminTab('monsters')" id="tab-btn-monsters" class="admin-tab-btn flex-1">👹 怪物設定</button>
                 </div>
                 
                 <div class="space-y-6 flex-1 overflow-y-auto pr-1 custom-scrollbar">
@@ -401,7 +405,128 @@
                     </div>
 
                 </div>
+<div id="tab-content-monsters" class="admin-tab-content space-y-4">
+                        
+                        <div id="monster-list-view" class="block animate-[fadeIn_0.3s_ease-out]">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-stone-800 flex items-center gap-2 text-xl">👹 怪物圖鑑總表</h4>
+                                <button onclick="app.addNewMonster()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-green-700 active:scale-95 transition-transform flex items-center gap-2">
+                                    <span>➕</span> 新增怪物
+                                </button>
+                            </div>
+                            
+                            <div class="bg-stone-100 rounded-xl border border-stone-300 overflow-hidden">
+                                <div class="grid grid-cols-12 gap-2 bg-stone-200 p-3 font-bold text-stone-700 text-sm border-b border-stone-300 items-center text-center">
+                                    <div class="col-span-1">預覽</div>
+                                    <div class="col-span-1">序號</div>
+                                    <div class="col-span-3 text-left pl-2">名稱 (點擊編輯)</div>
+                                    <div class="col-span-2">HP</div>
+                                    <div class="col-span-2">ATK</div>
+                                    <div class="col-span-2">金幣</div>
+                                    <div class="col-span-1">操作</div>
+                                </div>
+                                <div id="monster-list-container" class="max-h-[400px] overflow-y-auto custom-scrollbar bg-white">
+                                    </div>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-2 text-right">💡 提示：直接修改數值後，記得按下最下方的「儲存全域設定」才會生效。</div>
+                        </div>
 
+                        <div id="monster-editor-view" class="hidden animate-[fadeIn_0.3s_ease-out]">
+                            <div class="flex justify-between items-center mb-4 bg-stone-100 p-3 rounded-xl border border-stone-200">
+                                <button onclick="app.switchMonsterView('list')" class="bg-gray-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-600 active:scale-95 transition-transform flex items-center gap-2">
+                                    <span>🔙</span> 返回列表
+                                </button>
+                                <h4 class="font-bold text-stone-800 text-lg">📝 編輯怪物詳細參數</h4>
+                                <button onclick="app.deleteCurrentMonster()" class="bg-red-100 text-red-600 border border-red-300 px-4 py-2 rounded-lg font-bold hover:bg-red-200 active:scale-95 transition-transform">
+                                    🗑️ 刪除此怪
+                                </button>
+                            </div>
+
+                            <div class="bg-stone-50 p-4 rounded-xl border border-stone-300">
+                                <input type="hidden" id="edit-monster-index"> <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div class="space-y-2">
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-500 mb-1">怪物名稱</label>
+                                            <input type="text" id="edit-monster-name" class="w-full border-2 border-stone-300 rounded-lg p-2 font-bold text-stone-900">
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-500 mb-1">HP</label>
+                                                <input type="number" id="edit-monster-hp" class="w-full border-2 border-red-300 rounded-lg p-2 text-center font-bold text-red-700">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-500 mb-1">ATK</label>
+                                                <input type="number" id="edit-monster-atk" class="w-full border-2 border-orange-300 rounded-lg p-2 text-center font-bold text-orange-700">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-500 mb-1">掉落金幣</label>
+                                                <input type="number" id="edit-monster-gold" class="w-full border-2 border-yellow-300 rounded-lg p-2 text-center font-bold text-yellow-700">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="bg-white p-3 rounded-lg border border-stone-200 space-y-3 shadow-sm">
+                                            <div class="text-xs font-bold text-stone-500 border-b pb-1 mb-1">⚔️ 攻擊與行為模式</div>
+                                            
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs font-bold text-stone-700">模式1：被動反擊 (超時/未解完)</span>
+                                                <label class="switch scale-75"><input type="checkbox" id="edit-monster-mode-1"><span class="slider"></span></label>
+                                            </div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs font-bold text-stone-700">模式2：主動攻擊 (時間到全體)</span>
+                                                <label class="switch scale-75"><input type="checkbox" id="edit-monster-mode-2"><span class="slider"></span></label>
+                                            </div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs font-bold text-stone-700">模式3：懲罰攻擊 (答錯單體)</span>
+                                                <label class="switch scale-75"><input type="checkbox" id="edit-monster-mode-3"><span class="slider"></span></label>
+                                            </div>
+                                            <div class="flex items-center gap-2 mt-1 border-t pt-2 border-stone-100">
+                                                <span class="text-xs font-bold text-stone-700 whitespace-nowrap">模式4：每N回合全體</span>
+                                                <input type="number" id="edit-monster-mode-4-val" placeholder="0關閉" class="w-20 border rounded px-2 py-1 text-center text-sm font-bold bg-gray-50">
+                                            </div>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <span class="text-xs font-bold text-stone-700 whitespace-nowrap">模式5：法則攻擊(禁)</span>
+                                                <select id="edit-monster-mode-5-op" class="w-full border rounded px-2 py-1 text-sm font-bold bg-white">
+                                                    <option value="">無 (不啟用)</option>
+                                                    <option value="+">禁用法則 (+)</option>
+                                                    <option value="-">禁用法則 (-)</option>
+                                                    <option value="×">禁用法則 (×)</option>
+                                                    <option value="÷">禁用法則 (÷)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-3">
+                                        <div class="bg-gray-800 rounded-lg h-48 flex items-center justify-center overflow-hidden border-4 border-stone-400 relative shadow-inner">
+                                            <img id="edit-monster-preview-img" src="" class="max-h-full max-w-full object-contain" alt="預覽圖">
+                                            <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs text-center p-1">即時預覽</div>
+                                        </div>
+                                        
+                                        <div class="bg-white p-3 rounded-lg border border-stone-200 space-y-2">
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-500 mb-1">圖1 URL (正常狀態/列表圖)</label>
+                                                <input type="text" id="edit-monster-img-1" oninput="document.getElementById('edit-monster-preview-img').src=this.value" class="w-full border border-stone-300 rounded p-1 text-xs font-mono text-gray-600">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-500 mb-1">圖2 URL (攻擊狀態)</label>
+                                                <input type="text" id="edit-monster-img-2" class="w-full border border-stone-300 rounded p-1 text-xs font-mono text-gray-600">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-500 mb-1">圖3 URL (BOSS圖)</label>
+                                                <input type="text" id="edit-monster-img-3" class="w-full border border-stone-300 rounded p-1 text-xs font-mono text-gray-600">
+                                            </div>
+                                        </div>
+                                        
+                                        <button onclick="app.saveCurrentMonsterEdit()" class="w-full bg-amber-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg hover:bg-amber-700 active:scale-95 transition-all flex justify-center gap-2">
+                                            <span>💾</span> 暫存此怪物設定
+                                        </button>
+                                        <p class="text-xs text-center text-gray-400">點擊暫存後，記得在主畫面按下「儲存全域設定」</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 <div class="mt-4 pt-4 border-t border-gray-100">
                     <button onclick="app.saveAdminSettings()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-slate-900 active:scale-95 transition-transform">💾 儲存全域設定</button>
                 </div>
@@ -1149,21 +1274,43 @@
         },
 
         // --- 管理員相關 (v4.0.3 實作全域設定) ---
+        // [v4.2.3 修改] 加入自動登入判斷
         openAdminAuth: () => {
-            app.el('admin-auth-modal').classList.remove('hidden');
-            app.el('admin-password-input').value = '';
-            app.el('admin-password-input').focus();
+            // 檢查是否已有登入紀錄
+            if (localStorage.getItem('pharaoh_admin_token') === 'valid') {
+                app.fetchGlobalSettingsToUI();
+                app.el('admin-settings-modal').classList.remove('hidden');
+                app.toast('🔓 歡迎回來，管理員');
+            } else {
+                // 無紀錄才顯示輸入密碼框
+                app.el('admin-auth-modal').classList.remove('hidden');
+                app.el('admin-password-input').value = '';
+                app.el('admin-password-input').focus();
+            }
         },
 
+        // [v4.2.3 修改] 驗證成功後寫入紀錄
         verifyAdmin: () => {
             const pwd = app.el('admin-password-input').value;
             if (pwd === '6317261') {
+                // 寫入本地記憶
+                localStorage.setItem('pharaoh_admin_token', 'valid');
+                
                 app.el('admin-auth-modal').classList.add('hidden');
-                app.fetchGlobalSettingsToUI(); // 載入目前設定
+                app.fetchGlobalSettingsToUI(); 
                 app.el('admin-settings-modal').classList.remove('hidden');
                 app.toast('🔓 管理員驗證成功');
             } else {
                 app.toast('❌ 密碼錯誤');
+            }
+        },
+
+        // [v4.2.3 新增] 管理員登出功能
+        logoutAdmin: () => {
+            if(confirm('🔒 確定要登出管理員模式嗎？\n下次進入需要重新輸入密碼。')) {
+                localStorage.removeItem('pharaoh_admin_token');
+                app.el('admin-settings-modal').classList.add('hidden');
+                app.toast('🔒 管理員已登出');
             }
         },
 // v4.1.8: 管理員分頁切換
@@ -1196,6 +1343,123 @@
             console.log(`♾️ [Endless] Refilled ${color} deck with ${newDeck.length} cards.`);
         },
        // 將資料庫設定填回管理員介面 (v4.1.8 更新：加入無盡模式)
+	   // --- v4.2.2 怪物列表管理系統 ---
+        // 切換列表/編輯視圖
+        switchMonsterView: (view) => {
+            if (view === 'list') {
+                app.el('monster-list-view').classList.remove('hidden');
+                app.el('monster-editor-view').classList.add('hidden');
+                app.renderMonsterListUI(); // 重新渲染列表以更新數據
+            } else {
+                app.el('monster-list-view').classList.add('hidden');
+                app.el('monster-editor-view').classList.remove('hidden');
+            }
+        },
+
+        // 渲染怪物列表 (生成無空白 HTML)
+        renderMonsterListUI: () => {
+            const list = app.state.tempMonsterList || [];
+            const container = app.el('monster-list-container');
+            let html = '';
+
+            if (list.length === 0) {
+                html = '<div class="p-8 text-center text-gray-400 font-bold">尚無怪物資料，請點擊右上方「新增怪物」</div>';
+            } else {
+                list.forEach((m, idx) => {
+                    const img = m.img1 || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png'; // 預設圖
+                    // 表格列 HTML (使用壓縮寫法避免空白節點)
+                    html += `<div class="grid grid-cols-12 gap-2 p-2 border-b border-stone-200 items-center text-center hover:bg-stone-50 transition-colors group"><div class="col-span-1 flex justify-center"><img src="${img}" class="w-8 h-8 object-cover rounded bg-gray-200 border border-gray-300"></div><div class="col-span-1 font-mono text-xs text-gray-400">#${idx + 1}</div><div onclick="app.editMonsterDetail(${idx})" class="col-span-3 text-left pl-2 font-bold text-stone-800 cursor-pointer hover:text-amber-600 hover:underline flex items-center gap-1"><span>${m.name}</span><span class="text-[0.6rem] text-gray-400 group-hover:inline hidden">✏️</span></div><div class="col-span-2"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'hp', this.value)" value="${m.hp}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-red-700 bg-white focus:bg-amber-50"></div><div class="col-span-2"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'atk', this.value)" value="${m.atk}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-orange-700 bg-white focus:bg-amber-50"></div><div class="col-span-2"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'gold', this.value)" value="${m.gold}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-yellow-700 bg-white focus:bg-amber-50"></div><div class="col-span-1"><button onclick="app.editMonsterDetail(${idx})" class="text-stone-400 hover:text-amber-600 transition-colors" title="詳細設定">⚙️</button></div></div>`;
+                });
+            }
+            container.innerHTML = html;
+        },
+
+        // 新增一隻預設怪物
+        addNewMonster: () => {
+            if (!app.state.tempMonsterList) app.state.tempMonsterList = [];
+            app.state.tempMonsterList.push({
+                name: '新怪物',
+                hp: 1000, maxHp: 1000, atk: 10, gold: 50,
+                mode1: false, mode2: false, mode3: false, mode4: 0, mode5: '',
+                img1: '', img2: '', img3: ''
+            });
+            app.renderMonsterListUI();
+            // 自動捲動到底部
+            setTimeout(() => {
+                const c = app.el('monster-list-container');
+                c.scrollTop = c.scrollHeight;
+            }, 100);
+        },
+
+        // 直接在列表中更新數值 (HP, ATK, Gold)
+        updateMonsterDirect: (index, field, value) => {
+            if (app.state.tempMonsterList && app.state.tempMonsterList[index]) {
+                app.state.tempMonsterList[index][field] = parseInt(value) || 0;
+                if (field === 'hp') app.state.tempMonsterList[index].maxHp = parseInt(value) || 0;
+            }
+        },
+
+        // 進入詳細編輯模式
+        editMonsterDetail: (index) => {
+            const m = app.state.tempMonsterList[index];
+            if (!m) return;
+
+            app.el('edit-monster-index').value = index;
+            app.el('edit-monster-name').value = m.name;
+            app.el('edit-monster-hp').value = m.hp;
+            app.el('edit-monster-atk').value = m.atk;
+            app.el('edit-monster-gold').value = m.gold;
+            
+            app.el('edit-monster-mode-1').checked = m.mode1 || false;
+            app.el('edit-monster-mode-2').checked = m.mode2 || false;
+            app.el('edit-monster-mode-3').checked = m.mode3 || false;
+            app.el('edit-monster-mode-4-val').value = m.mode4 || '';
+            app.el('edit-monster-mode-5-op').value = m.mode5 || '';
+            
+            app.el('edit-monster-img-1').value = m.img1 || '';
+            app.el('edit-monster-img-2').value = m.img2 || '';
+            app.el('edit-monster-img-3').value = m.img3 || '';
+            
+            // 更新預覽圖
+            app.el('edit-monster-preview-img').src = m.img1 || '';
+
+            app.switchMonsterView('editor');
+        },
+
+        // 儲存當前編輯的怪物 (從編輯器寫回暫存陣列)
+        saveCurrentMonsterEdit: () => {
+            const idx = parseInt(app.el('edit-monster-index').value);
+            if (isNaN(idx) || !app.state.tempMonsterList[idx]) return;
+
+            const m = app.state.tempMonsterList[idx];
+            m.name = app.el('edit-monster-name').value.trim();
+            m.hp = parseInt(app.el('edit-monster-hp').value) || 100;
+            m.maxHp = m.hp;
+            m.atk = parseInt(app.el('edit-monster-atk').value) || 10;
+            m.gold = parseInt(app.el('edit-monster-gold').value) || 10;
+            
+            m.mode1 = app.el('edit-monster-mode-1').checked;
+            m.mode2 = app.el('edit-monster-mode-2').checked;
+            m.mode3 = app.el('edit-monster-mode-3').checked;
+            m.mode4 = parseInt(app.el('edit-monster-mode-4-val').value) || 0;
+            m.mode5 = app.el('edit-monster-mode-5-op').value;
+            
+            m.img1 = app.el('edit-monster-img-1').value.trim();
+            m.img2 = app.el('edit-monster-img-2').value.trim();
+            m.img3 = app.el('edit-monster-img-3').value.trim();
+
+            app.toast('✅ 怪物資料已暫存 (請記得儲存全域設定)');
+            app.switchMonsterView('list');
+        },
+
+        // 刪除當前編輯的怪物
+        deleteCurrentMonster: () => {
+            const idx = parseInt(app.el('edit-monster-index').value);
+            if (confirm('🗑️ 確定要刪除這隻怪物嗎？')) {
+                app.state.tempMonsterList.splice(idx, 1);
+                app.switchMonsterView('list');
+            }
+        },
         fetchGlobalSettingsToUI: () => {
             db.ref('global_settings').once('value', snapshot => {
                 const settings = snapshot.val() || {};
@@ -1212,6 +1476,20 @@
                 document.querySelectorAll('.admin-ag-item-check').forEach(chk => {
                     chk.checked = allowed.includes(chk.value);
                 });
+				
+				// v4.2.2 讀取怪物列表設定
+                // 如果有新版的 list 則用 list，否則檢查有沒有舊版單一設定並轉為 list，若都沒有則給預設值
+                if (settings.monsterList && Array.isArray(settings.monsterList)) {
+                    app.state.tempMonsterList = settings.monsterList;
+                } else if (settings.monsterConfig) {
+                    // 相容性過渡：將舊版單一設定轉為陣列的第一筆
+                    app.state.tempMonsterList = [settings.monsterConfig];
+                } else {
+                    app.state.tempMonsterList = [];
+                }
+                
+                // 初始顯示列表視圖
+                app.switchMonsterView('list');
             });
         },
 
@@ -1228,7 +1506,7 @@
 
             const settings = {
                 autoRollDefault: app.el('admin-auto-roll').checked,
-                endlessMode: app.el('admin-endless-mode').checked, // v4.1.8 儲存無盡模式設定
+                endlessMode: app.el('admin-endless-mode').checked,
                 autoGrant: {
                     enabled: app.el('admin-ag-enable').checked,
                     interval: parseInt(app.el('admin-ag-interval').value) || 3,
@@ -1236,6 +1514,9 @@
                     itemCount: parseInt(app.el('admin-ag-count').value) || 1,
                     allowedTypes: allowedTypes
                 },
+                // v4.2.2 新增怪物設定
+                // v4.2.2 儲存怪物列表
+                monsterList: app.state.tempMonsterList || [],
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             };
 
