@@ -709,9 +709,6 @@
         // v4.1.5: Google 登入邏輯
         loginGoogle: () => {
             const provider = new firebase.auth.GoogleAuthProvider();
-            // [修正] 強制每次登入都跳出帳號選擇視窗，解決無法切換帳號的問題
-            provider.setCustomParameters({ prompt: 'select_account' });
-
             auth.signInWithPopup(provider)
                 .then((result) => {
                     app.toast(`🎉 歡迎回來，${result.user.displayName}`);
@@ -801,19 +798,28 @@
                 app.toast('❌ 請先登入 Google 帳號');
             }
         },
-        // v4.1.5: 處理登出 (包含 Firebase 與 本地)
+        // v4.2.0: 修正後的登出邏輯 (強制刷新確保乾淨登出)
         logout: () => {
-            if (app.state.user) {
-                auth.signOut().then(() => {
-                    app.toast('👋 已登出 Google 帳號');
-                    // [修正] 清除本地紀錄並在 0.5 秒後重整頁面，確保登出完全
-                    localStorage.removeItem('pharaoh_v3_state');
-                    setTimeout(() => location.reload(), 500);
-                });
-            } else {
-                // 匿名登出模式
-                localStorage.removeItem('pharaoh_v3_state');
-                location.reload();
+            // 增加確認對話框，避免誤觸
+            if (confirm('👋 確定要登出嗎？\n這將會清除目前的連線狀態並重新整理頁面。')) {
+                const performLogout = () => {
+                    localStorage.removeItem('pharaoh_v3_state'); // 清除本地遊戲暫存
+                    location.reload(); // 核心修正：強制重整，回歸初始狀態
+                };
+
+                if (auth.currentUser) {
+                    // Google 帳號登出
+                    auth.signOut().then(() => {
+                        performLogout();
+                    }).catch((error) => {
+                        console.error("Logout Error:", error);
+                        // 即使 Firebase 報錯，也強制在本地執行登出重整
+                        performLogout();
+                    });
+                } else {
+                    // 匿名/未登入狀態的直接重置
+                    performLogout();
+                }
             }
         },
 
