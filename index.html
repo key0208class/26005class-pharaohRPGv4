@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.2.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.2.1 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -201,7 +201,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.2.0 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.2.1 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -798,25 +798,38 @@
                 app.toast('❌ 請先登入 Google 帳號');
             }
         },
-        // v4.1.5: 處理登出 (包含 Firebase 與 本地)
+        // v4.2.0: 修正 Google 登出邏輯 (強制清除狀態並重新載入)
         logout: () => {
             if (app.state.user) {
-                // 已登入 Google：執行 Firebase 登出
-                auth.signOut().then(() => {
-                    console.log('✅ Google 帳號已登出');
-                    app.toast('👋 已登出 Google 帳號');
-                    // 清除本地快取
-                    localStorage.removeItem('pharaoh_v3_state');
-                    // onAuthStateChanged 會自動處理 UI 切換，這裡不需要手動 reload
-                }).catch((error) => {
-                    console.error('登出失敗:', error);
-                    app.toast('❌ 登出時發生錯誤，請重新嘗試');
-                });
+                // 已登入 Google：強制執行完整登出流程
+                console.log('🔄 開始 Google 登出流程...');
+                
+                // 1. 立即清除本地狀態
+                app.state.user = null;
+                localStorage.removeItem('pharaoh_v3_state');
+                localStorage.removeItem('pharaoh_player_name');
+                
+                // 2. 執行 Firebase 登出
+                auth.signOut()
+                    .then(() => {
+                        console.log('✅ Firebase 登出成功');
+                        // 3. 強制重新載入頁面以清除所有殘留狀態
+                        setTimeout(() => {
+                            location.reload(true); // 加上 true 強制從伺服器重新載入
+                        }, 100);
+                    })
+                    .catch((error) => {
+                        console.error('❌ Firebase 登出失敗:', error);
+                        // 即使登出失敗也強制重新載入
+                        alert('登出過程發生錯誤，即將重新整理頁面');
+                        location.reload(true);
+                    });
             } else {
                 // 匿名登出模式：直接清除本地資料並重新載入
                 localStorage.removeItem('pharaoh_v3_state');
+                localStorage.removeItem('pharaoh_player_name');
                 app.toast('👋 已清除本地資料');
-                location.reload();
+                location.reload(true);
             }
         },
 
