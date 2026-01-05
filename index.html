@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.2.7 - 冒險模式版</title>
+    <title>神殿試煉 v4.2.8 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -201,7 +201,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.2.7 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.2.8 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -1021,12 +1021,26 @@
                 
                 // 檢查 Firebase 該房間是否還活著
                 db.ref(`classes/${savedRoomId}`).once('value', snapshot => {
-                    if (snapshot.exists()) {
+                    const roomData = snapshot.val();
+                    if (snapshot.exists() && roomData) {
                         // 房間還在 -> 恢復狀態
+                        
+                        // [修正邏輯] 強制房主歸位防護機制
+                        if (savedIsHost) {
+                             // 如果本地紀錄是房主，強制將「我的名字」校正為資料庫中的「房主名字」
+                             // 這能防止因 Google 登入名稱與遊戲暱稱不同，導致變成新角色的問題
+                             app.state.myName = roomData.hostName; 
+                             app.state.isHost = true;
+                             // 同步更新本地儲存，避免下次又不一致
+                             localStorage.setItem('pharaoh_player_name', roomData.hostName);
+                        } else {
+                             // 一般學生則使用紀錄的名字
+                             app.state.myName = savedMyName;
+                             app.state.isHost = false;
+                        }
+
                         app.state.classId = savedRoomId;
-                        app.state.myName = savedMyName;
                         app.state.role = 'student';
-                        app.state.isHost = savedIsHost;
                         app.state.myTeam = 'team1';
                         
                         // [v4.3.1] 房主回歸心跳：更新活躍時間，確保房間在大廳繼續顯示
