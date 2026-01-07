@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.3.3 - 冒險模式版</title>
+    <title>神殿試煉 v4.3.4 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -248,7 +248,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.3.3 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.3.4 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -2801,23 +2801,30 @@
      // v3.3.0 更新：驗證邏輯 (支援荷魯斯之眼與尼羅河恩賜)
        // v3.3.1 更新：驗證邏輯 (修正尼羅河持續效果與荷魯斯消耗)
       // v3.3.2 修正：強制骰子型別轉換，修復道具卡驗證錯誤與四則運算符號邏輯
-        // v3.3.2 修正：強制骰子型別轉換，修復道具卡驗證錯誤與四則運算符號邏輯
+   
+       // [v4.3.4] 提交答案 (整合怪物扣血機制)
         submitAnswer: () => {
             const idx = app.state.selectedCardIndex;
             if (idx === null) return app.toast('⚠️ 請先點擊金字塔上的數字！');
             
+            // 檢查是否處於怪物未召喚狀態
+            if (app.state.gameData?.activeMonster?.state !== 'battle') {
+                return app.toast('🛡️ 請等待房主召喚魔物後再進行攻擊！');
+            }
+
             const frozen = app.state.gameData.frozenState;
             if (frozen && frozen.endTime > Date.now() && frozen.byTeam !== app.state.myTeam) {
                 app.speak("時間凍結中，無法送出答案");
                 return app.toast(`❄️ 時間已被 ${app.getTeamShortName(frozen.byTeam)} 凍結！無法送出！`);
             }
-			
+            
             const card = app.state.gameData.pyramid[idx];
             if (!card || card.isTaken) return app.toast('🚫 晚了一步！這張牌已經被拿走了。');
             
             const formula = app.state.inputFormula;
             const activeItem = app.state.activeItem;
 
+            // 檢查阿努比斯禁忌符號
             if (activeItem === 'anubis' && app.state.anubisBannedOp) {
                 if (formula.includes(app.state.anubisBannedOp)) {
                     app.speak('審判失敗，使用了禁忌符號');
@@ -2831,6 +2838,7 @@
             
             let isUsageValid = false;
 
+            // 驗證骰子使用規則 (含道具)
             if (activeItem === 'nile') {
                 if (formulaNums.length === 2) {
                     const tempDice = [...diceNums];
@@ -2882,6 +2890,7 @@
             }
 
             try {
+                // 運算驗證
                 const codeFormula = formula.replace(/×/g, '*').replace(/÷/g, '/');
                 const cleanFormula = codeFormula.replace(/[^-()\d/*+.]/g, '');
                 
@@ -2892,22 +2901,21 @@
                 const result = new Function(`return ${cleanFormula}`)();
                 
                 if (Math.abs(result - card.number) < 0.001) {
-                    // --- 驗證成功 ---
+                    // --- 驗證成功：計算分數與傷害 ---
                     let points = card.points;
                     let playerName = app.state.myName;
                     let successMsg = `恭喜冒險者${playerName}解謎成功！`;
                     let itemToConsume = null;
                     let curseTriggered = false;
 
-                    // v3.7.1: 修正詛咒觸發邏輯
-                    // 檢查 card.curseData 且 隊伍不是自己
+                    // 詛咒判定
                     if (card.curseData && card.curseData.team !== app.state.myTeam) {
                         curseTriggered = true;
-                        points = -Math.abs(points); // 分數倒扣
-                        // v3.7.1 明確的訊息提示
+                        points = -Math.abs(points); // 分數倒扣，不會對怪物造成傷害
                         successMsg = `😱 糟了！${playerName} 觸發了木乃伊的詛咒！分數倒扣！`;
                     }
 
+                    // 道具加成判定
                     if (activeItem === 'double') {
                         points *= 2;
                         if (curseTriggered) successMsg += " (聖甲蟲讓傷害加倍了!)";
@@ -2930,6 +2938,7 @@
                         itemToConsume = 'nile';
                     }
 
+                    // 消耗道具
                     if (itemToConsume) {
                         const itemRef = db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}/items/${itemToConsume}`);
                         itemRef.transaction(count => Math.max(0, (count || 0) - 1));
@@ -2938,10 +2947,11 @@
                     app.renderStudentInventory(app.state.gameData.players);
                     app.renderActiveItemStatus();
 
+                    // 建構更新資料
                     const updates = {};
                     updates[`pyramid/${idx}/isTaken`] = true;
-                    // 被拿走後，詛咒資料自然會隨著 isTaken=true 而無效 (或直接保留在歷史紀錄也沒差)
                     
+                    // 更新玩家分數
                     const scorePath = `players/${app.state.myTeam}/${app.state.myName}/score`;
                     const currentScore = (app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName]?.score || 0);
                     updates[scorePath] = currentScore + points;
@@ -2951,17 +2961,50 @@
                         timestamp: firebase.database.ServerValue.TIMESTAMP
                     };
 
-                    if (!app.state.gameData.timerActive) {
-                        updates['timerActive'] = true;
-                        updates['timer'] = 30;
-                        app.speak(successMsg + " 倒數計時！");
-                    } else {
-                        app.speak(successMsg + " 攻擊成功！");
+                    // [v4.3.4] 怪物扣血邏輯
+                    // 只有當分數為正 (沒有被詛咒) 時，才對怪物造成傷害
+                    let monsterDied = false;
+                    if (points > 0) {
+                        const damage = points; // 1分 = 1點傷害
+                        const currentMonsterHp = app.state.gameData.activeMonster?.currentHp || 0;
+                        const newMonsterHp = Math.max(0, currentMonsterHp - damage);
+                        
+                        updates['activeMonster/currentHp'] = newMonsterHp;
+                        
+                        successMsg += ` (對魔物造成 ${damage} 點傷害!)`;
+                        
+                        if (newMonsterHp <= 0) {
+                            monsterDied = true;
+                        }
                     }
 
+                    if (monsterDied) {
+                        updates['status'] = 'ended';
+                        updates['timerActive'] = false;
+                        successMsg += " ⚔️ 魔物已倒下！冒險小隊獲勝！";
+                        app.speak(successMsg);
+                        
+                        // 播放勝利動畫 (稍後由 updateUI 處理)
+                        setTimeout(() => app.toast("🏆 恭喜！魔物已被擊敗！"), 1000);
+                    } else {
+                        // 怪物未死，繼續遊戲流程
+                        if (!app.state.gameData.timerActive) {
+                            updates['timerActive'] = true;
+                            updates['timer'] = 30;
+                            app.speak(successMsg + " 倒數計時！");
+                        } else {
+                            app.speak(successMsg + " 攻擊成功！");
+                        }
+                    }
+
+                    // 執行一次性更新
                     db.ref(`classes/${app.state.classId}`).update(updates);
                     app.resetInput();
                     app.state.selectedCardIndex = null;
+                    
+                    // 觸發攻擊特效
+                    app.triggerMonsterAttackEffect(); // 借用攻擊特效來顯示被打擊的震動
+
                 } else {
                     const displayResult = Math.round(result * 100) / 100;
                     app.toast(`❌ 計算結果是 ${displayResult}，目標是 ${card.number} 喔！`);
@@ -3083,21 +3126,48 @@
         },
 // --- v4.3.3 怪物卡牌特效系統 ---
         // --- v4.3.2 怪物卡牌特效系統 (優化版：獨立資訊欄) ---
-        // --- v4.3.3 怪物卡牌特效系統 (抽牌動畫版) ---
+       // [v4.3.4] 渲染怪物舞台 (支援血量同步與斷線重連)
         renderMonsterStage: () => {
-            // 防止重複渲染，如果已經有卡片就不重畫 (除非重置)
-            if (app.state.hasRenderedMonster && !app.state.isResetting) return;
+            const container = app.el('dynamic-monster-container');
+            if(!container) return;
+
+            // 1. 讀取 Firebase 同步的怪物資料
+            const remoteMonster = app.state.gameData?.activeMonster;
             
-            // 取得全域怪物設定
-            const monsterList = app.state.globalSettings?.monsterList || [];
-            // 預設取第一隻，若無則使用預設值
-            const monster = monsterList.length > 0 ? monsterList[0] : {
-                name: '守關魔物', hp: 100, maxHp: 100, cardBack: 1, 
-                img1: 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png', 
-                img2: 'https://cdn-icons-png.flaticon.com/512/1548/1548683.png'
-            };
+            // 如果資料庫還沒有怪物資料，顯示預設的牌背 (等待召喚狀態)
+            if (!remoteMonster) {
+                // 取得預設卡背樣式
+                const list = app.state.globalSettings?.monsterList || [];
+                const defaultBackId = (list[0] && list[0].cardBack) ? list[0].cardBack : 1;
+                const cardBacks = {
+                    1: 'https://class.kh.edu.tw/sites/30033/upload_file/6/BK8K9kH.jpg',
+                    2: 'https://class.kh.edu.tw/sites/30033/upload_file/6/jZAPi9w.jpg',
+                    3: 'https://class.kh.edu.tw/sites/30033/upload_file/6/YBrnPT7.jpg',
+                    4: 'https://class.kh.edu.tw/sites/30033/upload_file/6/gold.jpg',
+                    5: 'https://class.kh.edu.tw/sites/30033/upload_file/6/platinum.jpg',
+                    6: 'https://class.kh.edu.tw/sites/30033/upload_file/6/yauTZnK.jpg',
+                    7: 'https://class.kh.edu.tw/sites/30033/upload_file/6/AuMVWei.jpg'
+                };
+                const backImg = cardBacks[defaultBackId] || cardBacks[1];
+
+                // 渲染 "牌組狀態" (無血條，點擊可召喚) - [No-Whitespace]
+                container.innerHTML = `<div id="active-monster-card" class="monster-card-wrapper w-24 h-40 md:w-28 md:h-48" style="top:0.5rem;left:0.5rem;" onclick="app.activateMonsterCard()"><div class="monster-card-inner"><div class="monster-face monster-face-front bg-slate-900"></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div>`;
+                return;
+            }
+
+            // 2. 有怪物資料，計算血量與狀態
+            const currentHp = (remoteMonster.currentHp !== undefined) ? remoteMonster.currentHp : 100;
+            const maxHp = (remoteMonster.maxHp !== undefined) ? remoteMonster.maxHp : 100;
+            const hpPercent = Math.max(0, Math.min(100, (currentHp / maxHp) * 100));
             
-            // 卡背圖片對照
+            // 判斷是否已經在戰鬥位 (如果是 active 且 state='battle')
+            // 若是重新整理網頁，我們會直接加上 .is-in-battle .is-flipped 讓它停在原地
+            const isBattle = remoteMonster.state === 'battle';
+            const positionClass = isBattle ? 'is-in-battle is-flipped' : '';
+            
+            // 為了讓動畫順暢，如果上次狀態是 deck，這次是 battle，則不加 class 讓 CSS transition 跑
+            // 但為了簡化邏輯與確保斷線重連正確，我們直接依據資料庫狀態渲染 class
+            
             const cardBacks = {
                 1: 'https://class.kh.edu.tw/sites/30033/upload_file/6/BK8K9kH.jpg',
                 2: 'https://class.kh.edu.tw/sites/30033/upload_file/6/jZAPi9w.jpg',
@@ -3107,40 +3177,53 @@
                 6: 'https://class.kh.edu.tw/sites/30033/upload_file/6/yauTZnK.jpg',
                 7: 'https://class.kh.edu.tw/sites/30033/upload_file/6/AuMVWei.jpg'
             };
-            const backImg = cardBacks[monster.cardBack || 1] || cardBacks[1];
+            const backImg = cardBacks[remoteMonster.cardBack || 1] || cardBacks[1];
+            const faceImg = remoteMonster.img1 || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
 
-            const container = app.el('dynamic-monster-container');
-            if(!container) return;
+            // [v4.3.4] 渲染 "戰鬥狀態" (含血條、名稱、圖片) - [No-Whitespace Rule Applied]
+            // 我們使用 innerHTML 整行字串，避免空白節點造成的版面間隙
+            container.innerHTML = `<div id="active-monster-card" class="monster-card-wrapper w-24 h-40 md:w-28 md:h-48 ${positionClass}" style="top:0.5rem;left:0.5rem;" onclick="app.activateMonsterCard()"><div class="monster-card-inner"><div class="monster-face monster-face-front flex flex-col bg-slate-900 border-2 border-amber-500 overflow-hidden shadow-lg"><div class="h-[72%] w-full relative bg-gray-800"><img id="monster-img-face" src="${faceImg}" class="w-full h-full object-contain" alt="Monster"></div><div class="h-[28%] w-full bg-slate-900 flex flex-col justify-center items-center px-1 py-0.5"><div class="text-[0.6rem] md:text-xs font-black text-amber-400 truncate w-full text-center leading-tight">${remoteMonster.name}</div><div class="w-[90%] bg-gray-700 h-1.5 rounded-full overflow-hidden relative my-0.5 border border-black/40"><div class="bg-gradient-to-r from-red-600 to-red-400 h-full absolute top-0 left-0 transition-all duration-300" style="width:${hpPercent}%"></div></div><div class="text-[0.7rem] md:text-sm text-white font-mono font-bold leading-none drop-shadow-sm">HP ${currentHp}/${maxHp}</div></div></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div>`;
 
-            // 計算血量百分比
-            const currentHp = (monster.hp !== undefined) ? monster.hp : 100;
-            const maxHp = (monster.maxHp !== undefined && monster.maxHp > 0) ? monster.maxHp : currentHp; 
-            const hpPercent = Math.max(0, Math.min(100, (currentHp / maxHp) * 100));
-
-            // [v4.3.3] 生成無空白節點的 HTML
-            // 初始位置：top: 0.5rem (top-2), left: 0.5rem (left-2) -> 對應 Deck 位置
-            // 尺寸：w-24 h-40 (手機), md:w-28 md:h-48 (電腦) -> 對應新版卡槽
-            container.innerHTML = `<div id="active-monster-card" class="monster-card-wrapper w-24 h-40 md:w-28 md:h-48" style="top:0.5rem;left:0.5rem;" onclick="app.activateMonsterCard()"><div class="monster-card-inner"><div class="monster-face monster-face-front flex flex-col bg-slate-900 border-2 border-amber-500 overflow-hidden shadow-lg"><div class="h-[72%] w-full relative bg-gray-800"><img id="monster-img-face" src="${monster.img1}" class="w-full h-full object-contain" alt="Monster"></div><div class="h-[28%] w-full bg-slate-900 flex flex-col justify-center items-center px-1 py-0.5"><div class="text-[0.6rem] md:text-xs font-black text-amber-400 truncate w-full text-center leading-tight">${monster.name}</div><div class="w-[90%] bg-gray-700 h-1.5 rounded-full overflow-hidden relative my-0.5 border border-black/40"><div class="bg-gradient-to-r from-red-600 to-red-400 h-full absolute top-0 left-0 transition-all duration-500" style="width:${hpPercent}%"></div></div><div class="text-[0.7rem] md:text-sm text-white font-mono font-bold leading-none drop-shadow-sm">HP ${currentHp}/${maxHp}</div></div></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div>`;
-
-            // 儲存當前怪物數據供攻擊使用
-            app.state.currentMonsterData = monster;
-            app.state.hasRenderedMonster = true;
+            // 儲存當前怪物數據供攻擊特效使用
+            app.state.currentMonsterData = remoteMonster;
         },
 
         // 觸發：翻轉並移動到戰場 (Draw Animation)
+        // [v4.3.4] 觸發：主控者召喚怪物 (同步至 Firebase)
         activateMonsterCard: () => {
-            const card = app.el('active-monster-card');
-            if(!card || card.classList.contains('is-flipped')) return;
+            // 只有房主可以執行召喚
+            if (!app.state.isHost) {
+                if(app.state.gameData?.activeMonster?.state !== 'battle') {
+                    app.toast('✋ 等待房主召喚魔物...');
+                }
+                return;
+            }
 
-            // 1. 翻轉 (顯示怪物圖)
-            card.classList.add('is-flipped');
-            app.speak('召喚！' + (app.state.currentMonsterData?.name || '魔物'));
+            // 防止重複召喚
+            if (app.state.gameData?.activeMonster?.state === 'battle') return;
 
-            // 2. 延遲 0.6 秒後，從 Deck 飛向 Battle 區
-            setTimeout(() => {
-                card.classList.add('is-in-battle');
-                app.toast('⚔️ 魔物已進入戰場！');
-            }, 600);
+            // 1. 取得全域怪物設定 (預設取列表第一隻，若無則用預設值)
+            const monsterList = app.state.globalSettings?.monsterList || [];
+            const template = monsterList.length > 0 ? monsterList[0] : {
+                name: '守關魔物', hp: 100, maxHp: 100, cardBack: 1, atk: 1, gold: 50,
+                img1: 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png', 
+                img2: 'https://cdn-icons-png.flaticon.com/512/1548/1548683.png'
+            };
+
+            // 2. 建構即將寫入資料庫的怪物物件
+            const newMonsterData = {
+                ...template,
+                currentHp: template.hp, // 初始血量
+                maxHp: template.hp,     // 最大血量
+                state: 'battle',        // 設定狀態為戰鬥中
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            // 3. 寫入 Firebase (這會觸發所有人的 renderMonsterStage)
+            db.ref(`classes/${app.state.classId}/activeMonster`).set(newMonsterData);
+            
+            app.speak('召喚！' + newMonsterData.name);
+            app.toast('⚔️ 魔物已進入戰場！全體進攻！');
         },
 
         // 觸發：攻擊特效 (圖1 -> 圖2 + 震動 -> 圖1)
