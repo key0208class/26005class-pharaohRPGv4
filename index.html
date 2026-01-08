@@ -2544,14 +2544,14 @@
                     const msg = `擲出 ${d8}, ${d10}, ${d12}。此局無解！4秒後重新開始`;
                     if (app.state.voiceEnabled) app.speak(msg);
                     
-                    // 老師端 4 秒後自動觸發下一局
-                    setTimeout(() => app.forceNextRound(), 4000);
+                    // 老師端 3 秒後自動觸發下一局
+                    setTimeout(() => app.forceNextRound(), 3000);
                 } else {
                     db.ref(`classes/${app.state.classId}`).update({
                         status: 'playing',
                         dice: { d8, d10, d12 },
-                        timerActive: false,
-                        timer: 30
+                        timerActive: true, // 修改：擲骰後立即開始倒數
+                        timer: 180 // 修改：初始時間給予 3 分鐘 (180秒)
                     });
                     if (app.state.voiceEnabled) app.speak(`擲骰結果：${d8}、${d10}、${d12}。`);
                 }
@@ -3040,13 +3040,10 @@
                         setTimeout(() => app.toast("🏆 恭喜！魔物已被擊敗！"), 1000);
                     } else {
                         // 怪物未死，繼續遊戲流程
-                        if (!app.state.gameData.timerActive) {
-                            updates['timerActive'] = true;
-                            updates['timer'] = 30;
-                            app.speak(successMsg + " 倒數計時！");
-                        } else {
-                            app.speak(successMsg + " 攻擊成功！");
-                        }
+                        // 修改：奪寶模式規則 - 只要答對，時間強制重置為 1 分鐘 (60秒)
+                        updates['timerActive'] = true;
+                        updates['timer'] = 60; 
+                        app.speak(successMsg + " 60秒倒數！");
                     }
 
                     // 執行一次性更新
@@ -3464,22 +3461,22 @@
                      return app.toast('⚠️ 時之碎片只能在「撤退倒數中」使用！');
                 }
                 
-                if (!confirm('🕒 確定要使用「時之碎片」將倒數時間延長 15 秒嗎？')) return;
+                if (!confirm('🕒 確定要使用「時之碎片」將倒數時間延長 60 秒嗎？')) return;
 
                 const itemRef = db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}/items/shard`);
                 itemRef.transaction(count => {
                     if ((count || 0) > 0) {
-                        // 執行效果: 增加 15 秒
+                        // 執行效果: 增加 60 秒
                         // 注意：這裡直接修改 Firebase 上的 timer
                         const currentTimer = app.state.gameData.timer || 0;
                         // 避免在交易過程中 timer 剛好歸零，做二次檢查
                         if (currentTimer <= 0) return count; // 取消消耗
 
-                        const newTime = currentTimer + 15;
+                        const newTime = currentTimer + 60;
                         db.ref(`classes/${app.state.classId}/timer`).set(newTime);
                         
-                        app.speak('時間碎片已使用，延長十五秒');
-                        app.toast('🕒 成功！撤退時間已延長 15 秒！');
+                        app.speak('時間碎片已使用，延長六十秒');
+                        app.toast('🕒 成功！撤退時間已延長 60 秒！');
                         return count - 1;
                     }
                     return count;
