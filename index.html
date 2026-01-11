@@ -3440,7 +3440,7 @@
 
             const monsterList = app.state.globalSettings?.monsterList || [];
             // 隨機抽選怪物邏輯 (目前維持取第1隻，可修改)
-            const template = monsterList.length > 0 ? monsterList[6] : {
+            const template = monsterList.length > 0 ? monsterList[0] : {
                 name: '守關魔物', hp: 100, maxHp: 100, cardBack: 1, atk: 1, gold: 50,
                 img1: 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png'
             };
