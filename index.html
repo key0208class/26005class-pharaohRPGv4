@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.5.4 - 冒險模式版</title>
+    <title>神殿試煉 v4.5.6 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -287,7 +287,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.5.4 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.5.6 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -3180,12 +3180,21 @@
         },
 
       handleTimeUp: () => {
-            // v3.2.4: 時間到，自動換下一局 (修正：移除此處語音，改由 forceNextRound 統一判斷情境後播放，避免重複)
-            
+            // [修正] 防止雙重觸發：本機倒數與 Firebase 監聽同時觸發，會導致下一局邏輯執行兩次 (造成語音重疊與判斷錯誤)
+            const now = Date.now();
+            if (app.state.lastTimeUpTrigger && (now - app.state.lastTimeUpTrigger < 1500)) {
+                return; // 如果 1.5 秒內已經執行過，則忽略
+            }
+            app.state.lastTimeUpTrigger = now;
+
             // v4.1.0: 確保主控者在 2 秒緩衝後強制進入下一局
             if (app.state.role === 'teacher' || app.state.isHost) {
                 console.log("⏳ 時間到，主控者將在 2 秒後執行下一局...");
-                setTimeout(() => {
+                
+                // 清除可能堆疊的 timeout，防止多次執行
+                if (app.state.nextRoundTimeout) clearTimeout(app.state.nextRoundTimeout);
+
+                app.state.nextRoundTimeout = setTimeout(() => {
                     app.forceNextRound();
                 }, 2000);
             }
@@ -3431,7 +3440,7 @@
 
             const monsterList = app.state.globalSettings?.monsterList || [];
             // 隨機抽選怪物邏輯 (目前維持取第1隻，可修改)
-            const template = monsterList.length > 0 ? monsterList[0] : {
+            const template = monsterList.length > 0 ? monsterList[6] : {
                 name: '守關魔物', hp: 100, maxHp: 100, cardBack: 1, atk: 1, gold: 50,
                 img1: 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png'
             };
