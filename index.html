@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.4.5 - 冒險模式版</title>
+    <title>神殿試煉 v4.5.2 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -287,7 +287,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.4.5 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.5.2 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -430,6 +430,20 @@
                                     <input type="checkbox" id="admin-endless-mode">
                                     <span class="slider"></span>
                                 </label>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                            <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">⏱️ 時間控制設定</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">基礎倒數 (秒)</label>
+                                    <input type="number" id="admin-timer-base" value="120" class="w-full border-2 border-blue-300 rounded-lg p-2 text-center font-bold text-blue-900">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">答對重置 (秒)</label>
+                                    <input type="number" id="admin-timer-reset" value="45" class="w-full border-2 border-blue-300 rounded-lg p-2 text-center font-bold text-blue-900">
+                                </div>
                             </div>
                         </div>
 
@@ -1341,14 +1355,14 @@
                 });
                 
                 app.enterGameMode();
-                app.toast(`🏰 冒險小隊建立成功！代碼：${roomId}`);
+                app.toast(`🏰 冒險小隊建立成功！代碼：${roomId}`, 1);
                 app.speak('小隊建立！');
                 
                 // 提示目前模式
                 if (initEndless) {
     setTimeout(() => {
-        app.toast('♾️ 無盡戰鬥模式：已啟用');
-        app.speak('無盡戰鬥已啟動，請做好萬全準備！');
+        app.toast('♾️ 無盡戰鬥模式：已啟用', 1);
+        app.speak('戰鬥準備中！');
     }, 1200); // 依語音長度微調
 }
             });
@@ -1622,6 +1636,10 @@
                 app.el('admin-auto-roll').checked = settings.autoRollDefault !== false; 
                 app.el('admin-endless-mode').checked = settings.endlessMode || false; // v4.1.8
                 
+                // v4.5.0 時間設定讀取 (預設 120 與 45)
+                app.el('admin-timer-base').value = settings.baseTimer || 120;
+                app.el('admin-timer-reset').value = settings.resetTimer || 45;
+
                 const ag = settings.autoGrant || {};
                 app.el('admin-ag-enable').checked = ag.enabled || false;
                 app.el('admin-ag-interval').value = ag.interval || 3;
@@ -1663,6 +1681,10 @@
             const settings = {
                 autoRollDefault: app.el('admin-auto-roll').checked,
                 endlessMode: app.el('admin-endless-mode').checked,
+                // v4.5.0 儲存時間設定
+                baseTimer: parseInt(app.el('admin-timer-base').value) || 120,
+                resetTimer: parseInt(app.el('admin-timer-reset').value) || 45,
+                
                 autoGrant: {
                     enabled: app.el('admin-ag-enable').checked,
                     interval: parseInt(app.el('admin-ag-interval').value) || 3,
@@ -1793,7 +1815,7 @@
                         // v3.3.1: 新回合強制清除所有道具效果
                         app.state.activeItem = null;
                         app.renderStudentInventory(data.players); 
-                        app.toast('🔔 新回合開始，道具效果已重置');
+                        app.toast('🔔 新回合開始，道具效果已重置', 1);
                     }
                 }
 
@@ -1802,7 +1824,7 @@
                     app.state.lastWinnerTime = data.lastWinner.timestamp;
                     const now = Date.now();
                     if (now - data.lastWinner.timestamp < 10000) {
-                         app.speak(`恭喜`);
+                        
                          app.toast(`🎉 恭喜 ${data.lastWinner.name} 奪寶成功！`);
                     }
                 }
@@ -1826,7 +1848,7 @@
 
                 app.state.lastStatus = data.status;
                 if (data.status === 'dead_end') {
-                    const msg = "⚠️ 此局無解！4秒後重新開始...";
+                    const msg = "⚠️ 此局無解！";
                     app.toast(msg);
                     // 確保語音不重複觸發
                 }
@@ -2273,7 +2295,7 @@
                          mummy: '👻 木乃伊的詛咒' // 新增
                      };
                      const itemName = itemNames[type] || '🎁 神秘道具';
-                     app.toast(`🎁 已賜予 ${luckyMember.name}：${itemName}`);
+                     app.toast(物資已發放);
                  }
              });
         },
@@ -2519,7 +2541,7 @@
                 lastActive: firebase.database.ServerValue.TIMESTAMP
             });
             
-            if (app.state.voiceEnabled) app.speak("全員出擊!!!");
+            if (app.state.voiceEnabled) app.speak("全員出擊!!");
 
             const rollInterval = setInterval(() => {
                 app.el('t-dice-8').textContent = Math.floor(Math.random() * 8) + 1;
@@ -2546,17 +2568,20 @@
                         dice: { d8, d10, d12 } 
                     });
                     
-                    const msg = `擲出 ${d8}, ${d10}, ${d12}。此局無解！4秒後開始`;
+                    const msg = `重新開始`;
                     if (app.state.voiceEnabled) app.speak(msg);
                     
                     // 老師端 3 秒後自動觸發下一局
                     setTimeout(() => app.forceNextRound(), 3000);
                 } else {
+                    // v4.5.0: 使用全域設定的時間 (預設 120)
+                    const globalTime = app.state.globalSettings?.baseTimer || 120;
+                    
                     db.ref(`classes/${app.state.classId}`).update({
                         status: 'playing',
                         dice: { d8, d10, d12 },
                         timerActive: true, // 修改：擲骰後立即開始倒數
-                        timer: 120 // 修改：初始時間給予 2 分鐘 (120秒)
+                        timer: globalTime 
                     });
                     if (app.state.voiceEnabled) app.speak(`擲骰結果：${d8}、${d10}、${d12}。`);
                 }
@@ -2644,51 +2669,66 @@
             const gameData = app.state.gameData;
             if (!gameData || !gameData.decks) return;
 
-            // --- [修改開始 v4.4.6] 怪物攻擊判定邏輯 (Mode 1 & Mode 2 精準分流) ---
+            // --- [v4.4.9] 怪物攻擊判定邏輯 (Mode 1, 2, 4 精準分流與互斥) ---
             const monster = gameData.activeMonster;
             
             // 只有當怪物處於戰鬥狀態才進行判斷
             if (monster && monster.state === 'battle') {
                 let shouldAttack = false;
                 let attackReason = "";
+                let specificSpeech = ""; // 專用喊話變數
 
                 // 1. 計算場上卡牌狀態
                 const currentPyramid = gameData.pyramid || [];
-                // 剩餘未解的卡牌數
                 const remainingCount = currentPyramid.filter(c => c && !c.isTaken).length;
-                // 總卡牌位 (固定10張)
                 const totalSlots = 10; 
-                // 本局已解開的卡牌數 (用來判斷是否進入了30秒戰鬥狀態)
+                // 本局已解開的卡牌數 (用來判斷玩家是否有進行攻擊)
                 const takenCount = totalSlots - remainingCount;
 
                 // 2. 判斷是否為「時間到」 (timer === 0)
-                // 若是老師手動按「下一局」，timer 通常大於 0，則不觸發時間懲罰
                 const isTimeUp = (gameData.timer === 0);
 
-                // --- 判定邏輯開始 ---
+                // --- 判定邏輯開始 (互斥結構) ---
 
-                // 【Mode 1: 被動反擊】
-                // 觸發條件：
-                // A. 時間到了 (isTimeUp)
-                // B. 玩家有進行過攻擊 (takenCount > 0)，表示進入了30秒倒數階段
-                // C. 還有卡牌沒解完 (remainingCount > 0)
-                if (monster.mode1 && isTimeUp && takenCount > 0 && remainingCount > 0) {
-                    shouldAttack = true;
-                    attackReason = "mode1_counter"; 
+                // [優先檢測] Mode 4: 每N回合全體攻擊 (回合開始前/結束時檢測)
+                // 邏輯：下一回合是第幾局？
+                const nextRoundNum = (gameData.round || 1) + 1;
+                if (monster.mode4 > 0 && nextRoundNum % monster.mode4 === 0) {
+                     // 觸發週期性攻擊
+                     shouldAttack = true;
+                     attackReason = "mode4_periodic";
+                     specificSpeech = `魔物暴走！`;
                 }
 
-                // 【Mode 2: 主動攻擊】
-                // 觸發條件：
-                // A. 時間到了 (isTimeUp)
-                // B. 玩家完全沒有解開任何題目 (takenCount === 0)，表示耗盡了初始180秒
-                if (monster.mode2 && isTimeUp && takenCount === 0) {
-                    shouldAttack = true;
-                    attackReason = "mode2_active";
+                // [時間到檢測] Mode 1 vs Mode 2 (僅在時間到時觸發，且互斥)
+                if (isTimeUp && !shouldAttack) { // 如果已經觸發 Mode 4，則優先權給 Mode 4，或可疊加(視需求)，此處設為不疊加避免混亂
+                    
+                    if (takenCount > 0) {
+                        // 情況 A: 玩家有進行攻擊 (takenCount > 0)，但沒解完
+                        // ---> 檢測 Mode 1 (被動反擊)
+                        if (monster.mode1 && remainingCount > 0) {
+                            shouldAttack = true;
+                            attackReason = "mode1_counter";
+                            specificSpeech = "魔物反擊！";
+                        } else {
+                            // Mode 1 未開啟，且玩家有解題 -> 純粹時間到，安全
+                            specificSpeech = "時間到！做得好！";
+                        }
+                    } else {
+                        // 情況 B: 玩家完全沒有攻擊 (takenCount === 0)
+                        // ---> 檢測 Mode 2 (主動攻擊)
+                        if (monster.mode2) {
+                            shouldAttack = true;
+                            attackReason = "mode2_active";
+                            specificSpeech = "時間到，魔物主動攻擊！";
+                        } else {
+                            // Mode 2 未開啟，且玩家發呆 -> 純粹時間到，安全
+                            specificSpeech = "時間到，魔物正在觀察...";
+                        }
+                    }
                 }
 
-                // (Mode 3 為答錯觸發，不在回合結算處理)
-                // (Mode 4 為每N回合觸發，可在此擴充，目前保留)
-
+                // [執行結果]
                 if (shouldAttack) {
                     console.log(`👹 怪物發動攻擊！原因：${attackReason} (已解:${takenCount}, 剩餘:${remainingCount})`);
                     
@@ -2698,17 +2738,13 @@
                         actionTime: firebase.database.ServerValue.TIMESTAMP
                     });
 
-                    // 依據原因播放不同語音
-                    if (attackReason === "mode2_active") {
-                        app.speak('時間到，魔物主動發起攻擊！');
-                    } else if (attackReason === "mode1_counter") {
-                        app.speak('攻勢未盡，魔物進行反擊！');
-                    }
+                    // 播放對應語音
+                    if (specificSpeech) app.speak(specificSpeech);
+
                 } else {
-                    // 若時間到但未觸發攻擊 (例如沒開 Mode 2)，可播放提示
-                    if (isTimeUp && takenCount === 0 && !monster.mode2) {
-                        app.speak('時間到，魔物正在觀察...');
-                    }
+                    // 若沒有攻擊，但有設定好的語音 (例如純時間到)，則在此播放
+                    // 解決「時間到」語音重複問題：只在這裡播放一次
+                    if (specificSpeech) app.speak(specificSpeech);
                 }
             }
             // --- [修改結束] ---
@@ -2825,7 +2861,7 @@
                     app.toast(endlessRefilledMsg);
                     app.speak('時光回溯，牌庫重置');
                 } else {
-                    app.toast(hasRefilled ? '已進入下一回合並補牌' : '已進入下一回合');
+                    app.toast(hasRefilled ? '補牌' : '進入下一回合');
                 }
             }
         },
@@ -3018,7 +3054,7 @@
                     // --- 驗證成功：計算分數與傷害 ---
                     let points = card.points;
                     let playerName = app.state.myName;
-                    let successMsg = `恭喜冒險者${playerName}解謎成功！`;
+                    let successMsg = `${playerName}解謎成功！`;
                     let itemToConsume = null;
                     let curseTriggered = false;
 
@@ -3090,7 +3126,7 @@
                         updates['activeMonster/action'] = 'damage';
                         updates['activeMonster/actionTime'] = firebase.database.ServerValue.TIMESTAMP;
                         
-                        successMsg += ` (對魔物造成 ${damage} 點傷害!)`;
+                        successMsg += ` (造成 ${damage} 點傷害!)`;
                         
                         if (newMonsterHp <= 0) {
                             monsterDied = true;
@@ -3106,10 +3142,12 @@
                         setTimeout(() => app.toast("🏆 恭喜！魔物已被擊敗！"), 1000);
                     } else {
                         // 怪物未死，繼續遊戲流程
-                        // 修改：奪寶模式規則 - 只要答對，時間強制重置為 45 秒 (45秒)
+                        // v4.5.0: 使用全域設定的重置時間 (預設 45)
+                        const resetTime = app.state.globalSettings?.resetTimer || 45;
+                        
                         updates['timerActive'] = true;
-                        updates['timer'] = 45; 
-                        app.speak(successMsg + " 45秒倒數！");
+                        updates['timer'] = resetTime; 
+                        app.speak(successMsg + " 倒數開始！");
                     }
 
                     // 執行一次性更新
@@ -3130,8 +3168,7 @@
         },
 
       handleTimeUp: () => {
-            // v3.2.4: 時間到，自動換下一局
-            if (app.state.voiceEnabled) app.speak("時間到！進入下一回合。");
+            // v3.2.4: 時間到，自動換下一局 (修正：移除此處語音，改由 forceNextRound 統一判斷情境後播放，避免重複)
             
             // v4.1.0: 確保主控者在 2 秒緩衝後強制進入下一局
             if (app.state.role === 'teacher' || app.state.isHost) {
@@ -3170,7 +3207,8 @@
              return null;
         },
 
-        toast: (msg) => {
+        // [v4.4.6 修改] 增加 silentMode 參數，預設為 0 (播放語音)，傳入 1 則靜音  app.toast("你好", 1)不放語音
+        toast: (msg, silentMode = 0) => {
             const el = app.el('msg-toast');
             el.textContent = msg;
             el.style.opacity = '1';
@@ -3178,33 +3216,38 @@
             // 清除舊的 timer 以免閃爍
             if(app.state.toastTimer) clearTimeout(app.state.toastTimer);
             app.state.toastTimer = setTimeout(() => { el.style.opacity = '0'; el.style.top = '20px'; }, 2000);
-            app.speak(msg);
+            
+            // 只有當 silentMode 不等於 1 時，才播放語音
+            if (silentMode !== 1) {
+                app.speak(msg);
+            }
         },
 
         speak: (text) => {
-    // v4.0.9: 修正語音權限，讓房主 (isHost) 也能聽到語音提示
-    if ((app.state.role === 'teacher' || app.state.isHost) && app.state.voiceEnabled && window.speechSynthesis) {
-        // v3.1.5 修正：強制中斷上一句，避免語音重疊
-        window.speechSynthesis.cancel();
+            // v4.0.9: 修正語音權限，讓房主 (isHost) 也能聽到語音提示
+            if ((app.state.role === 'teacher' || app.state.isHost) && app.state.voiceEnabled && window.speechSynthesis) {
+                // [修改] 移除了 window.speechSynthesis.cancel() 
+                // 原因：為了讓語音排隊播放，而不是切斷上一句。
+                
+                // [修正] 語音口語化轉換：將符號轉為中文
+                let spokenText = text
+                    .replace(/\*/g, '乘以')   // 電腦符號 * -> 乘以
+                    .replace(/\//g, '除以')   // 電腦符號 / -> 除以
+                    .replace(/×/g, '乘以')    // 數學符號 × -> 乘以
+                    .replace(/÷/g, '除以')    // 數學符號 ÷ -> 除以
+                    .replace(/-/g, '減')      // 減號唸起來順一點
+                    .replace(/\+/g, '加');    // 加號唸起來順一點
 
-        // [修正] 語音口語化轉換：將符號轉為中文
-        let spokenText = text
-            .replace(/\*/g, '乘以')   // 電腦符號 * -> 乘以
-            .replace(/\//g, '除以')   // 電腦符號 / -> 除以
-            .replace(/×/g, '乘以')    // 數學符號 × -> 乘以
-            .replace(/÷/g, '除以')    // 數學符號 ÷ -> 除以
-            .replace(/-/g, '減')      // 減號唸起來順一點
-            .replace(/\+/g, '加');    // 加號唸起來順一點
+                // 移除表情符號，避免語音引擎讀出亂碼
+                const cleanText = spokenText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
 
-        // 移除表情符號，避免語音引擎讀出亂碼
-        const cleanText = spokenText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
-
-        const u = new SpeechSynthesisUtterance(cleanText);
-        u.lang = 'zh-TW';
-        u.rate = 0.9; // [建議] 稍微放慢語速，讓算式聽得更清楚
-        window.speechSynthesis.speak(u);
-    }
-},
+                const u = new SpeechSynthesisUtterance(cleanText);
+                u.lang = 'zh-TW';
+                // [建議] 排隊模式下，語速設為 1.0 (正常) 或 1.1，避免大量訊息堆積時講太久
+                u.rate = 1.8; 
+                window.speechSynthesis.speak(u);
+            }
+        },
         
         toggleVoice: () => {
             app.state.voiceEnabled = !app.state.voiceEnabled;
@@ -3241,6 +3284,7 @@
 // --- v4.3.3 怪物卡牌特效系統 ---
         // --- v4.3.2 怪物卡牌特效系統 (優化版：獨立資訊欄) ---
       // [v4.3.6] 渲染怪物舞台 (全同步特效版)
+        // [v4.5.2] 渲染怪物舞台 (修正提示位置 + 新增狀態燈號)
         renderMonsterStage: () => {
             const container = app.el('dynamic-monster-container');
             if (!container) return;
@@ -3263,8 +3307,17 @@
                 const cardBacks = { 1: 'https://class.kh.edu.tw/sites/30033/upload_file/6/BK8K9kH.jpg', 2: 'https://class.kh.edu.tw/sites/30033/upload_file/6/jZAPi9w.jpg', 3: 'https://class.kh.edu.tw/sites/30033/upload_file/6/YBrnPT7.jpg', 4: 'https://class.kh.edu.tw/sites/30033/upload_file/6/gold.jpg', 5: 'https://class.kh.edu.tw/sites/30033/upload_file/6/platinum.jpg', 6: 'https://class.kh.edu.tw/sites/30033/upload_file/6/yauTZnK.jpg', 7: 'https://class.kh.edu.tw/sites/30033/upload_file/6/AuMVWei.jpg' };
                 const backImg = cardBacks[defaultBackId] || cardBacks[1];
                 
-                // [No-Whitespace] 牌背
-                container.innerHTML = `<div id="active-monster-card" class="monster-card-wrapper w-24 h-40 md:w-28 md:h-48" style="top:0.5rem;left:0.5rem;" onclick="app.activateMonsterCard()"><div class="monster-card-inner"><div class="monster-face monster-face-front bg-slate-900"></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div>`;
+                // [No-Whitespace] 牌背 + v4.5.2 修正位置的召喚提示
+                // [版面修改說明]: 
+                // 1. 卡片位置: style="top:0.5rem; left:0.5rem;" (若要移動卡片，請改這裡)
+                // 2. 提示文字位置: 下方 div 的 style="top: 11rem; left: 0.5rem;" 
+                //    - top: 11rem (因為卡片高約10~12rem，設11rem會剛好在下方)
+                //    - left: 0.5rem (靠左對齊卡片)
+                //    - 若覺得太近或太遠，請調整 top 的數值
+                container.innerHTML = `<div id="active-monster-card" class="monster-card-wrapper w-24 h-40 md:w-28 md:h-48" style="top:0.5rem;left:0.5rem;" onclick="app.activateMonsterCard()"><div class="monster-card-inner"><div class="monster-face monster-face-front bg-slate-900"></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div><div class="absolute w-24 md:w-28 text-center pointer-events-none flex justify-center" style="top:13.5rem;left:0.5rem;z-index:40;"><div class="text-amber-600 font-bold text-s bg-white/95 px-2 py-1 rounded-full shadow-md animate-bounce border border-amber-300 whitespace-nowrap">👆 點擊遭遇卡</div></div>`;
+
+
+                
                 app.state.lastMonsterActionTime = 0; // 重置特效計時器
                 return;
             }
@@ -3277,6 +3330,19 @@
             const existingCard = document.getElementById('active-monster-card');
             const isSameMonster = existingCard && existingCard.dataset.monsterName === remoteMonster.name;
 
+            // [v4.5.2] 生成狀態燈號 HTML 字串 (無空白壓縮)
+            let statusHtml = '';
+            // Mode 1: 被動
+            if (remoteMonster.mode1) statusHtml += `<span onclick="app.toast('🛡️ [被動反擊]：若回合結束(或倒數結束)時，場上卡牌未全消，怪物將進行反擊。', 1)" class="cursor-pointer bg-slate-700 text-white px-1 rounded hover:bg-slate-600">[被動]</span>`;
+            // Mode 2: 主動
+            if (remoteMonster.mode2) statusHtml += `<span onclick="app.toast('⚔️ [主動攻擊]：若回合時間倒數結束，怪物將發動全體攻擊。', 1)" class="cursor-pointer bg-red-700 text-white px-1 rounded hover:bg-red-600">[主動]</span>`;
+            // Mode 3: 易怒
+            if (remoteMonster.mode3) statusHtml += `<span onclick="app.toast('💢 [易怒體質]：若答錯題目，怪物會立即對該小隊進行懲罰攻擊。', 1)" class="cursor-pointer bg-orange-600 text-white px-1 rounded hover:bg-orange-500">[易怒]</span>`;
+            // Mode 4: 暴走
+            if (remoteMonster.mode4 && remoteMonster.mode4 > 0) statusHtml += `<span onclick="app.toast('🔥 [暴走]：每隔 ${remoteMonster.mode4} 回合，怪物會無條件發動攻擊。', 1)" class="cursor-pointer bg-purple-700 text-white px-1 rounded hover:bg-purple-600">[暴走]</span>`;
+            // Mode 5: 禁用
+            if (remoteMonster.mode5) statusHtml += `<span onclick="app.toast('🚫 [法則封印]：本場戰鬥禁止使用「${remoteMonster.mode5}」符號。', 1)" class="cursor-pointer bg-black text-yellow-400 px-1 rounded hover:bg-gray-800 border border-yellow-500">[禁${remoteMonster.mode5}]</span>`;
+
             // 1. 如果卡片已存在且是同一隻 -> 執行更新與特效檢查
             if (existingCard && isSameMonster) {
                 // 更新血條
@@ -3288,8 +3354,6 @@
                 // 檢查是否需要觸發特效 (根據 actionTime)
                 if (remoteMonster.actionTime && remoteMonster.actionTime > (app.state.lastMonsterActionTime || 0)) {
                     app.state.lastMonsterActionTime = remoteMonster.actionTime;
-                    
-                    // 避免剛載入頁面就觸發特效 (例如重整時)，檢查時間差 (2秒內才觸發)
                     const now = Date.now();
                     const isRecent = (now - remoteMonster.actionTime) < 2000;
                     
@@ -3306,24 +3370,36 @@
             const backImg = cardBacks[remoteMonster.cardBack || 1] || cardBacks[1];
             const faceImg = remoteMonster.img1 || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
 
-            // 判斷是否為「新抽卡」：若召喚時間(timestamp)距離現在很近(<2秒)，則播放抽卡動畫
-            // 若距離很久(重整頁面)，則直接顯示在戰鬥位置
             const now = Date.now();
             const isFreshSummon = remoteMonster.timestamp && (now - remoteMonster.timestamp) < 2000;
-            
-            // 若非新召喚，直接給予定位 class
             const initialClass = isFreshSummon ? '' : 'is-in-battle is-flipped';
 
-            container.innerHTML = `<div id="active-monster-card" data-monster-name="${remoteMonster.name}" class="monster-card-wrapper w-24 h-40 md:w-28 md:h-48 ${initialClass}" style="top:0.5rem;left:0.5rem;" onclick="app.activateMonsterCard()"><div class="monster-card-inner"><div class="monster-face monster-face-front flex flex-col bg-slate-900 border-2 border-amber-500 overflow-hidden shadow-lg"><div class="h-[72%] w-full relative bg-gray-800"><img id="monster-img-face" src="${faceImg}" class="w-full h-full object-contain" alt="Monster"></div><div class="h-[28%] w-full bg-slate-900 flex flex-col justify-center items-center px-1 py-0.5"><div class="text-[0.6rem] md:text-xs font-black text-amber-400 truncate w-full text-center leading-tight">${remoteMonster.name}</div><div class="w-[90%] bg-gray-700 h-1.5 rounded-full overflow-hidden relative my-0.5 border border-black/40"><div id="monster-hp-bar-fill" class="bg-gradient-to-r from-red-600 to-red-400 h-full absolute top-0 left-0 transition-all duration-300" style="width:${hpPercent}%"></div></div><div id="monster-hp-text" class="text-[0.7rem] md:text-sm text-white font-mono font-bold leading-none drop-shadow-sm">HP ${currentHp}/${maxHp}</div></div></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div>`;
+            // [No-Whitespace] 戰鬥中的怪物卡 + 狀態燈號顯示區
+            // [版面修改說明]: 
+            // 狀態燈號容器: style="top: 13rem; ..." (位於戰鬥位置的下方)
+            // 若怪物移動到右側戰鬥位(is-in-battle)，樣式由 CSS class 控制位置，但燈號是 absolute，
+            // 我們使用一個 trick：將燈號放在卡片結構之外，但透過 CSS 定位到右側。
+            // 修正：為了讓燈號跟著卡片跑比較困難，我們直接將燈號固定在「戰鬥區(畫面右側)的下方」。
+            
+            // 下方 HTML 結構說明：
+            // 1. monster-card-wrapper: 怪物卡本體
+            // 2. status-container: 顯示 [被動] [主動] 等狀態，設定在 style="top: 0.5rem; right: 0.5rem; ..." 的戰鬥位置下方
+            // 這裡我們動態計算位置，因為怪物戰鬥時會移動到右側 (CSS class .is-in-battle)
+            // 為了簡化，我們將狀態列放在卡片 wrapper 內部或緊鄰，但這會被 3D 翻轉影響。
+            // 最佳解：獨立一個絕對定位的 div，位置對應戰鬥區。
+            
+            // 戰鬥區預設位置：手機版 left: calc(100% - 6rem - 0.5rem) / 桌機版 left: calc(100% - 7rem - 0.5rem)
+            // 我們直接把狀態列包含在 container 裡，並給予對應的右側定位。
+            
+            container.innerHTML = `<div id="active-monster-card" data-monster-name="${remoteMonster.name}" class="monster-card-wrapper w-24 h-40 md:w-28 md:h-48 ${initialClass}" style="top:0.5rem;left:0.5rem;" onclick="app.activateMonsterCard()"><div class="monster-card-inner"><div class="monster-face monster-face-front flex flex-col bg-slate-900 border-2 border-amber-500 overflow-hidden shadow-lg"><div class="h-[72%] w-full relative bg-gray-800"><img id="monster-img-face" src="${faceImg}" class="w-full h-full object-contain" alt="Monster"></div><div class="h-[28%] w-full bg-slate-900 flex flex-col justify-center items-center px-1 py-0.5"><div class="text-[0.6rem] md:text-xs font-black text-amber-400 truncate w-full text-center leading-tight">${remoteMonster.name}</div><div class="w-[90%] bg-gray-700 h-1.5 rounded-full overflow-hidden relative my-0.5 border border-black/40"><div id="monster-hp-bar-fill" class="bg-gradient-to-r from-red-600 to-red-400 h-full absolute top-0 left-0 transition-all duration-300" style="width:${hpPercent}%"></div></div><div id="monster-hp-text" class="text-[1rem] md:text-sm text-white font-mono font-bold leading-none drop-shadow-sm">HP ${currentHp}/${maxHp}</div></div></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div><div class="absolute w-32 flex flex-wrap justify-center gap-1 pointer-events-auto z-40" style="top:13.5rem; right:0.5rem;"><div class="flex flex-wrap justify-end gap-1 text-[0.6rem] font-bold shadow-sm">${statusHtml}</div></div>`;
 
-            // 如果是新召喚，延遲加入 class 以觸發飛入動畫
             if (isFreshSummon) {
                 setTimeout(() => {
                     const el = document.getElementById('active-monster-card');
                     if(el) {
                         el.classList.add('is-flipped');
                         app.speak('開始戰鬥！' + remoteMonster.name);
-                        setTimeout(() => el.classList.add('is-in-battle'), 100); // 些微延遲觸發移動
+                        setTimeout(() => el.classList.add('is-in-battle'), 100); 
                     }
                 }, 50);
             }
@@ -3380,7 +3456,7 @@
                 
                 // A. 啟動動畫 (怪物開始往左後退)
                 card.classList.add('monster-attacking'); 
-                app.speak('魔物發動攻擊');
+               
 
                 // B. 變身時機：延遲 450ms (配合 CSS 動畫退到最左邊時)，瞬間切換為攻擊圖
                 if (imgFace && attackImg && attackImg.trim() !== '') {
@@ -3752,7 +3828,7 @@
 
             // 延遲執行
             setTimeout(() => {
-                let msg = `🎁 補給時間 (第${round}回合)：\n`;
+                let msg = `🎁 補給物資`;
                 
                 targets.forEach(p => {
                     msg += `${p.name} 獲得支援\n`;
@@ -3764,7 +3840,7 @@
                 });
                 
                 app.toast(msg);
-                app.speak("戰場物資已投放");
+             
             }, 1500);
         },
     };
