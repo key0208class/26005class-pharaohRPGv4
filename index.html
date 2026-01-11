@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.5.3 - 冒險模式版</title>
+    <title>神殿試煉 v4.5.2 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -287,7 +287,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.5.3 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.5.2 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -3223,71 +3223,30 @@
             }
         },
 
-        // [v4.5.3] 優化語音播報 (修正平板觸發問題 + 裝置速度分流)
         speak: (text) => {
-            // 1. 基礎設定檢查
-            if (!app.state.globalSettings || !app.state.globalSettings.soundEnabled) return;
-            if (!window.speechSynthesis) return;
+            // v4.0.9: 修正語音權限，讓房主 (isHost) 也能聽到語音提示
+            if ((app.state.role === 'teacher' || app.state.isHost) && app.state.voiceEnabled && window.speechSynthesis) {
+                // [修改] 移除了 window.speechSynthesis.cancel() 
+                // 原因：為了讓語音排隊播放，而不是切斷上一句。
+                
+                // [修正] 語音口語化轉換：將符號轉為中文
+                let spokenText = text
+                    .replace(/\*/g, '乘以')   // 電腦符號 * -> 乘以
+                    .replace(/\//g, '除以')   // 電腦符號 / -> 除以
+                    .replace(/×/g, '乘以')    // 數學符號 × -> 乘以
+                    .replace(/÷/g, '除以')    // 數學符號 ÷ -> 除以
+                    .replace(/-/g, '減')      // 減號唸起來順一點
+                    .replace(/\+/g, '加');    // 加號唸起來順一點
 
-            // 2. 強制停止上一句 (避免堆疊)，但在某些舊款平板過度 cancel 會卡住，故流程需嚴謹
-            try {
-                window.speechSynthesis.cancel();
-            } catch (e) { console.warn("TTS Cancel error", e); }
+                // 移除表情符號，避免語音引擎讀出亂碼
+                const cleanText = spokenText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
 
-            // 3. 建立語音物件
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'zh-TW';
-
-            // --- ⚙️ 裝置偵測與速度設定 ---
-            // 偵測是否為行動裝置 (手機/平板)
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-            if (isMobile) {
-                // 📱 平板/手機設定：通常內建語音引擎較快，建議設慢一點 (0.8 ~ 1.0)
-                utterance.rate = 0.9; 
-                utterance.pitch = 1.0; 
-            } else {
-                // 💻 電腦設定：通常電腦語音較平緩，建議稍快 (1.1 ~ 1.3)
-                utterance.rate = 1.8; 
-                utterance.pitch = 1.0;
+                const u = new SpeechSynthesisUtterance(cleanText);
+                u.lang = 'zh-TW';
+                // [建議] 排隊模式下，語速設為 1.0 (正常) 或 1.1，避免大量訊息堆積時講太久
+                u.rate = 1.0; 
+                window.speechSynthesis.speak(u);
             }
-            // ---------------------------
-
-            // 4. 聲音庫選取 (更強健的選取邏輯)
-            // 瀏覽器聲音庫載入是非同步的，有時第一句會抓不到，這裡做個防護
-            let voices = window.speechSynthesis.getVoices();
-            if (voices.length > 0) {
-                // 優先順序：台灣中文 -> 香港中文 -> 任何含有 'zh' 的中文 -> 預設
-                const targetVoice = voices.find(v => v.lang === 'zh-TW') || 
-                                    voices.find(v => v.lang === 'zh-HK') || 
-                                    voices.find(v => v.lang.indexOf('zh') !== -1);
-                if (targetVoice) {
-                    utterance.voice = targetVoice;
-                }
-            }
-
-            // 5. [關鍵修正] 防止瀏覽器垃圾回收機制 (Garbage Collection) 移除播放物件
-            // Chrome 與部分 Android WebView 若沒把 utterance 存到全域，講長句會中斷
-            if (!window.speechSynthesisUtteranceHolder) window.speechSynthesisUtteranceHolder = [];
-            window.speechSynthesisUtteranceHolder.push(utterance);
-            
-            // 播放結束後釋放記憶體
-            utterance.onend = () => { 
-                window.speechSynthesisUtteranceHolder = window.speechSynthesisUtteranceHolder.filter(u => u !== utterance);
-            };
-            utterance.onerror = (e) => {
-                console.warn("TTS Playback Error:", e);
-                window.speechSynthesisUtteranceHolder = window.speechSynthesisUtteranceHolder.filter(u => u !== utterance);
-            };
-
-            // 6. 執行播放 (微小延遲確保執行緒不衝突)
-            setTimeout(() => {
-                try {
-                    window.speechSynthesis.speak(utterance);
-                } catch (e) {
-                    console.error("語音啟動失敗", e);
-                }
-            }, 10);
         },
         
         toggleVoice: () => {
