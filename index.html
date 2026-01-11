@@ -3410,7 +3410,7 @@
         // 主控者抽卡 (寫入 DB)
         activateMonsterCard: () => {
             if (!app.state.isHost) {
-                if(app.state.gameData?.activeMonster?.state !== 'battle') app.toast('✋ 等待遭遇魔物...');
+                if(app.state.gameData?.activeMonster?.state !== 'battle') app.toast('✋ 等待隊長抽取魔獸');
                 return;
             }
             if (app.state.gameData?.activeMonster?.state === 'battle') return;
