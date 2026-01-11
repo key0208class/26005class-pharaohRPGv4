@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.5.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.5.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -287,7 +287,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.5.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.5.3 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -3244,7 +3244,7 @@
                 const u = new SpeechSynthesisUtterance(cleanText);
                 u.lang = 'zh-TW';
                 // [建議] 排隊模式下，語速設為 1.0 (正常) 或 1.1，避免大量訊息堆積時講太久
-                u.rate = 1.0; 
+                u.rate = 1.5; 
                 window.speechSynthesis.speak(u);
             }
         },
@@ -3785,6 +3785,7 @@
         },
 
        // v4.0.5: 自動道具分配 (GM全域設定版)
+        // v4.0.5: 自動道具分配 (GM全域設定版)
         processAutoGrant: (round) => {
             // 只有房主負責執行分配，避免重複發送
             if (!app.state.isHost) return;
@@ -3802,11 +3803,7 @@
             // 開始計算分數與排名
             const players = app.state.gameData.players || {};
             
-            // 將所有玩家視為同一池子進行比較 (因為現在是單一小隊模式，我們改成給"分數較低的玩家")
-            // 但為了相容舊邏輯，我們這裡改為：隨機挑選 N 名玩家給予獎勵
-            // 或者：如果有多個隊伍(未來擴充)，則維持原邏輯。
-            // v4.0.3 調整：直接找出所有玩家，分數最低的前 N 名
-            
+            // 將所有玩家視為同一池子進行比較
             let allPlayers = [];
             Object.keys(players).forEach(teamKey => {
                 if(players[teamKey]) {
@@ -3828,18 +3825,23 @@
 
             // 延遲執行
             setTimeout(() => {
-                let msg = `🎁 補給物資`;
+                let msg = `🎁 補給物資\n`;
                 
                 targets.forEach(p => {
                     msg += `${p.name} 獲得支援\n`;
                     // 執行發放
                     for(let i=0; i<globalCfg.itemCount; i++) {
                         const randomType = globalCfg.allowedTypes[Math.floor(Math.random() * globalCfg.allowedTypes.length)];
-                        app.grantItem(p.teamKey, randomType); // 使用原本的 grantItem (它有權重邏輯，這裡混合使用也無妨)
+                        app.grantItem(p.teamKey, randomType); 
                     }
                 });
                 
-                app.toast(msg);
+                // [v4.5.3 修改] 優化語音體驗：
+                // 1. app.toast 傳入第二個參數 '1' 代表靜音模式 (只顯示文字，不讀出內容)
+                app.toast(msg, 1);
+                
+                // 2. 另外播放一句簡短的總結語音，避免名單太長一直念
+                app.speak(`發放物資`);
              
             }, 1500);
         },
