@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.5.3 - 冒險模式版</title>
+    <title>神殿試煉 v4.5.4 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -287,7 +287,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.5.3 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.5.4 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -662,6 +662,8 @@
             <div class="tablet-layout">
                 <div class="tablet-left flex flex-col gap-4">
                     <div class="bg-amber-100 rounded-2xl p-4 shadow-inner text-center relative border-2 border-amber-300">
+                        <div id="round-display" class="absolute right-3 top-2 text-XL font-black text-amber-900/60 font-mono tracking-widest select-none">ROUND 1</div>
+                        
                         <div id="game-status-text" class="text-xl font-bold text-amber-800">等待遊戲開始...</div>
                         <div id="timer-display" class="hidden mt-2 text-4xl font-black text-red-600 font-mono drop-shadow-sm">30</div>
                     </div>
@@ -1865,6 +1867,12 @@
                 'ended': '🏁 冒險結束 - 統計戰果'
             };
             statusEl.textContent = statusMap[data.status] || data.status;
+            
+            // [新增] 更新回合數顯示
+            if (app.el('round-display')) {
+                // 如果想要改顯示中文，可改為: `第 ${data.round || 1} 回合`
+                app.el('round-display').textContent = `第 ${data.round || 1} 回合`;
+            }
 
             // 特殊狀態樣式
             if (data.status === 'dead_end') {
