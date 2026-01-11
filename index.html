@@ -2443,7 +2443,7 @@
                             lockedBy: app.state.myTeam,
                             lockedUntil: Date.now() + 60000 
                         });
-                        app.speak('封印術式已發動');
+                        app.speak('封印發動');
                         app.state.activeItem = null; 
                         app.renderActiveItemStatus();
                         app.renderStudentInventory(app.state.gameData.players);
@@ -2516,7 +2516,7 @@
                 lastActive: firebase.database.ServerValue.TIMESTAMP
             });
             
-            if (app.state.voiceEnabled) app.speak("命運之骰轉動中...");
+            if (app.state.voiceEnabled) app.speak("全員出擊!!!");
 
             const rollInterval = setInterval(() => {
                 app.el('t-dice-8').textContent = Math.floor(Math.random() * 8) + 1;
@@ -2543,7 +2543,7 @@
                         dice: { d8, d10, d12 } 
                     });
                     
-                    const msg = `擲出 ${d8}, ${d10}, ${d12}。此局無解！4秒後重新開始`;
+                    const msg = `擲出 ${d8}, ${d10}, ${d12}。此局無解！4秒後開始`;
                     if (app.state.voiceEnabled) app.speak(msg);
                     
                     // 老師端 3 秒後自動觸發下一局
@@ -2759,7 +2759,7 @@
 
                  if (endlessRefilledMsg) {
                      app.toast(endlessRefilledMsg);
-                     app.speak('時光回溯，全彩牌庫已重置');
+                     app.speak('時光回溯，牌庫重置');
                  } else {
                      app.toast(hasRefilled ? '已進入下一回合並補牌' : '已進入下一回合');
                  }
@@ -3042,10 +3042,10 @@
                         setTimeout(() => app.toast("🏆 恭喜！魔物已被擊敗！"), 1000);
                     } else {
                         // 怪物未死，繼續遊戲流程
-                        // 修改：奪寶模式規則 - 只要答對，時間強制重置為 1 分鐘 (60秒)
+                        // 修改：奪寶模式規則 - 只要答對，時間強制重置為 0.5 分鐘 (30秒)
                         updates['timerActive'] = true;
-                        updates['timer'] = 60; 
-                        app.speak(successMsg + " 60秒倒數！");
+                        updates['timer'] = 30; 
+                        app.speak(successMsg + " 30秒倒數！");
                     }
 
                     // 執行一次性更新
@@ -3067,7 +3067,7 @@
 
       handleTimeUp: () => {
             // v3.2.4: 時間到，自動換下一局
-            if (app.state.voiceEnabled) app.speak("時間到！準備進入下一回合。");
+            if (app.state.voiceEnabled) app.speak("時間到！進入下一回合。");
             
             // v4.1.0: 確保主控者在 2 秒緩衝後強制進入下一局
             if (app.state.role === 'teacher' || app.state.isHost) {
@@ -3258,7 +3258,7 @@
                     const el = document.getElementById('active-monster-card');
                     if(el) {
                         el.classList.add('is-flipped');
-                        app.speak('召喚！' + remoteMonster.name);
+                        app.speak('遭遇！' + remoteMonster.name);
                         setTimeout(() => el.classList.add('is-in-battle'), 100); // 些微延遲觸發移動
                     }
                 }, 50);
@@ -3512,13 +3512,13 @@
                 
                 if (type === 'seal') {
                      app.toast('🔒 封印模式已啟動，請點擊金字塔上的牌進行封鎖！');
-                     app.speak('法老封印已啟動');
+                     app.speak('封印已啟動');
                 }
 
                 // v3.7.0 新增
                 if (type === 'mummy') {
                     app.toast('👻 詛咒模式已啟動，請選擇一張卡牌埋下陷阱！');
-                    app.speak('木乃伊詛咒已啟動');
+                    app.speak('詛咒已啟動');
                 }
             }
             
