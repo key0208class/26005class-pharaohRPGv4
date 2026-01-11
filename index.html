@@ -3244,7 +3244,7 @@
                 const u = new SpeechSynthesisUtterance(cleanText);
                 u.lang = 'zh-TW';
                 // [建議] 排隊模式下，語速設為 1.0 (正常) 或 1.1，避免大量訊息堆積時講太久
-                u.rate = 1.8; 
+                u.rate = 1.0; 
                 window.speechSynthesis.speak(u);
             }
         },
