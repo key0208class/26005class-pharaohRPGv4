@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.4.3 - 冒險模式版</title>
+    <title>神殿試煉 v4.4.5 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -287,7 +287,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.4.3 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.4.5 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -1342,12 +1342,15 @@
                 
                 app.enterGameMode();
                 app.toast(`🏰 冒險小隊建立成功！代碼：${roomId}`);
-                app.speak('冒險小隊建立成功！');
+                app.speak('小隊建立！');
                 
                 // 提示目前模式
-                if(initEndless) {
-                    setTimeout(() => app.toast('♾️ 無盡戰鬥模式：已啟用'), 1000);
-                }
+                if (initEndless) {
+    setTimeout(() => {
+        app.toast('♾️ 無盡戰鬥模式：已啟用');
+        app.speak('無盡戰鬥已啟動，請做好萬全準備！');
+    }, 1200); // 依語音長度微調
+}
             });
         },
 
@@ -2553,7 +2556,7 @@
                         status: 'playing',
                         dice: { d8, d10, d12 },
                         timerActive: true, // 修改：擲骰後立即開始倒數
-                        timer: 180 // 修改：初始時間給予 3 分鐘 (180秒)
+                        timer: 120 // 修改：初始時間給予 2 分鐘 (120秒)
                     });
                     if (app.state.voiceEnabled) app.speak(`擲骰結果：${d8}、${d10}、${d12}。`);
                 }
@@ -2637,133 +2640,194 @@
              }
         },
         
-       forceNextRound: () => {
-             const gameData = app.state.gameData;
-             if (!gameData || !gameData.decks) return;
+      forceNextRound: () => {
+            const gameData = app.state.gameData;
+            if (!gameData || !gameData.decks) return;
 
-             // [v4.3.7] 回合結束，發送怪物攻擊訊號 (同步特效)
-             if (gameData.activeMonster && gameData.activeMonster.state === 'battle') {
-                 db.ref(`classes/${app.state.classId}/activeMonster`).update({
-                     action: 'attack',
-                     actionTime: firebase.database.ServerValue.TIMESTAMP
-                 });
-             }
+            // --- [修改開始 v4.4.6] 怪物攻擊判定邏輯 (Mode 1 & Mode 2 精準分流) ---
+            const monster = gameData.activeMonster;
+            
+            // 只有當怪物處於戰鬥狀態才進行判斷
+            if (monster && monster.state === 'battle') {
+                let shouldAttack = false;
+                let attackReason = "";
 
-             // [v4.1.9 修正] 雙重檢查無盡模式設定
-             // 1. 優先讀取房間本身的設定
-             let isEndless = gameData.endlessMode;
-             
-             // 2. 如果房間沒有設定 (undefined)，則讀取 GM 全域設定作為備案
-             if (isEndless === undefined || isEndless === null) {
-                 if (app.state.globalSettings && app.state.globalSettings.endlessMode === true) {
-                     isEndless = true;
-                 } else {
-                     isEndless = false;
-                 }
-             }
+                // 1. 計算場上卡牌狀態
+                const currentPyramid = gameData.pyramid || [];
+                // 剩餘未解的卡牌數
+                const remainingCount = currentPyramid.filter(c => c && !c.isTaken).length;
+                // 總卡牌位 (固定10張)
+                const totalSlots = 10; 
+                // 本局已解開的卡牌數 (用來判斷是否進入了30秒戰鬥狀態)
+                const takenCount = totalSlots - remainingCount;
 
-             const newPyramid = [...(gameData.pyramid || [])];
-             // 深拷貝牌庫，避免直接修改 state，確保稍後寫入 DB 資料正確
-             const newDecks = JSON.parse(JSON.stringify(gameData.decks));
-             
-             let hasRefilled = false;
-             let cannotRefill = false;
-             let endlessRefilledMsg = "";
+                // 2. 判斷是否為「時間到」 (timer === 0)
+                // 若是老師手動按「下一局」，timer 通常大於 0，則不觸發時間懲罰
+                const isTimeUp = (gameData.timer === 0);
 
-             // v3.7.1 木乃伊詛咒倒數
-             newPyramid.forEach(card => {
-                 if (card && !card.isTaken && card.curseData) {
-                     card.curseData.roundsLeft -= 1;
-                     if (card.curseData.roundsLeft <= 0) delete card.curseData;
-                 }
-             });
+                // --- 判定邏輯開始 ---
 
-             const slots = [
-                 {idx:0, color:'black'}, {idx:1, color:'red'}, {idx:2, color:'red'},
-                 {idx:3, color:'blue'}, {idx:4, color:'blue'}, {idx:5, color:'blue'},
-                 {idx:6, color:'yellow'}, {idx:7, color:'yellow'}, {idx:8, color:'yellow'}, {idx:9, color:'yellow'}
-             ];
+                // 【Mode 1: 被動反擊】
+                // 觸發條件：
+                // A. 時間到了 (isTimeUp)
+                // B. 玩家有進行過攻擊 (takenCount > 0)，表示進入了30秒倒數階段
+                // C. 還有卡牌沒解完 (remainingCount > 0)
+                if (monster.mode1 && isTimeUp && takenCount > 0 && remainingCount > 0) {
+                    shouldAttack = true;
+                    attackReason = "mode1_counter"; 
+                }
 
-             // --- [v4.2.4 優化] 預先檢查：是否需要全域洗牌 (無盡模式) ---
-             let needsGlobalRefill = false;
+                // 【Mode 2: 主動攻擊】
+                // 觸發條件：
+                // A. 時間到了 (isTimeUp)
+                // B. 玩家完全沒有解開任何題目 (takenCount === 0)，表示耗盡了初始180秒
+                if (monster.mode2 && isTimeUp && takenCount === 0) {
+                    shouldAttack = true;
+                    attackReason = "mode2_active";
+                }
 
-             for (const slot of slots) {
-                 // 若該位置是空的或已被拿走，需要補牌
-                 if (!newPyramid[slot.idx] || newPyramid[slot.idx].isTaken) {
-                     // 檢查對應顏色的牌庫是否為空
-                     if (!newDecks[slot.color] || newDecks[slot.color].length === 0) {
-                         if (isEndless === true) {
-                             needsGlobalRefill = true; // 標記需要全域重置
-                             break; // 只要有一個顏色缺牌，就跳出檢查，直接觸發全體重置
-                         } else {
-                             cannotRefill = true; // 非無盡模式，標記為無法補牌 (遊戲結束)
-                         }
-                     }
-                 }
-             }
+                // (Mode 3 為答錯觸發，不在回合結算處理)
+                // (Mode 4 為每N回合觸發，可在此擴充，目前保留)
 
-             // --- [v4.2.4 實作] 執行全域洗牌 (針對所有顏色) ---
-             if (needsGlobalRefill) {
-                 // 1. 產生全新完整牌庫
-                 const fullDecks = app.createFullDeck();
-                 
-                 // 2. 找出目前場上「殘留」的卡牌 (避免洗出重複的牌)
-                 const currentOnBoard = newPyramid.filter(c => c && !c.isTaken);
+                if (shouldAttack) {
+                    console.log(`👹 怪物發動攻擊！原因：${attackReason} (已解:${takenCount}, 剩餘:${remainingCount})`);
+                    
+                    // 寫入攻擊訊號
+                    db.ref(`classes/${app.state.classId}/activeMonster`).update({
+                        action: 'attack',
+                        actionTime: firebase.database.ServerValue.TIMESTAMP
+                    });
 
-                 // 3. 針對四種顏色，分別過濾掉場上的牌，然後洗牌填入 newDecks
-                 ['black', 'red', 'blue', 'yellow'].forEach(color => {
-                     const freshCards = fullDecks[color];
-                     const onBoardNums = currentOnBoard.filter(c => c.color === color).map(c => c.number);
-                     // 過濾 -> 洗牌 -> 賦值 (確保所有顏色都補滿)
-                     newDecks[color] = app.shuffle(freshCards.filter(c => !onBoardNums.includes(c.number)));
-                 });
+                    // 依據原因播放不同語音
+                    if (attackReason === "mode2_active") {
+                        app.speak('時間到，魔物主動發起攻擊！');
+                    } else if (attackReason === "mode1_counter") {
+                        app.speak('攻勢未盡，魔物進行反擊！');
+                    }
+                } else {
+                    // 若時間到但未觸發攻擊 (例如沒開 Mode 2)，可播放提示
+                    if (isTimeUp && takenCount === 0 && !monster.mode2) {
+                        app.speak('時間到，魔物正在觀察...');
+                    }
+                }
+            }
+            // --- [修改結束] ---
 
-                 endlessRefilledMsg = "♾️ 牌庫能量耗盡，時光回溯！全彩牌庫已重置！";
-             }
+            // [v4.1.9 修正] 雙重檢查無盡模式設定
+            // 1. 優先讀取房間本身的設定
+            let isEndless = gameData.endlessMode;
 
-             // --- 執行補牌動作 ---
-             if (cannotRefill) {
-                 app.triggerEndGame();
-                 app.toast('🏁 牌庫耗盡，冒險結束！');
-             } else {
-                 // 依序填補空缺
-                 slots.forEach(slot => {
-                     if (!newPyramid[slot.idx] || newPyramid[slot.idx].isTaken) {
-                         // 再次檢查 (因為如果觸發了全域洗牌，這裡一定會有牌)
-                         if (newDecks[slot.color] && newDecks[slot.color].length > 0) {
-                             newPyramid[slot.idx] = newDecks[slot.color].pop(); 
-                             hasRefilled = true;
-                         }
-                     }
-                 });
+            // 2. 如果房間沒有設定 (undefined)，則讀取 GM 全域設定作為備案
+            if (isEndless === undefined || isEndless === null) {
+                if (app.state.globalSettings && app.state.globalSettings.endlessMode === true) {
+                    isEndless = true;
+                } else {
+                    isEndless = false;
+                }
+            }
 
-                 const nextRound = (gameData.round || 1) + 1;
-                 const updates = {
-                     status: 'waiting',
-                     dice: {d8:'-', d10:'-', d12:'-'},
-                     timerActive: false,
-                     pyramid: newPyramid,
-                     decks: newDecks,
-                     round: nextRound,
-                     endlessMode: isEndless,
-                     // [v4.4.1 修正] 每次換局都更新活躍時間，防止房間在大廳消失
-                     lastActive: firebase.database.ServerValue.TIMESTAMP 
-                 };
+            const newPyramid = [...(gameData.pyramid || [])];
+            // 深拷貝牌庫，避免直接修改 state，確保稍後寫入 DB 資料正確
+            const newDecks = JSON.parse(JSON.stringify(gameData.decks));
 
-                 db.ref(`classes/${app.state.classId}`).update(updates);
-                 
-                 // 觸發自動發放
-                 if(app.state.isHost) {
-                     app.processAutoGrant(nextRound);
-                 }
+            let hasRefilled = false;
+            let cannotRefill = false;
+            let endlessRefilledMsg = "";
 
-                 if (endlessRefilledMsg) {
-                     app.toast(endlessRefilledMsg);
-                     app.speak('時光回溯，牌庫重置');
-                 } else {
-                     app.toast(hasRefilled ? '已進入下一回合並補牌' : '已進入下一回合');
-                 }
-             }
+            // v3.7.1 木乃伊詛咒倒數
+            newPyramid.forEach(card => {
+                if (card && !card.isTaken && card.curseData) {
+                    card.curseData.roundsLeft -= 1;
+                    if (card.curseData.roundsLeft <= 0) delete card.curseData;
+                }
+            });
+
+            const slots = [
+                { idx: 0, color: 'black' }, { idx: 1, color: 'red' }, { idx: 2, color: 'red' },
+                { idx: 3, color: 'blue' }, { idx: 4, color: 'blue' }, { idx: 5, color: 'blue' },
+                { idx: 6, color: 'yellow' }, { idx: 7, color: 'yellow' }, { idx: 8, color: 'yellow' }, { idx: 9, color: 'yellow' }
+            ];
+
+            // --- [v4.2.4 優化] 預先檢查：是否需要全域洗牌 (無盡模式) ---
+            let needsGlobalRefill = false;
+
+            for (const slot of slots) {
+                // 若該位置是空的或已被拿走，需要補牌
+                if (!newPyramid[slot.idx] || newPyramid[slot.idx].isTaken) {
+                    // 檢查對應顏色的牌庫是否為空
+                    if (!newDecks[slot.color] || newDecks[slot.color].length === 0) {
+                        if (isEndless === true) {
+                            needsGlobalRefill = true; // 標記需要全域重置
+                            break; // 只要有一個顏色缺牌，就跳出檢查，直接觸發全體重置
+                        } else {
+                            cannotRefill = true; // 非無盡模式，標記為無法補牌 (遊戲結束)
+                        }
+                    }
+                }
+            }
+
+            // --- [v4.2.4 實作] 執行全域洗牌 (針對所有顏色) ---
+            if (needsGlobalRefill) {
+                // 1. 產生全新完整牌庫
+                const fullDecks = app.createFullDeck();
+
+                // 2. 找出目前場上「殘留」的卡牌 (避免洗出重複的牌)
+                const currentOnBoard = newPyramid.filter(c => c && !c.isTaken);
+
+                // 3. 針對四種顏色，分別過濾掉場上的牌，然後洗牌填入 newDecks
+                ['black', 'red', 'blue', 'yellow'].forEach(color => {
+                    const freshCards = fullDecks[color];
+                    const onBoardNums = currentOnBoard.filter(c => c.color === color).map(c => c.number);
+                    // 過濾 -> 洗牌 -> 賦值 (確保所有顏色都補滿)
+                    newDecks[color] = app.shuffle(freshCards.filter(c => !onBoardNums.includes(c.number)));
+                });
+
+                endlessRefilledMsg = "♾️ 牌庫能量耗盡，時光回溯！全彩牌庫已重置！";
+            }
+
+            // --- 執行補牌動作 ---
+            if (cannotRefill) {
+                app.triggerEndGame();
+                app.toast('🏁 牌庫耗盡，冒險結束！');
+            } else {
+                // 依序填補空缺
+                slots.forEach(slot => {
+                    if (!newPyramid[slot.idx] || newPyramid[slot.idx].isTaken) {
+                        // 再次檢查 (因為如果觸發了全域洗牌，這裡一定會有牌)
+                        if (newDecks[slot.color] && newDecks[slot.color].length > 0) {
+                            newPyramid[slot.idx] = newDecks[slot.color].pop();
+                            hasRefilled = true;
+                        }
+                    }
+                });
+
+                const nextRound = (gameData.round || 1) + 1;
+                const updates = {
+                    status: 'waiting',
+                    dice: { d8: '-', d10: '-', d12: '-' },
+                    timerActive: false,
+                    pyramid: newPyramid,
+                    decks: newDecks,
+                    round: nextRound,
+                    endlessMode: isEndless,
+                    // [v4.4.1 修正] 每次換局都更新活躍時間，防止房間在大廳消失
+                    lastActive: firebase.database.ServerValue.TIMESTAMP
+                };
+
+                db.ref(`classes/${app.state.classId}`).update(updates);
+
+                // 觸發自動發放
+                if (app.state.isHost) {
+                    app.processAutoGrant(nextRound);
+                }
+
+                if (endlessRefilledMsg) {
+                    app.toast(endlessRefilledMsg);
+                    app.speak('時光回溯，牌庫重置');
+                } else {
+                    app.toast(hasRefilled ? '已進入下一回合並補牌' : '已進入下一回合');
+                }
+            }
         },
 
         // v3.0.9: 觸發遊戲結束
@@ -2859,7 +2923,7 @@
             
             // 檢查是否處於怪物未召喚狀態
             if (app.state.gameData?.activeMonster?.state !== 'battle') {
-                return app.toast('🛡️ 請等待房主召喚魔物後再進行攻擊！');
+                return app.toast('🛡️ 請等待房主遭遇魔物後再進行攻擊！');
             }
 
             const frozen = app.state.gameData.frozenState;
@@ -3042,10 +3106,10 @@
                         setTimeout(() => app.toast("🏆 恭喜！魔物已被擊敗！"), 1000);
                     } else {
                         // 怪物未死，繼續遊戲流程
-                        // 修改：奪寶模式規則 - 只要答對，時間強制重置為 0.5 分鐘 (30秒)
+                        // 修改：奪寶模式規則 - 只要答對，時間強制重置為 45 秒 (45秒)
                         updates['timerActive'] = true;
-                        updates['timer'] = 30; 
-                        app.speak(successMsg + " 30秒倒數！");
+                        updates['timer'] = 45; 
+                        app.speak(successMsg + " 45秒倒數！");
                     }
 
                     // 執行一次性更新
@@ -3258,7 +3322,7 @@
                     const el = document.getElementById('active-monster-card');
                     if(el) {
                         el.classList.add('is-flipped');
-                        app.speak('遭遇！' + remoteMonster.name);
+                        app.speak('開始戰鬥！' + remoteMonster.name);
                         setTimeout(() => el.classList.add('is-in-battle'), 100); // 些微延遲觸發移動
                     }
                 }, 50);
@@ -3270,7 +3334,7 @@
         // 主控者抽卡 (寫入 DB)
         activateMonsterCard: () => {
             if (!app.state.isHost) {
-                if(app.state.gameData?.activeMonster?.state !== 'battle') app.toast('✋ 等待房主召喚魔物...');
+                if(app.state.gameData?.activeMonster?.state !== 'battle') app.toast('✋ 等待遭遇魔物...');
                 return;
             }
             if (app.state.gameData?.activeMonster?.state === 'battle') return;
@@ -3293,7 +3357,7 @@
             };
 
             db.ref(`classes/${app.state.classId}/activeMonster`).set(newMonsterData);
-            app.toast('⚔️ 魔物召喚中...');
+            app.toast('⚔️ 遭遇魔物中...');
         },
 
        // [v4.4.0] 觸發特效 (優化版：左退變身 -> 右衝 -> 還原)
@@ -3478,7 +3542,7 @@
                         db.ref(`classes/${app.state.classId}/timer`).set(newTime);
                         
                         app.speak('時間碎片已使用，延長六十秒');
-                        app.toast('🕒 成功！撤退時間已延長 60 秒！');
+                        app.toast('🕒 成功！戰鬥時間已延長 60 秒！');
                         return count - 1;
                     }
                     return count;
