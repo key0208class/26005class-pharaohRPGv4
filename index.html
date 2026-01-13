@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.5.6 - 冒險模式版</title>
+    <title>神殿試煉 v4.5.7 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -279,6 +279,14 @@
         .animate-shake {
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
         }
+		/* [新增] 怪物死亡破碎特效 */
+        .monster-die { animation: shatter-anim 2.5s forwards ease-in-out; pointer-events: none; }
+        @keyframes shatter-anim {
+            0% { transform: scale(1); filter: grayscale(0) brightness(1); opacity: 1; }
+            10% { transform: scale(1.1) rotate(5deg); filter: grayscale(1) brightness(2) contrast(2); } /* 變亮僵直 */
+            30% { transform: scale(1.1) rotate(-5deg); filter: sepia(1) hue-rotate(-50deg) saturate(5); opacity: 0.9; } /* 變紅/碎裂前兆 */
+            100% { transform: scale(1.5) rotate(15deg); filter: blur(20px) brightness(0); opacity: 0; } /* 破碎淡出 */
+        }
 </style>    
 	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -287,7 +295,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.5.6 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.5.7 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -506,6 +514,10 @@
 
                 </div>
 <div id="tab-content-monsters" class="admin-tab-content space-y-4">
+                        
+                       
+
+                        
                         
                         <div id="monster-list-view" class="block animate-[fadeIn_0.3s_ease-out]">
                             <div class="flex justify-between items-center mb-4">
@@ -3145,13 +3157,24 @@
                         }
                     }
                     if (monsterDied) {
-                        updates['status'] = 'ended';
-                        updates['timerActive'] = false;
-                        successMsg += " ⚔️ 魔物已倒下！冒險小隊獲勝！";
+                        // [修改] 怪物死亡時，不立即結束，先播放特效
+                        // 1. 設定血量為 0
+                        // 2. 發送 'die' 動作訊號 (觸發全體特效)
+                        // 3. 立即停止計時器 (防止倒數語音干擾)
+                        updates['activeMonster/action'] = 'die';
+                        updates['timerActive'] = false; 
+                        
+                        successMsg += " ⚔️ 魔物已粉碎！冒險小隊獲勝！";
+                        
+                        // 先播放語音，讓玩家知道贏了
                         app.speak(successMsg);
                         
-                        // 播放勝利動畫 (稍後由 updateUI 處理)
-                        setTimeout(() => app.toast("🏆 恭喜！魔物已被擊敗！"), 1000);
+                        // 延遲 2.5 秒後，才真正切換狀態為 ended (顯示結算視窗)
+                        setTimeout(() => {
+                            app.triggerEndGame();
+                            app.toast("🏆 恭喜！魔物已被擊敗！");
+                        }, 2500);
+
                     } else {
                         // 怪物未死，繼續遊戲流程
                         // v4.5.0: 使用全域設定的重置時間 (預設 45)
@@ -3383,6 +3406,7 @@
                     if (isRecent) {
                         if (remoteMonster.action === 'attack') app.triggerMonsterAttackEffect('attack');
                         if (remoteMonster.action === 'damage') app.triggerMonsterAttackEffect('damage');
+                        if (remoteMonster.action === 'die') app.triggerMonsterAttackEffect('die'); // [新增] 死亡偵測
                     }
                 }
                 return; 
@@ -3496,8 +3520,14 @@
                     card.classList.remove('monster-attacking');
                 }, 1500);
 
+            } else if (type === 'die') {
+                // [新增] 死亡特效邏輯
+                card.classList.add('monster-die');
+                // 播放強烈震動
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+
             } else if (type === 'damage') {
-                // --- 受傷特效邏輯 (維持不變) ---
+                // --- 受傷特效邏輯 ---
                 card.classList.add('monster-damaged');
                 
                 // 粒子爆炸特效
