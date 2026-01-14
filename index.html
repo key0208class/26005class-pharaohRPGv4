@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.5.7 - 冒險模式版</title>
+    <title>神殿試煉 v4.6.2 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -295,7 +295,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.5.7 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.6.2 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -454,7 +454,19 @@
                                 </div>
                             </div>
                         </div>
-
+<div class="bg-stone-100 p-4 rounded-xl border border-stone-200">
+                            <h4 class="font-bold text-stone-800 mb-3 flex items-center gap-2">🃏 怪物牌庫分佈設定</h4>
+                            <div class="text-xs text-gray-500 mb-2">設定每局遊戲自動產生的怪物數量與等級 (總數為各等級之和)</div>
+                            <div class="grid grid-cols-4 gap-2 md:grid-cols-7">
+                                <div><label class="block text-[0.6rem] font-bold text-stone-500">Lv.1 黃土</label><input type="number" id="admin-md-1" value="2" min="0" class="w-full border border-stone-300 rounded p-1 text-center font-bold"></div>
+                                <div><label class="block text-[0.6rem] font-bold text-stone-500">Lv.2 鋅銅</label><input type="number" id="admin-md-2" value="1" min="0" class="w-full border border-stone-300 rounded p-1 text-center font-bold"></div>
+                                <div><label class="block text-[0.6rem] font-bold text-stone-500">Lv.3 白銀</label><input type="number" id="admin-md-3" value="1" min="0" class="w-full border border-stone-300 rounded p-1 text-center font-bold"></div>
+                                <div><label class="block text-[0.6rem] font-bold text-stone-500">Lv.4 黃金</label><input type="number" id="admin-md-4" value="1" min="0" class="w-full border border-stone-300 rounded p-1 text-center font-bold"></div>
+                                <div><label class="block text-[0.6rem] font-bold text-stone-500">Lv.5 白金</label><input type="number" id="admin-md-5" value="0" min="0" class="w-full border border-stone-300 rounded p-1 text-center font-bold"></div>
+                                <div><label class="block text-[0.6rem] font-bold text-stone-500">Lv.6 黑金</label><input type="number" id="admin-md-6" value="0" min="0" class="w-full border border-stone-300 rounded p-1 text-center font-bold"></div>
+                                <div><label class="block text-[0.6rem] font-bold text-stone-500">Lv.7 藍金</label><input type="number" id="admin-md-7" value="0" min="0" class="w-full border border-stone-300 rounded p-1 text-center font-bold"></div>
+                            </div>
+                        </div>
                         <div class="bg-red-50 p-4 rounded-xl border border-red-200">
                              <h4 class="font-bold text-red-800 mb-3">🗑️ 數據清理</h4>
                              <div class="flex items-center justify-between mb-2">
@@ -1353,7 +1365,8 @@
             db.ref(`classes/${roomId}`).set({
                 hostName: name,
                 roomName: `${name} 的冒險`,
-                status: 'waiting', 
+               status: 'waiting',
+                monsterDeck: app.generateMonsterDeck(), // [新增] 寫入初始怪物牌庫
                 dice: { d8: '-', d10: '-', d12: '-' },
                 round: 1,
                 timer: 30,
@@ -1658,6 +1671,13 @@
                 app.el('admin-timer-base').value = settings.baseTimer || 120;
                 app.el('admin-timer-reset').value = settings.resetTimer || 45;
 
+                // 讀取怪物分佈設定
+                const md = settings.monsterDist || {};
+                for(let i=1; i<=7; i++) {
+                    const input = document.getElementById(`admin-md-${i}`);
+                    if(input) input.value = (md[i] !== undefined) ? md[i] : (i===1?2: (i<=4?1:0)); // 預設值: L1=2, L2-4=1, 其他0
+                }
+
                 const ag = settings.autoGrant || {};
                 app.el('admin-ag-enable').checked = ag.enabled || false;
                 app.el('admin-ag-interval').value = ag.interval || 3;
@@ -1709,6 +1729,16 @@
                     targetCount: parseInt(app.el('admin-ag-target').value) || 2,
                     itemCount: parseInt(app.el('admin-ag-count').value) || 1,
                     allowedTypes: allowedTypes
+                },
+                // 儲存怪物分佈
+                monsterDist: {
+                    1: parseInt(document.getElementById('admin-md-1').value)||0,
+                    2: parseInt(document.getElementById('admin-md-2').value)||0,
+                    3: parseInt(document.getElementById('admin-md-3').value)||0,
+                    4: parseInt(document.getElementById('admin-md-4').value)||0,
+                    5: parseInt(document.getElementById('admin-md-5').value)||0,
+                    6: parseInt(document.getElementById('admin-md-6').value)||0,
+                    7: parseInt(document.getElementById('admin-md-7').value)||0
                 },
                 // v4.2.2 新增怪物設定
                 // v4.2.2 儲存怪物列表
@@ -2319,7 +2349,7 @@
                          mummy: '👻 木乃伊的詛咒' // 新增
                      };
                      const itemName = itemNames[type] || '🎁 神秘道具';
-                     app.toast(物資已發放);
+                     app.toast('物資已發放',1);
                  }
              });
         },
@@ -2567,14 +2597,10 @@
             
             if (app.state.voiceEnabled) app.speak("全員出擊!!");
 
-            const rollInterval = setInterval(() => {
-                app.el('t-dice-8').textContent = Math.floor(Math.random() * 8) + 1;
-                app.el('t-dice-10').textContent = Math.floor(Math.random() * 10) + 1;
-                app.el('t-dice-12').textContent = Math.floor(Math.random() * 12) + 1;
-            }, 80);
+            // [修正 v4.5.9] 移除舊版視覺骰子動畫 setInterval，避免找不到元素報錯 (textContent error)
 
             setTimeout(() => {
-                clearInterval(rollInterval);
+                // 產生真正的隨機數值
                 const d8 = Math.floor(Math.random() * 8) + 1;
                 const d10 = Math.floor(Math.random() * 10) + 1;
                 const d12 = Math.floor(Math.random() * 12) + 1;
@@ -2665,8 +2691,9 @@
                  // 2. 設定資料庫狀態為 reset_completed，並重置所有資料
                  // 這樣所有客戶端收到通知後，就會顯示全螢幕的按鈕
                  // [v4.3.1] 重置時更新 lastActive，確保房間重新出現在大廳
-                 await db.ref(`classes/${app.state.classId}`).set({
+               await db.ref(`classes/${app.state.classId}`).set({
                     status: 'reset_completed', 
+                    monsterDeck: app.generateMonsterDeck(), // [新增] 重置時重新生成牌庫
                     dice: { d8: '-', d10: '-', d12: '-' },
                     round: 1,
                     timer: 30,
@@ -3078,7 +3105,7 @@
                     // --- 驗證成功：計算分數與傷害 ---
                     let points = card.points;
                     let playerName = app.state.myName;
-                    let successMsg = `${playerName}解謎成功！`;
+                    let successMsg = `${playerName}進攻！`;
                     let itemToConsume = null;
                     let curseTriggered = false;
 
@@ -3157,22 +3184,26 @@
                         }
                     }
                     if (monsterDied) {
-                        // [修改] 怪物死亡時，不立即結束，先播放特效
-                        // 1. 設定血量為 0
-                        // 2. 發送 'die' 動作訊號 (觸發全體特效)
-                        // 3. 立即停止計時器 (防止倒數語音干擾)
+                        // [v4.5.8 修改] 怪物死亡時，不結束遊戲，而是自動換局並重置抽卡區
                         updates['activeMonster/action'] = 'die';
                         updates['timerActive'] = false; 
                         
-                        successMsg += " ⚔️ 魔物已粉碎！冒險小隊獲勝！";
+                        successMsg += " ⚔️ 已擊敗魔物！";
                         
                         // 先播放語音，讓玩家知道贏了
                         app.speak(successMsg);
                         
-                        // 延遲 2.5 秒後，才真正切換狀態為 ended (顯示結算視窗)
+                        // 延遲 2.5 秒後，執行自動換局邏輯
                         setTimeout(() => {
-                            app.triggerEndGame();
-                            app.toast("🏆 恭喜！魔物已被擊敗！");
+                            // 1. 移除當前怪物 (讓介面回到「點擊抽卡」狀態)
+                            db.ref(`classes/${app.state.classId}/activeMonster`).remove();
+                            
+                            // 2. 自動進入下一回合 (補牌)
+                            app.forceNextRound();
+                            
+                            // 3. 提示房主抽卡
+                            app.toast("💀 魔物已消滅！進入下一局，請房主抽取新魔物！", 1);
+                            app.speak("請抽取下一隻魔物");
                         }, 2500);
 
                     } else {
@@ -3348,10 +3379,20 @@
                     return;
                 }
                 
-                // 顯示預設牌背 (靜止狀態)
-                const defaultBackId = (globalList[0] && globalList[0].cardBack) ? globalList[0].cardBack : 1;
+              // 顯示預設牌背 (靜止狀態) - [修改] 優先讀取牌庫第一張的背卡
+                let nextBackId = 1;
+                const deck = app.state.gameData.monsterDeck || [];
+                let tipsText = "👆 點擊遭遇卡";
+                
+                if (deck.length > 0) {
+                    nextBackId = deck[0].cardBack || 1;
+                } else {
+                    nextBackId = 7; // 顯示藍金卡代表勝利
+                    tipsText = "🏆 點擊結算勝利";
+                }
+
                 const cardBacks = { 1: 'https://class.kh.edu.tw/sites/30033/upload_file/6/BK8K9kH.jpg', 2: 'https://class.kh.edu.tw/sites/30033/upload_file/6/jZAPi9w.jpg', 3: 'https://class.kh.edu.tw/sites/30033/upload_file/6/YBrnPT7.jpg', 4: 'https://class.kh.edu.tw/sites/30033/upload_file/6/gold.jpg', 5: 'https://class.kh.edu.tw/sites/30033/upload_file/6/platinum.jpg', 6: 'https://class.kh.edu.tw/sites/30033/upload_file/6/yauTZnK.jpg', 7: 'https://class.kh.edu.tw/sites/30033/upload_file/6/AuMVWei.jpg' };
-                const backImg = cardBacks[defaultBackId] || cardBacks[1];
+                const backImg = cardBacks[nextBackId] || cardBacks[1];
                 
                 // [No-Whitespace] 牌背 + v4.5.2 修正位置的召喚提示
                 // [版面修改說明]: 
@@ -3360,7 +3401,7 @@
                 //    - top: 11rem (因為卡片高約10~12rem，設11rem會剛好在下方)
                 //    - left: 0.5rem (靠左對齊卡片)
                 //    - 若覺得太近或太遠，請調整 top 的數值
-                container.innerHTML = `<div id="active-monster-card" class="monster-card-wrapper w-24 h-40 md:w-28 md:h-48" style="top:0.5rem;left:0.5rem;" onclick="app.activateMonsterCard()"><div class="monster-card-inner"><div class="monster-face monster-face-front bg-slate-900"></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div><div class="absolute w-24 md:w-28 text-center pointer-events-none flex justify-center" style="top:13.5rem;left:0.5rem;z-index:40;"><div class="text-amber-600 font-bold text-s bg-white/95 px-2 py-1 rounded-full shadow-md animate-bounce border border-amber-300 whitespace-nowrap">👆 點擊遭遇卡</div></div>`;
+                container.innerHTML = `<div id="active-monster-card" class="monster-card-wrapper w-24 h-40 md:w-28 md:h-48" style="top:0.5rem;left:0.5rem;" onclick="app.activateMonsterCard()"><div class="monster-card-inner"><div class="monster-face monster-face-front bg-slate-900"></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div><div class="absolute w-24 md:w-28 text-center pointer-events-none flex justify-center" style="top:13.5rem;left:0.5rem;z-index:40;"><div class="text-amber-600 font-bold text-s bg-white/95 px-2 py-1 rounded-full shadow-md animate-bounce border border-amber-300 whitespace-nowrap">${tipsText}</div></div>`;
 
 
                 
@@ -3445,7 +3486,7 @@
                     const el = document.getElementById('active-monster-card');
                     if(el) {
                         el.classList.add('is-flipped');
-                        app.speak('開始戰鬥！' + remoteMonster.name);
+                        app.speak('開始戰鬥！');
                         setTimeout(() => el.classList.add('is-in-battle'), 100); 
                     }
                 }, 50);
@@ -3455,6 +3496,8 @@
         },
 
         // 主控者抽卡 (寫入 DB)
+        // 主控者抽卡 (寫入 DB) - v4.5.8 改為全亂數抽取
+        // 主控者抽卡 (寫入 DB) - v4.6.1 修正：牌庫耗盡即勝利
         activateMonsterCard: () => {
             if (!app.state.isHost) {
                 if(app.state.gameData?.activeMonster?.state !== 'battle') app.toast('✋ 等待隊長抽取魔獸');
@@ -3462,25 +3505,39 @@
             }
             if (app.state.gameData?.activeMonster?.state === 'battle') return;
 
-            const monsterList = app.state.globalSettings?.monsterList || [];
-            // 隨機抽選怪物邏輯 (目前維持取第1隻，可修改)
-            const template = monsterList.length > 0 ? monsterList[0] : {
-                name: '守關魔物', hp: 100, maxHp: 100, cardBack: 1, atk: 1, gold: 50,
-                img1: 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png'
-            };
+            // [修改] 改為從牌庫抽取
+            const currentDeck = app.state.gameData.monsterDeck || [];
+            let template = null;
+            let newDeck = [...currentDeck]; // 複製一份以便修改
 
-            const newMonsterData = {
-                ...template,
-                currentHp: template.hp,
-                maxHp: template.hp,
-                state: 'battle',
-                timestamp: firebase.database.ServerValue.TIMESTAMP, // 記錄召喚時間
-                action: 'summon',
-                actionTime: firebase.database.ServerValue.TIMESTAMP
-            };
+            if (newDeck.length > 0) {
+                template = newDeck.shift(); // 取出第一張
+                app.toast(`🎴 遭遇魔物！(牌庫剩餘 ${newDeck.length})`, 1);
+                
+                // 只有還有怪才建立新怪物資料，避免 template 為 null 報錯
+                const newMonsterData = {
+                    ...template,
+                    currentHp: template.maxHp, // 確保滿血
+                    maxHp: template.maxHp,
+                    state: 'battle',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    action: 'summon',
+                    actionTime: firebase.database.ServerValue.TIMESTAMP
+                };
 
-            db.ref(`classes/${app.state.classId}/activeMonster`).set(newMonsterData);
-            app.toast('⚔️ 遭遇魔物中...');
+                // 同時更新：設定新怪物 + 更新剩餘牌庫
+                db.ref(`classes/${app.state.classId}`).update({
+                    activeMonster: newMonsterData,
+                    monsterDeck: newDeck
+                });
+                app.speak('遭遇魔物' + template.name);
+
+            } else {
+                // 牌庫沒了，代表設定的所有怪物都已打完 -> 觸發勝利
+                app.toast('🎉 恭喜！所有魔物已被擊敗！', 1);
+                app.speak('任務完成，冒險勝利！');
+                app.triggerEndGame(); // 直接呼叫結束遊戲函式
+            }
         },
 
        // [v4.4.0] 觸發特效 (優化版：左退變身 -> 右衝 -> 還原)
@@ -3670,8 +3727,8 @@
                         const newTime = currentTimer + 60;
                         db.ref(`classes/${app.state.classId}/timer`).set(newTime);
                         
-                        app.speak('時間碎片已使用，延長六十秒');
-                        app.toast('🕒 成功！戰鬥時間已延長 60 秒！');
+                        app.speak('使用時間碎片，延長六十秒');
+                        app.toast('🕒 成功！戰鬥時間已延長 60 秒！', 1);
                         return count - 1;
                     }
                     return count;
@@ -3699,7 +3756,7 @@
                     const ops = ['+', '-', '×', '÷'];
                     const banned = ops[Math.floor(Math.random() * ops.length)];
                     app.state.anubisBannedOp = banned;
-                    app.toast(`⚖️ 審判降臨！本題禁止使用「${banned}」`);
+                    app.toast(`⚖️ 審判降臨！禁用「${banned}」`,1);
                     app.speak(`阿努比斯禁止使用${banned}`);
                 }
                 
@@ -3781,6 +3838,61 @@
                 area.innerHTML = '';
                 area.classList.add('hidden');
             }
+        },
+		
+		// [新增] 根據全域設定產生怪物牌庫
+        // [新增] 根據全域設定產生怪物牌庫 (v4.6.1 修改：強度排序邏輯)
+        generateMonsterDeck: () => {
+            const globalSet = app.state.globalSettings || {};
+            const dist = globalSet.monsterDist || {1:2, 2:1, 3:1, 4:1, 5:0, 6:0, 7:0}; // 預設分佈
+            const fullList = globalSet.monsterList || [];
+            
+            let finalDeck = [];
+            
+            // 依序遍歷 L1 ~ L7，確保怪物強度是循序漸進的
+            for (let level = 1; level <= 7; level++) {
+                const count = dist[level] || 0;
+                
+                // 只有當該等級設定數量 > 0 時才處理
+                if (count > 0) {
+                    let levelDeck = []; // 建立「該等級專用」的暫存牌堆
+
+                    // 找出該等級的所有候選怪物
+                    const candidates = fullList.filter(m => (m.cardBack == level)); // 注意: 比較時允許型別轉換
+                    
+                    if (candidates.length > 0) {
+                        for (let k = 0; k < count; k++) {
+                            // 隨機從該等級中選一隻 (可重複選)
+                            const picked = candidates[Math.floor(Math.random() * candidates.length)];
+                            // 深拷貝並加上唯一ID (避免參照問題)
+                            levelDeck.push({ ...picked, uniqueId: Date.now() + Math.random() + k });
+                        }
+                    } else {
+                        // 若該等級沒有設定怪物，但有設定數量，則產生一隻預設怪
+                        for (let k = 0; k < count; k++) {
+                            levelDeck.push({
+                                name: `Lv.${level} 未知魔物`, hp: level*100, maxHp: level*100, cardBack: level, atk: level*10, gold: level*50,
+                                img1: 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png',
+                                uniqueId: Date.now() + Math.random() + k
+                            });
+                        }
+                    }
+
+                    // [關鍵修改] 只針對「目前這個等級」的牌堆進行洗牌
+                    // 這樣保證同等級的怪物順序隨機，但整體順序依然是 Lv1 -> Lv2 -> ...
+                    for (let i = levelDeck.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [levelDeck[i], levelDeck[j]] = [levelDeck[j], levelDeck[i]];
+                    }
+
+                    // 將洗好的該等級牌堆，依序加入最終牌庫
+                    finalDeck = finalDeck.concat(levelDeck);
+                }
+            }
+            
+            // v4.6.1: 移除原本的全域大洗牌，保留強度排序
+            
+            return finalDeck;
         },
         generateInitialGameData: () => {
             const decks = app.createFullDeck();
