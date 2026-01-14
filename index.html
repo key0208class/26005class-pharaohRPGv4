@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.6.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.6.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -295,7 +295,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.6.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.6.3 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -527,10 +527,6 @@
                 </div>
 <div id="tab-content-monsters" class="admin-tab-content space-y-4">
                         
-                       
-
-                        
-                        
                         <div id="monster-list-view" class="block animate-[fadeIn_0.3s_ease-out]">
                             <div class="flex justify-between items-center mb-4">
                                 <h4 class="font-bold text-stone-800 flex items-center gap-2 text-xl">👹 怪物圖鑑總表</h4>
@@ -547,8 +543,9 @@
                                     <div class="col-span-1">卡背</div>
                                     <div class="col-span-1">HP</div>
                                     <div class="col-span-1">ATK</div>
+                                    <div class="col-span-1 text-purple-700">經驗</div>
                                     <div class="col-span-1">金幣</div>
-                                    <div class="col-span-3">操作</div>
+                                    <div class="col-span-2">操作</div>
                                 </div>
                                 <div id="monster-list-container" class="max-h-[400px] overflow-y-auto custom-scrollbar bg-white">
                                     </div>
@@ -588,7 +585,7 @@
                                             </select>
                                         </div>
 
-                                        <div class="grid grid-cols-3 gap-2">
+                                        <div class="grid grid-cols-4 gap-2">
                                             <div>
                                                 <label class="block text-xs font-bold text-gray-500 mb-1">HP</label>
                                                 <input type="number" id="edit-monster-hp" class="w-full border-2 border-red-300 rounded-lg p-2 text-center font-bold text-red-700">
@@ -598,7 +595,11 @@
                                                 <input type="number" id="edit-monster-atk" class="w-full border-2 border-orange-300 rounded-lg p-2 text-center font-bold text-orange-700">
                                             </div>
                                             <div>
-                                                <label class="block text-xs font-bold text-gray-500 mb-1">掉落金幣</label>
+                                                <label class="block text-xs font-bold text-gray-500 mb-1 text-purple-700">經驗</label>
+                                                <input type="number" id="edit-monster-exp" class="w-full border-2 border-purple-300 rounded-lg p-2 text-center font-bold text-purple-700">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-500 mb-1">金幣</label>
                                                 <input type="number" id="edit-monster-gold" class="w-full border-2 border-yellow-300 rounded-lg p-2 text-center font-bold text-yellow-700">
                                             </div>
                                         </div>
@@ -1540,7 +1541,7 @@
             }
         },
 
-       // 渲染怪物列表 (生成無空白 HTML)
+// 渲染怪物列表 (生成無空白 HTML)
         renderMonsterListUI: () => {
             const list = app.state.tempMonsterList || [];
             const container = app.el('monster-list-container');
@@ -1564,9 +1565,9 @@
                     const img = m.img1 || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png'; // 預設圖
                     const cbUrl = cardBacks[m.cardBack || 1] || cardBacks[1]; // 取得卡背圖，預設1
                     
-                    // 表格列 HTML (使用壓縮寫法避免空白節點)
-                    // 調整欄位: Name(3), Card(1), HP(1), ATK(1), Gold(1), Action(3)
-                    html += `<div class="grid grid-cols-12 gap-2 p-2 border-b border-stone-200 items-center text-center hover:bg-stone-50 transition-colors group"><div class="col-span-1 flex justify-center"><img src="${img}" class="w-8 h-8 object-cover rounded bg-gray-200 border border-gray-300"></div><div class="col-span-1 font-mono text-xs text-gray-400">#${idx + 1}</div><div onclick="app.editMonsterDetail(${idx})" class="col-span-3 text-left pl-2 font-bold text-stone-800 cursor-pointer hover:text-amber-600 hover:underline flex items-center gap-1 truncate" title="${m.name}"><span>${m.name}</span><span class="text-[0.6rem] text-gray-400 group-hover:inline hidden">✏️</span></div><div class="col-span-1 flex justify-center"><img src="${cbUrl}" class="w-6 h-9 object-cover rounded border border-gray-300 shadow-sm" title="強度: ${m.cardBack||1}"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'hp', this.value)" value="${m.hp}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-red-700 bg-white focus:bg-amber-50"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'atk', this.value)" value="${m.atk}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-orange-700 bg-white focus:bg-amber-50"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'gold', this.value)" value="${m.gold}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-yellow-700 bg-white focus:bg-amber-50"></div><div class="col-span-3 flex justify-center gap-2"><button onclick="app.editMonsterDetail(${idx})" class="bg-slate-100 text-slate-600 px-3 py-1 rounded text-xs font-bold hover:bg-amber-100 hover:text-amber-700 transition-colors border border-slate-200">詳細設定</button></div></div>`;
+                    // [v4.6.3] 表格列 HTML (使用壓縮寫法避免空白節點)
+                    // 調整欄位: Name(3), Card(1), HP(1), ATK(1), EXP(1), Gold(1), Action(2)
+                    html += `<div class="grid grid-cols-12 gap-2 p-2 border-b border-stone-200 items-center text-center hover:bg-stone-50 transition-colors group"><div class="col-span-1 flex justify-center"><img src="${img}" class="w-8 h-8 object-cover rounded bg-gray-200 border border-gray-300"></div><div class="col-span-1 font-mono text-xs text-gray-400">#${idx + 1}</div><div onclick="app.editMonsterDetail(${idx})" class="col-span-3 text-left pl-2 font-bold text-stone-800 cursor-pointer hover:text-amber-600 hover:underline flex items-center gap-1 truncate" title="${m.name}"><span>${m.name}</span><span class="text-[0.6rem] text-gray-400 group-hover:inline hidden">✏️</span></div><div class="col-span-1 flex justify-center"><img src="${cbUrl}" class="w-6 h-9 object-cover rounded border border-gray-300 shadow-sm" title="強度: ${m.cardBack||1}"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'hp', this.value)" value="${m.hp}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-red-700 bg-white focus:bg-amber-50"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'atk', this.value)" value="${m.atk}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-orange-700 bg-white focus:bg-amber-50"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'exp', this.value)" value="${m.exp||0}" class="w-full border border-purple-300 rounded px-1 text-center text-sm font-bold text-purple-700 bg-white focus:bg-amber-50"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'gold', this.value)" value="${m.gold}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-yellow-700 bg-white focus:bg-amber-50"></div><div class="col-span-2 flex justify-center gap-2"><button onclick="app.editMonsterDetail(${idx})" class="bg-slate-100 text-slate-600 px-3 py-1 rounded text-xs font-bold hover:bg-amber-100 hover:text-amber-700 transition-colors border border-slate-200">詳細設定</button></div></div>`;
                 });
             }
             container.innerHTML = html;
@@ -1575,9 +1576,10 @@
         // 新增一隻預設怪物
         addNewMonster: () => {
             if (!app.state.tempMonsterList) app.state.tempMonsterList = [];
+            // [v4.6.3] 新增 exp 預設值
             app.state.tempMonsterList.push({
                 name: '新怪物',
-                hp: 1000, maxHp: 1000, atk: 10, gold: 50,
+                hp: 100, maxHp: 100, atk: 1, exp: 10, gold: 50,
                 cardBack: 1, // 預設黃土卡
                 mode1: false, mode2: false, mode3: false, mode4: 0, mode5: '',
                 img1: '', img2: '', img3: ''
@@ -1590,7 +1592,7 @@
             }, 100);
         },
 
-        // 直接在列表中更新數值 (HP, ATK, Gold)
+        // 直接在列表中更新數值 (HP, ATK, Exp, Gold)
         updateMonsterDirect: (index, field, value) => {
             if (app.state.tempMonsterList && app.state.tempMonsterList[index]) {
                 app.state.tempMonsterList[index][field] = parseInt(value) || 0;
@@ -1598,7 +1600,7 @@
             }
         },
 
-        // 進入詳細編輯模式
+       // 進入詳細編輯模式
         editMonsterDetail: (index) => {
             const m = app.state.tempMonsterList[index];
             if (!m) return;
@@ -1608,6 +1610,7 @@
             app.el('edit-monster-cardback').value = m.cardBack || 1; // 載入卡背設定
             app.el('edit-monster-hp').value = m.hp;
             app.el('edit-monster-atk').value = m.atk;
+            app.el('edit-monster-exp').value = m.exp || 0; // [v4.6.3] 載入經驗值
             app.el('edit-monster-gold').value = m.gold;
             
             app.el('edit-monster-mode-1').checked = m.mode1 || false;
@@ -1637,6 +1640,7 @@
             m.hp = parseInt(app.el('edit-monster-hp').value) || 100;
             m.maxHp = m.hp;
             m.atk = parseInt(app.el('edit-monster-atk').value) || 10;
+            m.exp = parseInt(app.el('edit-monster-exp').value) || 0; // [v4.6.3] 儲存經驗值
             m.gold = parseInt(app.el('edit-monster-gold').value) || 10;
             
             m.mode1 = app.el('edit-monster-mode-1').checked;
@@ -2869,13 +2873,13 @@
                     newDecks[color] = app.shuffle(freshCards.filter(c => !onBoardNums.includes(c.number)));
                 });
 
-                endlessRefilledMsg = "♾️ 牌庫能量耗盡，時光回溯！全彩牌庫已重置！";
+                endlessRefilledMsg = "♾️ 牌庫耗盡，時光回溯！";
             }
 
             // --- 執行補牌動作 ---
             if (cannotRefill) {
                 app.triggerEndGame();
-                app.toast('🏁 牌庫耗盡，冒險結束！');
+                app.toast('🏁 牌庫耗盡，重洗！');
             } else {
                 // 依序填補空缺
                 slots.forEach(slot => {
