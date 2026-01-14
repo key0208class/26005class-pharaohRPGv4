@@ -287,6 +287,26 @@
             30% { transform: scale(1.1) rotate(-5deg); filter: sepia(1) hue-rotate(-50deg) saturate(5); opacity: 0.9; } /* 變紅/碎裂前兆 */
             100% { transform: scale(1.5) rotate(15deg); filter: blur(20px) brightness(0); opacity: 0; } /* 破碎淡出 */
         }
+		/* [新增] 傷害數字跳出特效 */
+        .damage-text {
+            position: absolute;
+            left: 50%;
+            top: 20%; /* [可修改] 若要調整數字出現的高低，請改這裡 (20% 為卡片上方) */
+            transform: translate(-50%, -50%);
+            color: #ef4444; /* [可修改] 數字顏色 (目前為鮮紅色) */
+            font-size: 2.5rem; /* [可修改] 數字大小 (目前為 2.5rem，相當大) */
+            font-weight: 900;
+            text-shadow: 2px 2px 0px #fff, -1px -1px 0 #fff, 0 0 10px rgba(255,0,0,0.5); /* 白邊與發光 */
+            pointer-events: none;
+            z-index: 100;
+            font-family: 'Arial Black', sans-serif;
+            animation: damage-float-up 1s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+        }
+        @keyframes damage-float-up {
+            0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+            15% { opacity: 1; transform: translate(-50%, -30px) scale(1.5); } /* 彈出放大 */
+            100% { opacity: 0; transform: translate(-50%, -80px) scale(1); } /* 向上飄走消失 */
+        }
 </style>    
 	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -3008,6 +3028,7 @@
       // v3.3.2 修正：強制骰子型別轉換，修復道具卡驗證錯誤與四則運算符號邏輯
    
        // [v4.3.4] 提交答案 (整合怪物扣血機制)
+        // [v4.3.4] 提交答案 (整合怪物扣血機制 - 已修正1分=10傷與死亡動畫流程)
         submitAnswer: () => {
             const idx = app.state.selectedCardIndex;
             if (idx === null) return app.toast('⚠️ 請先點擊金字塔上的數字！');
@@ -3169,27 +3190,34 @@
                         timestamp: firebase.database.ServerValue.TIMESTAMP
                     };
 
-                    // [v4.3.7] 怪物扣血與特效同步邏輯
+                   // [v4.3.7] 怪物扣血與特效同步邏輯
                     let monsterDied = false;
                     if (points > 0) {
-                        const damage = points;
+                        // [修改] 1分代表10點傷害 (原本是 points)
+                        const damage = points * 10;
+                        
+                        // [新增] 呼叫傷害數字顯示特效
+                        app.showDamageText(damage);
+
                         const currentMonsterHp = app.state.gameData.activeMonster?.currentHp || 0;
                         const newMonsterHp = Math.max(0, currentMonsterHp - damage);
                         
                         updates['activeMonster/currentHp'] = newMonsterHp;
-                        // 同步發送受傷特效訊號
-                        updates['activeMonster/action'] = 'damage';
-                        updates['activeMonster/actionTime'] = firebase.database.ServerValue.TIMESTAMP;
                         
-                        successMsg += ` (造成 ${damage} 點傷害!)`;
-                        
+                        // 標記受傷或死亡狀態，讓前端觸發對應特效
                         if (newMonsterHp <= 0) {
                             monsterDied = true;
+                            // 這裡只設定死亡標記，讓前端 triggerMonsterAttackEffect('die') 執行
+                            updates['activeMonster/action'] = 'die';
+                        } else {
+                            updates['activeMonster/action'] = 'damage';
                         }
+                        // 更新 actionTime 讓所有客戶端同步特效
+                        updates['activeMonster/actionTime'] = firebase.database.ServerValue.TIMESTAMP;
                     }
+
                     if (monsterDied) {
                         // [v4.5.8 修改] 怪物死亡時，不結束遊戲，而是自動換局並重置抽卡區
-                        updates['activeMonster/action'] = 'die';
                         updates['timerActive'] = false; 
                         
                         successMsg += " ⚔️ 已擊敗魔物！";
@@ -3224,8 +3252,6 @@
                     db.ref(`classes/${app.state.classId}`).update(updates);
                     app.resetInput();
                     app.state.selectedCardIndex = null;
-                    
-                  
 
                 } else {
                     const displayResult = Math.round(result * 100) / 100;
@@ -3545,6 +3571,7 @@
         },
 
        // [v4.4.0] 觸發特效 (優化版：左退變身 -> 右衝 -> 還原)
+        // [v4.4.0] 觸發特效 (優化版：左退變身 -> 右衝 -> 還原)
         triggerMonsterAttackEffect: (type) => {
             const card = app.el('active-monster-card');
             const imgFace = document.getElementById('monster-img-face'); 
@@ -3555,16 +3582,15 @@
             const idleImg = monsterData?.img1 || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
             const attackImg = monsterData?.img2; // 攻擊圖片
 
-            // 移除舊動畫 class 以便重播
-            card.classList.remove('monster-attacking', 'monster-damaged');
-            void card.offsetWidth; // Force Reflow (強制瀏覽器重繪)
+            // [修正] 移除所有舊動畫 class (包含 monster-die)，確保動畫能重置播放
+            card.classList.remove('monster-attacking', 'monster-damaged', 'monster-die');
+            void card.offsetWidth; // Force Reflow (強制瀏覽器重繪，這行很重要)
 
             if (type === 'attack') {
                 // --- 攻擊特效邏輯 ---
                 
                 // A. 啟動動畫 (怪物開始往左後退)
                 card.classList.add('monster-attacking'); 
-               
 
                 // B. 變身時機：延遲 450ms (配合 CSS 動畫退到最左邊時)，瞬間切換為攻擊圖
                 if (imgFace && attackImg && attackImg.trim() !== '') {
@@ -3600,7 +3626,65 @@
                 document.body.appendChild(explosion);
                 setTimeout(() => explosion.remove(), 300);
             }
+        }, // 這是 triggerMonsterAttackEffect 的結尾逗號
+
+        // [新增] 顯示傷害數字浮動特效
+        // [新增] 顯示傷害數字浮動特效 (v4.6.4 優化：放慢速度、加大字體)
+        showDamageText: (dmg) => {
+            const card = app.el('active-monster-card');
+            if (!card) return;
+
+            // 1. 計算顯示位置 (怪物圖片中央上方)
+            const rect = card.getBoundingClientRect();
+            // 加入隨機偏移 (-20px ~ +20px)，避免連續攻擊時數字完全重疊
+            const randomX = (Math.random() - 0.5) * 40; 
+            const left = rect.left + (rect.width / 2) + randomX;
+            const top = rect.top;
+
+            // 2. 建立數字元素
+            const el = document.createElement('div');
+            el.textContent = `-${dmg}`;
+            
+            // 3. 設定樣式 (加大、變慢)
+            el.style.cssText = `
+                position: fixed;
+                left: ${left}px;
+                top: ${top}px;
+                transform: translateX(-50%);
+                color: #ff2a2a; /* 鮮紅色 */
+                font-family: 'Arial Black', sans-serif;
+                font-size: 3.5rem; /* [修改] 字體放大到 3.5rem */
+                font-weight: 900;
+                text-shadow: 
+                    2px 2px 0 #fff, 
+                    -1px -1px 0 #fff,  
+                    1px -1px 0 #fff,
+                    -1px 1px 0 #fff,
+                    1px 1px 0 #fff; /* [修改] 強烈白邊，確保清晰 */
+                pointer-events: none;
+                z-index: 10000;
+                opacity: 1;
+                /* [修改] 動畫時間拉長至 2.5秒，使用 ease-out 讓它最後慢慢停下 */
+                transition: all 2.5s cubic-bezier(0.1, 0.8, 0.2, 1);
+            `;
+
+            document.body.appendChild(el);
+
+            // 4. 觸發動畫 (下一幀執行位移與淡出)
+            requestAnimationFrame(() => {
+                el.style.top = `${top - 150}px`; // [修改] 往上飄移距離增加
+                el.style.opacity = '0';
+            });
+
+            // 5. 移除元素 (配合動畫時間 2500ms)
+            setTimeout(() => {
+                if (el && el.parentNode) {
+                    el.remove();
+                }
+            }, 2500);
         },
+		
+		
        // v3.3.1 更新：渲染學生背包 (支援四種道具，消除空白節點)
        // v3.4.0 更新：渲染學生背包 (支援五種道具，消除空白節點)
         renderStudentInventory: (players) => {
