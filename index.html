@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.6.3 - 冒險模式版</title>
+    <title>神殿試煉 v4.6.4 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -1040,11 +1040,17 @@
             userRef.on('value', snapshot => {
                 const data = snapshot.val() || {};
                 
-                // 1. 處理名稱：優先使用資料庫中的 displayName，若無則用 Google 預設
+                // 1. 處理名稱與等級 (v4.6.4)
                 const finalName = data.displayName || user.displayName;
                 app.state.myName = finalName;
-                app.el('user-display-name').textContent = finalName;
-                app.el('lobby-player-name').value = finalName; // 同步更新創房時的預設名稱
+                
+                // 計算永久等級
+                const totalExp = data.totalExp || 0;
+                const accountLv = app.getAccountLevel(totalExp);
+                
+                // 顯示名稱 + 等級
+                app.el('user-display-name').innerHTML = `${finalName} <span class="text-sm bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">Lv.${accountLv}</span>`;
+                app.el('lobby-player-name').value = finalName;
                 
                 // 2. 處理分數
                 if (data.highScore) {
@@ -1969,11 +1975,45 @@
             if (app.state.role === 'student') {
                 app.renderStudentInventory(data.players);
             }
-            // v3.0.9: 遊戲結束時，自動彈出結算畫面
+           // v3.0.9: 遊戲結束時，自動彈出結算畫面
             if (data.status === 'ended') {
                 app.renderGameOverStats(data.players);
                 app.el('game-over-modal').classList.remove('hidden');
                 
+                // --- [新增] v4.6.4 結算時同步經驗值與金幣到 Google 帳號 ---
+                // 每個玩家只負責同步「自己」的資料
+                if (app.state.user && app.state.myTeam && app.state.myName) {
+                    const myData = data.players?.[app.state.myTeam]?.[app.state.myName];
+                    
+                    // 防止重複寫入 (檢查本地標記)
+                    const sessionKey = `synced_${app.state.classId}`;
+                    if (myData && !sessionStorage.getItem(sessionKey)) {
+                        const earnedExp = myData.exp || 0;
+                        const earnedGold = myData.gold || 0;
+                        
+                        if (earnedExp > 0 || earnedGold > 0) {
+                            const userRef = db.ref(`users/${app.state.user.uid}`);
+                            userRef.transaction(userData => {
+                                if (!userData) userData = {};
+                                userData.totalExp = (userData.totalExp || 0) + earnedExp;
+                                userData.totalGold = (userData.totalGold || 0) + earnedGold;
+                                // 更新最高分
+                                if ((myData.score || 0) > (userData.highScore || 0)) {
+                                    userData.highScore = myData.score;
+                                }
+                                userData.lastActive = firebase.database.ServerValue.TIMESTAMP;
+                                return userData;
+                            }, (error, committed) => {
+                                if (committed) {
+                                    sessionStorage.setItem(sessionKey, 'true'); // 標記已同步
+                                    app.toast(`💾 戰績同步完成！累積獲得 ${earnedExp}經驗, ${earnedGold}金幣`, 1);
+                                }
+                            });
+                        }
+                    }
+                }
+                // -----------------------------------------------------
+
                 // [v3.1.0] 只有老師能看到「下載」與「重啟」按鈕
                 if (app.state.role === 'teacher') {
                     app.el('btn-restart-game').classList.remove('hidden');
@@ -2091,25 +2131,25 @@
             // 若想要稍微有點順序，可以依名字排序： allPlayers.sort((a, b) => a.name.localeCompare(b.name));
 
             // 共用渲染邏輯：產生無空白節點的 HTML 字串
+           // 共用渲染邏輯：產生無空白節點的 HTML 字串 (v4.6.4 DQ升級版)
             const generateBoardHtml = (isCompact) => {
-                // 角色頭像庫 (依序循環使用)
                 const avatars = ['💂','👸','🧙','🧝','🧛','🧚','🧞','🧜','🧟','🕵️'];
-                
                 let listHtml = '';
                 
                 if (allPlayers.length === 0) {
                     listHtml = `<div class="text-center text-gray-400 py-4 text-xs">等待冒險者加入...</div>`;
                 } else {
                     allPlayers.forEach((p, index) => {
-                        // 1. 決定頭像 (使用 index 循環取用)
                         const avatar = avatars[index % avatars.length];
-                        
-                        // 2. 判斷是否為自己
                         const isMe = (p.name === app.state.myName);
                         const highlightClass = isMe ? 'bg-amber-100 border-amber-300' : 'bg-white border-slate-100';
                         const nameClass = isMe ? 'text-amber-900' : 'text-slate-700';
 
-                        // 3. 生成道具圖示字串 (無空白)
+                        // 計算等級與經驗條
+                        const expInfo = app.getInGameLevelInfo(p.exp || 0);
+                        const gold = p.gold || 0;
+
+                        // 道具圖示字串
                         let itemsBadge = '';
                         if (p.items) {
                             if (p.items.hint > 0) itemsBadge += '📜'; 
@@ -2122,11 +2162,16 @@
                             if (p.items.anubis > 0) itemsBadge += '⚖️';
                             if (p.items.mummy > 0) itemsBadge += '👻';
                         }
-                        // 若無道具顯示空位，保持排版 (可選)
-                        // if(itemsBadge === '') itemsBadge = '<span class="opacity-0">.</span>';
 
-                        // 4. 組合單行 HTML (嚴格無空白)
-                        listHtml += `<div class="flex justify-between items-center p-2 ${highlightClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01]"><div class="truncate mr-2 flex items-center gap-2 overflow-hidden"><span class="text-xl filter drop-shadow-sm grayscale-[0.2]">${avatar}</span><div class="flex flex-col"><span class="font-bold ${nameClass} text-sm leading-tight">${p.name}</span><span class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden">${itemsBadge}</span></div></div><div class="font-black text-amber-700 flex-shrink-0 text-lg">${p.score}</div></div>`;
+                        // [UI調整] 
+                        // Row 1: Avatar + Lv + Name + Gold
+                        // Row 2: EXP Bar (左側) + Items (中間) + Score (右側)
+                        // 使用 flex-col 與 w-full 確保佈局
+                        
+                        // 進度條顏色：LV5 金色，其他 藍色
+                        const barColor = expInfo.lv >= 5 ? 'bg-yellow-400' : 'bg-blue-500';
+
+                        listHtml += `<div class="flex flex-col p-2 ${highlightClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01]"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-1 overflow-hidden"><span class="text-xl filter drop-shadow-sm grayscale-[0.2]">${avatar}</span><span class="text-xs font-black text-white bg-slate-600 px-1 rounded transform scale-90">Lv.${expInfo.lv}</span><span class="font-bold ${nameClass} text-sm truncate max-w-[80px] md:max-w-[120px]">${p.name}</span></div><div class="flex items-center gap-1 text-xs font-bold text-yellow-700 bg-yellow-100 px-1.5 rounded-full border border-yellow-200"><span>💰</span><span>${gold}</span></div></div><div class="flex items-center justify-between w-full gap-2"><div class="flex-1 flex flex-col justify-center h-full"><div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden border border-black/10"><div class="${barColor} h-full transition-all duration-500" style="width:${expInfo.percent}%"></div></div></div><div class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden flex-shrink-0 text-right min-w-[20px]">${itemsBadge}</div><div class="font-black text-amber-700 text-lg leading-none">${p.score}</div></div></div>`;
                     });
                 }
                 return listHtml;
@@ -2137,7 +2182,11 @@
             if (teacherBoard) {
                 const content = generateBoardHtml(false);
                 // 加上總分標題列
-                const header = `<div class="sticky top-0 bg-white border-b border-amber-200 pb-2 mb-2 z-10 flex justify-between items-center"><span class="font-black text-amber-800 text-lg">⚔️ 冒險小隊</span><span class="bg-amber-100 text-amber-900 px-3 py-1 rounded-full font-black text-xl border border-amber-300 shadow-sm">${totalTeamScore}</span></div>`;
+                // 計算全隊總金幣
+                const totalTeamGold = allPlayers.reduce((acc, p) => acc + (p.gold || 0), 0);
+                
+                // [修改] 標題列加入金幣顯示
+                const header = `<div class="sticky top-0 bg-white border-b border-amber-200 pb-2 mb-2 z-10 flex justify-between items-center"><div class="flex items-center gap-2"><span class="font-black text-amber-800 text-lg">⚔️ 冒險小隊</span><div class="flex items-center gap-1 bg-yellow-100 px-2 py-0.5 rounded-lg border border-yellow-300 shadow-inner"><span class="text-xs">💰</span><span class="text-xs font-bold text-yellow-800">${totalTeamGold}</span></div></div><span class="bg-amber-100 text-amber-900 px-3 py-1 rounded-full font-black text-xl border border-amber-300 shadow-sm">${totalTeamScore}</span></div>`;
                 teacherBoard.innerHTML = header + content;
             }
 
@@ -3180,10 +3229,26 @@
                     // [v4.4.1 修正] 只要有人答對，就更新房間活躍時間
                     updates['lastActive'] = firebase.database.ServerValue.TIMESTAMP;
 
-                    // 更新玩家分數
+                   // 更新玩家分數
                     const scorePath = `players/${app.state.myTeam}/${app.state.myName}/score`;
                     const currentScore = (app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName]?.score || 0);
                     updates[scorePath] = currentScore + points;
+
+                    // --- [新增] 1. 答對給予局內經驗值 (+2 EXP) ---
+                    if (points > 0) {
+                        const expPath = `players/${app.state.myTeam}/${app.state.myName}/exp`;
+                        const currentExp = (app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName]?.exp || 0);
+                        const newExp = currentExp + 2;
+                        updates[expPath] = newExp;
+                        
+                        // 檢查升級特效 (如果剛好跨過門檻)
+                        const oldLv = app.getInGameLevelInfo(currentExp).lv;
+                        const newLv = app.getInGameLevelInfo(newExp).lv;
+                        if(newLv > oldLv) {
+                            app.toast(`🆙 升級！現在是 Lv.${newLv}`, 1);
+                            app.showDamageText("LEVEL UP!", "#fbbf24"); // 金色升級字樣
+                        }
+                    }
                     
                     updates['lastWinner'] = {
                         name: app.state.myName,
@@ -3193,7 +3258,7 @@
                    // [v4.3.7] 怪物扣血與特效同步邏輯
                     let monsterDied = false;
                     if (points > 0) {
-                        // [修改] 1分代表10點傷害 (原本是 points)
+                        // [修改] 1分代表10點傷害
                         const damage = points * 10;
                         
                         // [新增] 呼叫傷害數字顯示特效
@@ -3204,15 +3269,44 @@
                         
                         updates['activeMonster/currentHp'] = newMonsterHp;
                         
-                        // 標記受傷或死亡狀態，讓前端觸發對應特效
                         if (newMonsterHp <= 0) {
                             monsterDied = true;
-                            // 這裡只設定死亡標記，讓前端 triggerMonsterAttackEffect('die') 執行
                             updates['activeMonster/action'] = 'die';
+                            
+                            // --- [新增] 2. 怪物死亡：全體發放經驗與金幣 ---
+                            // 讀取怪物設定的 EXP 與 Gold
+                            const mExp = app.state.gameData.activeMonster?.exp || 0;
+                            const mGold = app.state.gameData.activeMonster?.gold || 0;
+                            
+                            if (mExp > 0 || mGold > 0) {
+                                // 遍歷所有隊伍的所有玩家 (目前只有 team1，但保留擴充性)
+                                const allTeams = app.state.gameData.players;
+                                if (allTeams) {
+                                    Object.keys(allTeams).forEach(tKey => {
+                                        const members = allTeams[tKey];
+                                        if (members) {
+                                            Object.keys(members).forEach(pName => {
+                                                const pData = members[pName];
+                                                // 累加 EXP
+                                                const pExpPath = `players/${tKey}/${pName}/exp`;
+                                                const pCurrentExp = pData.exp || 0;
+                                                updates[pExpPath] = pCurrentExp + mExp;
+                                                
+                                                // 累加 Gold
+                                                const pGoldPath = `players/${tKey}/${pName}/gold`;
+                                                const pCurrentGold = pData.gold || 0;
+                                                updates[pGoldPath] = pCurrentGold + mGold;
+                                            });
+                                        }
+                                    });
+                                    successMsg += ` (全員獲得 ${mExp}經驗, ${mGold}金幣!)`;
+                                }
+                            }
+                            // ---------------------------------------------
+
                         } else {
                             updates['activeMonster/action'] = 'damage';
                         }
-                        // 更新 actionTime 讓所有客戶端同步特效
                         updates['activeMonster/actionTime'] = firebase.database.ServerValue.TIMESTAMP;
                     }
 
@@ -3362,7 +3456,46 @@
         },
 
         generatePredefinedCards: () => { /* 佔位符 */ },
+        generatePredefinedCards: () => { /* 佔位符 */ },
         createPredefinedCards: () => { /* 佔位符 */ },
+        
+        // --- [新增] DQ 風格等級計算系統 ---
+        // 1. Google 帳號永久等級 (1-99等) - 曲線較陡
+        getAccountLevel: (totalExp) => {
+            if (!totalExp) return 1;
+            // 簡易公式：等級 = 根號(EXP / 10) + 1，反推 EXP = 10 * (Lv-1)^2
+            // Lv10=810, Lv50=24000, Lv99=96000
+            let lv = Math.floor(Math.sqrt(totalExp / 10)) + 1;
+            return Math.min(99, lv);
+        },
+        
+        // 2. 局內冒險等級 (1-5等) - 設定固定門檻
+        // 門檻：Lv1(0), Lv2(10), Lv3(30), Lv4(60), Lv5(100)
+        getInGameLevelInfo: (currentExp) => {
+            const exp = currentExp || 0;
+            const levels = [
+                { lv: 1, min: 0, next: 10 },
+                { lv: 2, min: 10, next: 30 },
+                { lv: 3, min: 30, next: 60 },
+                { lv: 4, min: 60, next: 100 },
+                { lv: 5, min: 100, next: 9999 } // 封頂
+            ];
+            // 找出對應等級
+            const current = levels.slice().reverse().find(l => exp >= l.min) || levels[0];
+            
+            // 計算當前等級的進度百分比 (用於顯示進度條)
+            let percent = 0;
+            if (current.lv < 5) {
+                const range = current.next - current.min;
+                const progress = exp - current.min;
+                percent = Math.floor((progress / range) * 100);
+            } else {
+                percent = 100; // 封頂
+            }
+
+            return { lv: current.lv, percent: percent, nextExp: current.next };
+        },
+
         getCardColorClass: (c) => { return { black: 'bg-slate-900 text-white', red: 'bg-red-600 text-white', blue: 'bg-blue-600 text-white', yellow: 'bg-yellow-400 text-black' }[c] || 'bg-gray-200'; },
         
         shuffle: (array) => {
@@ -3630,58 +3763,52 @@
 
         // [新增] 顯示傷害數字浮動特效
         // [新增] 顯示傷害數字浮動特效 (v4.6.4 優化：放慢速度、加大字體)
-        showDamageText: (dmg) => {
+        // [新增] 顯示傷害數字浮動特效 (vv4.6.5 支援文字與顏色)
+        showDamageText: (text, color = "#ff2a2a") => {
             const card = app.el('active-monster-card');
-            if (!card) return;
-
-            // 1. 計算顯示位置 (怪物圖片中央上方)
-            const rect = card.getBoundingClientRect();
-            // 加入隨機偏移 (-20px ~ +20px)，避免連續攻擊時數字完全重疊
-            const randomX = (Math.random() - 0.5) * 40; 
-            const left = rect.left + (rect.width / 2) + randomX;
-            const top = rect.top;
-
-            // 2. 建立數字元素
-            const el = document.createElement('div');
-            el.textContent = `-${dmg}`;
+            if (!card && typeof text === 'number') return; // 如果是數字且沒卡片就不顯示
             
-            // 3. 設定樣式 (加大、變慢)
+            // 如果沒卡片但有文字(例如升級)，顯示在螢幕中央上方
+            let left, top;
+            if (card) {
+                const rect = card.getBoundingClientRect();
+                const randomX = (Math.random() - 0.5) * 40; 
+                left = rect.left + (rect.width / 2) + randomX;
+                top = rect.top;
+            } else {
+                left = window.innerWidth / 2;
+                top = window.innerHeight / 3;
+            }
+
+            const el = document.createElement('div');
+            // 如果傳入的是數字，加上負號
+            el.textContent = (typeof text === 'number') ? `-${text}` : text;
+            
             el.style.cssText = `
                 position: fixed;
                 left: ${left}px;
                 top: ${top}px;
                 transform: translateX(-50%);
-                color: #ff2a2a; /* 鮮紅色 */
+                color: ${color}; 
                 font-family: 'Arial Black', sans-serif;
-                font-size: 3.5rem; /* [修改] 字體放大到 3.5rem */
+                font-size: ${typeof text === 'number' ? '3.5rem' : '2.5rem'};
                 font-weight: 900;
-                text-shadow: 
-                    2px 2px 0 #fff, 
-                    -1px -1px 0 #fff,  
-                    1px -1px 0 #fff,
-                    -1px 1px 0 #fff,
-                    1px 1px 0 #fff; /* [修改] 強烈白邊，確保清晰 */
+                text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
                 pointer-events: none;
                 z-index: 10000;
                 opacity: 1;
-                /* [修改] 動畫時間拉長至 2.5秒，使用 ease-out 讓它最後慢慢停下 */
                 transition: all 2.5s cubic-bezier(0.1, 0.8, 0.2, 1);
+                white-space: nowrap;
             `;
 
             document.body.appendChild(el);
 
-            // 4. 觸發動畫 (下一幀執行位移與淡出)
             requestAnimationFrame(() => {
-                el.style.top = `${top - 150}px`; // [修改] 往上飄移距離增加
+                el.style.top = `${top - 150}px`;
                 el.style.opacity = '0';
             });
 
-            // 5. 移除元素 (配合動畫時間 2500ms)
-            setTimeout(() => {
-                if (el && el.parentNode) {
-                    el.remove();
-                }
-            }, 2500);
+            setTimeout(() => { if (el && el.parentNode) el.remove(); }, 2500);
         },
 		
 		
