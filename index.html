@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.6.6 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.2.2 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -307,6 +307,23 @@
             15% { opacity: 1; transform: translate(-50%, -30px) scale(1.5); } /* 彈出放大 */
             100% { opacity: 0; transform: translate(-50%, -80px) scale(1); } /* 向上飄走消失 */
         }
+		/* [新增 v4.7.0] 玩家受傷與死亡復活特效 */
+        .player-damaged {
+            animation: player-shake-red 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes player-shake-red {
+            0%, 100% { transform: translateX(0); box-shadow: 0 0 0 rgba(220, 38, 38, 0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); box-shadow: 0 0 20px rgba(220, 38, 38, 0.8); border-color: #ef4444; }
+            20%, 40%, 60%, 80% { transform: translateX(4px); box-shadow: 0 0 15px rgba(220, 38, 38, 0.6); }
+        }
+        
+        .player-dead-overlay {
+            position: absolute; inset: 0; background: rgba(50, 50, 50, 0.85);
+            z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 0.5rem; backdrop-filter: blur(2px);
+            color: #fff; font-weight: 900; text-align: center;
+        }
+        .revive-timer { font-size: 1.5rem; color: #fbbf24; text-shadow: 0 0 10px #d97706; animation: pulse 1s infinite; }
 </style>    
 	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -315,7 +332,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.6.6 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.2.2 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -436,10 +453,11 @@
                     </div>
                 </div>
 
-                <div class="flex border-b border-slate-200 mb-4">
-                    <button onclick="app.switchAdminTab('flow')" id="tab-btn-flow" class="admin-tab-btn admin-tab-active flex-1">🎮 遊戲流程</button>
-                    <button onclick="app.switchAdminTab('items')" id="tab-btn-items" class="admin-tab-btn flex-1">🎁 道具發放</button>
-                    <button onclick="app.switchAdminTab('monsters')" id="tab-btn-monsters" class="admin-tab-btn flex-1">👹 怪物設定</button>
+                <div class="flex border-b border-slate-200 mb-4 overflow-x-auto">
+                    <button onclick="app.switchAdminTab('flow')" id="tab-btn-flow" class="admin-tab-btn admin-tab-active flex-1 whitespace-nowrap">🎮 遊戲流程</button>
+                    <button onclick="app.switchAdminTab('items')" id="tab-btn-items" class="admin-tab-btn flex-1 whitespace-nowrap">🎁 道具發放</button>
+                    <button onclick="app.switchAdminTab('monsters')" id="tab-btn-monsters" class="admin-tab-btn flex-1 whitespace-nowrap">👹 怪物設定</button>
+                    <button onclick="app.switchAdminTab('shop')" id="tab-btn-shop" class="admin-tab-btn flex-1 whitespace-nowrap">🛒 冒險商店</button>
                 </div>
                 
                 <div class="space-y-6 flex-1 overflow-y-auto pr-1 custom-scrollbar">
@@ -548,6 +566,9 @@
                                     <label class="flex items-center gap-3 cursor-pointer hover:bg-amber-50 p-2 rounded-lg transition-colors select-none border border-transparent hover:border-amber-200"><input type="checkbox" class="admin-ag-item-check w-6 h-6 accent-amber-600" value="anubis"> <span>⚖️ 阿努比斯</span></label>
                                     <label class="flex items-center gap-3 cursor-pointer hover:bg-amber-50 p-2 rounded-lg transition-colors select-none border border-transparent hover:border-amber-200"><input type="checkbox" class="admin-ag-item-check w-6 h-6 accent-amber-600" value="shard" checked> <span>🕒 碎片</span></label>
                                     <label class="flex items-center gap-3 cursor-pointer hover:bg-amber-50 p-2 rounded-lg transition-colors select-none border border-transparent hover:border-amber-200"><input type="checkbox" class="admin-ag-item-check w-6 h-6 accent-amber-600" value="mummy"> <span>👻 木乃伊</span></label>
+                                    <label class="flex items-center gap-3 cursor-pointer hover:bg-amber-50 p-2 rounded-lg transition-colors select-none border border-transparent hover:border-amber-200"><input type="checkbox" class="admin-ag-item-check w-6 h-6 accent-amber-600" value="herb"> <span>🌿 草藥(+10)</span></label>
+                                    <label class="flex items-center gap-3 cursor-pointer hover:bg-amber-50 p-2 rounded-lg transition-colors select-none border border-transparent hover:border-amber-200"><input type="checkbox" class="admin-ag-item-check w-6 h-6 accent-amber-600" value="potion"> <span>🧪 治療劑(+20)</span></label>
+                                    <label class="flex items-center gap-3 cursor-pointer hover:bg-amber-50 p-2 rounded-lg transition-colors select-none border border-transparent hover:border-amber-200"><input type="checkbox" class="admin-ag-item-check w-6 h-6 accent-amber-600" value="elixir"> <span>🏺 補血瓶(+30)</span></label>
                                 </div>
                             </div>
                         </div>
@@ -696,6 +717,96 @@
                         </div>
 
                     </div>
+<div id="tab-content-shop" class="admin-tab-content space-y-4">
+                        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200">
+                            <h4 class="font-bold text-indigo-900 mb-3 flex items-center gap-2 text-lg">🛒 遊戲商店道具定價</h4>
+                            <p class="text-xs text-indigo-700 mb-4">設定各項道具在商店中的售價、購買門檻與持有上限。</p>
+                            
+                            <div class="bg-white rounded-xl border border-indigo-100 overflow-hidden shadow-sm">
+                                <div class="grid grid-cols-12 gap-1 bg-indigo-100 p-2 font-black text-indigo-800 text-xs text-center border-b border-indigo-200">
+                                    <div class="col-span-4 text-left pl-2">道具名稱</div>
+                                    <div class="col-span-3">售價(G)</div>
+                                    <div class="col-span-2">限Lv</div>
+                                    <div class="col-span-3">上限(個)</div>
+                                </div>
+                                <div class="max-h-[300px] overflow-y-auto custom-scrollbar p-1 space-y-1">
+                                    <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="古老提示卡">📜 提示卡</div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-hint-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="50"></div>
+                                        <div class="col-span-2"><input type="number" id="admin-shop-hint-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-hint-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
+                                    </div>
+                                    <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="聖甲蟲祝福">🦂 聖甲蟲</div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-double-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="100"></div>
+                                        <div class="col-span-2"><input type="number" id="admin-shop-double-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-double-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
+                                    </div>
+                                    <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="荷魯斯之眼">👁️ 荷魯斯</div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-horus-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="150"></div>
+                                        <div class="col-span-2"><input type="number" id="admin-shop-horus-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-horus-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
+                                    </div>
+                                    <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="尼羅河恩賜">🌊 尼羅河</div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-nile-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="150"></div>
+                                        <div class="col-span-2"><input type="number" id="admin-shop-nile-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-nile-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
+                                    </div>
+                                    <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="時之沙">⏳ 時之沙</div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-time-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="200"></div>
+                                        <div class="col-span-2"><input type="number" id="admin-shop-time-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-time-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
+                                    </div>
+                                    <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="時之碎片">🕒 碎片</div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-shard-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="80"></div>
+                                        <div class="col-span-2"><input type="number" id="admin-shop-shard-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-shard-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="2"></div>
+                                    </div>
+                                    <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="法老王的封印">🔒 封印</div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-seal-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="100"></div>
+                                        <div class="col-span-2"><input type="number" id="admin-shop-seal-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-seal-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
+                                    </div>
+                                    <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="阿努比斯的審判">⚖️ 阿努比斯</div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-anubis-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="300"></div>
+                                        <div class="col-span-2"><input type="number" id="admin-shop-anubis-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="3"></div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-anubis-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
+                                    </div>
+                                    <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="木乃伊的詛咒">👻 木乃伊</div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-mummy-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="250"></div>
+                                        <div class="col-span-2"><input type="number" id="admin-shop-mummy-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="2"></div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-mummy-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
+                                    </div>
+                                    <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="恢復 10 點生命">🌿 草藥</div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-herb-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="50"></div>
+                                        <div class="col-span-2"><input type="number" id="admin-shop-herb-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-herb-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="5"></div>
+                                    </div>
+                                    <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="恢復 20 點生命">🧪 治療劑</div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-potion-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="100"></div>
+                                        <div class="col-span-2"><input type="number" id="admin-shop-potion-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="2"></div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-potion-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="3"></div>
+                                    </div>
+                                    <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="恢復 30 點生命">🏺 補血瓶</div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-elixir-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="200"></div>
+                                        <div class="col-span-2"><input type="number" id="admin-shop-elixir-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="3"></div>
+                                        <div class="col-span-3"><input type="number" id="admin-shop-elixir-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="2"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>					
+					
                 <div class="mt-4 pt-4 border-t border-gray-100">
                     <button onclick="app.saveAdminSettings()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-slate-900 active:scale-95 transition-transform">💾 儲存全域設定</button>
                 </div>
@@ -865,7 +976,7 @@
                 <div class="mt-4 text-center z-10 pt-4 border-t border-amber-100">
 
                 <div class="mt-6 text-center z-10 pt-4 border-t border-amber-100">
-                    <p class="text-sm text-gray-500 mb-3">老師確認後可開啟新的一局</p>
+                    <p class="text-sm text-gray-500 mb-3">隊長確認後可開啟新的一局</p>
                     <div class="flex flex-col md:flex-row justify-center gap-3">
                         <button onclick="app.leaveGame()" class="bg-slate-500 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg hover:bg-slate-600 transition-transform">🔙 返回大廳</button>
                         <button id="btn-download-report" onclick="app.downloadGameData()" class="hidden bg-green-600 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg hover:bg-green-700 transition-transform">📥 下載戰績表</button>
@@ -918,6 +1029,9 @@
                             <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="ag-item-check" value="anubis"> ⚖️ 阿努比斯</label>
                             <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="ag-item-check" value="shard" checked> 🕒 碎片</label>
 							<label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="ag-item-check" value="mummy"> 👻 木乃伊</label>
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="ag-item-check" value="herb"> 🌿 草藥</label>
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="ag-item-check" value="potion"> 🧪 治療劑</label>
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="ag-item-check" value="elixir"> 🏺 補血瓶</label>
                         </div>
                     </div>
                 </div>
@@ -993,6 +1107,7 @@
             myTeam: null,
             myName: null,
             gameData: {},
+            lastPlayerHps: {}, // [新增] 用於偵測血量變化以觸發特效
             cards: {}, 
             voiceEnabled: true,
             localTimer: null,
@@ -1359,9 +1474,19 @@
                 if (snapshot.exists()) {
                     // [關鍵] 使用 update 更新最後活動時間，且不設定 onDisconnect().remove()
                     // 這樣玩家閃退再連回來，分數還在
-                    db.ref(`classes/${roomId}/players/team1/${name}`).update({
-                        name: name,
-                        lastActive: firebase.database.ServerValue.TIMESTAMP
+                    // [修改] 加入初始血量設定 (若原本已有血量則不覆蓋，這裡用 update 安全處理)
+                    const playerRef = db.ref(`classes/${roomId}/players/team1/${name}`);
+                    playerRef.once('value', sn => {
+                        const exists = sn.exists();
+                        const pData = sn.val() || {};
+                        
+                        playerRef.update({
+                            name: name,
+                            // 若是新玩家或無血量資料，則補上 100
+                            hp: (exists && pData.hp !== undefined) ? pData.hp : 100,
+                            maxHp: 100,
+                            lastActive: firebase.database.ServerValue.TIMESTAMP
+                        });
                     });
                     
                     app.enterGameMode();
@@ -1422,6 +1547,8 @@
                 db.ref(`classes/${roomId}/players/team1/${name}`).set({
                     name: name,
                     score: 0,
+                    hp: 100,    // [新增] 初始血量
+                    maxHp: 100, // [新增] 最大血量
                     lastActive: firebase.database.ServerValue.TIMESTAMP
                 });
                 
@@ -1719,31 +1846,45 @@
                 const md = settings.monsterDist || {};
                 for(let i=1; i<=7; i++) {
                     const input = document.getElementById(`admin-md-${i}`);
-                    if(input) input.value = (md[i] !== undefined) ? md[i] : (i===1?2: (i<=4?1:0)); // 預設值: L1=2, L2-4=1, 其他0
+                    if(input) input.value = (md[i] !== undefined) ? md[i] : (i===1?2: (i<=4?1:0)); 
                 }
 
                 const ag = settings.autoGrant || {};
-                app.el('admin-ag-enable').checked = ag.enabled || false;
-                app.el('admin-ag-interval').value = ag.interval || 3;
-                app.el('admin-ag-target').value = ag.targetCount || 2;
-                app.el('admin-ag-count').value = ag.itemCount || 1;
+                if(app.el('admin-ag-enable')) app.el('admin-ag-enable').checked = ag.enabled || false;
+                if(app.el('admin-ag-interval')) app.el('admin-ag-interval').value = ag.interval || 3;
+                if(app.el('admin-ag-target')) app.el('admin-ag-target').value = ag.targetCount || 2;
+                if(app.el('admin-ag-count')) app.el('admin-ag-count').value = ag.itemCount || 1;
 
                 const allowed = ag.allowedTypes || ['hint', 'double', 'nile', 'shard'];
                 document.querySelectorAll('.admin-ag-item-check').forEach(chk => {
                     chk.checked = allowed.includes(chk.value);
                 });
-				
-				// v4.2.2 讀取怪物列表設定
-                // 如果有新版的 list 則用 list，否則檢查有沒有舊版單一設定並轉為 list，若都沒有則給預設值
+                
+                // v4.2.2 讀取怪物列表設定
                 if (settings.monsterList && Array.isArray(settings.monsterList)) {
                     app.state.tempMonsterList = settings.monsterList;
                 } else if (settings.monsterConfig) {
-                    // 相容性過渡：將舊版單一設定轉為陣列的第一筆
                     app.state.tempMonsterList = [settings.monsterConfig];
                 } else {
                     app.state.tempMonsterList = [];
                 }
                 
+                // [v4.6.8] 讀取商店設定 (新增)
+                const shopConfig = settings.shopConfig || {};
+                const shopItems = ['hint', 'double', 'horus', 'nile', 'time', 'shard', 'seal', 'anubis', 'mummy', 'herb', 'potion', 'elixir'];
+                shopItems.forEach(item => {
+                    // 預設值: 價格100, 等級1, 上限1
+                    const conf = shopConfig[item] || { price: 100, minLv: 1, limit: 1 };
+                    
+                    const priceEl = app.el(`admin-shop-${item}-price`);
+                    const lvEl = app.el(`admin-shop-${item}-lv`);
+                    const limitEl = app.el(`admin-shop-${item}-limit`);
+                    
+                    if(priceEl) priceEl.value = conf.price;
+                    if(lvEl) lvEl.value = conf.minLv;
+                    if(limitEl) limitEl.value = conf.limit;
+                });
+
                 // 初始顯示列表視圖
                 app.switchMonsterView('list');
             });
@@ -1759,6 +1900,21 @@
             if (app.el('admin-ag-enable').checked && allowedTypes.length === 0) {
                 return app.toast('⚠️ 開啟自動發放時，至少要勾選一種道具！');
             }
+
+                     // [v4.6.8] 收集商店設定
+            const shopItems = ['hint', 'double', 'horus', 'nile', 'time', 'shard', 'seal', 'anubis', 'mummy', 'herb', 'potion', 'elixir'];
+            const shopConfig = {};
+            shopItems.forEach(item => {
+                const p = parseInt(app.el(`admin-shop-${item}-price`).value);
+                const l = parseInt(app.el(`admin-shop-${item}-lv`).value);
+                const m = parseInt(app.el(`admin-shop-${item}-limit`).value);
+                
+                shopConfig[item] = {
+                    price: isNaN(p) ? 100 : p,
+                    minLv: isNaN(l) ? 1 : l,
+                    limit: isNaN(m) ? 1 : m
+                };
+            });
 
             const settings = {
                 autoRollDefault: app.el('admin-auto-roll').checked,
@@ -1784,9 +1940,10 @@
                     6: parseInt(document.getElementById('admin-md-6').value)||0,
                     7: parseInt(document.getElementById('admin-md-7').value)||0
                 },
-                // v4.2.2 新增怪物設定
                 // v4.2.2 儲存怪物列表
                 monsterList: app.state.tempMonsterList || [],
+                // [v4.6.8] 儲存商店設定
+                shopConfig: shopConfig,
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             };
 
@@ -1794,12 +1951,12 @@
                 app.state.globalSettings = settings; 
                 app.el('admin-settings-modal').classList.add('hidden');
                 
-                // 若開啟無盡模式，即時更新當前房間設定 (選擇性)
+                // 若開啟無盡模式，即時更新當前房間設定
                 if (app.state.isHost) {
                      db.ref(`classes/${app.state.classId}/endlessMode`).set(settings.endlessMode);
                 }
 
-                app.toast('💾 GM全域設定已儲存 (無盡模式: ' + (settings.endlessMode ? '開' : '關') + ')');
+                app.toast('💾 GM全域設定 (含商店) 已儲存');
             });
         },
         
@@ -1867,21 +2024,29 @@
             classRef.on('value', snapshot => {
                 const data = snapshot.val();
 
-                // [v4.3.0] 房主已解散房間 (data 為 null)
+                // [v4.3.0] 房主已解散房間 (data 為 null) - [v4.6.7 修正] 自動重整回大廳
                 if (!data) {
-                    // 清除本地紀錄，避免重整後又試圖重連
+                    console.log("偵測到房間解散，執行自動回大廳...");
+
+                    // 1. 清除本地紀錄，避免重整後又試圖重連
                     localStorage.removeItem('pharaoh_current_room_id');
                     localStorage.removeItem('pharaoh_is_host');
+                    localStorage.removeItem('pharaoh_role');
 
-                    // 顯示強制結束遮罩
+                    // 2. 顯示強制結束遮罩與提示
                     app.el('game-board').classList.add('hidden');
                     app.el('reset-overlay').classList.remove('hidden');
                     
-                    // 修改遮罩文字內容 (動態修改，不需改 HTML)
                     const overlayTitle = document.querySelector('#reset-overlay h2');
                     const overlayDesc = document.querySelector('#reset-overlay p');
                     if(overlayTitle) overlayTitle.textContent = "冒險已結束";
-                    if(overlayDesc) overlayDesc.textContent = "房主已解散房間，請返回大廳";
+                    if(overlayDesc) overlayDesc.textContent = "房主已解散房間，正在自動返回大廳...";
+                    
+                    // 3. 延遲 1.5 秒後自動重整頁面，直接回到大廳初始狀態
+                    app.toast("⚠️ 房間已解散，正在返回大廳...", 1);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
                     
                     return;
                 }
@@ -1920,7 +2085,26 @@
                          app.toast(`🎉 恭喜 ${data.lastWinner.name} 奪寶成功！`);
                     }
                 }
-
+// [v4.7.0 新增] 房主自動檢查隊員復活
+                if (app.state.isHost && data.players && data.status === 'playing') {
+                    const now = Date.now();
+                    Object.keys(data.players).forEach(tKey => {
+                        const team = data.players[tKey];
+                        Object.keys(team).forEach(pName => {
+                            const p = team[pName];
+                            // 若血量歸零，且有設定復活時間，且時間已到
+                            if (p.hp <= 0 && p.reviveAt && now > p.reviveAt) {
+                                const maxHp = p.maxHp || 100;
+                                // 恢復一半血量，並移除 reviveAt
+                                db.ref(`classes/${app.state.classId}/players/${tKey}/${pName}`).update({
+                                    hp: Math.floor(maxHp / 2),
+                                    reviveAt: null
+                                });
+                                app.toast(`${pName} 復活了！`, 1);
+                            }
+                        });
+                    });
+                }
                 app.state.gameData = data;
                 app.updateUI(data);
             });
@@ -2168,7 +2352,7 @@
 
                         // 道具圖示字串
                         let itemsBadge = '';
-                        if (p.items) {
+                       if (p.items) {
                             if (p.items.hint > 0) itemsBadge += '📜'; 
                             if (p.items.double > 0) itemsBadge += '🦂';
                             if (p.items.horus > 0) itemsBadge += '👁️'; 
@@ -2178,6 +2362,9 @@
                             if (p.items.seal > 0) itemsBadge += '🔒'; 
                             if (p.items.anubis > 0) itemsBadge += '⚖️';
                             if (p.items.mummy > 0) itemsBadge += '👻';
+                            if (p.items.herb > 0) itemsBadge += '🌿';
+                            if (p.items.potion > 0) itemsBadge += '🧪';
+                            if (p.items.elixir > 0) itemsBadge += '🏺';
                         }
 
                         // [UI調整] 
@@ -2185,10 +2372,42 @@
                         // Row 2: EXP Bar (左側) + Items (中間) + Score (右側)
                         // 使用 flex-col 與 w-full 確保佈局
                         
-                        // 進度條顏色：LV5 金色，其他 藍色
-                        const barColor = expInfo.lv >= 5 ? 'bg-yellow-400' : 'bg-blue-500';
+                        // [v4.7.2.1] 進度條顏色：LV1~3 淺藍, LV4~6 深藍, LV7~10 金色
+                        let barColor = 'bg-sky-400';
+                        if (expInfo.lv >= 4 && expInfo.lv <= 6) barColor = 'bg-blue-700';
+                        else if (expInfo.lv >= 7) barColor = 'bg-yellow-400';
+                        
+                        // [新增] 讀取玩家血量，若無資料則預設 100
+                        const currentHp = p.hp !== undefined ? p.hp : 100;
+                        const maxHp = p.maxHp !== undefined ? p.maxHp : 100;
+                        // 血量過低時顯示紅色警示
+                        const hpColorClass = currentHp < 30 ? 'text-red-600 animate-pulse' : 'text-red-500';
 
-                        listHtml += `<div class="flex flex-col p-2 ${highlightClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01]"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-1 overflow-hidden"><span class="text-xl filter drop-shadow-sm grayscale-[0.2]">${avatar}</span><span class="text-xs font-black text-white bg-slate-600 px-1 rounded transform scale-90">Lv.${expInfo.lv}</span><span class="font-bold ${nameClass} text-sm truncate max-w-[80px] md:max-w-[120px]">${p.name}</span></div><div class="flex items-center gap-1 text-xs font-bold text-yellow-700 bg-yellow-100 px-1.5 rounded-full border border-yellow-200"><span>💰</span><span>${gold}</span></div></div><div class="flex items-center justify-between w-full gap-2"><div class="flex-1 flex flex-col justify-center h-full"><div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden border border-black/10"><div class="${barColor} h-full transition-all duration-500" style="width:${expInfo.percent}%"></div></div></div><div class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden flex-shrink-0 text-right min-w-[20px]">${itemsBadge}</div><div class="font-black text-amber-700 text-lg leading-none">${p.score}</div></div></div>`;
+                       // [修改 v4.7.0] 判斷是否受傷、是否死亡復活中
+                        const prevHp = app.state.lastPlayerHps[p.name];
+                        let damageEffectClass = '';
+                        // 若舊血量存在且當前血量變少，觸發受傷特效
+                        if (prevHp !== undefined && currentHp < prevHp) {
+                            damageEffectClass = 'player-damaged';
+                        }
+                        // 更新血量紀錄
+                        app.state.lastPlayerHps[p.name] = currentHp;
+
+                        // 復活倒數 HTML
+                        let deadOverlayHtml = '';
+                        if (currentHp <= 0 && p.reviveAt) {
+                            const now = Date.now();
+                            if (p.reviveAt > now) {
+                                const secLeft = Math.ceil((p.reviveAt - now) / 1000);
+                                const min = Math.floor(secLeft / 60);
+                                const sec = secLeft % 60;
+                                const timeStr = `${min}:${sec < 10 ? '0'+sec : sec}`;
+                                deadOverlayHtml = `<div class="player-dead-overlay"><div class="text-xs text-gray-300 mb-1">重傷復活中</div><div class="revive-timer">${timeStr}</div></div>`;
+                            }
+                        }
+
+                        // [修改 v4.7.0] 更新 HTML 結構，加入 HP/MaxHP 顯示、受傷特效、復活遮罩 (無空白節點壓縮版)
+                        listHtml += `<div class="flex flex-col p-2 ${highlightClass} ${damageEffectClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01] relative overflow-hidden"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-1 overflow-hidden"><span class="text-xl filter drop-shadow-sm grayscale-[0.2]">${avatar}</span><span class="text-xs font-black text-white bg-slate-600 px-1 rounded transform scale-90">Lv.${expInfo.lv}</span><div class="flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 rounded border border-red-100 shadow-sm"><span class="text-[0.6rem] ${hpColorClass}">❤️</span><span class="text-[0.65rem] font-black text-slate-700 leading-none">${currentHp}/${maxHp}</span></div><span class="font-bold ${nameClass} text-sm truncate max-w-[60px] md:max-w-[100px]">${p.name}</span></div><div class="flex items-center gap-1 text-xs font-bold text-yellow-700 bg-yellow-100 px-1.5 rounded-full border border-yellow-200"><span>💰</span><span>${gold}</span></div></div><div class="flex items-center justify-between w-full gap-2"><div class="flex-1 flex flex-col justify-center h-full"><div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden border border-black/10"><div class="${barColor} h-full transition-all duration-500" style="width:${expInfo.percent}%"></div></div></div><div class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden flex-shrink-0 text-right min-w-[20px]">${itemsBadge}</div><div class="font-black text-amber-700 text-lg leading-none">${p.score}</div></div>${deadOverlayHtml}</div>`;
                     });
                 }
                 return listHtml;
@@ -2269,6 +2488,7 @@
                          if (i.time) itemsBadge += '⏳'; if (i.shard) itemsBadge += '🕒';
                          if (i.seal) itemsBadge += '🔒'; if (i.anubis) itemsBadge += '⚖️';
                          if (i.mummy) itemsBadge += '👻';
+                         if (i.herb) itemsBadge += '🌿'; if (i.potion) itemsBadge += '🧪'; if (i.elixir) itemsBadge += '🏺';
                     }
 
                     listHtml += `<div class="flex justify-between items-center p-3 rounded-lg border ${bgClass} shadow-sm transition-transform hover:scale-[1.01]"><div class="flex items-center gap-3"><div class="text-xl">${rankIcon}</div><div><div class="font-bold ${textClass}">${p.name}</div><div class="text-xs text-gray-500 tracking-wider">${itemsBadge}</div></div></div><div class="font-black text-xl text-amber-600">${p.score || 0}</div></div>`;
@@ -2351,10 +2571,15 @@
             html += `<button onclick="app.grantItem('${teamKey}', 'shard')" class="grant-btn bg-blue-50 border-blue-200 hover:bg-blue-100"><span class="text-xl mb-1">🕒</span><span class="text-[0.6rem] font-bold text-blue-900">碎片</span></button>`;
             html += `<button onclick="app.grantItem('${teamKey}', 'seal')" class="grant-btn bg-slate-100 border-slate-300 hover:bg-slate-200"><span class="text-xl mb-1">🔒</span><span class="text-[0.6rem] font-bold text-slate-800">封印</span></button>`;
 
-            // 第三排
+          // 第三排
             html += `<button onclick="app.grantItem('${teamKey}', 'horus')" class="grant-btn bg-emerald-50 border-emerald-200 hover:bg-emerald-100"><span class="text-xl mb-1">👁️</span><span class="text-[0.6rem] font-bold text-emerald-900">荷魯斯</span></button>`;
             html += `<button onclick="app.grantItem('${teamKey}', 'nile')" class="grant-btn bg-emerald-50 border-emerald-200 hover:bg-emerald-100"><span class="text-xl mb-1">🌊</span><span class="text-[0.6rem] font-bold text-emerald-900">尼羅河</span></button>`;
-            html += `<button onclick="app.grantItem('${teamKey}', 'mummy')" class="grant-btn bg-stone-200 border-stone-400 hover:bg-stone-300"><span class="text-xl mb-1">👻</span><span class="text-[0.6rem] font-bold text-stone-900">木乃伊</span></button>`; // 新增
+            html += `<button onclick="app.grantItem('${teamKey}', 'mummy')" class="grant-btn bg-stone-200 border-stone-400 hover:bg-stone-300"><span class="text-xl mb-1">👻</span><span class="text-[0.6rem] font-bold text-stone-900">木乃伊</span></button>`;
+            
+            // 第四排 (補血類)
+            html += `<button onclick="app.grantItem('${teamKey}', 'herb')" class="grant-btn bg-red-50 border-red-200 hover:bg-red-100"><span class="text-xl mb-1">🌿</span><span class="text-[0.6rem] font-bold text-red-900">草藥</span></button>`;
+            html += `<button onclick="app.grantItem('${teamKey}', 'potion')" class="grant-btn bg-red-50 border-red-200 hover:bg-red-100"><span class="text-xl mb-1">🧪</span><span class="text-[0.6rem] font-bold text-red-900">治療劑</span></button>`;
+            html += `<button onclick="app.grantItem('${teamKey}', 'elixir')" class="grant-btn bg-red-50 border-red-200 hover:bg-red-100"><span class="text-xl mb-1">🏺</span><span class="text-[0.6rem] font-bold text-red-900">補血瓶</span></button>`;
 
             html += '</div></div><div class="text-xs text-gray-500 mb-2 font-bold">組員列表：</div>';
 
@@ -2369,7 +2594,10 @@
                     if (m.items.shard) itemsBadge += '🕒';
                     if (m.items.seal) itemsBadge += '🔒';
                     if (m.items.anubis) itemsBadge += '⚖️';
-                    if (m.items.mummy) itemsBadge += '👻'; // 新增列表圖示
+                    if (m.items.mummy) itemsBadge += '👻';
+                    if (m.items.herb) itemsBadge += '🌿';
+                    if (m.items.potion) itemsBadge += '🧪';
+                    if (m.items.elixir) itemsBadge += '🏺';
                 }
                 html += `<div class="team-detail-row items-center"><span class="font-bold text-gray-700">${m.name} <span class="text-xs">${itemsBadge}</span></span><span class="font-bold text-amber-600">${m.score}分</span></div>`;
             });
@@ -2445,7 +2673,10 @@
                          shard: '🕒 時之碎片',
                          seal: '🔒 法老王的封印',
                          anubis: '⚖️ 阿努比斯的審判',
-                         mummy: '👻 木乃伊的詛咒' // 新增
+                         mummy: '👻 木乃伊的詛咒',
+                         herb: '🌿 治癒草藥',
+                         potion: '🧪 強效治療劑',
+                         elixir: '🏺 秘傳補血瓶'
                      };
                      const itemName = itemNames[type] || '🎁 神秘道具';
                      app.toast('物資已發放',1);
@@ -2882,14 +3113,54 @@
                 if (shouldAttack) {
                     console.log(`👹 怪物發動攻擊！原因：${attackReason} (已解:${takenCount}, 剩餘:${remainingCount})`);
                     
-                    // 寫入攻擊訊號
-                    db.ref(`classes/${app.state.classId}/activeMonster`).update({
-                        action: 'attack',
-                        actionTime: firebase.database.ServerValue.TIMESTAMP
+                    // 準備資料庫更新物件
+                    const updates = {};
+                    const damage = monster.atk || 10; // 讀取怪物攻擊力
+                    const playersData = gameData.players || {};
+
+                    // [新增] 遍歷所有隊伍與玩家進行扣血 (含 v4.7.0 死亡邏輯)
+                    Object.keys(playersData).forEach(teamKey => {
+                        const members = playersData[teamKey];
+                        if (members) {
+                            Object.keys(members).forEach(pName => {
+                                const p = members[pName];
+                                // 如果已經死亡(有復活時間且未到)，則跳過扣血
+                                if (p.hp <= 0 && p.reviveAt && p.reviveAt > Date.now()) return;
+
+                                const oldHp = (p.hp !== undefined) ? p.hp : 100;
+                                let newHp = Math.max(0, oldHp - damage);
+                                
+                                updates[`players/${teamKey}/${pName}/hp`] = newHp;
+
+                                // [死亡判定邏輯]
+                                if (newHp <= 0 && oldHp > 0) {
+                                    // 情況A: 隊長(Host) 死亡 -> 觸發遊戲結束
+                                    const hostName = gameData.hostName; // 從 gameData 讀取房主名
+                                    if (pName === hostName) {
+                                        specificSpeech = "隊長陣亡！冒險失敗！";
+                                        setTimeout(() => app.triggerEndGame(), 1000); // 延遲觸發結束
+                                    } 
+                                    // 情況B: 隊員死亡 -> 設定 2 分鐘復活 CD
+                                    else {
+                                        const reviveTime = Date.now() + 120000; // 2 分鐘後
+                                        updates[`players/${teamKey}/${pName}/reviveAt`] = reviveTime;
+                                        // 這裡不需廣播語音，讓 UI 顯示倒數即可
+                                    }
+                                }
+                            });
+                        }
                     });
 
-                    // 播放對應語音
+                    // 寫入攻擊訊號
+                    updates[`activeMonster/action`] = 'attack';
+                    updates[`activeMonster/actionTime`] = firebase.database.ServerValue.TIMESTAMP;
+
+                    // 一次性更新所有扣血與狀態
+                    db.ref(`classes/${app.state.classId}`).update(updates);
+
+                    // 播放對應語音與提示
                     if (specificSpeech) app.speak(specificSpeech);
+                    app.toast(`💥 受到 ${damage} 點傷害！`, 1); // 1 代表不語音朗讀 toast，避免與 speak 重疊
 
                 } else {
                     // 若沒有攻擊，但有設定好的語音 (例如純時間到)，則在此播放
@@ -3103,7 +3374,7 @@
       // v3.3.2 修正：強制骰子型別轉換，修復道具卡驗證錯誤與四則運算符號邏輯
    
        // [v4.3.4] 提交答案 (整合怪物扣血機制)
-        // [v4.3.4] 提交答案 (整合怪物扣血機制 - 已修正1分=10傷與死亡動畫流程)
+        // [v4.3.4] 提交答案 (整合怪物扣血機制 - 已修正1分=10傷與死亡動畫流程)       
         submitAnswer: () => {
             const idx = app.state.selectedCardIndex;
             if (idx === null) return app.toast('⚠️ 請先點擊金字塔上的數字！');
@@ -3111,6 +3382,13 @@
             // 檢查是否處於怪物未召喚狀態
             if (app.state.gameData?.activeMonster?.state !== 'battle') {
                 return app.toast('🛡️ 請等待房主遭遇魔物後再進行攻擊！');
+            }
+
+            // [v4.7.2 新增] 死亡狀態檢查 (HP <= 0 禁止攻擊)
+            const myData = app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName];
+            if (myData && myData.hp <= 0) {
+                app.speak("重傷無法戰鬥");
+                return app.toast('💀 你目前處於重傷復活狀態，無法進行攻擊！\n(請使用背包中的補血道具恢復)', 1);
             }
 
             const frozen = app.state.gameData.frozenState;
@@ -3271,11 +3549,23 @@
                         const oldLv = app.getInGameLevelInfo(currentExp).lv;
                         const newLv = app.getInGameLevelInfo(newExp).lv;
                         if(newLv > oldLv) {
-                            app.toast(`🆙 升級！現在是 Lv.${newLv}`, 1);
+                            app.toast(`🆙 升級！現在是 Lv.${newLv} (生命上限+5)`, 1);
                             app.showDamageText("LEVEL UP!", "#fbbf24"); // 金色升級字樣
+                            
+                            // [v4.7.2.1] 升級增加血量上限與當前血量 (+5)
+                            const hpPath = `players/${app.state.myTeam}/${app.state.myName}/hp`;
+                            const maxHpPath = `players/${app.state.myTeam}/${app.state.myName}/maxHp`;
+                            // 讀取目前數值 (需注意若 undefined 預設 100)
+                            const curHp = (app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName]?.hp !== undefined) 
+                                          ? app.state.gameData.players[app.state.myTeam][app.state.myName].hp : 100;
+                            const curMaxHp = (app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName]?.maxHp !== undefined)
+                                             ? app.state.gameData.players[app.state.myTeam][app.state.myName].maxHp : 100;
+
+                            updates[hpPath] = curHp + 5;
+                            updates[maxHpPath] = curMaxHp + 5;
                         }
-                    }
-                    
+                    } // 🟢 這裡補上了原本遺失的右大括號，結束 if (points > 0)
+
                     updates['lastWinner'] = {
                         name: app.state.myName,
                         timestamp: firebase.database.ServerValue.TIMESTAMP
@@ -3313,11 +3603,29 @@
                                         if (members) {
                                             Object.keys(members).forEach(pName => {
                                                 const pData = members[pName];
-                                                // 累加 EXP
+                                                
+                                                // [修正 v4.7.2.2] 處理經驗值並檢查升級增加血量
                                                 const pExpPath = `players/${tKey}/${pName}/exp`;
                                                 const pCurrentExp = pData.exp || 0;
-                                                updates[pExpPath] = pCurrentExp + mExp;
+                                                const newTotalExp = pCurrentExp + mExp;
+                                                updates[pExpPath] = newTotalExp;
                                                 
+                                                // 檢查是否升級 (比較舊等級與新等級)
+                                                const oldLv = app.getInGameLevelInfo(pCurrentExp).lv;
+                                                const newLv = app.getInGameLevelInfo(newTotalExp).lv;
+                                                
+                                                if (newLv > oldLv) {
+                                                    // 讀取該玩家當前血量設定
+                                                    const pHpPath = `players/${tKey}/${pName}/hp`;
+                                                    const pMaxHpPath = `players/${tKey}/${pName}/maxHp`;
+                                                    const pCurHp = (pData.hp !== undefined) ? pData.hp : 100;
+                                                    const pMaxHp = (pData.maxHp !== undefined) ? pData.maxHp : 100;
+                                                    
+                                                    // 升級獎勵：血量與上限 +5
+                                                    updates[pHpPath] = pCurHp + 5;
+                                                    updates[pMaxHpPath] = pMaxHp + 5;
+                                                }
+
                                                 // 累加 Gold (當前錢包 - 可消費)
                                                 const pGoldPath = `players/${tKey}/${pName}/gold`;
                                                 const pCurrentGold = pData.gold || 0;
@@ -3330,7 +3638,7 @@
                                             });
                                         }
                                     });
-                                    successMsg += ` (全員獲得 ${mExp}經驗, ${mGold}金幣!)`;
+                                    successMsg += ` (獲得 ${mExp}經驗, ${mGold}金幣!)`;
                                 }
                             }
                             // ---------------------------------------------
@@ -3486,7 +3794,6 @@
             app.el('voice-toggle-btn').textContent = app.state.voiceEnabled ? "🔊 語音開" : "🔇 語音關";
         },
 
-        generatePredefinedCards: () => { /* 佔位符 */ },
         generatePredefinedCards: () => { /* 佔位符 */ },
         createPredefinedCards: () => { /* 佔位符 */ },
         
@@ -3800,25 +4107,35 @@
         // [新增] 顯示傷害數字浮動特效
         // [新增] 顯示傷害數字浮動特效 (v4.6.4 優化：放慢速度、加大字體)
         // [新增] 顯示傷害數字浮動特效 (vv4.6.5 支援文字與顏色)
-        showDamageText: (text, color = "#ff2a2a") => {
-            const card = app.el('active-monster-card');
-            if (!card && typeof text === 'number') return; // 如果是數字且沒卡片就不顯示
+       // [新增] 顯示傷害數字浮動特效 (v4.7.2 優化：支援指定顯示目標與補血特效)
+        showDamageText: (text, color = "#ff2a2a", targetId = null) => {
+            // 決定定位目標：優先使用指定ID，否則找怪物卡，再沒有就找螢幕中心
+            let targetEl = targetId ? document.getElementById(targetId) : app.el('active-monster-card');
             
-            // 如果沒卡片但有文字(例如升級)，顯示在螢幕中央上方
+            // 特例：如果是攻擊傷害(未指定targetId)且場上無怪物卡，則不顯示數字(避免飄在半空)
+            if (!targetId && !targetEl && typeof text === 'number') return; 
+            
             let left, top;
-            if (card) {
-                const rect = card.getBoundingClientRect();
+            if (targetEl) {
+                const rect = targetEl.getBoundingClientRect();
                 const randomX = (Math.random() - 0.5) * 40; 
+                // 如果是指定目標(如小隊視窗)，顯示在該區域中心；如果是怪物，顯示在頂部
                 left = rect.left + (rect.width / 2) + randomX;
-                top = rect.top;
+                top = targetId ? (rect.top + rect.height / 2) : rect.top;
             } else {
                 left = window.innerWidth / 2;
                 top = window.innerHeight / 3;
             }
 
             const el = document.createElement('div');
-            // 如果傳入的是數字，加上負號
-            el.textContent = (typeof text === 'number') ? `-${text}` : text;
+            // 如果傳入的是數字，且不是補血(綠色)，加上負號
+            // 簡單判斷：如果是綠色(#22c55e)，通常是補血，顯示 +號
+            if (typeof text === 'number') {
+                if (color === '#22c55e') el.textContent = `+${text}`;
+                else el.textContent = `-${text}`;
+            } else {
+                el.textContent = text;
+            }
             
             el.style.cssText = `
                 position: fixed;
@@ -3840,6 +4157,7 @@
             document.body.appendChild(el);
 
             requestAnimationFrame(() => {
+                // 補血往上飄，傷害也往上飄
                 el.style.top = `${top - 150}px`;
                 el.style.opacity = '0';
             });
@@ -3863,7 +4181,7 @@
             const listEl = app.el('inventory-list');
             
             // v3.7.0 修正：加入 mummy 檢查
-            const hasItems = (items.hint > 0) || (items.double > 0) || (items.horus > 0) || (items.nile > 0) || (items.time > 0) || (items.seal > 0) || (items.shard > 0) || (items.anubis > 0) || (items.mummy > 0);
+            const hasItems = (items.hint > 0) || (items.double > 0) || (items.horus > 0) || (items.nile > 0) || (items.time > 0) || (items.seal > 0) || (items.shard > 0) || (items.anubis > 0) || (items.mummy > 0) || (items.herb > 0) || (items.potion > 0) || (items.elixir > 0);
             if (!hasItems) {
                 invEl.classList.add('hidden');
                 return;
@@ -3902,15 +4220,96 @@
             // 5. 封印陷阱類 (灰/黑)
             html += renderItem('seal', '🔒', items.seal, 'bg-slate-200', '法老封印');
             html += renderItem('mummy', '👻', items.mummy, 'bg-stone-300', '木乃伊的詛咒');
+            
+            // 6. 恢復補血類 (紅)
+            html += renderItem('herb', '🌿', items.herb, 'bg-red-100', '治癒草藥(+10HP)');
+            html += renderItem('potion', '🧪', items.potion, 'bg-red-100', '治療劑(+20HP)');
+            html += renderItem('elixir', '🏺', items.elixir, 'bg-red-100', '補血瓶(+30HP)');
 
             listEl.innerHTML = html;
         },
 
         // v3.4.0 更新：使用道具 (新增時之沙邏輯)
+       // v4.7.2 更新：使用道具 (開放補血時機與視覺修正)
         useItem: (type) => {
-            if (app.state.gameData.status !== 'playing') return app.toast('✋ 遊戲尚未開始，還不能使用道具喔');
+            const status = app.state.gameData.status;
+            const isHealing = ['herb', 'potion', 'elixir'].includes(type);
 
-            // --- 類型 A: 立即消耗型 ---
+            // 1. 補血道具：允許在 等待中(擲骰前) 或 進行中 使用
+            // 2. 其他道具：只允許在 進行中 使用
+            if (isHealing) {
+                if (status !== 'playing' && status !== 'waiting') return app.toast('✋ 現在還不能使用道具喔');
+            } else {
+                if (status !== 'playing') return app.toast('✋ 遊戲尚未開始，還不能使用道具喔');
+            }
+
+            // --- 補血道具 (立即生效) ---
+            if (isHealing) {
+                const healAmounts = { herb: 10, potion: 20, elixir: 30 };
+                const healVal = healAmounts[type];
+                
+                // 讀取當前血量 (使用安全路徑讀取，避免 undefined)
+                const playerRef = db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}`);
+                
+                playerRef.once('value', snapshot => {
+                    const pData = snapshot.val() || {};
+                    const currentHp = pData.hp !== undefined ? pData.hp : 100;
+                    const maxHp = pData.maxHp || 100;
+
+                    if (currentHp >= maxHp) {
+                        return app.toast('❤️ 生命值已滿，不需要補血！');
+                    }
+                    
+                    // 確認是否真的有該道具
+                    const currentItemCount = (pData.items && pData.items[type]) ? pData.items[type] : 0;
+                    if (currentItemCount <= 0) {
+                        return app.toast('❌ 道具數量不足！');
+                    }
+
+                    // 即使死亡 (HP<=0) 也可以使用補血瓶復活
+                    const confirmMsg = (currentHp <= 0) 
+                        ? `👼 你正在復活倒數中，要使用「${type==='herb'?'草藥':(type==='potion'?'治療劑':'補血瓶')}」立即復活嗎？`
+                        : `❤️ 確定要使用「${type==='herb'?'草藥':(type==='potion'?'治療劑':'補血瓶')}」恢復 ${healVal} 點生命嗎？`;
+
+                    if (!confirm(confirmMsg)) return;
+
+                    // 執行交易：扣道具 + 補血
+                    playerRef.transaction(player => {
+                        if (player) {
+                             if (!player.items || !player.items[type] || player.items[type] <= 0) return; // 再次檢查
+                             
+                             player.items[type]--; // 扣除道具
+                             
+                             // 補血邏輯 (不超過上限)
+                             let newHp = (player.hp || 0) + healVal;
+                             if (newHp > player.maxHp) newHp = player.maxHp;
+                             player.hp = newHp;
+                             
+                             // [修正 v4.7.2] 若補血後 HP > 0，移除復活時間標記 (reviveAt)
+                             if (newHp > 0 && player.reviveAt) {
+                                 delete player.reviveAt;
+                             }
+                        }
+                        return player;
+                    }, (error, committed, snapshot) => {
+                        if (committed) {
+                             const p = snapshot.val();
+                             app.toast(`💖 恢復生命！目前 HP: ${p.hp}/${p.maxHp}`, 1);
+                             app.speak('生命值恢復');
+                             
+                             // [修正 v4.7.2] 依據身分決定補血特效顯示位置 (主控者: teacher-personal-board, 學生: student-squad-section)
+                             const targetContainerId = app.state.isHost ? 'teacher-personal-board' : 'student-squad-section';
+                             app.showDamageText(healVal, '#22c55e', targetContainerId); 
+                             
+                             // 刷新背包
+                             app.renderStudentInventory(app.state.gameData.players);
+                        }
+                    });
+                });
+                return;
+            }
+
+            // --- 類型 A: 立即消耗型 (非補血類，繼續執行下方邏輯) ---
             
             // 1. 提示卡
             if (type === 'hint') {
@@ -4051,9 +4450,12 @@
                  seal: { icon: '🔒', name: '法老封印', desc: '點擊金字塔上的牌以鎖定60秒 (再次點擊取消)' },
                  double: { icon: '🦂', name: '聖甲蟲祝福', desc: '本題分數 x2 (再次點擊可關閉)' },
                  horus: { icon: '👁️', name: '荷魯斯之眼', desc: '可使用下方 1, 2, 3 按鈕 (再次點擊可關閉)' },
-                 nile: { icon: '🌊', name: '尼羅河恩賜', desc: '本回合只需 2 顆骰子 (再次點擊可關閉)' },
+                nile: { icon: '🌊', name: '尼羅河恩賜', desc: '本回合只需 2 顆骰子 (再次點擊可關閉)' },
                  anubis: { icon: '⚖️', name: '阿努比斯的審判', desc: `分數 x3，但禁止使用「${app.state.anubisBannedOp}」運算！` },
-                 mummy: { icon: '👻', name: '木乃伊的詛咒', desc: '點擊金字塔上的牌埋設陷阱，敵人踩到將倒扣分數！' }
+                 mummy: { icon: '👻', name: '木乃伊的詛咒', desc: '點擊金字塔上的牌埋設陷阱，敵人踩到將倒扣分數！' },
+                 herb: { icon: '🌿', name: '治癒草藥', desc: '恢復 10 點生命值' },
+                 potion: { icon: '🧪', name: '治療劑', desc: '恢復 20 點生命值' },
+                 elixir: { icon: '🏺', name: '秘傳補血瓶', desc: '恢復 30 點生命值' }
              };
              
              const cfg = configs[type];
