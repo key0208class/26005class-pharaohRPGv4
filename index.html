@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.3.6 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.4.2 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -307,7 +307,39 @@
             15% { opacity: 1; transform: translate(-50%, -30px) scale(1.5); } /* 彈出放大 */
             100% { opacity: 0; transform: translate(-50%, -80px) scale(1); } /* 向上飄走消失 */
         }
-		/* [新增 v4.7.0] 玩家受傷與死亡復活特效 */
+		/* [新增 v4.7.4] 懲罰閃電特效 */
+        .lightning-overlay {
+            position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+            background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E9%96%83%E9%9B%BB%E7%89%B9%E6%95%88.png');
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+            opacity: 0;
+        }
+        .animate-lightning { animation: flash-lightning 0.4s ease-out; }
+        @keyframes flash-lightning {
+            0% { opacity: 0; filter: brightness(3); }
+            10% { opacity: 1; filter: brightness(2); }
+            30% { opacity: 0.5; }
+            50% { opacity: 0.8; filter: invert(1); }
+            100% { opacity: 0; }
+        }
+		/* [新增 v4.7.4.1] 爪痕攻擊特效 */
+        .claw-overlay {
+            position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+            background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%AA%E7%97%95.png');
+            /* [可修改] 爪痕大小：修改下方的 50% 即可改變大小 (原為80%) */
+            background-size: 30%; 
+            background-position: center; background-repeat: no-repeat;
+            opacity: 0; animation: claw-slash 0.5s ease-out forwards;
+            filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.8));
+        }
+        @keyframes claw-slash {
+            0% { opacity: 0; transform: scale(1.5) rotate(-15deg); }
+            20% { opacity: 1; transform: scale(1) rotate(0deg); }
+            80% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(1.1); }
+        }
+
+        /* [新增 v4.7.0] 玩家受傷與死亡復活特效 */
         .player-damaged {
             animation: player-shake-red 0.5s cubic-bezier(.36,.07,.19,.97) both;
         }
@@ -332,7 +364,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.3.6 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.4.2 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -1150,6 +1182,7 @@
             gameData: {},
             lastPlayerHps: {}, // [新增] 用於偵測血量變化以觸發特效
             cards: {}, 
+            lastWrongAttempt: null, // [v4.7.4] 記錄上次錯誤(算式+目標)，防止重複懲罰 
             voiceEnabled: true,
             localTimer: null,
             selectedCardIndex: null,
@@ -3533,6 +3566,28 @@
                 const result = new Function(`return ${cleanFormula}`)();
                 
                if (Math.abs(result - card.number) < 0.001) {
+                    // --- [v4.7.4.1] Mode 5 法則攻擊判定 (答對仍可能受傷) ---
+                    const monster = app.state.gameData?.activeMonster;
+                    if (monster && monster.state === 'battle' && monster.mode5) {
+                        // 檢查算式是否包含禁止符號 (UI輸入的是: +, -, ×, ÷)
+                        if (formula.includes(monster.mode5)) {
+                            const damage = monster.atk || 10;
+                            // 1. 扣除玩家血量
+                            const pRef = db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}`);
+                            pRef.transaction(p => {
+                                if (p) p.hp = Math.max(0, (p.hp || 0) - damage);
+                                return p;
+                            });
+                            
+                            // 2. 觸發特效與提示
+                            app.triggerClawEffect(); // 爪痕
+                            app.showDamageText(`-${damage}`, '#ef4444', app.state.isHost ? 'teacher-personal-board' : 'student-squad-section');
+                            app.toast(`🚫 觸犯法則「${monster.mode5}」！受到反噬傷害！`, 1);
+                            app.speak('禁忌反噬');
+                        }
+                    }
+                    // -------------------------------------------------------
+
                     // --- 驗證成功：計算分數與傷害 ---
                     let points = card.points;
                     let playerName = app.state.myName;
@@ -3740,9 +3795,47 @@
                     app.resetInput();
                     app.state.selectedCardIndex = null;
 
-                } else {
+               } else {
                     const displayResult = Math.round(result * 100) / 100;
-                    app.toast(`❌ 計算結果是 ${displayResult}，目標是 ${card.number} 喔！`);
+                    
+                    // --- [v4.7.4] Mode 3 懲罰攻擊邏輯 ---
+                    const monster = app.state.gameData?.activeMonster;
+                    // 檢查是否為模式3且處於戰鬥中
+                    if (monster && monster.state === 'battle' && monster.mode3) {
+                        // 唯一性檢查鍵值: 目標ID + 算式內容 (去除空格，確保只針對該題該算式判定一次)
+                        const currentAttemptKey = `${idx}_${cleanFormula}`;
+                        
+                        if (app.state.lastWrongAttempt !== currentAttemptKey) {
+                            app.state.lastWrongAttempt = currentAttemptKey; // 記錄本次錯誤
+                            
+                            // 執行懲罰
+                            const damage = monster.atk || 10;
+                            
+                            // 1. 扣血 (寫入 Firebase)
+                            const pRef = db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}`);
+                            pRef.transaction(p => {
+                                if (p) {
+                                    p.hp = Math.max(0, (p.hp || 0) - damage);
+                                    // 死亡判定由 listenToGameData 統一處理
+                                }
+                                return p;
+                            });
+
+                            // 2. 視覺特效 (閃電 + 震動 + 扣血字樣)
+                            app.triggerLightningEffect();
+                            app.showDamageText(`-${damage}`, '#ef4444', app.state.isHost ? 'teacher-personal-board' : 'student-squad-section');
+                            
+                            app.toast(`⚡ 答錯懲罰！受到 ${damage} 點傷害！`, 1);
+                            app.speak('遭到懲罰攻擊');
+                        } else {
+                            // 重複錯誤，僅提示，不扣血
+                            app.toast(`❌ 計算結果是 ${displayResult} (重複錯誤不扣血)`, 1);
+                        }
+                    } else {
+                        // 普通錯誤提示 (無懲罰)
+                        app.toast(`❌ 計算結果是 ${displayResult}，目標是 ${card.number} 喔！`, 1);
+                    }
+                    // -----------------------------------
                 }
             } catch (e) {
                 console.error(e);
@@ -4172,7 +4265,31 @@
                 setTimeout(() => explosion.remove(), 300);
             }
         }, // 這是 triggerMonsterAttackEffect 的結尾逗號
-
+// [v4.7.4] 觸發全螢幕閃電特效
+        triggerLightningEffect: () => {
+            const overlay = document.createElement('div');
+            overlay.className = 'lightning-overlay animate-lightning';
+            document.body.appendChild(overlay);
+            // 播放音效 (如果有的話，這裡暫用震動替代)
+            if (navigator.vibrate) navigator.vibrate([50, 50, 50, 50]);
+            
+            setTimeout(() => {
+                if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            }, 500); // 與 CSS 動畫時間配合
+        },
+		// [v4.7.4.1] 觸發全螢幕爪痕特效 (Mode 5)
+        triggerClawEffect: () => {
+            const overlay = document.createElement('div');
+            overlay.className = 'claw-overlay';
+            document.body.appendChild(overlay);
+            
+            // 播放強烈震動
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+            
+            setTimeout(() => {
+                if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            }, 600); // 動畫時間 0.5s + 緩衝
+        },
         // [新增] 顯示傷害數字浮動特效
         // [新增] 顯示傷害數字浮動特效 (v4.6.4 優化：放慢速度、加大字體)
         // [新增] 顯示傷害數字浮動特效 (vv4.6.5 支援文字與顏色)
