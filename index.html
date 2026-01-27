@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.4.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.5.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -364,7 +364,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.4.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.5.3 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -2837,15 +2837,17 @@
                         const colorClass = app.getCardColorClass(card.color);
                         const visibilityClass = card.isTaken ? 'opacity-0 pointer-events-none' : 'opacity-100';
                         
-                        // 卡牌鎖定狀態檢查
+                        // 卡牌鎖定狀態檢查 [v4.7.5.1 修改] 移除倒數顯示，改為持續鎖定
                         let lockHtml = '';
-                        if (card.lockedUntil && card.lockedUntil > now) {
-                            const remaining = Math.ceil((card.lockedUntil - now) / 1000);
+                        // 只要有 lockedBy 屬性，且該牌未被拿走，即視為被封印
+                        if (card.lockedBy && !card.isTaken) {
                             const isMyLock = card.lockedBy === app.state.myTeam;
                             if (isMyLock) {
-                                lockHtml = `<div class="absolute -top-6 -left-2 w-full text-left z-30"><span class="bg-red-500 text-white text-xs font-black px-1.5 py-0.5 rounded-full shadow-md animate-pulse">${remaining}s</span></div><div class="absolute -top-2 -left-2 text-2xl z-20 drop-shadow-md">🔒</div><div class="absolute bottom-0 w-full text-[0.6rem] bg-green-600 text-white text-center py-0.5 rounded-b-md">已鎖定</div>`;
+                                // 自己隊伍：顯示鎖頭與狀態標籤 (無倒數)
+                                lockHtml = `<div class="absolute -top-2 -left-2 text-2xl z-20 drop-shadow-md animate-pulse" title="解開此題以封印怪物">🔒</div><div class="absolute bottom-0 w-full text-[0.6rem] bg-green-600 text-white text-center py-0.5 rounded-b-md">封印準備</div>`;
                             } else {
-                                lockHtml = `<div class="absolute inset-0 bg-slate-800/80 rounded-xl z-20 flex flex-col items-center justify-center text-white backdrop-blur-[2px]"><div class="text-xl font-black text-amber-400 mb-1">${remaining}s</div><div class="text-3xl">🔒</div><div class="text-xs font-bold mt-1">封印中</div></div>`;
+                                // 別人隊伍：顯示封印中遮罩
+                                lockHtml = `<div class="absolute inset-0 bg-slate-800/80 rounded-xl z-20 flex flex-col items-center justify-center text-white backdrop-blur-[2px]"><div class="text-3xl mb-1">🔒</div><div class="text-xs font-bold">封印中</div></div>`;
                             }
                         }
 
@@ -2915,22 +2917,22 @@
                 return;
             }
 
-            // v3.3.1 封印道具邏輯
+            // v3.3.1 封印道具邏輯 [v4.7.5.1 修改] 移除時間限制，改為觸發型封印
             if (app.state.activeItem === 'seal') {
-                if (card.lockedUntil && card.lockedUntil > Date.now()) {
-                    return app.toast('⚠️這張牌已經被鎖定了！');
+                if (card.lockedBy) {
+                    return app.toast('⚠️ 這張牌已經被鎖定了！');
                 }
                 
-                if (!confirm(`🔒 確定要消耗一張「法老封印」鎖定數字 ${card.number} 嗎？\n(鎖定時間 60 秒)`)) return;
+                if (!confirm(`🔒 確定要在數字 ${card.number} 上施加封印嗎？\n(解開此題後，將封印怪物攻擊 3 回合！)`)) return;
 
                 const itemRef = db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}/items/seal`);
                 itemRef.transaction(count => {
                     if ((count || 0) > 0) {
                         db.ref(`classes/${app.state.classId}/pyramid/${index}`).update({
-                            lockedBy: app.state.myTeam,
-                            lockedUntil: Date.now() + 60000 
+                            lockedBy: app.state.myTeam
+                            // [移除] lockedUntil: Date.now() + 60000 
                         });
-                        app.speak('封印發動');
+                        app.speak('封印術式已設置');
                         app.state.activeItem = null; 
                         app.renderActiveItemStatus();
                         app.renderStudentInventory(app.state.gameData.players);
@@ -3140,55 +3142,67 @@
                 let attackReason = "";
                 let specificSpeech = ""; // 專用喊話變數
 
-                // 1. 計算場上卡牌狀態
+                // [v4.7.5.2 修正] 將計數變數移至最外層，解決 takenCount is not defined 錯誤
                 const currentPyramid = gameData.pyramid || [];
                 const remainingCount = currentPyramid.filter(c => c && !c.isTaken).length;
                 const totalSlots = 10; 
-                // 本局已解開的卡牌數 (用來判斷玩家是否有進行攻擊)
                 const takenCount = totalSlots - remainingCount;
-
-                // 2. 判斷是否為「時間到」 (timer === 0)
-                const isTimeUp = (gameData.timer === 0);
-
-                // --- 判定邏輯開始 (互斥結構) ---
-
-                // [優先檢測] Mode 4: 每N回合全體攻擊 (回合開始前/結束時檢測)
-                // 邏輯：下一回合是第幾局？
-                const nextRoundNum = (gameData.round || 1) + 1;
-                if (monster.mode4 > 0 && nextRoundNum % monster.mode4 === 0) {
-                     // 觸發週期性攻擊
-                     shouldAttack = true;
-                     attackReason = "mode4_periodic";
-                     specificSpeech = `魔物暴走！`;
-                }
-
-                // [時間到檢測] Mode 1 vs Mode 2 (僅在時間到時觸發，且互斥)
-                if (isTimeUp && !shouldAttack) { // 如果已經觸發 Mode 4，則優先權給 Mode 4，或可疊加(視需求)，此處設為不疊加避免混亂
+                
+                // [v4.7.5.1 新增] 全域封印檢查：若怪物被封印，則跳過所有自動攻擊判定
+                if (monster.sealRounds && monster.sealRounds > 0) {
+                    console.log(`🔒 怪物被封印中，剩餘 ${monster.sealRounds} 回合，跳過攻擊判定`);
+                    shouldAttack = false;
+                    // 若是時間到，雖然不攻擊，但仍可提示
+                    if (gameData.timer === 0) specificSpeech = "怪物被封印，無法動彈！";
                     
-                    if (takenCount > 0) {
-                        // 情況 A: 玩家有進行攻擊 (takenCount > 0)，但沒解完
-                        // ---> 檢測 Mode 1 (被動反擊)
-                        if (monster.mode1 && remainingCount > 0) {
-                            shouldAttack = true;
-                            attackReason = "mode1_counter";
-                            specificSpeech = "魔物反擊！";
+                    // 在此函數後段的 updates 處理區塊會自動寫入新的 sealRounds
+                    
+                } else {
+                    // --- 只有在未被封印時，才執行原本的攻擊判定 ---
+
+                    // 2. 判斷是否為「時間到」 (timer === 0)
+                    const isTimeUp = (gameData.timer === 0);
+
+                    // --- 判定邏輯開始 (互斥結構) ---
+
+                    // [優先檢測] Mode 4: 每N回合全體攻擊 (回合開始前/結束時檢測)
+                    // 邏輯：下一回合是第幾局？
+                    const nextRoundNum = (gameData.round || 1) + 1;
+                    if (monster.mode4 > 0 && nextRoundNum % monster.mode4 === 0) {
+                         // 觸發週期性攻擊
+                         shouldAttack = true;
+                         attackReason = "mode4_periodic";
+                         specificSpeech = `魔物暴走！`;
+                    }
+
+                    // [時間到檢測] Mode 1 vs Mode 2 (僅在時間到時觸發，且互斥)
+                    if (isTimeUp && !shouldAttack) { // 如果已經觸發 Mode 4，則優先權給 Mode 4
+                        
+                        if (takenCount > 0) {
+                            // 情況 A: 玩家有進行攻擊 (takenCount > 0)，但沒解完
+                            // ---> 檢測 Mode 1 (被動反擊)
+                            if (monster.mode1 && remainingCount > 0) {
+                                shouldAttack = true;
+                                attackReason = "mode1_counter";
+                                specificSpeech = "魔物反擊！";
+                            } else {
+                                // Mode 1 未開啟，且玩家有解題 -> 純粹時間到，安全
+                                specificSpeech = "時間到！做得好！";
+                            }
                         } else {
-                            // Mode 1 未開啟，且玩家有解題 -> 純粹時間到，安全
-                            specificSpeech = "時間到！做得好！";
-                        }
-                    } else {
-                        // 情況 B: 玩家完全沒有攻擊 (takenCount === 0)
-                        // ---> 檢測 Mode 2 (主動攻擊)
-                        if (monster.mode2) {
-                            shouldAttack = true;
-                            attackReason = "mode2_active";
-                            specificSpeech = "時間到，魔物主動攻擊！";
-                        } else {
-                            // Mode 2 未開啟，且玩家發呆 -> 純粹時間到，安全
-                            specificSpeech = "時間到，魔物正在觀察...";
+                            // 情況 B: 玩家完全沒有攻擊 (takenCount === 0)
+                            // ---> 檢測 Mode 2 (主動攻擊)
+                            if (monster.mode2) {
+                                shouldAttack = true;
+                                attackReason = "mode2_active";
+                                specificSpeech = "時間到，魔物主動攻擊！";
+                            } else {
+                                // Mode 2 未開啟，且玩家發呆 -> 純粹時間到，安全
+                                specificSpeech = "時間到，魔物正在觀察...";
+                            }
                         }
                     }
-                }
+                } // End of sealRounds check
 
                 // [執行結果]
                 if (shouldAttack) {
@@ -3338,10 +3352,20 @@
                         }
                     }
                 });
-
+// [v4.7.5.1 新增] 處理封印回合遞減
+                let newSealRounds = (gameData.activeMonster && gameData.activeMonster.sealRounds) || 0;
+                if (newSealRounds > 0) {
+                    newSealRounds--; // 回合結束，次數-1
+                    // 若歸零，可選擇在此發送提示
+                    if (newSealRounds === 0 && app.state.isHost) {
+                         // 這裡可以做封印解除的提示，但因為頁面重整，toast 可能會閃一下
+                         // 可以在 speak 裡處理
+                    }
+                }
                 const nextRound = (gameData.round || 1) + 1;
                 const updates = {
                     status: 'waiting',
+                    'activeMonster/sealRounds': newSealRounds, // [v4.7.5.1] 更新剩餘封印回合
                     dice: { d8: '-', d10: '-', d12: '-' },
                     timerActive: false,
                     pyramid: newPyramid,
@@ -3568,7 +3592,10 @@
                if (Math.abs(result - card.number) < 0.001) {
                     // --- [v4.7.4.1] Mode 5 法則攻擊判定 (答對仍可能受傷) ---
                     const monster = app.state.gameData?.activeMonster;
-                    if (monster && monster.state === 'battle' && monster.mode5) {
+                    // [v4.7.5.1 修改] 若怪物被封印 (sealRounds > 0)，則法則攻擊失效
+                    const isSealed = (monster && monster.sealRounds > 0);
+                    
+                    if (monster && monster.state === 'battle' && monster.mode5 && !isSealed) {
                         // 檢查算式是否包含禁止符號 (UI輸入的是: +, -, ×, ÷)
                         if (formula.includes(monster.mode5)) {
                             const damage = monster.atk || 10;
@@ -3589,11 +3616,26 @@
                     // -------------------------------------------------------
 
                     // --- 驗證成功：計算分數與傷害 ---
+                    // [v4.7.5.2 修正] 提早初始化 updates 物件，解決 Cannot access 'updates' 錯誤
+                    const updates = {};
+
                     let points = card.points;
                     let playerName = app.state.myName;
                     let successMsg = `${playerName}進攻！`;
                     let itemToConsume = null;
                     let curseTriggered = false;
+
+                    // [v4.7.5.1 新增] 封印觸發判定
+                    // 檢查這張牌是否被「我們隊伍」鎖定 (lockedBy === myTeam)
+                    if (card.lockedBy === app.state.myTeam) {
+                        // 觸發封印效果！
+                        successMsg += " 🔒 封印成功！";
+                        app.toast("🔒 封印術式發動！怪物攻擊被封印 3 回合！", 1);
+                        app.showDamageText("封印", "#94a3b8"); // 灰色封印字樣
+                        
+                        // 寫入封印回合數 (當前 + 未來2回合 = 3)
+                        updates['activeMonster/sealRounds'] = 3;
+                    }
 
                     // 詛咒判定
                     if (card.curseData && card.curseData.team !== app.state.myTeam) {
@@ -3634,8 +3676,7 @@
                     app.renderStudentInventory(app.state.gameData.players);
                     app.renderActiveItemStatus();
 
-                    // 建構更新資料
-                    const updates = {};
+                    // 建構更新資料 (updates 已在上方初始化，這裡直接賦值)
                     updates[`pyramid/${idx}/isTaken`] = true;
                     
                     // [v4.4.1 修正] 只要有人答對，就更新房間活躍時間
@@ -3800,8 +3841,11 @@
                     
                     // --- [v4.7.4] Mode 3 懲罰攻擊邏輯 ---
                     const monster = app.state.gameData?.activeMonster;
-                    // 檢查是否為模式3且處於戰鬥中
-                    if (monster && monster.state === 'battle' && monster.mode3) {
+                    // [v4.7.5.1 修改] 若怪物被封印，懲罰攻擊失效
+                    const isSealed = (monster && monster.sealRounds > 0);
+                    
+                    // 檢查是否為模式3且處於戰鬥中，且未被封印
+                    if (monster && monster.state === 'battle' && monster.mode3 && !isSealed) {
                         // 唯一性檢查鍵值: 目標ID + 算式內容 (去除空格，確保只針對該題該算式判定一次)
                         const currentAttemptKey = `${idx}_${cleanFormula}`;
                         
@@ -4048,16 +4092,8 @@
                 const backImg = cardBacks[nextBackId] || cardBacks[1];
                 
                 // [No-Whitespace] 牌背 + v4.5.2 修正位置的召喚提示
-                // [版面修改說明]: 
-                // 1. 卡片位置: style="top:0.5rem; left:0.5rem;" (若要移動卡片，請改這裡)
-                // 2. 提示文字位置: 下方 div 的 style="top: 11rem; left: 0.5rem;" 
-                //    - top: 11rem (因為卡片高約10~12rem，設11rem會剛好在下方)
-                //    - left: 0.5rem (靠左對齊卡片)
-                //    - 若覺得太近或太遠，請調整 top 的數值
                 container.innerHTML = `<div id="active-monster-card" class="monster-card-wrapper w-24 h-40 md:w-28 md:h-48" style="top:0.5rem;left:0.5rem;" onclick="app.activateMonsterCard()"><div class="monster-card-inner"><div class="monster-face monster-face-front bg-slate-900"></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div><div class="absolute w-24 md:w-28 text-center pointer-events-none flex justify-center" style="top:13.5rem;left:0.5rem;z-index:40;"><div class="text-amber-600 font-bold text-s bg-white/95 px-2 py-1 rounded-full shadow-md animate-bounce border border-amber-300 whitespace-nowrap">${tipsText}</div></div>`;
 
-
-                
                 app.state.lastMonsterActionTime = 0; // 重置特效計時器
                 return;
             }
@@ -4066,15 +4102,7 @@
             
             // [v4.7.3.1 新增] 檢查是否為寶箱 (無血量、不可攻擊、點擊開啟)
             if (remoteMonster.type === 'chest') {
-                 // [可修改] 寶箱位置與大小設定 (修正為對齊戰鬥區)
-                 // 大小類別: w-24 h-40 md:w-28 md:h-48 (設定跟怪物卡一樣大)
-                 // 位置設定: top: 0.5rem; right: 0.5rem; (設定貼齊右側 Battle 框框)
-                 container.innerHTML = `<div id="active-monster-card" class="monster-card-wrapper w-24 h-40 md:w-28 md:h-48 animate-[urgentFloat_2s_ease-in-out_infinite]" style="position: absolute; top: 0.5rem; right: 0.5rem; cursor: pointer; z-index: 50;" onclick="app.openTreasureChest()">
-                    <div class="relative w-full h-full drop-shadow-2xl transition-transform hover:scale-105">
-                        <img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%8D%8E%E5%8B%B5%E5%AF%B6%E7%AE%B1.png" class="w-full h-full object-contain" alt="Treasure Chest">
-                        <div class="absolute -bottom-6 w-full text-center"><span class="bg-amber-100 text-amber-800 text-[0.6rem] font-black px-2 py-0.5 rounded-full border border-amber-300 shadow-sm animate-bounce inline-block whitespace-nowrap">隊長請開啟</span></div>
-                    </div>
-                </div>`;
+                 container.innerHTML = `<div id="active-monster-card" class="monster-card-wrapper w-24 h-40 md:w-28 md:h-48 animate-[urgentFloat_2s_ease-in-out_infinite]" style="position: absolute; top: 0.5rem; right: 0.5rem; cursor: pointer; z-index: 50;" onclick="app.openTreasureChest()"><div class="relative w-full h-full drop-shadow-2xl transition-transform hover:scale-105"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%8D%8E%E5%8B%B5%E5%AF%B6%E7%AE%B1.png" class="w-full h-full object-contain" alt="Treasure Chest"><div class="absolute -bottom-6 w-full text-center"><span class="bg-amber-100 text-amber-800 text-[0.6rem] font-black px-2 py-0.5 rounded-full border border-amber-300 shadow-sm animate-bounce inline-block whitespace-nowrap">隊長請開啟</span></div></div></div>`;
                 return;
             }
 
@@ -4098,13 +4126,33 @@
             // Mode 5: 禁用
             if (remoteMonster.mode5) statusHtml += `<span onclick="app.toast('🚫 [法則封印]：本場戰鬥禁止使用「${remoteMonster.mode5}」符號。', 1)" class="cursor-pointer bg-black text-yellow-400 px-1 rounded hover:bg-gray-800 border border-yellow-500">[禁${remoteMonster.mode5}]</span>`;
 
-            // 1. 如果卡片已存在且是同一隻 -> 執行更新與特效檢查
+            // 1. 如果卡片已存在且是同一隻 -> 執行更新與特效檢查 (效能優化區)
             if (existingCard && isSameMonster) {
                 // 更新血條
                 const hpBar = document.getElementById('monster-hp-bar-fill');
                 const hpText = document.getElementById('monster-hp-text');
                 if (hpBar) hpBar.style.width = `${hpPercent}%`;
                 if (hpText) hpText.innerText = `HP ${currentHp}/${maxHp}`;
+
+                // [v4.7.5.3 Fix] 動態更新封印狀態 (解決封印後卡片沒刷新問題)
+                // 檢查是否有封印標記 (seal-badge-container)
+                let sealBadge = existingCard.querySelector('.seal-badge-container');
+                
+                if (remoteMonster.sealRounds && remoteMonster.sealRounds > 0) {
+                    if (!sealBadge) {
+                        // 如果沒有徽章但應該有，插入 HTML (放在 wrapper 內最前面)
+                        // 我們加上 class "seal-badge-container" 和 "seal-count-text" 以便後續選取
+                        const badgeHtml = `<div class="seal-badge-container absolute -top-3 -left-3 z-50 flex flex-col items-center justify-center bg-white border-2 border-slate-400 rounded-full w-10 h-10 shadow-lg animate-pulse" title="怪物被封印中"><span class="text-lg leading-none">🔒</span><span class="seal-count-text absolute -bottom-1 -right-1 bg-red-600 text-white text-[0.6rem] font-black px-1.5 py-0.5 rounded-full border border-white leading-none shadow-sm">${remoteMonster.sealRounds}</span></div>`;
+                        existingCard.insertAdjacentHTML('afterbegin', badgeHtml);
+                    } else {
+                        // 如果已有徽章，更新倒數數字
+                        const countEl = sealBadge.querySelector('.seal-count-text');
+                        if (countEl) countEl.textContent = remoteMonster.sealRounds;
+                    }
+                } else {
+                    // 如果不該有封印(回合歸零)但畫面上有，移除它
+                    if (sealBadge) sealBadge.remove();
+                }
 
                 // 檢查是否需要觸發特效 (根據 actionTime)
                 if (remoteMonster.actionTime && remoteMonster.actionTime > (app.state.lastMonsterActionTime || 0)) {
@@ -4115,7 +4163,7 @@
                     if (isRecent) {
                         if (remoteMonster.action === 'attack') app.triggerMonsterAttackEffect('attack');
                         if (remoteMonster.action === 'damage') app.triggerMonsterAttackEffect('damage');
-                        if (remoteMonster.action === 'die') app.triggerMonsterAttackEffect('die'); // [新增] 死亡偵測
+                        if (remoteMonster.action === 'die') app.triggerMonsterAttackEffect('die');
                     }
                 }
                 return; 
@@ -4130,26 +4178,19 @@
             const isFreshSummon = remoteMonster.timestamp && (now - remoteMonster.timestamp) < 2000;
             const initialClass = isFreshSummon ? '' : 'is-in-battle is-flipped';
 
-            // [No-Whitespace] 戰鬥中的怪物卡 + 狀態燈號顯示區
-            // [版面修改說明]: 
-            // 狀態燈號容器: style="top: 13rem; ..." (位於戰鬥位置的下方)
-            // 若怪物移動到右側戰鬥位(is-in-battle)，樣式由 CSS class 控制位置，但燈號是 absolute，
-            // 我們使用一個 trick：將燈號放在卡片結構之外，但透過 CSS 定位到右側。
-            // 修正：為了讓燈號跟著卡片跑比較困難，我們直接將燈號固定在「戰鬥區(畫面右側)的下方」。
-            
-            // 下方 HTML 結構說明：
-            // 1. monster-card-wrapper: 怪物卡本體
-            // 2. status-container: 顯示 [被動] [主動] 等狀態，設定在 style="top: 0.5rem; right: 0.5rem; ..." 的戰鬥位置下方
-            // 這裡我們動態計算位置，因為怪物戰鬥時會移動到右側 (CSS class .is-in-battle)
-            // 為了簡化，我們將狀態列放在卡片 wrapper 內部或緊鄰，但這會被 3D 翻轉影響。
-            // 最佳解：獨立一個絕對定位的 div，位置對應戰鬥區。
-            
-            // 戰鬥區預設位置：手機版 left: calc(100% - 6rem - 0.5rem) / 桌機版 left: calc(100% - 7rem - 0.5rem)
-            // 我們直接把狀態列包含在 container 裡，並給予對應的右側定位。
-            
-            container.innerHTML = `<div id="active-monster-card" data-monster-name="${remoteMonster.name}" class="monster-card-wrapper w-24 h-40 md:w-28 md:h-48 ${initialClass}" style="top:0.5rem;left:0.5rem;" onclick="app.activateMonsterCard()"><div class="monster-card-inner"><div class="monster-face monster-face-front flex flex-col bg-slate-900 border-2 border-amber-500 overflow-hidden shadow-lg"><div class="h-[72%] w-full relative bg-gray-800"><img id="monster-img-face" src="${faceImg}" class="w-full h-full object-contain" alt="Monster"></div><div class="h-[28%] w-full bg-slate-900 flex flex-col justify-center items-center px-1 py-0.5"><div class="text-[0.6rem] md:text-xs font-black text-amber-400 truncate w-full text-center leading-tight">${remoteMonster.name}</div><div class="w-[90%] bg-gray-700 h-1.5 rounded-full overflow-hidden relative my-0.5 border border-black/40"><div id="monster-hp-bar-fill" class="bg-gradient-to-r from-red-600 to-red-400 h-full absolute top-0 left-0 transition-all duration-300" style="width:${hpPercent}%"></div></div><div id="monster-hp-text" class="text-[1rem] md:text-sm text-white font-mono font-bold leading-none drop-shadow-sm">HP ${currentHp}/${maxHp}</div></div></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div><div class="absolute w-32 flex flex-wrap justify-center gap-1 pointer-events-auto z-40" style="top:13.5rem; right:0.5rem;"><div class="flex flex-wrap justify-end gap-1 text-[0.6rem] font-bold shadow-sm">${statusHtml}</div></div>`;
+            // [v4.7.5.3] 初始封印圖示邏輯 (加入 class 名稱以便後續選取)
+            let sealHtml = '';
+            if (remoteMonster.sealRounds && remoteMonster.sealRounds > 0) {
+                sealHtml = `
+                <div class="seal-badge-container absolute -top-3 -left-3 z-50 flex flex-col items-center justify-center bg-white border-2 border-slate-400 rounded-full w-10 h-10 shadow-lg animate-pulse" title="怪物被封印中">
+                    <span class="text-lg leading-none">🔒</span>
+                    <span class="seal-count-text absolute -bottom-1 -right-1 bg-red-600 text-white text-[0.6rem] font-black px-1.5 py-0.5 rounded-full border border-white leading-none shadow-sm">${remoteMonster.sealRounds}</span>
+                </div>`;
+            }
 
-            if (isFreshSummon) {
+            // 注意：這裡將 sealHtml 放入 wrapper 內部最上層
+            container.innerHTML = `<div id="active-monster-card" data-monster-name="${remoteMonster.name}" class="monster-card-wrapper w-24 h-40 md:w-28 md:h-48 ${initialClass}" style="top:0.5rem;left:0.5rem;" onclick="app.activateMonsterCard()">${sealHtml}<div class="monster-card-inner"><div class="monster-face monster-face-front flex flex-col bg-slate-900 border-2 border-amber-500 overflow-hidden shadow-lg"><div class="h-[72%] w-full relative bg-gray-800"><img id="monster-img-face" src="${faceImg}" class="w-full h-full object-contain" alt="Monster"></div><div class="h-[28%] w-full bg-slate-900 flex flex-col justify-center items-center px-1 py-0.5"><div class="text-[0.6rem] md:text-xs font-black text-amber-400 truncate w-full text-center leading-tight">${remoteMonster.name}</div><div class="w-[90%] bg-gray-700 h-1.5 rounded-full overflow-hidden relative my-0.5 border border-black/40"><div id="monster-hp-bar-fill" class="bg-gradient-to-r from-red-600 to-red-400 h-full absolute top-0 left-0 transition-all duration-300" style="width:${hpPercent}%"></div></div><div id="monster-hp-text" class="text-[1rem] md:text-sm text-white font-mono font-bold leading-none drop-shadow-sm">HP ${currentHp}/${maxHp}</div></div></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div><div class="absolute w-32 flex flex-wrap justify-center gap-1 pointer-events-auto z-40" style="top:13.5rem; right:0.5rem;"><div class="flex flex-wrap justify-end gap-1 text-[0.6rem] font-bold shadow-sm">${statusHtml}</div></div>`;
+			if (isFreshSummon) {
                 setTimeout(() => {
                     const el = document.getElementById('active-monster-card');
                     if(el) {
@@ -4633,7 +4674,7 @@
              
              // v3.7.0 新增 mummy 設定
              const configs = {
-                 seal: { icon: '🔒', name: '法老封印', desc: '點擊金字塔上的牌以鎖定60秒 (再次點擊取消)' },
+                 seal: { icon: '🔒', name: '法老封印', desc: '解題成功後，將封印怪物攻擊 3 回合' },
                  double: { icon: '🦂', name: '聖甲蟲祝福', desc: '本題分數 x2 (再次點擊可關閉)' },
                  horus: { icon: '👁️', name: '荷魯斯之眼', desc: '可使用下方 1, 2, 3 按鈕 (再次點擊可關閉)' },
                 nile: { icon: '🌊', name: '尼羅河恩賜', desc: '本回合只需 2 顆骰子 (再次點擊可關閉)' },
@@ -4923,7 +4964,7 @@
                 { id: 'elixir', name: '補血瓶', icon: '🏺', desc: '恢復30點生命' },
                 { id: 'shard', name: '時之碎片', icon: '🕒', desc: '延長倒數60秒' },
                 { id: 'double', name: '聖甲蟲', icon: '🦂', desc: '下題分數加倍' },
-                { id: 'seal', name: '封印', icon: '🔒', desc: '鎖定卡牌60秒' },
+                { id: 'seal', name: '封印', icon: '🔒', desc: '封印怪物攻擊3回' },
                 { id: 'nile', name: '尼羅河', icon: '🌊', desc: '只用2顆骰子' },
                 { id: 'horus', name: '荷魯斯', icon: '👁️', desc: '獲得萬用數字' },
                 { id: 'time', name: '時之沙', icon: '⏳', desc: '凍結敵人時間' },
