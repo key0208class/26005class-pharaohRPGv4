@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.5.3 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.5.4 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -364,7 +364,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.5.3 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.5.4 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -763,55 +763,55 @@
                                 </div>
                                 <div class="max-h-[300px] overflow-y-auto custom-scrollbar p-1 space-y-1">
                                     <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
-                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="古老提示卡">📜 提示卡</div>
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="古老提示卡:提示運算規則">📜 提示卡</div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-hint-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="50"></div>
                                         <div class="col-span-2"><input type="number" id="admin-shop-hint-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-hint-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
                                     </div>
                                     <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
-                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="聖甲蟲祝福">🦂 聖甲蟲</div>
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="聖甲蟲祝福:攻擊力x2">🦂 聖甲蟲</div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-double-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="100"></div>
                                         <div class="col-span-2"><input type="number" id="admin-shop-double-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-double-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
                                     </div>
                                     <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
-                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="荷魯斯之眼">👁️ 荷魯斯</div>
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="荷魯斯之眼:取代1顆骰子為1~3點">👁️ 荷魯斯</div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-horus-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="150"></div>
                                         <div class="col-span-2"><input type="number" id="admin-shop-horus-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-horus-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
                                     </div>
                                     <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
-                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="尼羅河恩賜">🌊 尼羅河</div>
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="尼羅河恩賜:用2顆骰子運算">🌊 尼羅河</div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-nile-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="150"></div>
                                         <div class="col-span-2"><input type="number" id="admin-shop-nile-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-nile-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
                                     </div>
                                     <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
-                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="時之沙">⏳ 時之沙</div>
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="時之沙:時間暫停，持續提示並封印怪物攻擊">⏳ 時之沙</div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-time-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="200"></div>
                                         <div class="col-span-2"><input type="number" id="admin-shop-time-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-time-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
                                     </div>
                                     <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
-                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="時之碎片">🕒 碎片</div>
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="時之碎片:延長時間30秒">🕒 碎片</div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-shard-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="80"></div>
                                         <div class="col-span-2"><input type="number" id="admin-shop-shard-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-shard-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="2"></div>
                                     </div>
                                     <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
-                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="法老王的封印">🔒 封印</div>
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="法老王的封印:封印魔物行動3回合">🔒 封印</div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-seal-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="100"></div>
                                         <div class="col-span-2"><input type="number" id="admin-shop-seal-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="1"></div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-seal-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
                                     </div>
                                     <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
-                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="阿努比斯的審判">⚖️ 阿努比斯</div>
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="阿努比斯的審判:限定運算，通過後攻擊力x3">⚖️ 阿努比斯</div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-anubis-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="300"></div>
                                         <div class="col-span-2"><input type="number" id="admin-shop-anubis-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="3"></div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-anubis-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
                                     </div>
                                     <div class="grid grid-cols-12 gap-1 items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors border-b border-gray-50">
-                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="木乃伊的詛咒">👻 木乃伊</div>
+                                        <div class="col-span-4 font-bold text-gray-700 text-sm truncate" title="木乃伊的詛咒:怪物虛弱，2回合所受傷害成1.5倍">👻 木乃伊</div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-mummy-price" class="w-full border border-gray-300 rounded px-1 text-center text-sm font-bold text-yellow-700 focus:bg-yellow-50 focus:border-yellow-400 outline-none" placeholder="250"></div>
                                         <div class="col-span-2"><input type="number" id="admin-shop-mummy-lv" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-blue-50 focus:border-blue-400 outline-none" placeholder="2"></div>
                                         <div class="col-span-3"><input type="number" id="admin-shop-mummy-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="1"></div>
@@ -2232,15 +2232,62 @@
                 statusEl.className = "text-xl font-black text-red-800";
             }
 
-            app.updateDiceUI(data.dice);
+           app.updateDiceUI(data.dice);
             app.renderPyramid(data.pyramid);
 
-            if (data.timerActive) {
-                app.el('timer-display').classList.remove('hidden');
-                app.el('timer-display').textContent = data.timer;
-                if(data.timer === 0) app.handleTimeUp(); 
+            // [v4.7.5.4] 時之沙特殊顯示邏輯：顯示提示並隱藏倒數
+            if (data.timeSandActive && data.status === 'playing') {
+                app.el('timer-display').classList.add('hidden'); // 隱藏倒數數字
+                
+                // 計算提示
+                const { d8, d10, d12 } = data.dice;
+                const targets = data.pyramid.filter(c => c && !c.isTaken).map(c => c.number);
+                let hintText = "搜尋中...";
+                let hasSolution = false;
+
+                if (targets.length > 0) {
+                    // 尋找任一可解目標
+                    for (let t of targets) {
+                        const sol = app.findSolution([d8, d10, d12], t);
+                        if (sol) {
+                            // 取出前兩個數字運算 (例如 (8+5)*2 -> 8+5)
+                            const match = sol.match(/(\d+\s*[\+\-\*\/]\s*\d+)/);
+                            let shortHint = match ? match[0] : sol;
+                            shortHint = shortHint.replace(/\*/g, '×').replace(/\//g, '÷');
+                            hintText = `提示: ${shortHint}...`;
+                            hasSolution = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!hasSolution) {
+                        hintText = "已無可解數字";
+                        // 若無解，且是房主，則自動推進回合 (稍微延遲讓玩家看到訊息)
+                        if (app.state.isHost && !app.state.autoNextTimer) {
+                            app.state.autoNextTimer = setTimeout(() => {
+                                app.forceNextRound();
+                                app.state.autoNextTimer = null;
+                            }, 3000);
+                        }
+                    }
+                } else {
+                    hintText = "圖騰全數清除";
+                }
+
+                // 更新狀態欄文字
+                const statusBox = app.el('game-status-text').parentElement;
+                statusBox.className = "bg-blue-100 rounded-2xl p-4 shadow-inner text-center relative border-2 border-blue-400 transition-colors duration-300";
+                app.el('game-status-text').innerHTML = `<div class="flex flex-col items-center animate-pulse"><div class="text-2xl font-black text-blue-800 flex items-center gap-2">⏳ 時間凍結中</div><div class="text-lg font-bold text-blue-600 mt-1 font-mono">${hintText}</div></div>`;
+
             } else {
-                app.el('timer-display').classList.add('hidden');
+                // 正常倒數顯示邏輯
+                if (data.timerActive) {
+                    app.el('timer-display').classList.remove('hidden');
+                    app.el('timer-display').textContent = data.timer;
+                    if(data.timer === 0) app.handleTimeUp(); 
+                } else {
+                    app.el('timer-display').classList.add('hidden');
+                }
             }
             
             app.calculateAndRenderScores(data.players);
@@ -3368,6 +3415,7 @@
                     'activeMonster/sealRounds': newSealRounds, // [v4.7.5.1] 更新剩餘封印回合
                     dice: { d8: '-', d10: '-', d12: '-' },
                     timerActive: false,
+                    timeSandActive: null, // [v4.7.5.4] 換局時清除時之沙凍結狀態
                     pyramid: newPyramid,
                     decks: newDecks,
                     round: nextRound,
@@ -4556,25 +4604,24 @@
                 return;
             }
             
-            // 2. 時之沙
+            // 2. 時之沙 (v4.7.5.4 修改: 永久凍結 + 提示 + 封印1回合)
             if (type === 'time') {
-                const currentFrozen = app.state.gameData.frozenState;
-                const now = Date.now();
-                if (currentFrozen && currentFrozen.endTime > now) {
-                    return app.toast('❄️ 場上時間已被凍結，無法疊加使用！');
+                if (app.state.gameData.timeSandActive) {
+                    return app.toast('⏳ 時之沙效運作中了！', 1);
                 }
-                if (!confirm('⏳ 確定要使用「時之沙」嗎？\n\n接下來 30 秒內，只有你們小組可以答題，其他隊伍將被凍結！')) return;
+                if (!confirm('⏳ 確定要使用「時之沙」嗎？\n\n1. 時間凍結。\n2. 持續顯示解題提示。\n3. 怪物本回合停止攻擊！')) return;
 
                 const refItem = db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}/items/time`);
                 refItem.transaction(count => {
                     if ((count || 0) > 0) {
-                        db.ref(`classes/${app.state.classId}/frozenState`).set({
-                            active: true,
-                            byTeam: app.state.myTeam,
-                            byPlayer: app.state.myName,
-                            endTime: Date.now() + 30000 
+                        // 更新全域狀態
+                        db.ref(`classes/${app.state.classId}`).update({
+                            timeSandActive: true,      // 標記時之沙啟用
+                            timerActive: false,        // 停止倒數計時
+                            'activeMonster/sealRounds': 1 // 賦予封印效果 (本回合不攻擊)
                         });
-                        app.speak(`警告！${app.state.myName}使用了時之沙，時間凍結30秒！`);
+                        
+                        app.speak(`${app.state.myName}使用了時之沙！`);
                         return count - 1;
                     }
                     return count;
@@ -4967,7 +5014,7 @@
                 { id: 'seal', name: '封印', icon: '🔒', desc: '封印怪物攻擊3回' },
                 { id: 'nile', name: '尼羅河', icon: '🌊', desc: '只用2顆骰子' },
                 { id: 'horus', name: '荷魯斯', icon: '👁️', desc: '獲得萬用數字' },
-                { id: 'time', name: '時之沙', icon: '⏳', desc: '凍結敵人時間' },
+                { id: 'time', name: '時之沙', icon: '⏳', desc: '1回合凍結時間解題提示並封印' },
                 { id: 'mummy', name: '木乃伊', icon: '👻', desc: '埋設扣分陷阱' },
                 { id: 'anubis', name: '阿努比斯', icon: '⚖️', desc: '分數x3但禁符號' }
             ];
