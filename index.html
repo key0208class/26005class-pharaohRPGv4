@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.6.4 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.6.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -356,58 +356,6 @@
             color: #fff; font-weight: 900; text-align: center;
         }
         .revive-timer { font-size: 1.5rem; color: #fbbf24; text-shadow: 0 0 10px #d97706; animation: pulse 1s infinite; }
-		/* [新增 v4.7.6.4] 黑市系統樣式 (暗黑破壞神風格) */
-        .black-market-modal {
-            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
-            border: 4px solid #4a3b2a; /* 深褐色邊框 */
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), inset 0 0 100px rgba(0,0,0,0.8);
-            font-family: 'Times New Roman', serif; /* 襯線字體營造古老感 */
-        }
-        
-        /* [可修改] 黑市商人圖片設定 */
-        .merchant-avatar {
-            position: absolute;
-            top: -60px;   /* 負值讓圖片往上突破框架 */
-            left: -40px;  /* 負值讓圖片往左突破框架 */
-            width: 220px; /* 控制圖片大小 */
-            height: auto;
-            z-index: 60;  /* 確保在最上層 */
-            filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.8));
-            transition: transform 0.3s ease;
-            cursor: pointer;
-        }
-        .merchant-avatar:hover { transform: scale(1.05) rotate(-2deg); }
-
-        /* 黑市商品卡片 */
-        .bm-item-card {
-            background: linear-gradient(to bottom, #2d2d2d, #1a1a1a);
-            border: 1px solid #5c4d3c;
-            box-shadow: inset 0 0 10px #000;
-            transition: all 0.2s;
-        }
-        .bm-item-card:hover {
-            border-color: #d4af37; /* 金色邊框 */
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        /* 裝備縮圖堆疊效果 */
-        .bm-thumb-stack { display: flex; align-items: center; justify-content: center; }
-        .bm-thumb-stack img { 
-            width: 30px; height: 30px; border: 1px solid #444; border-radius: 4px; 
-            margin-right: -10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); z-index: 1; transition: transform 0.2s;
-        }
-        .bm-thumb-stack img:hover { transform: scale(1.5); z-index: 10; }
-
-        /* 背包格子 */
-        .bm-bag-slot {
-            width: 48px; height: 48px;
-            background: #111; border: 2px solid #333;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; position: relative;
-        }
-        .bm-bag-slot:hover { border-color: #d4af37; background: #222; }
-        .bm-bag-slot.selected { border-color: #ef4444; box-shadow: 0 0 10px #ef4444; }
 </style>    
 	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -416,7 +364,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.6.4 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.6.3 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -466,7 +414,7 @@
                         <div id="auth-panel-guest" class="flex flex-col items-center">
                             <div class="text-6xl mb-4">🤠</div>
                             <h2 class="text-2xl font-black text-amber-900 mb-2">冒險者資料</h2>
-                            <p class="text-xs text-gray-500 mb-4">登入 Google 以永久保存戰績</p>
+                            <p class="text-xs text-gray-500 mb-4">登入 Google 以開啟完整功能(金幣體系及裝備體系)</p>
                             
                             <button onclick="app.loginGoogle()" class="w-full bg-white border border-gray-300 text-gray-700 font-bold py-3 rounded-xl shadow-sm hover:bg-gray-50 hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-3 mb-4 group">
                                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6" alt="G">
@@ -501,12 +449,7 @@
                     <div class="lobby-card p-6 min-h-[500px] flex flex-col">
                         <div class="flex justify-between items-center mb-6 border-b border-amber-200 pb-4">
                             <h2 class="text-2xl font-black text-amber-900">🗺️ 冒險大廳</h2>
-                            <div class="flex items-center gap-3">
-                                <button onclick="app.openBlackMarket()" class="bg-slate-800 text-amber-500 border border-amber-600 px-3 py-1 rounded-lg font-bold hover:bg-black hover:text-amber-400 transition-colors shadow-sm flex items-center gap-1 text-sm animate-pulse">
-                                    <span>🧛</span> 黑市
-                                </button>
-                                <button onclick="app.refreshLobby()" class="text-amber-600 font-bold hover:text-amber-800 text-sm">🔄 重新整理</button>
-                            </div>
+                            <button onclick="app.refreshLobby()" class="text-amber-600 font-bold hover:text-amber-800 text-sm">🔄 重新整理</button>
                         </div>
                         
                         <div id="lobby-room-list" class="space-y-3 flex-1 overflow-y-auto pr-2">
@@ -1336,91 +1279,6 @@
                     <span class="text-2xl font-bold text-white shadow-sm">🔙 回到初始之地</span>
                 </div>
             </button>
-        </div>
-		<!-- [新增 v4.7.6.4] 黑市系統視窗 -->
-        <div id="black-market-modal" class="fixed inset-0 z-[65] hidden flex items-center justify-center modal-backdrop">
-            <!-- 突破容器框架：設定 overflow-visible 讓圖片可以超出邊界 -->
-            <div class="black-market-modal relative w-[95%] max-w-7xl h-[85vh] rounded-xl p-2 md:p-6 flex flex-col overflow-visible animate-[fadeIn_0.5s_ease-out]">
-                
-                <!-- 左上角：黑市商人 (突破框架) -->
-                <!-- [註解] 若要調整商人大小，請修改 CSS 中的 .merchant-avatar 寬度 -->
-                <img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%95%86%E4%BA%BA.png" class="merchant-avatar" alt="Black Market Merchant" onclick="app.playMerchantVoice()">
-                
-                <!-- 頂部：標題與對話框 -->
-                <div class="flex justify-between items-start mb-4 ml-32 md:ml-48">
-                    <div class="flex-1 mr-4">
-                        <div class="bg-black/60 border border-gray-600 rounded-xl p-4 text-gray-200 relative">
-                            <!-- 對話框箭頭 -->
-                            <div class="absolute top-6 -left-2 w-4 h-4 bg-black/60 border-l border-b border-gray-600 transform rotate-45"></div>
-                            <h3 class="text-amber-600 font-bold text-lg mb-1">黑市商人</h3>
-                            <p id="bm-merchant-dialogue" class="text-sm md:text-base italic text-gray-300">"嘿嘿嘿... 冒險者，這裡有些好東西，只要你付得起代價..."</p>
-                        </div>
-                    </div>
-                    <button onclick="app.el('black-market-modal').classList.add('hidden')" class="text-gray-500 hover:text-white font-bold text-2xl px-2">✕</button>
-                </div>
-
-                <!-- 主要內容區：左右分欄 -->
-                <div class="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4 overflow-hidden">
-                    
-                    <!-- 左側：商品列表 (大區域) -->
-                    <div class="md:col-span-8 bg-black/40 border border-gray-700 rounded-lg p-1 flex flex-col">
-                        <div class="bg-gradient-to-r from-amber-900/50 to-transparent p-2 text-amber-500 font-bold border-b border-gray-700 flex justify-between">
-                            <span>📦 稀有商品列表</span>
-                            <span class="text-xs text-gray-400 self-center">每種商品皆有等級限制</span>
-                        </div>
-                        <div id="bm-shop-list" class="flex-1 overflow-y-auto custom-scrollbar p-2 grid grid-cols-1 md:grid-cols-2 gap-3 content-start">
-                            <!-- JS 動態生成商品卡片 -->
-                        </div>
-                    </div>
-
-                    <!-- 右側：個人資訊與背包 -->
-                    <div class="md:col-span-4 flex flex-col gap-4">
-                        
-                        <!-- 個人資訊卡 -->
-                        <div class="bg-black/40 border border-gray-700 rounded-lg p-4">
-                            <div class="text-gray-400 text-xs font-bold mb-2">冒險者資訊 (Google Account)</div>
-                            <div class="flex items-center gap-3 mb-3">
-                                <div class="w-12 h-12 rounded-full border-2 border-amber-600 overflow-hidden bg-black">
-                                    <img id="bm-user-avatar" src="" class="w-full h-full object-cover">
-                                </div>
-                                <div>
-                                    <div id="bm-user-name" class="text-amber-500 font-bold text-lg leading-none">未登入</div>
-                                    <div class="text-gray-500 text-xs">Account Lv.<span id="bm-user-lv">0</span></div>
-                                </div>
-                            </div>
-                            <div class="bg-gray-900 rounded p-2 flex items-center justify-between border border-gray-800">
-                                <span class="text-gray-400 text-sm">持有金幣</span>
-                                <span class="text-yellow-500 font-mono font-bold text-xl">💰 <span id="bm-user-gold">0</span></span>
-                            </div>
-                        </div>
-
-                        <!-- 背包區 -->
-                        <div class="flex-1 bg-black/40 border border-gray-700 rounded-lg p-2 flex flex-col min-h-[200px]">
-                            <div class="text-gray-400 text-xs font-bold mb-2 px-1">🎒 黑市背包</div>
-                            
-                            <!-- 物品詳細資訊顯示區 -->
-                            <div id="bm-item-detail-panel" class="mb-2 bg-gray-900/80 p-2 rounded border border-gray-600 min-h-[80px] hidden">
-                                <div class="flex gap-2">
-                                    <div id="bm-detail-icon" class="text-3xl"></div>
-                                    <div class="flex-1">
-                                        <div id="bm-detail-name" class="text-amber-500 font-bold text-sm"></div>
-                                        <div id="bm-detail-desc" class="text-gray-400 text-xs leading-tight my-1"></div>
-                                        <div class="flex gap-2 mt-2">
-                                            <button class="bg-gray-700 text-gray-400 text-[0.6rem] px-2 py-1 rounded cursor-not-allowed opacity-50">裝備(未開放)</button>
-                                            <button class="bg-gray-700 text-gray-400 text-[0.6rem] px-2 py-1 rounded cursor-not-allowed opacity-50">販賣(未開放)</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 格子列表 -->
-                            <div id="bm-inventory-grid" class="grid grid-cols-5 gap-1 content-start overflow-y-auto custom-scrollbar">
-                                <!-- JS 生成背包格子 -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 	<script>
@@ -5675,263 +5533,63 @@
         },
 	   // v4.0.5: 自動道具分配 (GM全域設定版)       
         processAutoGrant: (round) => {
+            // 只有房主負責執行分配，避免重複發送
             if (!app.state.isHost) return;
+
+            // 讀取全域設定 (若無則預設不啟用，避免干擾)
             const globalCfg = app.state.globalSettings?.autoGrant;
+            
+            // 1. 檢查是否啟用
             if (!globalCfg || !globalCfg.enabled) return;
+
+            // 2. 檢查回合數 (排除第1回合，符合間隔才發)
+            // 例如 interval=3，則在 round 4 (3+1), 7 (6+1), 10... 發放
             if (round <= 1 || (round - 1) % globalCfg.interval !== 0) return;
 
+            // 開始計算分數與排名
             const players = app.state.gameData.players || {};
+            
+            // 將所有玩家視為同一池子進行比較
             let allPlayers = [];
             Object.keys(players).forEach(teamKey => {
                 if(players[teamKey]) {
                     Object.values(players[teamKey]).forEach(p => {
-                        allPlayers.push({...p, teamKey: teamKey});
+                        allPlayers.push({...p, teamKey: teamKey}); // 需紀錄 teamKey 才能發道具
                     });
                 }
             });
+
             if (allPlayers.length === 0) return;
+
+            // 分數由低到高排序
             allPlayers.sort((a, b) => (a.score || 0) - (b.score || 0));
+
+            // 取出倒數 N 名 (分數最低的前 N 位)
             const targets = allPlayers.slice(0, globalCfg.targetCount);
+            
             if (targets.length === 0) return;
 
+            // 延遲執行
             setTimeout(() => {
                 let msg = `🎁 補給物資\n`;
+                
                 targets.forEach(p => {
                     msg += `${p.name} 獲得支援\n`;
+                    // 執行發放
                     for(let i=0; i<globalCfg.itemCount; i++) {
                         const randomType = globalCfg.allowedTypes[Math.floor(Math.random() * globalCfg.allowedTypes.length)];
                         app.grantItem(p.teamKey, randomType); 
                     }
                 });
+                
+                // [v4.5.3 修改] 優化語音體驗：
+                // 1. app.toast 傳入第二個參數 '1' 代表靜音模式 (只顯示文字，不讀出內容)
                 app.toast(msg, 1);
+                
+                // 2. 另外播放一句簡短的總結語音，避免名單太長一直念
                 app.speak(`發放物資`);
+             
             }, 1500);
-        },
-
-        // --- [新增 v4.7.6.4] 黑市系統邏輯 ---
-
-        // 開啟黑市視窗
-        openBlackMarket: () => {
-            // 檢查是否登入 (需要 Google 帳號來儲存黑市物品)
-            if (!app.state.user) {
-                return app.toast('⚠️ 需登入 Google 帳號才能進入黑市交易！');
-            }
-
-            // 讀取黑市設定 (全域)
-            const settings = app.state.globalSettings || {};
-            const blackMarketList = settings.blackMarketList || [];
-            
-            // 讀取使用者資料 (金幣、經驗、背包)
-            const userRef = db.ref(`users/${app.state.user.uid}`);
-            userRef.once('value', snapshot => {
-                const userData = snapshot.val() || {};
-                
-                // 渲染介面
-                app.renderBlackMarketUI(userData, blackMarketList);
-                app.el('black-market-modal').classList.remove('hidden');
-                
-                // 播放歡迎語音
-                app.playMerchantVoice(true);
-            });
-        },
-
-        // 渲染黑市介面 (User Info, Shop List, Inventory)
-        renderBlackMarketUI: (userData, shopList) => {
-            // 1. 個人資訊
-            const totalExp = userData.totalExp || 0;
-            const accountLv = app.getAccountLevel(totalExp);
-            app.el('bm-user-avatar').src = app.state.user.photoURL || '';
-            app.el('bm-user-name').textContent = userData.displayName || app.state.user.displayName;
-            app.el('bm-user-lv').textContent = accountLv;
-            app.el('bm-user-gold').textContent = userData.totalGold || 0;
-            
-            // 2. 渲染商品列表
-            const shopContainer = app.el('bm-shop-list');
-            let shopHtml = '';
-
-            if (!shopList || shopList.length === 0) {
-                shopHtml = '<div class="col-span-2 text-center text-gray-500 py-10 font-bold">商人外出補貨中...</div>';
-            } else {
-                shopList.forEach((item, idx) => {
-                    if (item.isSold === false) return; // 沒上架的不顯示
-
-                    // 讀取 LV1 資訊作為基本展示 (若無則防呆)
-                    const lv1Data = (item.levelData && item.levelData[1]) ? item.levelData[1] : { price: 9999, minLv: 1, desc: '未知商品' };
-                    const price = lv1Data.price;
-                    const minLv = lv1Data.minLv;
-                    const maxLv = item.maxLv || 1;
-                    const img = item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-
-                    // 判斷購買資格
-                    const canAfford = (userData.totalGold || 0) >= price;
-                    const levelEnough = accountLv >= minLv;
-
-                    // 按鈕狀態
-                    let btnClass = "bg-amber-700 hover:bg-amber-600 text-white border border-amber-500";
-                    let btnText = "購買";
-                    let disabledAttr = "";
-
-                    if (!levelEnough) {
-                        btnClass = "bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed";
-                        btnText = `需 Lv.${minLv}`;
-                        disabledAttr = "disabled";
-                    } else if (!canAfford) {
-                        btnClass = "bg-red-900/50 text-red-400 border border-red-900 cursor-not-allowed";
-                        btnText = "金幣不足";
-                        disabledAttr = "disabled";
-                    }
-
-                    // 縮圖邏輯：若 maxLv > 1，顯示多個小圖示示意
-                    let thumbHtml = '';
-                    if (maxLv > 1) {
-                        thumbHtml = '<div class="bm-thumb-stack mt-2">';
-                        for(let i=0; i<Math.min(3, maxLv); i++) {
-                            thumbHtml += `<img src="${img}">`;
-                        }
-                        if(maxLv > 3) thumbHtml += '<span class="text-gray-500 text-xs ml-2">...</span>';
-                        thumbHtml += `<span class="bg-black text-amber-500 text-[0.6rem] px-1 ml-2 border border-amber-600 rounded">MAX Lv.${maxLv}</span></div>`;
-                    }
-
-                    // 無空白節點 HTML
-                    shopHtml += `<div class="bm-item-card p-3 rounded flex gap-3 relative overflow-hidden group"><div class="w-20 h-20 bg-black/50 border border-gray-600 rounded flex-shrink-0 flex items-center justify-center p-1"><img src="${img}" class="max-w-full max-h-full object-contain"></div><div class="flex-1 flex flex-col justify-between"><div class="flex justify-between items-start"><div><div class="text-gray-200 font-bold text-lg leading-tight group-hover:text-amber-400 transition-colors">${item.name}</div>${thumbHtml}</div><div class="text-right"><div class="text-yellow-500 font-mono font-bold text-lg">💰${price}</div></div></div><div class="mt-2 flex justify-between items-end"><div class="text-xs text-gray-500 line-clamp-2 w-2/3">${lv1Data.desc}</div><button onclick="app.buyBlackMarketItem(${idx}, ${price})" ${disabledAttr} class="px-4 py-1.5 rounded text-sm font-bold shadow-lg transition-transform active:scale-95 ${btnClass}">${btnText}</button></div></div></div>`;
-                });
-            }
-            shopContainer.innerHTML = shopHtml;
-
-            // 3. 渲染背包
-            app.renderBlackMarketInventory(userData.blackMarketInventory);
-        },
-
-        // 渲染黑市背包
-        renderBlackMarketInventory: (inventory) => {
-            const grid = app.el('bm-inventory-grid');
-            const items = inventory || {}; // 結構: { itemId_timestamp: { name, lv, img... } } 
-            // 這裡假設 inventory 儲存的是購買的實體
-            // 由於目前黑市列表是 Array，我們暫時用 index 作為 ID，或是產生 unique ID
-
-            let html = '';
-            // 填滿 20 格 (5x4)
-            for (let i = 0; i < 20; i++) {
-                // 暫時模擬：因為還沒有寫入邏輯，先顯示空格子
-                // 若之後有資料，會從 Object.values(items)[i] 讀取
-                const item = Object.values(items)[i];
-                
-                if (item) {
-                     // 有物品
-                     const icon = item.img || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-                     // 點擊顯示詳情
-                     html += `<div onclick='app.showBlackMarketItemDetail(${JSON.stringify(item)})' class="bm-bag-slot"><img src="${icon}" class="w-full h-full object-cover p-1"></div>`;
-                } else {
-                     // 空格子
-                     html += `<div class="bm-bag-slot"></div>`;
-                }
-            }
-            grid.innerHTML = html;
-        },
-
-        // 顯示背包物品詳情 (點擊格子觸發)
-        showBlackMarketItemDetail: (item) => {
-            const panel = app.el('bm-item-detail-panel');
-            panel.classList.remove('hidden');
-            
-            app.el('bm-detail-icon').innerHTML = `<img src="${item.img}" class="w-10 h-10 object-contain">`;
-            app.el('bm-detail-name').textContent = `${item.name} (Lv.${item.lv || 1})`;
-            app.el('bm-detail-desc').textContent = item.desc || '無詳細說明';
-        },
-
-        // 購買黑市商品
-        buyBlackMarketItem: (index, price) => {
-            if (!confirm(`💰 確定要花費 ${price} 金幣購買此商品嗎？`)) return;
-
-            const itemDef = app.state.globalSettings.blackMarketList[index];
-            const userId = app.state.user.uid;
-            const userRef = db.ref(`users/${userId}`);
-
-            userRef.transaction(userData => {
-                if (userData) {
-                    if ((userData.totalGold || 0) >= price) {
-                        userData.totalGold -= price;
-                        
-                        // 產生一個新的物品實體
-                        if (!userData.blackMarketInventory) userData.blackMarketInventory = {};
-                        
-                        const newId = Date.now().toString(); // 簡單唯一ID
-                        const lv1Data = itemDef.levelData[1];
-                        
-                        userData.blackMarketInventory[newId] = {
-                            name: itemDef.name,
-                            img: itemDef.img1,
-                            lv: 1,
-                            maxLv: itemDef.maxLv,
-                            desc: lv1Data.desc,
-                            type: 'black_market_item',
-                            boughtAt: firebase.database.ServerValue.TIMESTAMP
-                        };
-                    } else {
-                        return; // 交易失敗 (錢不夠)
-                    }
-                }
-                return userData;
-            }, (error, committed, snapshot) => {
-                if (committed) {
-                    app.toast(`🛍️ 交易成功！獲得 ${itemDef.name}`);
-                    // 播放金幣聲
-                    const audio = new Audio("https://taira-komori.net/sound_os2/game01/coin01.mp3");
-                    audio.volume = 0.3;
-                    audio.play().catch(()=>{});
-                    
-                    // 重新渲染介面
-                    app.renderBlackMarketUI(snapshot.val(), app.state.globalSettings.blackMarketList);
-                    // 商人說話
-                    app.playMerchantVoice(false, true);
-                } else {
-                    app.toast('❌ 交易失敗 (金幣不足或網路錯誤)');
-                }
-            });
-        },
-
-        // 商人語音與對話邏輯
-        playMerchantVoice: (isWelcome = false, isPurchase = false) => {
-            const dialogues = [
-                "嘿嘿嘿... 這裡的東西可是外面買不到的...",
-                "你的靈魂... 喔不，你的金幣看起來很美味...",
-                "噓... 別讓神殿的守衛發現我們...",
-                "這些寶物來自被詛咒的陵墓...",
-                "想要變強嗎？我有捷徑..."
-            ];
-            const purchaseDialogues = [
-                "明智的選擇... 嘿嘿嘿...",
-                "合作愉快...",
-                "這東西會給你帶來力量... 或者毀滅...",
-                "多謝惠顧..."
-            ];
-
-            let text = "";
-            if (isPurchase) {
-                text = purchaseDialogues[Math.floor(Math.random() * purchaseDialogues.length)];
-            } else if (isWelcome) {
-                text = "歡迎來到黑市... 帶夠錢了嗎？";
-            } else {
-                text = dialogues[Math.floor(Math.random() * dialogues.length)];
-            }
-
-            // 更新文字
-            const dialogEl = app.el('bm-merchant-dialogue');
-            if (dialogEl) {
-                dialogEl.textContent = `"${text}"`;
-                dialogEl.classList.remove('animate-pulse');
-                void dialogEl.offsetWidth; // 觸發重繪
-                dialogEl.classList.add('animate-pulse');
-            }
-
-            // 播放語音 (低沉音調)
-            if (app.state.voiceEnabled && window.speechSynthesis) {
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'zh-TW';
-                u.rate = 0.8;  // 慢速
-                u.pitch = 0.6; // 低沉
-                window.speechSynthesis.speak(u);
-            }
         },
     };
 
