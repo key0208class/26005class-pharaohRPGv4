@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.5.9 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.6.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -364,7 +364,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.5.9 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.6.3 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -414,7 +414,7 @@
                         <div id="auth-panel-guest" class="flex flex-col items-center">
                             <div class="text-6xl mb-4">🤠</div>
                             <h2 class="text-2xl font-black text-amber-900 mb-2">冒險者資料</h2>
-                            <p class="text-xs text-gray-500 mb-4">登入 Google 以永久保存戰績</p>
+                            <p class="text-xs text-gray-500 mb-4">登入 Google 以開啟完整功能(金幣體系及裝備體系)</p>
                             
                             <button onclick="app.loginGoogle()" class="w-full bg-white border border-gray-300 text-gray-700 font-bold py-3 rounded-xl shadow-sm hover:bg-gray-50 hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-3 mb-4 group">
                                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6" alt="G">
@@ -490,6 +490,8 @@
                     <button onclick="app.switchAdminTab('items')" id="tab-btn-items" class="admin-tab-btn flex-1 whitespace-nowrap">🎁 道具發放</button>
                     <button onclick="app.switchAdminTab('monsters')" id="tab-btn-monsters" class="admin-tab-btn flex-1 whitespace-nowrap">👹 怪物設定</button>
                     <button onclick="app.switchAdminTab('shop')" id="tab-btn-shop" class="admin-tab-btn flex-1 whitespace-nowrap">🛒 冒險商店</button>
+					<!-- [新增 v4.7.6.0] 黑市分頁按鈕 -->
+                    <button onclick="app.switchAdminTab('blackmarket')" id="tab-btn-blackmarket" class="admin-tab-btn flex-1 whitespace-nowrap">🧛 黑市商品</button>
                 </div>
                 
                 <div class="space-y-6 flex-1 overflow-y-auto pr-1 custom-scrollbar">
@@ -835,9 +837,134 @@
                                         <div class="col-span-3"><input type="number" id="admin-shop-elixir-limit" class="w-full border border-gray-300 rounded px-1 text-center text-sm text-gray-600 focus:bg-gray-50 outline-none" placeholder="2"></div>
                                     </div>
                                 </div>
+                           </div>
+                        </div>
+                    </div>
+
+                    <!-- [新增 v4.7.6.0] 黑市商品分頁內容 -->
+                    <div id="tab-content-blackmarket" class="admin-tab-content space-y-4">
+                        
+                        <!-- 黑市列表視圖 -->
+                        <div id="blackmarket-list-view" class="block animate-[fadeIn_0.3s_ease-out]">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-slate-800 flex items-center gap-2 text-xl">🏴‍☠️ 黑市商品總表</h4>
+                                <button onclick="app.addNewBlackMarketItem()" class="bg-slate-700 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-slate-800 active:scale-95 transition-transform flex items-center gap-2">
+                                    <span>➕</span> 新增商品
+                                </button>
+                            </div>
+                            
+                            <div class="bg-slate-100 rounded-xl border border-slate-300 overflow-hidden">
+                                <div class="grid grid-cols-12 gap-2 bg-slate-200 p-3 font-bold text-slate-700 text-sm border-b border-slate-300 items-center text-center">
+                                    <div class="col-span-1">販售</div>
+                                    <div class="col-span-1">預覽</div>
+                                    <div class="col-span-1">序號</div>
+                                    <div class="col-span-2 text-left pl-2">名稱 (點擊編輯)</div>
+                                    <div class="col-span-1">價格</div>
+                                    <div class="col-span-1">最高LV</div>
+                                    <div class="col-span-1">限購LV</div>
+                                    <div class="col-span-3">說明 (當前LV)</div>
+                                    <div class="col-span-1">操作</div>
+                                </div>
+                                <div id="blackmarket-list-container" class="max-h-[400px] overflow-y-auto custom-scrollbar bg-white"></div>
                             </div>
                         </div>
-                    </div>					
+
+                        <!-- 黑市詳細設定視圖 -->
+                        <div id="blackmarket-editor-view" class="hidden animate-[fadeIn_0.3s_ease-out]">
+                            <div class="flex justify-between items-center mb-4 bg-slate-100 p-3 rounded-xl border border-slate-200">
+                                <button onclick="app.switchBlackMarketView('list')" class="bg-gray-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-600 active:scale-95 transition-transform flex items-center gap-2">
+                                    <span>🔙</span> 返回列表
+                                </button>
+                                <h4 class="font-bold text-slate-800 text-lg">📝 編輯黑市商品詳細參數</h4>
+                                <button onclick="app.deleteCurrentBlackMarketItem()" class="bg-red-100 text-red-600 border border-red-300 px-4 py-2 rounded-lg font-bold hover:bg-red-200 active:scale-95 transition-transform">
+                                    🗑️ 刪除商品
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-4 rounded-xl border border-slate-300">
+                                <!-- 左側欄位 -->
+                                <div class="space-y-4">
+                                    <input type="hidden" id="edit-bm-index">
+                                    
+                                    <div class="flex gap-4">
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-gray-500 mb-1">商品名稱</label>
+                                            <input type="text" id="edit-bm-name" class="w-full border-2 border-slate-300 rounded-lg p-2 font-bold text-slate-900">
+                                        </div>
+                                        <div class="w-24">
+                                            <label class="block text-xs font-bold text-gray-500 mb-2 text-center">是否販售</label>
+                                            <div class="flex justify-center">
+                                                <label class="switch">
+                                                    <input type="checkbox" id="edit-bm-is-sold">
+                                                    <span class="slider"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-500 mb-1">飾品最高等級</label>
+                                            <input type="number" id="edit-bm-maxlv" onchange="app.renderBlackMarketLevelSelect()" class="w-full border-2 border-slate-300 rounded-lg p-2 text-center font-bold text-slate-900" min="1" max="10">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-500 mb-1">編輯等級設定</label>
+                                            <select id="edit-bm-level-select" onchange="app.loadBlackMarketLevelData()" class="w-full border-2 border-amber-300 rounded-lg p-2 font-bold text-amber-900 bg-amber-50 cursor-pointer">
+                                                <!-- JS 動態生成 -->
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-3 bg-amber-50 p-3 rounded-lg border border-amber-100">
+                                        <div class="col-span-2 text-xs font-bold text-amber-600 mb-1 border-b border-amber-200 pb-1">當前選擇等級 (LV<span id="display-bm-lv">1</span>) 數值</div>
+                                        <div>
+                                            <label class="block text-[0.65rem] font-bold text-gray-500 mb-1">價格 (Gold)</label>
+                                            <input type="number" id="edit-bm-price" class="w-full border border-slate-300 rounded p-1 text-center font-bold text-yellow-700">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[0.65rem] font-bold text-gray-500 mb-1">限制購買等級</label>
+                                            <input type="number" id="edit-bm-minlv" class="w-full border border-slate-300 rounded p-1 text-center font-bold text-blue-700">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 mb-1">商品說明 <span class="text-red-500 text-[0.6rem]">(不同等級可設定不同說明)</span></label>
+                                        <textarea id="edit-bm-desc" class="w-full border-2 border-slate-300 rounded-lg p-2 font-bold text-gray-700 h-24 text-sm resize-none"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- 右側欄位 -->
+                                <div class="space-y-4">
+                                    <div class="bg-slate-800 rounded-lg h-48 flex items-center justify-center overflow-hidden border-4 border-slate-600 relative shadow-inner group">
+                                        <img id="edit-bm-preview-img" src="" class="max-h-full max-w-full object-contain" alt="預覽圖">
+                                        <div class="absolute bottom-2 right-2 bg-black/70 text-amber-400 font-black text-xs px-2 py-1 rounded border border-amber-500/50" id="edit-bm-preview-tag">LV1</div>
+                                        <div class="absolute top-0 left-0 bg-black/60 text-white text-[0.6rem] p-1 rounded-br">即時預覽</div>
+                                    </div>
+                                    
+                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2">
+                                        <div class="text-xs font-bold text-slate-500 mb-2">圖片設定 (若缺圖將自動遞補)</div>
+                                        <div>
+                                            <label class="block text-[0.65rem] font-bold text-gray-500 mb-1">圖1 URL (LV1 / 預設)</label>
+                                            <input type="text" id="edit-bm-img-1" oninput="app.loadBlackMarketLevelData()" class="w-full border border-slate-300 rounded p-1 text-xs font-mono text-gray-600">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[0.65rem] font-bold text-gray-500 mb-1">圖2 URL (LV2)</label>
+                                            <input type="text" id="edit-bm-img-2" oninput="app.loadBlackMarketLevelData()" class="w-full border border-slate-300 rounded p-1 text-xs font-mono text-gray-600">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[0.65rem] font-bold text-gray-500 mb-1">圖3 URL (LV3)</label>
+                                            <input type="text" id="edit-bm-img-3" oninput="app.loadBlackMarketLevelData()" class="w-full border border-slate-300 rounded p-1 text-xs font-mono text-gray-600">
+                                        </div>
+                                    </div>
+
+                                    <button onclick="app.saveCurrentBlackMarketEdit()" class="w-full bg-amber-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg hover:bg-amber-700 active:scale-95 transition-all flex justify-center gap-2">
+                                        <span>💾</span> 暫存此商品設定
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>				
 					
                 <div class="mt-4 pt-4 border-t border-gray-100">
                     <button onclick="app.saveAdminSettings()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-slate-900 active:scale-95 transition-transform">💾 儲存全域設定</button>
@@ -1740,15 +1867,22 @@
             }
         },
 // v4.1.8: 管理員分頁切換
-        switchAdminTab: (tabName) => {
-            // 隱藏所有內容
-            document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('admin-tab-active'));
-            
-            // 顯示目標內容
-            app.el(`tab-content-${tabName}`).classList.add('active');
-            app.el(`tab-btn-${tabName}`).classList.add('admin-tab-active');
-        },
+    switchAdminTab: (tabName) => {
+        // 隱藏所有內容
+        document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('admin-tab-active'));
+        
+        // 顯示目標內容
+        app.el(`tab-content-${tabName}`).classList.add('active');
+        app.el(`tab-btn-${tabName}`).classList.add('admin-tab-active');
+
+        // [修正 v4.7.6.2] 切換分頁時，強制重新渲染對應列表，確保資料即時顯示
+        if (tabName === 'blackmarket') {
+            app.renderBlackMarketListUI();
+        } else if (tabName === 'monsters') {
+            app.renderMonsterListUI();
+        }
+    },
 
         // v4.1.8: 無盡模式 - 指定顏色牌庫回填 (過濾掉場上已有的牌)
         refillSpecificDeck: (color) => {
@@ -1769,6 +1903,197 @@
             console.log(`♾️ [Endless] Refilled ${color} deck with ${newDeck.length} cards.`);
         },
        // 將資料庫設定填回管理員介面 (v4.1.8 更新：加入無盡模式)
+	   // --- v4.7.6.0 黑市商品管理系統 ---
+        // 切換黑市視圖
+      
+        switchBlackMarketView: (view) => {
+            if (view === 'list') {
+                app.el('blackmarket-list-view').classList.remove('hidden');
+                app.el('blackmarket-editor-view').classList.add('hidden');
+                app.renderBlackMarketListUI();
+            } else {
+                app.el('blackmarket-list-view').classList.add('hidden');
+                app.el('blackmarket-editor-view').classList.remove('hidden');
+            }
+        },
+
+        // 新增黑市商品
+        addNewBlackMarketItem: () => {
+            if (!app.state.tempBlackMarketList) app.state.tempBlackMarketList = [];
+            app.state.tempBlackMarketList.push({
+                name: '神秘商品',
+                maxLv: 1,
+                isSold: true, // 預設上架
+                img1: 'https://cdn-icons-png.flaticon.com/512/272/272527.png',
+                img2: '', img3: '',
+                // 儲存各等級數據，將 desc 移入 levelData
+                levelData: { 1: { price: 100, minLv: 1, desc: '來自黑市的稀有寶物' } }
+            });
+            app.renderBlackMarketListUI();
+        },
+
+        // 渲染黑市列表 (無空白 HTML) [v4.7.6.3 新增販售開關]
+        renderBlackMarketListUI: () => {
+            const list = app.state.tempBlackMarketList || [];
+            const container = app.el('blackmarket-list-container');
+            let html = '';
+            
+            if (list.length === 0) {
+                html = '<div class="p-8 text-center text-gray-400 font-bold">尚無商品，請點擊「新增商品」</div>';
+            } else {
+                list.forEach((item, idx) => {
+                    // 列表顯示預設 LV1 的資料
+                    const lv1Data = (item.levelData && item.levelData[1]) ? item.levelData[1] : { price: 0, minLv: 1, desc: '' };
+                    const img = item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+                    const isSoldChecked = (item.isSold !== false) ? 'checked' : '';
+                    
+                    // 判斷是否需要顯示 LV 標籤
+                    const showLv = (item.maxLv && item.maxLv > 1);
+                    const lvTag = showLv ? '<div class="absolute bottom-0 right-0 bg-black/70 text-amber-400 text-[0.5rem] px-0.5 rounded-tl font-black leading-none backdrop-blur-[1px]">LV1</div>' : '';
+
+                    // 圖片區塊改為 relative 容器
+                    // 欄位: Sale(1), Prev(1), Seq(1), Name(2), Price(1), Max(1), Limit(1), Desc(3), Op(1)
+                    html += `<div class="grid grid-cols-12 gap-2 p-2 border-b border-slate-200 items-center text-center hover:bg-slate-50 transition-colors group"><div class="col-span-1 flex justify-center"><label class="switch scale-75"><input type="checkbox" onchange="app.updateBlackMarketDirect(${idx}, 'isSold', this.checked)" ${isSoldChecked}><span class="slider"></span></label></div><div class="col-span-1 flex justify-center"><div class="relative w-8 h-8"><img src="${img}" class="w-full h-full object-cover rounded bg-gray-200 border border-gray-300">${lvTag}</div></div><div class="col-span-1 font-mono text-xs text-gray-400">#${idx + 1}</div><div onclick="app.editBlackMarketDetail(${idx})" class="col-span-2 text-left pl-2 font-bold text-slate-800 cursor-pointer hover:text-amber-600 hover:underline flex items-center gap-1 truncate" title="${item.name}"><span>${item.name}</span><span class="text-[0.6rem] text-gray-400 group-hover:inline hidden">✏️</span></div><div class="col-span-1"><input type="number" onchange="app.updateBlackMarketDirect(${idx}, 'price', this.value)" value="${lv1Data.price}" class="w-full border border-slate-300 rounded px-1 text-center text-sm font-bold text-yellow-700 bg-white focus:bg-amber-50" title="修改LV1基礎價格"></div><div class="col-span-1"><input type="number" onchange="app.updateBlackMarketDirect(${idx}, 'maxLv', this.value)" value="${item.maxLv}" class="w-full border border-slate-300 rounded px-1 text-center text-sm font-bold text-slate-700 bg-white focus:bg-amber-50" min="1" max="10"></div><div class="col-span-1"><input type="number" onchange="app.updateBlackMarketDirect(${idx}, 'minLv', this.value)" value="${lv1Data.minLv}" class="w-full border border-slate-300 rounded px-1 text-center text-sm font-bold text-blue-700 bg-white focus:bg-amber-50" title="修改LV1限制等級"></div><div class="col-span-3 text-xs text-gray-500 text-left truncate px-1" title="${lv1Data.desc || ''}">${lv1Data.desc || '(無說明)'}</div><div class="col-span-1 flex justify-center"><button onclick="app.editBlackMarketDetail(${idx})" class="bg-slate-100 text-slate-600 px-3 py-1 rounded text-xs font-bold hover:bg-amber-100 hover:text-amber-700 transition-colors border border-slate-200">設定</button></div></div>`;
+                });
+            }
+            container.innerHTML = html;
+        },
+
+        // 列表直接更新 (更新基礎資料 與 LV1 數值)
+        updateBlackMarketDirect: (index, field, value) => {
+            const item = app.state.tempBlackMarketList[index];
+            if (!item) return;
+            
+            if (field === 'isSold') {
+                item.isSold = value; // boolean
+            } else if (field === 'maxLv') {
+                item.maxLv = parseInt(value) || 1;
+            } else if (field === 'price' || field === 'minLv') {
+                // 若列表直接修改，預設更新 LV1 的資料
+                if (!item.levelData) item.levelData = {};
+                if (!item.levelData[1]) item.levelData[1] = { price: 100, minLv: 1, desc: '' };
+                item.levelData[1][field] = parseInt(value) || 0;
+            }
+        },
+
+        // 進入詳細編輯 [v4.7.6.3 修正說明讀取]
+        editBlackMarketDetail: (index) => {
+            const item = app.state.tempBlackMarketList[index];
+            if (!item) return;
+            
+            app.el('edit-bm-index').value = index;
+            app.el('edit-bm-name').value = item.name;
+            app.el('edit-bm-maxlv').value = item.maxLv;
+            app.el('edit-bm-is-sold').checked = (item.isSold !== false);
+            
+            // 圖片
+            app.el('edit-bm-img-1').value = item.img1 || '';
+            app.el('edit-bm-img-2').value = item.img2 || '';
+            app.el('edit-bm-img-3').value = item.img3 || '';
+
+            // 重新產生下拉選單，並預設選取 LV1
+            app.renderBlackMarketLevelSelect(1);
+            app.switchBlackMarketView('editor');
+        },
+
+        // 渲染等級下拉選單
+        renderBlackMarketLevelSelect: (selectLv = 1) => {
+            const max = parseInt(app.el('edit-bm-maxlv').value) || 1;
+            const select = app.el('edit-bm-level-select');
+            let html = '';
+            for(let i=1; i<=max; i++) {
+                html += `<option value="${i}">等級 LV${i}</option>`;
+            }
+            select.innerHTML = html;
+            select.value = selectLv;
+            app.loadBlackMarketLevelData(); // 載入選定等級的數據
+        },
+
+       // 載入當前選定等級的數據 & 預覽圖更新 [v4.7.6.3 支援說明切換]
+        loadBlackMarketLevelData: () => {
+            const idx = app.el('edit-bm-index').value;
+            const item = app.state.tempBlackMarketList[idx];
+            if (!item) return;
+            
+            const lv = parseInt(app.el('edit-bm-level-select').value) || 1;
+            const maxLv = parseInt(app.el('edit-bm-maxlv').value) || 1;
+            
+            // 確保該等級資料存在，若無則複製 LV1 或預設
+            if (!item.levelData) item.levelData = {};
+            if (!item.levelData[lv]) {
+                const base = item.levelData[1] || { price: 100, minLv: 1, desc: '' };
+                // 自動遞增預設值
+                item.levelData[lv] = { 
+                    price: base.price + (lv-1)*100, 
+                    minLv: Math.max(1, base.minLv + (lv-1)),
+                    desc: base.desc || item.desc || '' // 嘗試繼承說明
+                };
+            }
+
+            const data = item.levelData[lv];
+            app.el('edit-bm-price').value = data.price;
+            app.el('edit-bm-minlv').value = data.minLv;
+            // [Bug Fix] 說明欄位依據等級載入
+            app.el('edit-bm-desc').value = data.desc || '';
+            app.el('display-bm-lv').textContent = lv;
+
+            // 圖片預覽邏輯 (若 LV2 缺圖則用 LV1)
+            const img1 = app.el('edit-bm-img-1').value;
+            const img2 = app.el('edit-bm-img-2').value;
+            const img3 = app.el('edit-bm-img-3').value;
+            
+            let previewSrc = img1;
+            if (lv >= 2 && img2) previewSrc = img2;
+            if (lv >= 3 && img3) previewSrc = img3;
+            
+            app.el('edit-bm-preview-img').src = previewSrc || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+            
+            // 標籤顯示邏輯
+            const tagEl = app.el('edit-bm-preview-tag');
+            if (maxLv > 1) {
+                tagEl.classList.remove('hidden');
+                tagEl.textContent = `LV${lv}`;
+            } else {
+                tagEl.classList.add('hidden');
+            }
+        },
+
+        // 暫存編輯內容 [v4.7.6.3 儲存分級說明與販售狀態]
+        saveCurrentBlackMarketEdit: () => {
+            const idx = app.el('edit-bm-index').value;
+            const item = app.state.tempBlackMarketList[idx];
+            if (!item) return;
+
+            // 儲存基礎資訊
+            item.name = app.el('edit-bm-name').value;
+            item.maxLv = parseInt(app.el('edit-bm-maxlv').value) || 1;
+            item.isSold = app.el('edit-bm-is-sold').checked; // 儲存販售狀態
+            // item.desc = ... (舊版：全域說明，現在已停用，改存入 levelData)
+            
+            item.img1 = app.el('edit-bm-img-1').value;
+            item.img2 = app.el('edit-bm-img-2').value;
+            item.img3 = app.el('edit-bm-img-3').value;
+
+            // 儲存當前等級的數據
+            const lv = parseInt(app.el('edit-bm-level-select').value) || 1;
+            if (!item.levelData) item.levelData = {};
+            item.levelData[lv] = {
+                price: parseInt(app.el('edit-bm-price').value) || 0,
+                minLv: parseInt(app.el('edit-bm-minlv').value) || 1,
+                desc: app.el('edit-bm-desc').value // 儲存當前等級的說明
+            };
+
+            app.toast('✅ 商品資料已暫存 (請記得儲存全域設定)');
+            app.switchBlackMarketView('list');
+        },
+
+        deleteCurrentBlackMarketItem: () => {
+            const idx = app.el('edit-bm-index').value;
+            if (confirm('🗑️ 確定要刪除此黑市商品嗎？')) {
+                app.state.tempBlackMarketList.splice(idx, 1);
+                app.switchBlackMarketView('list');
+            }
+        },
 	   // --- v4.2.2 怪物列表管理系統 ---
         // 切換列表/編輯視圖
         switchMonsterView: (view) => {
@@ -1943,6 +2268,8 @@
                     app.state.tempMonsterList = [];
                 }
                 
+				// [v4.7.6.0] 讀取黑市設定
+                app.state.tempBlackMarketList = settings.blackMarketList || [];
                 // [v4.6.8] 讀取商店設定 (新增)
                 const shopConfig = settings.shopConfig || {};
                 const shopItems = ['hint', 'double', 'horus', 'nile', 'time', 'shard', 'seal', 'anubis', 'mummy', 'herb', 'potion', 'elixir'];
@@ -2018,6 +2345,8 @@
                 monsterList: app.state.tempMonsterList || [],
                 // [v4.6.8] 儲存商店設定
                 shopConfig: shopConfig,
+                // [v4.7.6.0] 儲存黑市商品列表
+                blackMarketList: app.state.tempBlackMarketList || [],
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             };
 
