@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.6.12 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.7.0 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -385,7 +385,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.6.12 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.7.0 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -471,8 +471,8 @@
                         <div class="flex flex-wrap justify-between items-center mb-6 border-b border-amber-200 pb-4 gap-2">
                             <div class="flex items-center gap-3">
                                 <h2 class="text-2xl font-black text-amber-900">🗺️ 冒險大廳</h2>
-                                <!-- [移至此處] 黑市按鈕 (風格調整為精緻標籤) -->
-                                <button onclick="app.openBlackMarket()" class="flex items-center gap-1.5 bg-slate-800 text-amber-500 px-3 py-1 rounded-lg font-bold shadow-md hover:bg-black hover:text-amber-400 transition-all border border-slate-600 active:scale-95 group relative">
+                               <!-- [移至此處] 黑市按鈕 (風格調整為精緻標籤) -->
+                                <button id="btn-lobby-blackmarket" onclick="app.openBlackMarket()" class="flex items-center gap-1.5 bg-slate-800 text-amber-500 px-3 py-1 rounded-lg font-bold shadow-md hover:bg-black hover:text-amber-400 transition-all border border-slate-600 active:scale-95 group relative">
                                     <span class="text-lg filter drop-shadow group-hover:animate-bounce">🧛</span> 
                                     <span class="text-sm">黑市</span>
                                     <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
@@ -529,31 +529,59 @@
                 <div class="space-y-6 flex-1 overflow-y-auto pr-1 custom-scrollbar">
                     
                     <div id="tab-content-flow" class="admin-tab-content active space-y-4">
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">🎲 自動擲骰系統</h4>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-600">預設開啟自動擲骰 (各房主可手動關閉)</span>
-                                <label class="switch">
-                                    <input type="checkbox" id="admin-auto-roll" checked>
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="bg-amber-50 p-4 rounded-xl border border-amber-200">
-                            <h4 class="font-bold text-amber-800 mb-3 flex items-center gap-2">♾️ 無盡戰鬥模式 (v4.1.8)</h4>
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <div class="text-sm text-amber-900 font-bold">開啟循環牌庫</div>
-                                    <div class="text-xs text-amber-700">牌庫用盡時自動洗牌重補，遊戲永不結束，適合打王戰。</div>
+                        
+                        <!-- 2x2 控制網格 (自動擲骰 / 無盡模式 / 下一局按鈕 / 黑市按鈕) -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- 1. 自動擲骰 -->
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between h-full">
+                                <h4 class="font-bold text-slate-800 mb-2 flex items-center gap-2">🎲 自動擲骰系統</h4>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-600">預設開啟 (各房主可關)</span>
+                                    <label class="switch scale-90">
+                                        <input type="checkbox" id="admin-auto-roll" checked>
+                                        <span class="slider"></span>
+                                    </label>
                                 </div>
-                                <label class="switch">
-                                    <input type="checkbox" id="admin-endless-mode">
-                                    <span class="slider"></span>
-                                </label>
+                            </div>
+
+                            <!-- 2. 無盡模式 -->
+                            <div class="bg-amber-50 p-4 rounded-xl border border-amber-200 flex flex-col justify-between h-full">
+                                <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">♾️ 無盡戰鬥模式</h4>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-amber-700">牌庫循環，遊戲不結束</span>
+                                    <label class="switch scale-90">
+                                        <input type="checkbox" id="admin-endless-mode">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 3. 下一局按鈕 -->
+                            <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 flex flex-col justify-between h-full">
+                                <h4 class="font-bold text-emerald-800 mb-2 flex items-center gap-2">⏭️ 下一局按鈕</h4>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-emerald-700">顯示老師面板換局鈕</span>
+                                    <label class="switch scale-90">
+                                        <input type="checkbox" id="admin-show-next-btn" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 4. 黑市按鈕 -->
+                            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200 flex flex-col justify-between h-full">
+                                <h4 class="font-bold text-indigo-800 mb-2 flex items-center gap-2">🧛 黑市入口</h4>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-indigo-700">顯示大廳黑市按鈕</span>
+                                    <label class="switch scale-90">
+                                        <input type="checkbox" id="admin-show-blackmarket" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
+                        <!-- 時間控制設定 (已修復外框容器) -->
                         <div class="bg-blue-50 p-4 rounded-xl border border-blue-200">
                             <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">⏱️ 時間控制設定</h4>
                             <div class="grid grid-cols-2 gap-4">
@@ -567,7 +595,9 @@
                                 </div>
                             </div>
                         </div>
-<div class="bg-stone-100 p-4 rounded-xl border border-stone-200">
+
+                        <!-- 怪物牌庫分佈設定 -->
+                        <div class="bg-stone-100 p-4 rounded-xl border border-stone-200">
                             <h4 class="font-bold text-stone-800 mb-3 flex items-center gap-2">🃏 怪物牌庫分佈設定</h4>
                             <div class="text-xs text-gray-500 mb-2">設定每局遊戲自動產生的怪物數量與等級 (總數為各等級之和)</div>
                             <div class="grid grid-cols-4 gap-2 md:grid-cols-7">
@@ -580,6 +610,8 @@
                                 <div><label class="block text-[0.6rem] font-bold text-stone-500">Lv.7 藍金</label><input type="number" id="admin-md-7" value="0" min="0" class="w-full border border-stone-300 rounded p-1 text-center font-bold"></div>
                             </div>
                         </div>
+
+                        <!-- 數據清理 -->
                         <div class="bg-red-50 p-4 rounded-xl border border-red-200">
                              <h4 class="font-bold text-red-800 mb-3">🗑️ 數據清理</h4>
                              <div class="flex items-center justify-between mb-2">
@@ -1224,7 +1256,7 @@
 
                                 <div class="grid grid-cols-2 gap-3 mb-2 flex-shrink-0">
                                     <button id="btn-roll" onclick="app.teacherRollDice()" class="col-span-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white py-4 rounded-xl font-bold text-2xl shadow hover:scale-105 transition-transform active:scale-95">🎲 擲骰子</button>
-                                    <button onclick="app.forceNextRound()" class="bg-slate-600 text-white py-3 rounded-xl font-bold shadow hover:bg-slate-700 text-base active:scale-95">下一局</button>
+                                    <button id="btn-teacher-next-round" onclick="app.forceNextRound()" class="bg-slate-600 text-white py-3 rounded-xl font-bold shadow hover:bg-slate-700 text-base active:scale-95">下一局</button>
                                     <button onclick="app.triggerEndGame()" class="bg-red-700 text-white py-3 rounded-xl font-bold shadow hover:bg-red-800 text-base active:scale-95">🏁 冒險結束</button>
                                 </div>
                                 
@@ -1733,9 +1765,26 @@
                 app.checkPreviousSession();
             });
 
-            // 監聽全域設定
+            // 監聽全域設定 (v4.7.7.0: 即時更新介面顯示)
             db.ref('global_settings').on('value', snapshot => {
-                app.state.globalSettings = snapshot.val() || {};
+                const settings = snapshot.val() || {};
+                app.state.globalSettings = settings;
+
+                // 1. 控制黑市按鈕顯示
+                const bmBtn = document.getElementById('btn-lobby-blackmarket');
+                if (bmBtn) {
+                    const showBM = settings.showBlackMarket !== false; // 預設顯示
+                    if (showBM) bmBtn.classList.remove('hidden-logic');
+                    else bmBtn.classList.add('hidden-logic');
+                }
+
+                // 2. 控制下一局按鈕顯示
+                const nextBtn = document.getElementById('btn-teacher-next-round');
+                if (nextBtn) {
+                    const showNext = settings.showNextBtn !== false; // 預設顯示
+                    if (showNext) nextBtn.classList.remove('hidden-logic');
+                    else nextBtn.classList.add('hidden-logic');
+                }
             });
 
             // 讀取並顯示大廳房間
@@ -2469,7 +2518,10 @@
             db.ref('global_settings').once('value', snapshot => {
                 const settings = snapshot.val() || {};
                 app.el('admin-auto-roll').checked = settings.autoRollDefault !== false; 
-                app.el('admin-endless-mode').checked = settings.endlessMode || false; // v4.1.8
+                app.el('admin-endless-mode').checked = settings.endlessMode || false; 
+                // [v4.7.7.0] 讀取新按鈕顯示設定 (預設為 true)
+                app.el('admin-show-next-btn').checked = settings.showNextBtn !== false;
+                app.el('admin-show-blackmarket').checked = settings.showBlackMarket !== false;
                 
                 // v4.5.0 時間設定讀取 (預設 120 與 45)
                 app.el('admin-timer-base').value = settings.baseTimer || 120;
@@ -2554,6 +2606,10 @@
             const settings = {
                 autoRollDefault: app.el('admin-auto-roll').checked,
                 endlessMode: app.el('admin-endless-mode').checked,
+                // [v4.7.7.0] 儲存按鈕顯示設定
+                showNextBtn: app.el('admin-show-next-btn').checked,
+                showBlackMarket: app.el('admin-show-blackmarket').checked,
+                
                 // v4.5.0 儲存時間設定
                 baseTimer: parseInt(app.el('admin-timer-base').value) || 120,
                 resetTimer: parseInt(app.el('admin-timer-reset').value) || 45,
