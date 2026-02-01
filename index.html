@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.7.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.7.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -385,7 +385,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.7.0 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.7.3 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -1327,18 +1327,15 @@
             </div>
         </div>
        <div id="game-over-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center modal-backdrop">
-             <div class="game-over-modal-content bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full mx-4 relative overflow-hidden flex flex-col max-h-[90vh]">
+             <div class="game-over-modal-content bg-white rounded-3xl p-6 md:p-8 max-w-4xl w-full mx-4 relative overflow-hidden flex flex-col max-h-[90vh]">
                 <div class="text-center mb-4 z-10">
                     <div class="text-6xl mb-2 animate-bounce">🎉</div>
                     <h2 class="text-3xl md:text-4xl font-black text-amber-800 drop-shadow-sm">冒險完成！</h2>
                     
-                    <div class="mt-4 bg-gradient-to-r from-amber-100 to-orange-100 rounded-2xl p-4 border-2 border-amber-300 shadow-inner">
-                        <p class="text-amber-800 font-bold text-sm uppercase tracking-widest mb-1">Adventure Squad Score</p>
-                        <div class="text-5xl font-black text-amber-900 drop-shadow-sm flex justify-center items-center gap-2">
-                            <span class="text-3xl">🛡️</span>
-                            <span id="end-total-score">0</span>
-                        </div>
-                    </div>
+                    <!-- 結算戰績儀表板容器 -->
+<div id="end-game-summary-container" class="mt-2 w-full">
+    <!-- JS 將動態生成詳細戰績 (金幣/經驗/時間/BOSS圖) -->
+</div>
                 </div>
                 
                 <div class="flex-1 overflow-y-auto z-10 px-1 py-2 custom-scrollbar">
@@ -1896,71 +1893,73 @@
         },
 
         // v4.0.1: 建立新房間 (成為房主+主控者) - [v4.3.0] 新增 Session 記憶
-        createRoom: () => {
-            const name = app.el('lobby-player-name').value.trim();
-            if (!name) return app.toast('❌ 請先輸入你的冒險者名字');
-            
-            // 儲存名字與身分標記
-            localStorage.setItem('pharaoh_player_name', name);
-            app.state.myName = name;
+        // v4.0.1: 建立新房間 (成為房主+主控者) - [v4.3.0] 新增 Session 記憶
+     createRoom: () => {
+         const name = app.el('lobby-player-name').value.trim();
+         if (!name) return app.toast('❌ 請先輸入你的冒險者名字');
+         
+         // 儲存名字與身分標記
+         localStorage.setItem('pharaoh_player_name', name);
+         app.state.myName = name;
 
-            // 生成隨機房間代碼 (6碼數字)
-            const roomId = Math.floor(100000 + Math.random() * 900000).toString();
-            app.state.classId = roomId;
-            app.state.role = 'student'; 
-            app.state.isHost = true;    
-            app.state.myTeam = 'team1'; 
+         // 生成隨機房間代碼 (6碼數字)
+         const roomId = Math.floor(100000 + Math.random() * 900000).toString();
+         app.state.classId = roomId;
+         app.state.role = 'student'; 
+         app.state.isHost = true;    
+         app.state.myTeam = 'team1'; 
 
-            // [關鍵] 寫入 Session，做為斷線重連的憑證
-            localStorage.setItem('pharaoh_current_room_id', roomId);
-            localStorage.setItem('pharaoh_is_host', 'true');
-            localStorage.setItem('pharaoh_role', 'student');
+         // [關鍵] 寫入 Session，做為斷線重連的憑證
+         localStorage.setItem('pharaoh_current_room_id', roomId);
+         localStorage.setItem('pharaoh_is_host', 'true');
+         localStorage.setItem('pharaoh_role', 'student');
 
-            // [v4.2.5 修正] 確保讀取正確的全域設定預設值
-            // 避免因未打開管理員視窗，導致讀取到 checkbox 預設 false 的問題
-            const globalSet = app.state.globalSettings || {};
-            const initAutoRoll = (globalSet.autoRollDefault !== undefined) ? globalSet.autoRollDefault : true;
-            const initEndless = (globalSet.endlessMode === true); // 預設 false，除非全域明確為 true
+         // [v4.2.5 修正] 確保讀取正確的全域設定預設值
+         const globalSet = app.state.globalSettings || {};
+         const initAutoRoll = (globalSet.autoRollDefault !== undefined) ? globalSet.autoRollDefault : true;
+         const initEndless = (globalSet.endlessMode === true);
 
-            // 寫入 Firebase
-            const initialData = app.generateInitialGameData();
-            db.ref(`classes/${roomId}`).set({
-                hostName: name,
-                roomName: `${name} 的冒險`,
-               status: 'waiting',
-                monsterDeck: app.generateMonsterDeck(), // [新增] 寫入初始怪物牌庫
-                dice: { d8: '-', d10: '-', d12: '-' },
-                round: 1,
-                timer: 30,
-                timerActive: false,
-                pyramid: initialData.pyramid,
-                decks: initialData.decks,
-                lastActive: firebase.database.ServerValue.TIMESTAMP, 
-                autoRoll: initAutoRoll, 
-                endlessMode: initEndless
-            }).then(() => {
-                // 加入自己為玩家
-                db.ref(`classes/${roomId}/players/team1/${name}`).set({
-                    name: name,
-                    score: 0,
-                    hp: 100,    // [新增] 初始血量
-                    maxHp: 100, // [新增] 最大血量
-                    lastActive: firebase.database.ServerValue.TIMESTAMP
-                });
-                
-                app.enterGameMode();
-                app.toast(`🏰 冒險小隊建立成功！代碼：${roomId}`, 1);
-                app.speak('小隊建立！');
-                
-                // 提示目前模式
-                if (initEndless) {
-    setTimeout(() => {
-        app.toast('♾️ 無盡戰鬥模式：已啟用', 1);
-        app.speak('戰鬥準備中！');
-    }, 1200); // 依語音長度微調
-}
-            });
-        },
+         // 寫入 Firebase
+         const initialData = app.generateInitialGameData();
+         db.ref(`classes/${roomId}`).set({
+             hostName: name,
+             roomName: `${name} 的冒險`,
+             status: 'waiting',
+             monsterDeck: app.generateMonsterDeck(),
+             dice: { d8: '-', d10: '-', d12: '-' },
+             round: 1,
+             timer: 30,
+             timerActive: false,
+             pyramid: initialData.pyramid,
+             decks: initialData.decks,
+             lastActive: firebase.database.ServerValue.TIMESTAMP,
+             startTime: firebase.database.ServerValue.TIMESTAMP, // [v4.7.7.1 新增] 記錄遊戲開始時間
+             autoRoll: initAutoRoll, 
+             endlessMode: initEndless
+         }).then(() => {
+             // 加入自己為玩家
+             db.ref(`classes/${roomId}/players/team1/${name}`).set({
+                 name: name,
+                 score: 0,
+                 gold: 0, 
+                 sessionGold: 0, // [v4.7.7.1] 初始化本局金幣
+                 hp: 100,    
+                 maxHp: 100, 
+                 lastActive: firebase.database.ServerValue.TIMESTAMP
+             });
+             
+             app.enterGameMode();
+             app.toast(`🏰 冒險小隊建立成功！代碼：${roomId}`, 1);
+             app.speak('小隊建立！');
+             
+             if (initEndless) {
+                 setTimeout(() => {
+                     app.toast('♾️ 無盡戰鬥模式：已啟用', 1);
+                     app.speak('戰鬥準備中！');
+                 }, 1200);
+             }
+         });
+     },
 
         // v4.0.3: 進入遊戲介面 (房主權限控制)
        // v4.1.0: 進入遊戲介面 (修正主控者倒數計時與語音按鈕顯示)
@@ -3259,43 +3258,85 @@
             app.el('student-stats-modal').classList.remove('hidden');
         },
         // v4.0.4: 產生遊戲結束的結算畫面內容 (單一小隊版)
-        renderGameOverStats: (players) => {
-            if (!players) return;
-            
-            // 收集並統計
-            let allPlayers = [];
-            let totalScore = 0;
+        // v4.7.7.1: 產生遊戲結束的詳細戰績儀表板 (含金幣、經驗、時間、BOSS)
+   renderGameOverStats: (players) => {
+         if (!players) return;
+         
+         const gameData = app.state.gameData || {};
+         
+         // 1. 統計總數據
+         let allPlayers = [];
+         let totalScore = 0;
+         let totalGold = 0;
+         let totalExp = 0;
 
-            Object.keys(players).forEach(teamKey => {
-                if(players[teamKey]) {
-                    Object.values(players[teamKey]).forEach(p => {
-                        const score = p.score || 0;
-                        allPlayers.push({...p, score: score});
-                        totalScore += score;
-                    });
-                }
-            });
+         Object.keys(players).forEach(teamKey => {
+             if(players[teamKey]) {
+                 Object.values(players[teamKey]).forEach(p => {
+                     allPlayers.push(p);
+                     totalScore += (p.score || 0);
+                     // 優先使用本局戰績 (sessionGold)，若無則用持有金幣
+                     totalGold += (p.sessionGold !== undefined ? p.sessionGold : (p.gold || 0));
+                     totalExp += (p.exp || 0);
+                 });
+             }
+         });
 
-            // 排序個人分數
-            allPlayers.sort((a, b) => b.score - a.score);
-            
-            // 渲染：英雄榜 (前 10 名)
-            let playerHtml = '';
-            if (allPlayers.length > 0) {
-                allPlayers.slice(0, 10).forEach((p, i) => {
-                    const rankClass = i===0 ? 'rank-1' : (i===1 ? 'rank-2' : (i===2 ? 'rank-3' : 'rank-other'));
-                    const rowBg = i < 3 ? 'bg-white' : 'bg-slate-50';
-                    playerHtml += `<div class="flex items-center justify-between p-3 rounded-xl border border-amber-100 ${rowBg} shadow-sm mb-2"><div class="flex items-center gap-3"><span class="rank-badge ${rankClass} text-lg shadow-sm">${i+1}</span><span class="font-bold text-slate-700 text-lg">${p.name}</span></div><span class="font-black text-amber-700 text-xl">${p.score}</span></div>`;
-                });
-            } else {
-                playerHtml = '<div class="text-center text-gray-400 py-4">本次冒險無人得分</div>';
-            }
+         // 2. 計算耗時
+         let durationStr = "--:--";
+         if (gameData.startTime) {
+             const diff = Date.now() - gameData.startTime;
+             const minutes = Math.floor(diff / 60000);
+             const seconds = Math.floor((diff % 60000) / 1000);
+             durationStr = `${minutes}分${seconds}秒`;
+         }
 
-            // 更新 HTML
-            // 我們直接操作 DOM 來改變 modal 的標題與內容，使其適應單欄佈局
-            app.el('end-total-score').textContent = totalScore;
-            app.el('end-player-ranks').innerHTML = playerHtml;
-        },
+         // 3. [修正] 決定 BOSS 圖片
+         // 預設圖: 藍金卡背 (通關證明)
+         let bossImg = "https://class.kh.edu.tw/sites/30033/upload_file/6/AuMVWei.jpg"; 
+         let bossName = "最終試煉完成";
+         
+         const monster = gameData.activeMonster;
+         
+         // [v4.7.7.3] 優先讀取紀錄中的「最後擊敗BOSS」，這最準確
+         if (gameData.lastDefeatedBoss) {
+             if (gameData.lastDefeatedBoss.img) bossImg = gameData.lastDefeatedBoss.img;
+             if (gameData.lastDefeatedBoss.name) bossName = `擊敗: ${gameData.lastDefeatedBoss.name}`;
+         } 
+         // 如果沒有紀錄 (例如舊版相容)，且場上還有活著的怪 (強制結束)，則顯示當前怪物
+         // 排除寶箱 (寶箱不應被視為 BOSS)
+         else if (monster && monster.img1 && monster.type !== 'chest') {
+             bossImg = monster.img1;
+             bossName = monster.name;
+         }
+         // 若是寶箱或無怪且無紀錄，則維持預設通關證明圖
+
+         // 4. 渲染排行榜 HTML (生成排名列表)
+         allPlayers.sort((a, b) => (b.score || 0) - (a.score || 0));
+         let playerHtml = '';
+         if (allPlayers.length > 0) {
+             allPlayers.forEach((p, i) => {
+                 const rankClass = i===0 ? 'rank-1' : (i===1 ? 'rank-2' : (i===2 ? 'rank-3' : 'rank-other'));
+                 const rowBg = i < 3 ? 'bg-white' : 'bg-slate-50';
+                 // 壓縮 HTML
+                 playerHtml += `<div class="flex items-center justify-between p-2 rounded-lg border border-amber-100 ${rowBg} shadow-sm mb-1"><div class="flex items-center gap-2"><span class="rank-badge ${rankClass} text-sm shadow-sm w-6 h-6">${i+1}</span><span class="font-bold text-slate-700 text-sm truncate max-w-[100px]">${p.name}</span></div><span class="font-black text-amber-700 text-base">${p.score || 0}</span></div>`;
+             });
+         } else {
+             playerHtml = '<div class="text-center text-gray-400 py-4 text-sm">本次冒險無人得分</div>';
+         }
+
+         // 5. 生成雙欄位儀表板 HTML (左側數據與BOSS圖，右側排行榜)
+         const summaryContainer = app.el('end-game-summary-container');
+         if (summaryContainer) {
+             // 使用 grid-cols-2 切分左右，並設定 h-full 讓排行榜可滾動
+             // 左側：BOSS大圖 + 4格數據
+             // 右側：排行榜標題 + 滾動列表
+             summaryContainer.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-full text-left mt-2"><div class="flex flex-col gap-2"><div class="relative bg-gradient-to-br from-stone-800 to-black rounded-xl p-1 shadow-lg border-2 border-amber-600 overflow-hidden flex-shrink-0 group h-40 md:h-48 flex items-center justify-center"><div class="absolute top-2 left-2 bg-red-700 text-white text-[0.6rem] font-black px-2 py-0.5 rounded shadow z-10 tracking-widest border border-red-500">TARGET ELIMINATED</div><img src="${bossImg}" class="h-full w-auto object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] group-hover:scale-110 transition-transform duration-700"><div class="absolute bottom-0 w-full bg-black/80 text-amber-500 text-center text-xs py-1 font-bold border-t border-amber-900/50">${bossName}</div></div><div class="grid grid-cols-2 gap-2"><div class="bg-yellow-50 border border-yellow-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-yellow-800 font-bold">💰 總獲金幣</div><div class="text-lg font-black text-yellow-600">${totalGold}</div></div><div class="bg-purple-50 border border-purple-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-purple-800 font-bold">✨ 累積經驗</div><div class="text-lg font-black text-purple-600">${totalExp}</div></div><div class="bg-blue-50 border border-blue-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-blue-800 font-bold">⏱️ 冒險耗時</div><div class="text-base font-black text-blue-600">${durationStr}</div></div><div class="bg-stone-100 border border-stone-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-stone-600 font-bold">🔄 回合數</div><div class="text-base font-black text-stone-600">${gameData.round || 1}</div></div></div></div><div class="flex flex-col h-64 md:h-auto bg-amber-50/50 rounded-xl border border-amber-200 overflow-hidden"><div class="bg-amber-100/80 p-2 text-center font-bold text-amber-900 border-b border-amber-200 text-sm flex-shrink-0">🏆 傳奇冒險家排行榜</div><div class="flex-1 overflow-y-auto custom-scrollbar p-2">${playerHtml}</div></div></div>`;
+         }
+         
+         // 清空舊的排行榜容器 (因為已經整合進 summaryContainer 了)
+         app.el('end-player-ranks').innerHTML = '';
+     },
 
    showTeamModal: (teamKey) => {
             if (!app.state.latestTeamStats) return;
@@ -3766,45 +3807,43 @@
 
        // [v3.1.2] 優化後的重置邏輯：使用 Promise 避免阻塞主執行緒
        // [v3.1.5] 優化後的重置邏輯：設定狀態讓所有人看到「回到初始之地」按鈕
-        resetGame: async () => {
-             if(!confirm('⚠️ 確定要開啟新的一局嗎？\n\n1. 所有分數將歸零。\n2. 所有人將看到「回到初始之地」按鈕。\n3. 請確認已下載戰績表。')) {
-                 return;
-             }
+        // [v3.1.5] 優化後的重置邏輯：設定狀態讓所有人看到「回到初始之地」按鈕
+     resetGame: async () => {
+          if(!confirm('⚠️ 確定要開啟新的一局嗎？\n\n1. 所有分數將歸零。\n2. 所有人將看到「回到初始之地」按鈕。\n3. 請確認已下載戰績表。')) {
+              return;
+          }
 
-             try {
-                 app.el('game-over-modal').classList.add('hidden');
-                 app.state.isResetting = true; // 標記自己，避免畫面閃爍
+          try {
+              app.el('game-over-modal').classList.add('hidden');
+              app.state.isResetting = true; // 標記自己，避免畫面閃爍
 
-                 // 1. 產生新的遊戲初始資料
-                 const initialData = app.generateInitialGameData();
-                 
-                 // 2. 設定資料庫狀態為 reset_completed，並重置所有資料
-                 // 這樣所有客戶端收到通知後，就會顯示全螢幕的按鈕
-                 // [v4.3.1] 重置時更新 lastActive，確保房間重新出現在大廳
-               await db.ref(`classes/${app.state.classId}`).set({
-                    status: 'reset_completed', 
-                    monsterDeck: app.generateMonsterDeck(), // [新增] 重置時重新生成牌庫
-                    dice: { d8: '-', d10: '-', d12: '-' },
-                    round: 1,
-                    timer: 30,
-                    timerActive: false,
-                    pyramid: initialData.pyramid,
-                    decks: initialData.decks,
-                    lastActive: firebase.database.ServerValue.TIMESTAMP, // 關鍵：讓房間再次浮上大廳
-                    autoRoll: app.el('admin-auto-roll').checked,
-                    endlessMode: app.el('admin-endless-mode').checked
-                 });
-                 
-                 app.toast('🔄 遊戲已重置，等待冒險者回歸...');
-                 
-                 // 老師自己也顯示該遮罩 (由 listenToGameData 處理)
-                 
-             } catch (err) {
-                 console.error("Reset failed:", err);
-                 alert('重置過程發生錯誤，請手動重新整理頁面。');
-                 location.reload();
-             }
-        },
+              // 1. 產生新的遊戲初始資料
+              const initialData = app.generateInitialGameData();
+              
+              // 2. 設定資料庫狀態為 reset_completed，並重置所有資料
+              await db.ref(`classes/${app.state.classId}`).set({
+                 status: 'reset_completed', 
+                 monsterDeck: app.generateMonsterDeck(),
+                 dice: { d8: '-', d10: '-', d12: '-' },
+                 round: 1,
+                 timer: 30,
+                 timerActive: false,
+                 pyramid: initialData.pyramid,
+                 decks: initialData.decks,
+                 lastActive: firebase.database.ServerValue.TIMESTAMP, 
+                 startTime: firebase.database.ServerValue.TIMESTAMP, // [v4.7.7.1 新增] 重置開始時間
+                 autoRoll: app.el('admin-auto-roll').checked,
+                 endlessMode: app.el('admin-endless-mode').checked
+              });
+              
+              app.toast('🔄 遊戲已重置，等待冒險者回歸...');
+              
+          } catch (err) {
+              console.error("Reset failed:", err);
+              alert('重置過程發生錯誤，請手動重新整理頁面。');
+              location.reload();
+          }
+     },
         
       forceNextRound: () => {
             // [v4.7.5.9 安全鎖] 防止時之沙導致的重複觸發
@@ -4447,6 +4486,11 @@
                         if (newMonsterHp <= 0) {
                             monsterDied = true;
                             updates['activeMonster/action'] = 'die';
+                            // [v4.7.7.3] 記錄最後擊殺的BOSS，確保結算畫面顯示正確的怪物 (而非通關證明)
+                            updates['lastDefeatedBoss'] = {
+                                name: app.state.gameData.activeMonster.name,
+                                img: app.state.gameData.activeMonster.img1
+                            };
                             
                             // --- [新增] 2. 怪物死亡：全體發放經驗與金幣 ---
                             // 讀取怪物設定的 EXP 與 Gold
