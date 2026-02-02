@@ -3,34 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉RPG v4.7.7.4 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.7.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 裝備欄位絕對定位樣式 */
-        .equip-slot {
-            position: absolute;
-            width: 22%; /* 根據圖片比例設定寬度 */
-            height: 22%; /* 根據圖片比例設定高度 */
-            cursor: pointer;
-            transition: all 0.2s;
-            border-radius: 12%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-        }
-        .equip-slot:hover { box-shadow: 0 0 15px #fbbf24, inset 0 0 5px rgba(0,0,0,0.2); background-color: rgba(255,255,255,0.1); }
-        .equip-slot.has-item { border: 2px solid #fbbf24; background-color: rgba(0,0,0,0.6); }
-        
-        /* 定義6個欄位的位置 (根據提供的圖片佈局) */
-        .slot-1 { top: 12%; left: 6%; }
-        .slot-2 { top: 41%; left: 6%; }
-        .slot-3 { top: 70%; left: 6%; }
-        .slot-4 { top: 12%; right: 6%; }
-        .slot-5 { top: 41%; right: 6%; }
-        .slot-6 { top: 70%; right: 6%; }
-
-       
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         
         body {
@@ -410,7 +385,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.7.4 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.7.3 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -455,15 +430,6 @@
                              </div>
                              
                              <button onclick="app.logout()" class="text-sm text-red-500 font-bold hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-full transition-colors mb-4">登出 Google 帳號</button>
-                             
-                             <!-- 新增：角色背包按鈕 -->
-                             <button onclick="app.openCharacterInventory()" class="w-full bg-slate-800 border-2 border-slate-600 text-amber-400 font-black py-3 rounded-xl shadow-md hover:bg-slate-900 hover:text-amber-300 hover:border-amber-500 transition-all active:scale-95 flex items-center justify-center gap-2 mb-2 group">
-                                <span class="text-2xl group-hover:animate-bounce">🎒</span> 
-                                <span>角色背包 & 裝備</span>
-                             </button>
-                        </div>
-
-                        <div id="auth-panel-guest" class="flex flex-col items-center">
                         </div>
 
                         <div id="auth-panel-guest" class="flex flex-col items-center">
@@ -1063,96 +1029,6 @@
                     <button onclick="app.saveAdminSettings()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-slate-900 active:scale-95 transition-transform">💾 儲存全域設定</button>
                 </div>
              </div>
-        </div>
-		<!-- [新增 v4.7.7.4] 角色背包與裝備系統 -->
-        <div id="character-inventory-modal" class="fixed inset-0 z-[65] hidden flex items-center justify-center modal-backdrop bg-black/80">
-            <div class="bg-slate-900 rounded-2xl border-4 border-amber-600 max-w-5xl w-full mx-4 shadow-2xl overflow-hidden flex flex-col h-[90vh] md:h-[800px] animate-[fadeIn_0.3s_ease-out]">
-                <!-- 標題列 -->
-                <div class="bg-gradient-to-r from-slate-900 via-amber-900 to-slate-900 p-3 border-b-2 border-amber-600 flex justify-between items-center shrink-0">
-                    <div class="flex items-center gap-3">
-                        <span class="text-3xl">🎒</span>
-                        <div>
-                            <h3 class="text-2xl font-black text-amber-400 tracking-wider">角色裝備</h3>
-                            <p class="text-xs text-amber-200/60 font-mono">Character Equipment System</p>
-                        </div>
-                    </div>
-                    <button onclick="app.closeCharacterInventory()" class="bg-slate-800 text-slate-400 hover:text-white px-4 py-2 rounded-lg font-bold border border-slate-600 hover:bg-red-900/50 hover:border-red-500 transition-colors">✕ 關閉</button>
-                </div>
-
-                <div class="flex flex-col md:flex-row h-full overflow-hidden">
-                    <!-- 左側：人物裝備區 (40%) -->
-                    <div class="w-full md:w-2/5 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] bg-slate-800 relative p-4 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-amber-700/50">
-                        <div class="relative w-full max-w-[400px] aspect-square">
-                            <!-- 背景圖 -->
-                            <img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E4%BA%BA%E7%89%A9%E8%A3%9D%E5%82%99%E6%AC%84%E4%BD%8D.png" class="w-full h-full object-contain drop-shadow-2xl opacity-90" alt="Equipment Slots">
-                            
-                            <!-- 6個裝備欄位 (絕對定位) -->
-                            <!-- 點擊欄位可卸下裝備 -->
-                            <div id="equip-slot-1" class="equip-slot slot-1" onclick="app.unequipItem(1)" title="裝備欄位 1"></div>
-                            <div id="equip-slot-2" class="equip-slot slot-2" onclick="app.unequipItem(2)" title="裝備欄位 2"></div>
-                            <div id="equip-slot-3" class="equip-slot slot-3" onclick="app.unequipItem(3)" title="裝備欄位 3"></div>
-                            <div id="equip-slot-4" class="equip-slot slot-4" onclick="app.unequipItem(4)" title="裝備欄位 4"></div>
-                            <div id="equip-slot-5" class="equip-slot slot-5" onclick="app.unequipItem(5)" title="裝備欄位 5"></div>
-                            <div id="equip-slot-6" class="equip-slot slot-6" onclick="app.unequipItem(6)" title="裝備欄位 6"></div>
-                            
-                            <!-- 裝備總覽提示 -->
-                            <div class="absolute bottom-2 left-0 right-0 text-center pointer-events-none">
-                                <span class="bg-black/70 text-amber-500 text-xs px-3 py-1 rounded-full border border-amber-600/50">點擊圖示卸下裝備</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 右側：資訊與背包 (60%) -->
-                    <div class="w-full md:w-3/5 flex flex-col bg-slate-100">
-                        <!-- 上方：人物資料 -->
-                        <div class="bg-white p-4 border-b border-slate-300 shadow-sm shrink-0">
-                            <div class="flex items-center gap-4 mb-3">
-                                <img id="char-sys-avatar" src="" class="w-16 h-16 rounded-full border-4 border-amber-500 shadow-lg bg-slate-200">
-                                <div class="flex-1">
-                                    <div class="flex justify-between items-end mb-1">
-                                        <h4 id="char-sys-name" class="text-xl font-black text-slate-800">冒險者</h4>
-                                        <span class="text-sm font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded">LV.<span id="char-sys-lv">1</span></span>
-                                    </div>
-                                    <!-- 經驗條 -->
-                                    <div class="w-full h-4 bg-slate-200 rounded-full overflow-hidden border border-slate-300 relative">
-                                        <div id="char-sys-exp-bar" class="h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500" style="width: 0%"></div>
-                                        <div class="absolute inset-0 flex items-center justify-center text-[0.6rem] font-black text-slate-600 shadow-sm">
-                                            EXP: <span id="char-sys-exp-text">0 / 100</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="bg-yellow-50 p-2 rounded border border-yellow-200 flex items-center gap-2">
-                                    <span class="text-2xl">💰</span>
-                                    <div>
-                                        <div class="text-[0.6rem] text-yellow-800 font-bold uppercase">Gold</div>
-                                        <div id="char-sys-gold" class="font-black text-yellow-600 text-lg leading-none">0</div>
-                                    </div>
-                                </div>
-                                <div class="bg-amber-50 p-2 rounded border border-amber-200 flex items-center gap-2">
-                                    <span class="text-2xl">🏆</span>
-                                    <div>
-                                        <div class="text-[0.6rem] text-amber-800 font-bold uppercase">High Score</div>
-                                        <div id="char-sys-score" class="font-black text-amber-600 text-lg leading-none">0</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 下方：背包物品 -->
-                        <div class="flex-1 flex flex-col overflow-hidden bg-slate-200 min-h-0">
-                            <div class="p-2 bg-slate-300 border-b border-slate-400 flex justify-between items-center text-xs font-bold text-slate-600">
-                                <span>📦 背包物品 (點擊裝備)</span>
-                                <span id="char-sys-inv-count">0 件物品</span>
-                            </div>
-                            <div id="char-sys-inventory-grid" class="flex-1 overflow-y-auto p-3 grid grid-cols-4 sm:grid-cols-5 gap-2 content-start custom-scrollbar">
-                                <!-- JS 動態生成背包物品 -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 		<!-- [新增 v4.7.6.4] 黑市系統介面 (Diablo 風格) -->
         <div id="black-market-interface" class="hidden fixed inset-0 z-[60] bg-black text-slate-300 overflow-hidden font-mono animate-[fadeIn_0.5s_ease-out]">
@@ -6048,183 +5924,6 @@
                 app.speak(`發放物資`);
              
             }, 1500);
-        },
-		
-		// --- [v4.7.7.4] 角色背包與裝備系統邏輯 ---
-        
-        openCharacterInventory: () => {
-            if (!app.state.user) return app.toast('⚠️ 請先登入 Google 帳號才能使用裝備系統');
-            
-            app.el('page-lobby').classList.add('hidden');
-            app.el('character-inventory-modal').classList.remove('hidden');
-            
-            const uid = app.state.user.uid;
-            
-            // 讀取使用者資料 (包含裝備狀態)
-            db.ref(`users/${uid}`).once('value', snap => {
-                const data = snap.val() || {};
-                const inventory = data.inventory || {};
-                const equipment = data.equipment || {}; // 格式: { 1: 'itemId', 2: 'itemId'... }
-                
-                // 1. 渲染人物資料
-                app.el('char-sys-name').textContent = data.displayName || app.state.user.displayName;
-                app.el('char-sys-avatar').src = app.state.user.photoURL;
-                app.el('char-sys-gold').textContent = data.totalGold || 0;
-                app.el('char-sys-score').textContent = data.highScore || 0;
-                
-                // 2. 計算與渲染經驗條
-                const exp = data.totalExp || 0;
-                const lvInfo = app.getInGameLevelInfo(exp); // 借用同樣的等級曲線
-                // 計算永久等級 (這裡使用較陡的 AccountLevel 公式)
-                const accLv = app.getAccountLevel(exp); 
-                
-                // 計算下一級所需經驗 (Account Level 公式: EXP = 10 * (Lv-1)^2)
-                // 反推: 下一級經驗 = 10 * (accLv)^2
-                const nextLvExp = 10 * Math.pow(accLv, 2);
-                const currentLvBase = 10 * Math.pow(accLv - 1, 2);
-                const range = nextLvExp - currentLvBase;
-                const progress = exp - currentLvBase;
-                const percent = Math.min(100, Math.max(0, (progress / range) * 100));
-
-                app.el('char-sys-lv').textContent = accLv;
-                app.el('char-sys-exp-bar').style.width = `${percent}%`;
-                app.el('char-sys-exp-text').textContent = `${Math.floor(progress)} / ${Math.floor(range)}`;
-
-                // 3. 渲染裝備欄位
-                app.renderCharacterEquipment(equipment);
-
-                // 4. 渲染背包 (需要扣除已裝備的數量)
-                app.renderCharacterInventory(inventory, equipment);
-            });
-        },
-
-        closeCharacterInventory: () => {
-            app.el('character-inventory-modal').classList.add('hidden');
-            app.el('page-lobby').classList.remove('hidden');
-        },
-
-        // 渲染裝備欄位 (填入圖片)
-        renderCharacterEquipment: (equipment) => {
-            const list = app.state.globalSettings?.blackMarketList || [];
-            
-            for (let i = 1; i <= 6; i++) {
-                const slotEl = app.el(`equip-slot-${i}`);
-                const equippedId = equipment[i];
-                
-                slotEl.innerHTML = ''; // 清空
-                slotEl.classList.remove('has-item');
-                
-                if (equippedId !== undefined && equippedId !== null) {
-                    const item = list[equippedId];
-                    if (item) {
-                        const targetLv = item.currentEditLv || 1;
-                        const img = item[`img${targetLv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-                        slotEl.innerHTML = `<img src="${img}" class="w-full h-full object-contain p-1 drop-shadow-md">`;
-                        slotEl.classList.add('has-item');
-                    }
-                } else {
-                    // 空欄位顯示透明提示
-                    slotEl.innerHTML = `<span class="text-white/20 text-xs font-black select-none">${i}</span>`;
-                }
-            }
-        },
-
-        // 渲染背包物品 (過濾並顯示)
-        renderCharacterInventory: (inventory, equipment) => {
-            const container = app.el('char-sys-inventory-grid');
-            const list = app.state.globalSettings?.blackMarketList || [];
-            
-            // 計算每個物品已裝備的數量
-            const equippedCounts = {};
-            Object.values(equipment).forEach(id => {
-                equippedCounts[id] = (equippedCounts[id] || 0) + 1;
-            });
-
-            let html = '';
-            let displayCount = 0;
-
-            Object.keys(inventory).forEach(key => {
-                const totalOwned = inventory[key] || 0;
-                const used = equippedCounts[key] || 0;
-                const available = totalOwned - used;
-
-                if (available > 0) {
-                    displayCount++;
-                    const itemData = list[key] || { name: '未知', img1: '' };
-                    const targetLv = itemData.currentEditLv || 1;
-                    const img = itemData[`img${targetLv}`] || itemData.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-                    
-                    // 點擊裝備 (傳入物品ID)
-                    html += `<div onclick="app.equipItem('${key}')" class="relative bg-white rounded-lg border-2 border-slate-300 cursor-pointer hover:border-amber-500 hover:shadow-md transition-all group aspect-square flex items-center justify-center p-1" title="點擊裝備: ${itemData.name}"><div class="absolute top-0 right-0 bg-slate-600 text-white text-[0.6rem] px-1.5 rounded-bl-lg font-bold">x${available}</div><img src="${img}" class="w-full h-full object-contain group-hover:scale-110 transition-transform"></div>`;
-                }
-            });
-
-            if (displayCount === 0) {
-                container.innerHTML = `<div class="col-span-full text-center text-slate-400 py-10 text-sm">背包裡沒有可裝備的物品<br>(或是全部都已裝備)</div>`;
-            } else {
-                container.innerHTML = html;
-            }
-            app.el('char-sys-inv-count').textContent = `${displayCount} 種可用`;
-        },
-
-        // 裝備物品 (自動尋找第一個空位)
-        equipItem: (itemId) => {
-            if (!app.state.user) return;
-            const uid = app.state.user.uid;
-            const userRef = db.ref(`users/${uid}`);
-
-            userRef.transaction(data => {
-                if (data) {
-                    const equipment = data.equipment || {};
-                    // 尋找第一個空位 (1~6)
-                    let emptySlot = -1;
-                    for (let i = 1; i <= 6; i++) {
-                        if (equipment[i] === undefined || equipment[i] === null) {
-                            emptySlot = i;
-                            break;
-                        }
-                    }
-
-                    if (emptySlot === -1) {
-                        // 沒有空位
-                        return; 
-                    } else {
-                        // 裝備上去
-                        if (!data.equipment) data.equipment = {};
-                        data.equipment[emptySlot] = itemId;
-                    }
-                }
-                return data;
-            }, (error, committed, snapshot) => {
-                if (committed) {
-                    // 重新整理介面
-                    app.openCharacterInventory(); // 簡單暴力的重繪
-                    
-                    // 音效
-                    const audio = new Audio("https://taira-komori.net/sound_os2/game01/cloth_swish.mp3"); // 穿裝備音效
-                    audio.volume = 0.4;
-                    audio.play().catch(()=>{});
-                } else {
-                    app.toast('❌ 裝備欄已滿！請先卸下舊裝備。');
-                }
-            });
-        },
-
-        // 卸下裝備
-        unequipItem: (slotId) => {
-            if (!app.state.user) return;
-            // 檢查該欄位是否有東西 (前端檢查，避免無謂請求)
-            const slotEl = app.el(`equip-slot-${slotId}`);
-            if (!slotEl.classList.contains('has-item')) return;
-
-            const uid = app.state.user.uid;
-            db.ref(`users/${uid}/equipment/${slotId}`).remove().then(() => {
-                app.openCharacterInventory(); // 重繪
-                // 卸下音效
-                const audio = new Audio("https://taira-komori.net/sound_os2/game01/cursor_cancel.mp3");
-                audio.volume = 0.3;
-                audio.play().catch(()=>{});
-            });
         },
 		// --- v4.7.6.4 黑市系統邏輯 ---
         
