@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.7.3 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.7.9 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -385,7 +385,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.7.3 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.7.9 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -455,6 +455,15 @@
                                  <div class="text-xs text-amber-600 font-bold">本機紀錄 (未同步)</div>
                                  <div class="text-xl font-black text-amber-700" id="lobby-high-score">0</div>
                             </div>
+                        </div>
+
+                        <!-- [新增 v4.7.7.4] 角色背包按鈕 -->
+                        <div class="mt-4">
+                            <button onclick="app.openCharacterBackpack()" class="w-full bg-gradient-to-r from-slate-700 to-slate-800 text-amber-400 font-bold py-3 rounded-xl shadow-md border-2 border-slate-600 hover:border-amber-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-3 group relative overflow-hidden">
+                                <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                                <span class="text-2xl filter drop-shadow">🎒</span>
+                                <span class="text-lg tracking-widest">角色背包</span>
+                            </button>
                         </div>
 
                         <hr class="border-amber-200 my-4">
@@ -1029,6 +1038,130 @@
                     <button onclick="app.saveAdminSettings()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-slate-900 active:scale-95 transition-transform">💾 儲存全域設定</button>
                 </div>
              </div>
+        </div>
+		<!-- [新增 v4.7.7.4] 角色背包與裝備系統 (RPG Style) -->
+        <div id="character-backpack-modal" class="fixed inset-0 z-[80] hidden flex items-center justify-center modal-backdrop backdrop-blur-md">
+            <!-- [v4.7.7.7 修改] 羊皮紙風格介面 -->
+            <div class="bg-stone-900 rounded-3xl w-full max-w-6xl mx-4 shadow-2xl border-4 border-amber-700 flex flex-col md:flex-row overflow-hidden relative animate-[popIn_0.3s_ease-out]" style="height: 85vh;">
+                
+                <!-- 左側：紙娃娃裝備區 (維持深色背景以突顯裝備) -->
+                <div class="w-full md:w-6/12 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] bg-slate-900 border-b-4 md:border-b-0 md:border-r-4 border-amber-800 flex flex-col items-center justify-center relative p-0 overflow-hidden shadow-[inset_-10px_0_20px_rgba(0,0,0,0.5)]">
+                    
+                    <h3 class="absolute top-4 left-0 w-full text-center text-amber-500 font-black text-2xl tracking-widest drop-shadow-md z-10 pointer-events-none" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">🛡️ 冒險者裝備</h3>
+                    
+                    <!-- 裝備背景與欄位容器 -->
+                    <div class="relative w-full h-full bg-no-repeat bg-center bg-cover" style="background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%96%B0%E4%BA%BA%E7%89%A9%E8%A3%9D%E5%82%99%E5%9C%962.png');">
+                        
+                        <!-- 6個裝備欄位 (3左 3右) -->
+                        <div id="equip-slot-0" onclick="app.handleUnequipItem(0)" class="absolute top-[12%] left-[10%] w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg">
+                            <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">HEAD</span>
+                        </div>
+                        <div id="equip-slot-2" onclick="app.handleUnequipItem(2)" class="absolute top-[42%] left-[10%] w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg">
+                            <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">HAND</span>
+                        </div>
+                        <div id="equip-slot-4" onclick="app.handleUnequipItem(4)" class="absolute bottom-[15%] left-[10%] w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg">
+                            <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">ACC1</span>
+                        </div>
+                        <div id="equip-slot-1" onclick="app.handleUnequipItem(1)" class="absolute top-[12%] right-[10%] w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg">
+                            <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">BODY</span>
+                        </div>
+                        <div id="equip-slot-3" onclick="app.handleUnequipItem(3)" class="absolute top-[42%] right-[10%] w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg">
+                            <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">OFF</span>
+                        </div>
+                        <div id="equip-slot-5" onclick="app.handleUnequipItem(5)" class="absolute bottom-[15%] right-[10%] w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg">
+                            <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">ACC2</span>
+                        </div>
+                        
+                        <div class="absolute bottom-2 left-0 w-full flex items-center justify-center pointer-events-none">
+                            <div class="bg-black/60 text-amber-200 text-xs px-3 py-1 rounded-full backdrop-blur-sm border border-amber-500/30">點擊背包物品裝備 / 點擊欄位卸下</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右側：羊皮紙風格資料與背包 -->
+                <div class="w-full md:w-6/12 flex flex-col bg-[#f5e6c8] relative" style="background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');">
+                    
+                    <!-- 關閉按鈕 (改為方形，移至右上角，修復返回大廳邏輯) -->
+                    <button onclick="app.el('character-backpack-modal').classList.add('hidden'); app.el('page-lobby').classList.remove('hidden');" class="absolute top-3 right-3 z-50 bg-red-800 text-white w-8 h-8 rounded-lg font-black shadow-lg hover:bg-red-700 hover:scale-105 active:scale-95 transition-all border-2 border-red-900 flex items-center justify-center" title="返回大廳">✕</button>
+
+                    <!-- 上方：人物資料 (羊皮紙風格) -->
+                    <div class="p-6 border-b-4 border-amber-900/20 relative">
+                        <div class="flex items-center gap-4 mb-3">
+                            <!-- 頭像 -->
+                            <div class="w-20 h-20 rounded-full border-4 border-amber-800 overflow-hidden shadow-lg bg-stone-300 flex-shrink-0">
+                                <img id="bp-user-avatar" src="" class="w-full h-full object-cover">
+                            </div>
+                            
+                            <!-- 資訊區 -->
+                            <div class="flex-1 min-w-0 pr-8">
+                                <h2 id="bp-user-name" class="text-2xl font-black text-amber-900 mb-1 truncate">冒險者</h2>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-xs bg-amber-800 text-amber-100 px-2 py-0.5 rounded font-bold shadow-sm">LV.<span id="bp-user-lv">1</span></span>
+                                    <span class="text-xs text-amber-800/70 font-bold">冒險階級</span>
+                                </div>
+                                
+                                <!-- 數據顯示區 (金幣左移，加入最高分) -->
+                                <div class="flex flex-wrap gap-3">
+                                    <div class="flex items-center gap-1 bg-yellow-200/50 px-2 py-1 rounded border border-yellow-600/30">
+                                        <span class="text-sm">💰</span>
+                                        <div class="font-black text-amber-900 font-mono text-lg leading-none" id="bp-user-gold">0</div>
+                                    </div>
+                                    <div class="flex items-center gap-1 bg-amber-200/50 px-2 py-1 rounded border border-amber-600/30">
+                                        <span class="text-sm">🏆</span>
+                                        <div class="font-black text-amber-900 font-mono text-lg leading-none" id="bp-user-highscore">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 經驗值條 -->
+                        <div class="w-full">
+                            <div class="flex justify-between text-xs text-amber-900 mb-1 font-bold">
+                                <span>EXP 經驗值</span>
+                                <span><span id="bp-exp-current">0</span> / <span id="bp-exp-next">100</span></span>
+                            </div>
+                            <div class="w-full h-3 bg-amber-900/20 rounded-full overflow-hidden border border-amber-900/30">
+                                <div id="bp-exp-bar" class="h-full bg-gradient-to-r from-amber-600 to-yellow-600 transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                   <!-- 下方：背包物品 (調整背景色以配合羊皮紙) -->
+                    <div class="flex-1 flex flex-col overflow-hidden min-h-0 bg-amber-900/5 relative">
+                        <div class="p-2 bg-amber-800/10 border-b border-amber-900/10 flex justify-between items-center z-10 shrink-0">
+                            <span class="text-amber-900 font-bold flex items-center gap-2 text-sm ml-2">🎒 物品欄 <span class="text-xs text-amber-800/60 font-normal">(點擊物品查看詳情)</span></span>
+                            <span class="text-xs text-amber-800/50 mr-2">來自黑市的珍藏</span>
+                        </div>
+                        
+                        <!-- 物品網格 -->
+                        <div id="bp-inventory-grid" class="flex-1 overflow-y-auto p-4 grid grid-cols-4 md:grid-cols-5 gap-3 content-start custom-scrollbar pb-32">
+                            <!-- JS 動態生成 -->
+                        </div>
+
+                        <!-- [新增] 底部道具詳情與操作面板 -->
+                        <div id="bp-item-action-panel" class="absolute bottom-0 left-0 w-full bg-[#f5e6c8] border-t-4 border-amber-800/20 p-3 shadow-[0_-5px_15px_rgba(0,0,0,0.1)] hidden flex-col animate-[slideUp_0.2s_ease-out] z-20" style="background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');">
+                            <div class="flex gap-4">
+                                <!-- 道具圖示與名稱 -->
+                                <div id="bp-panel-icon" class="w-16 h-16 rounded-lg border-2 border-amber-600/30 bg-amber-900/5 flex items-center justify-center shrink-0 shadow-inner"></div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 id="bp-panel-name" class="font-black text-amber-900 text-lg truncate">道具名稱</h4>
+                                    <p id="bp-panel-desc" class="text-xs text-amber-800/80 font-bold leading-tight line-clamp-2 mt-1">道具說明...</p>
+                                </div>
+                                <button onclick="app.closeBackpackPanel()" class="absolute top-2 right-2 text-amber-900/40 hover:text-amber-900 font-bold">✕</button>
+                            </div>
+                            <!-- 操作按鈕 -->
+                            <div class="flex gap-3 mt-3">
+                                <button id="btn-bp-equip" class="flex-1 bg-gradient-to-r from-amber-600 to-amber-700 text-white font-bold py-2 rounded-lg shadow-md active:scale-95 transition-transform flex justify-center items-center gap-2">
+                                    <span>⚔️</span> 裝備
+                                </button>
+                                <button id="btn-bp-discard" class="flex-1 bg-stone-300 text-stone-700 font-bold py-2 rounded-lg shadow-md hover:bg-stone-400 active:scale-95 transition-colors flex justify-center items-center gap-2">
+                                    <span>🗑️</span> 丟棄
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 		<!-- [新增 v4.7.6.4] 黑市系統介面 (Diablo 風格) -->
         <div id="black-market-interface" class="hidden fixed inset-0 z-[60] bg-black text-slate-300 overflow-hidden font-mono animate-[fadeIn_0.5s_ease-out]">
@@ -6294,6 +6427,302 @@
                 }
             }, speed);
         },
+// --- [新增 v4.7.7.4] 角色背包系統邏輯 ---
+        
+        // 1. 開啟背包 (判斷訪客或登入者)
+        openCharacterBackpack: () => {
+            app.el('page-lobby').classList.add('hidden');
+            app.el('character-backpack-modal').classList.remove('hidden');
+            
+            // 預設資料
+            let userData = {
+                name: app.state.myName || '神秘客',
+                photo: 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+                gold: 100,
+                exp: 0,
+                highScore: 0, // [新增 v4.7.7.7] 最高分欄位
+                inventory: {},
+                equipped: {} // 格式: { 0: itemId, 1: itemId ... }
+            };
+
+            if (app.state.user) {
+                // 登入者：從 Firebase 讀取
+                db.ref(`users/${app.state.user.uid}`).once('value', snap => {
+                    const data = snap.val() || {};
+                    userData.name = data.displayName || app.state.user.displayName;
+                    userData.photo = app.state.user.photoURL;
+                    userData.gold = data.totalGold || 0;
+                    userData.exp = data.totalExp || 0;
+                    userData.highScore = data.highScore || 0; // 讀取最高分
+                    userData.inventory = data.inventory || {};
+                    userData.equipped = data.equipped || {};
+                    
+                    app.state.currentBackpackData = userData; // 暫存
+                    app.renderCharacterBackpackUI();
+                });
+            } else {
+                // 訪客：讀取 LocalStorage
+                userData.inventory = JSON.parse(localStorage.getItem('pharaoh_guest_inventory') || '{}');
+                userData.equipped = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
+                userData.highScore = parseInt(localStorage.getItem('pharaoh_high_score') || '0'); // 讀取本地最高分
+                
+                // 訪客金幣可能在黑市變動，嘗試讀取介面上的值或預設
+                const goldEl = app.el('bm-user-gold');
+                if (goldEl && goldEl.textContent !== '0') userData.gold = parseInt(goldEl.textContent);
+                
+                app.state.currentBackpackData = userData;
+                app.renderCharacterBackpackUI();
+            }
+        },
+
+       // 2. 渲染背包 UI (左右欄)
+        renderCharacterBackpackUI: () => {
+            const data = app.state.currentBackpackData;
+            const globalList = app.state.globalSettings?.blackMarketList || []; 
+            
+            // --- A. 渲染人物資料 (右側上方) ---
+            app.el('bp-user-name').textContent = data.name;
+            app.el('bp-user-avatar').src = data.photo;
+            app.el('bp-user-gold').textContent = data.gold;
+            const hsEl = app.el('bp-user-highscore');
+            if(hsEl) hsEl.textContent = data.highScore;
+            
+            // 計算經驗條與等級
+            // 這裡借用現有公式，但在顯示時我們需要真正的 Account Level 來判斷解鎖
+            const accLv = app.getAccountLevel(data.exp);
+            
+            // 簡易計算經驗條 (與原本邏輯保持一致)
+            const currentLevelExpBase = 10 * Math.pow(accLv - 1, 2);
+            const nextLevelExp = 10 * Math.pow(accLv, 2);
+            const levelRange = nextLevelExp - currentLevelExpBase;
+            const currentProgress = data.exp - currentLevelExpBase;
+            const percent = Math.min(100, Math.max(0, (currentProgress / levelRange) * 100));
+
+            app.el('bp-user-lv').textContent = accLv;
+            app.el('bp-exp-current').textContent = data.exp;
+            app.el('bp-exp-next').textContent = nextLevelExp;
+            app.el('bp-exp-bar').style.width = `${percent}%`;
+
+            // --- B. 渲染裝備欄 (左側 6 格) [修改：加入等級鎖定] ---
+            // 定義每個格子的解鎖等級
+            const unlockLevels = [5, 15, 25, 35, 45, 55];
+            const slotLabels = ['LV.5','LV.15','LV.25','LV.35','LV.45','LV.55'];
+
+            for (let i = 0; i < 6; i++) {
+                const slotEl = app.el(`equip-slot-${i}`);
+                const equippedItemId = data.equipped[i];
+                const isLocked = accLv < unlockLevels[i]; // 判斷是否鎖定
+
+                // 清理舊的 class，保留定位與背景圖
+                const baseClasses = slotEl.className.split(' ').filter(c => 
+                    c.startsWith('absolute') || c.startsWith('top') || c.startsWith('bottom') || c.startsWith('left') || c.startsWith('right') || 
+                    c.startsWith('w-') || c.startsWith('h-') || c.startsWith('bg-') || c.startsWith('flex') || c.startsWith('items-') || 
+                    c.startsWith('justify-') || c.startsWith('transition-') || c.startsWith('group') || c.startsWith('filter') || c.startsWith('drop-shadow')
+                ).join(' ');
+
+                // 重置點擊事件
+                slotEl.onclick = null;
+                slotEl.classList.remove('cursor-pointer', 'hover:scale-110', 'grayscale');
+
+                if (isLocked) {
+                    // 鎖定狀態
+                    slotEl.innerHTML = `<div class="bg-black/60 absolute inset-0 flex flex-col items-center justify-center rounded-lg border-2 border-red-900/50 backdrop-blur-[1px]"><span class="text-2xl opacity-80">🔒</span><span class="text-xs text-red-400 font-black mt-1 tracking-wider">${slotLabels[i]}</span></div>`;
+                    slotEl.className = `${baseClasses} grayscale cursor-not-allowed`;
+                } else {
+                    // 解鎖狀態
+                    slotEl.onclick = () => app.handleUnequipItem(i);
+                    slotEl.classList.add('cursor-pointer', 'hover:scale-110');
+
+                    if (equippedItemId && globalList[equippedItemId]) {
+                        const itemInfo = globalList[equippedItemId];
+                        const targetLv = itemInfo.currentEditLv || 1; 
+                        const img = itemInfo[`img${targetLv}`] || itemInfo.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+                        
+                        // [修改] 只有當 MaxLV > 1 時才顯示 LV 標籤
+                        const lvTag = itemInfo.maxLv > 1 ? `<div class="absolute -bottom-1 -right-1 bg-black/80 text-amber-400 text-[0.6rem] font-bold px-1.5 rounded border border-amber-600/50 shadow">LV${targetLv}</div>` : '';
+
+                        slotEl.innerHTML = `<img src="${img}" class="w-[85%] h-[85%] object-contain filter drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">${lvTag}`;
+                        slotEl.className = `${baseClasses} border-2 border-amber-400/80 shadow-[0_0_15px_rgba(251,191,36,0.4)] rounded-lg bg-black/20`; 
+                    } else {
+                        // 空格狀態
+                        slotEl.innerHTML = `<span class="text-xs text-amber-200/40 font-bold group-hover:opacity-0 mt-8 tracking-widest">${slotLabels[i]}</span>`;
+                        slotEl.className = baseClasses;
+                    }
+                }
+            }
+
+            // --- C. 渲染背包網格 (右側下方) ---
+            const gridContainer = app.el('bp-inventory-grid');
+            let gridHtml = '';
+            let hasItem = false;
+
+            // 統計已裝備數量
+            const equippedCounts = {};
+            Object.values(data.equipped).forEach(id => {
+                equippedCounts[id] = (equippedCounts[id] || 0) + 1;
+            });
+
+            // 遍歷背包
+            Object.keys(data.inventory).forEach(itemId => {
+                const totalCount = data.inventory[itemId];
+                const usedCount = equippedCounts[itemId] || 0;
+                const remainCount = totalCount - usedCount;
+
+                if (remainCount > 0) {
+                    hasItem = true;
+                    const itemData = globalList[itemId] || { name: '未知物品', img1: '', maxLv: 1 };
+                    const targetLv = itemData.currentEditLv || 1;
+                    const img = itemData[`img${targetLv}`] || itemData.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+
+                    // [修改] 只有當 MaxLV > 1 時才顯示左上角的 LV 標籤
+                    const lvBadge = itemData.maxLv > 1 ? `<div class="absolute top-1 left-1 bg-red-900/90 text-amber-200 text-[0.55rem] font-black px-1.5 py-0.5 rounded border border-amber-500/30 shadow-sm z-10 leading-none">LV${targetLv}</div>` : '';
+
+                    // [修改] 點擊觸發 selectBackpackItem 而不是直接裝備
+                    gridHtml += `<div onclick="app.selectBackpackItem('${itemId}')" class="relative group cursor-pointer rounded-lg hover:scale-105 transition-transform aspect-square shadow-md flex flex-col items-center justify-center bg-white/20 hover:bg-white/40 border border-amber-900/10" style="background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png'); background-size: cover; background-repeat: no-repeat;">${lvBadge}<div class="absolute top-1 right-1 text-[0.6rem] bg-black/70 text-white px-1.5 py-0.5 rounded font-bold border border-white/20 z-10 leading-none">x${remainCount}</div><div class="w-full h-full p-3 flex items-center justify-center"><img src="${img}" class="max-w-full max-h-full object-contain filter drop-shadow-md group-hover:scale-110 transition-transform"></div><div class="absolute bottom-1.5 w-[90%] bg-black/80 text-amber-100 text-[0.6rem] font-bold truncate text-center rounded border border-amber-500/30 backdrop-blur-[1px] py-0.5 shadow-sm pointer-events-none">${itemData.name}</div></div>`;
+                }
+            });
+
+            if (!hasItem) {
+                gridHtml = `<div class="col-span-full text-center text-amber-900/40 py-10 flex flex-col items-center"><span class="text-4xl mb-2 grayscale opacity-30">🎒</span><span>背包內沒有可裝備的物品</span></div>`;
+            }
+            
+            gridContainer.innerHTML = gridHtml;
+        },
+
+        // [新增] 選取背包物品 (顯示詳情面板)
+        selectBackpackItem: (itemId) => {
+            const list = app.state.globalSettings?.blackMarketList || [];
+            const itemData = list[itemId];
+            if (!itemData) return;
+
+            const targetLv = itemData.currentEditLv || 1;
+            const lvData = (itemData.levelData && itemData.levelData[targetLv]) ? itemData.levelData[targetLv] : {};
+            const img = itemData[`img${targetLv}`] || itemData.img1 || '';
+
+            // 更新面板內容
+            app.el('bp-panel-name').textContent = itemData.maxLv > 1 ? `${itemData.name} (LV${targetLv})` : itemData.name;
+            app.el('bp-panel-desc').textContent = lvData.desc || '暫無說明';
+            app.el('bp-panel-icon').innerHTML = `<img src="${img}" class="w-full h-full object-contain filter drop-shadow-sm">`;
+
+            // 設定按鈕事件
+            app.el('btn-bp-equip').onclick = () => app.handleEquipItem(itemId);
+            app.el('btn-bp-discard').onclick = () => app.handleDiscardItem(itemId);
+
+            // 顯示面板
+            app.el('bp-item-action-panel').classList.remove('hidden');
+            app.el('bp-item-action-panel').classList.add('flex');
+        },
+
+        // [新增] 關閉背包面板
+        closeBackpackPanel: () => {
+            app.el('bp-item-action-panel').classList.add('hidden');
+            app.el('bp-item-action-panel').classList.remove('flex');
+        },
+
+        // [新增] 丟棄物品邏輯
+        handleDiscardItem: (itemId) => {
+            const data = app.state.currentBackpackData;
+            const currentQty = data.inventory[itemId] || 0;
+            
+            // 判斷可用數量 (扣除已裝備的)
+            let usedCount = 0;
+            Object.values(data.equipped).forEach(id => { if(id === itemId) usedCount++; });
+            const availableQty = currentQty - usedCount;
+
+            if (availableQty <= 0) return app.toast('❌ 此物品已全部裝備中，無法丟棄！');
+
+            // 詢問數量
+            const input = prompt(`🗑️ 確定要丟棄「${app.state.globalSettings?.blackMarketList[itemId]?.name}」嗎？\n目前持有: ${currentQty} (可用: ${availableQty})\n\n請輸入要丟棄的數量：`, "1");
+            
+            if (input === null) return; // 取消
+            
+            const qty = parseInt(input);
+            if (isNaN(qty) || qty <= 0) return app.toast('❌ 請輸入有效的數量');
+            if (qty > availableQty) return app.toast(`❌ 數量不足！你只有 ${availableQty} 個未裝備的物品。`);
+
+            // 執行扣除
+            if (confirm(`⚠️ 警告：丟棄後無法復原！\n確認丟棄 ${qty} 個？`)) {
+                data.inventory[itemId] -= qty;
+                if (data.inventory[itemId] <= 0) delete data.inventory[itemId];
+                
+                app.saveBackpackData(); // 儲存
+                app.renderCharacterBackpackUI(); // 重繪
+                app.closeBackpackPanel(); // 關閉面板
+                app.toast(`🗑️ 已丟棄 ${qty} 個物品`);
+            }
+        },
+
+        // 3. 裝備物品 (自動尋找符合等級的空位)
+        handleEquipItem: (itemId) => {
+            const data = app.state.currentBackpackData;
+            const accLv = app.getAccountLevel(data.exp);
+            const unlockLevels = [5, 15, 25, 35, 45, 55];
+            
+            // 尋找第一個「已解鎖」且「為空」的格子
+            let emptySlot = -1;
+            for (let i = 0; i < 6; i++) {
+                // 必須滿足等級條件
+                if (accLv >= unlockLevels[i]) {
+                    if (!data.equipped[i]) {
+                        emptySlot = i;
+                        break;
+                    }
+                }
+            }
+
+            if (emptySlot === -1) {
+                // 檢查是因為滿了還是因為等級不夠
+                const hasLockedSlot = unlockLevels.some(lv => accLv < lv);
+                if (hasLockedSlot) {
+                    return app.toast('❌ 無可用欄位！(部分欄位需更高等級解鎖)');
+                } else {
+                    return app.toast('❌ 裝備欄已滿！請先卸下舊裝備。');
+                }
+            }
+
+            // 執行裝備
+            data.equipped[emptySlot] = itemId;
+            app.saveBackpackData();
+            app.renderCharacterBackpackUI(); 
+            app.closeBackpackPanel(); // 裝備後關閉面板
+            
+            // 音效
+            const audio = new Audio("https://taira-komori.net/sound_os2/game01/poka01.mp3");
+            audio.volume = 0.4;
+            audio.play().catch(()=>{});
+        },
+
+        // 4. 卸下裝備
+        handleUnequipItem: (slotIndex) => {
+            const data = app.state.currentBackpackData;
+            if (!data.equipped[slotIndex]) return; 
+
+            delete data.equipped[slotIndex];
+            app.saveBackpackData();
+            app.renderCharacterBackpackUI();
+            
+            // 音效
+            const audio = new Audio("https://taira-komori.net/sound_os2/game01/poka02.mp3");
+            audio.volume = 0.4;
+            audio.play().catch(()=>{});
+        },
+
+        // 5. 儲存資料 (寫入 DB 或 LocalStorage)
+        saveBackpackData: () => {
+            const data = app.state.currentBackpackData;
+            
+            if (app.state.user) {
+                // 寫入 Firebase
+                db.ref(`users/${app.state.user.uid}`).update({
+                    inventory: data.inventory,
+                    equipped: data.equipped
+                });
+            } else {
+                // 寫入 LocalStorage
+                localStorage.setItem('pharaoh_guest_inventory', JSON.stringify(data.inventory));
+                localStorage.setItem('pharaoh_guest_equipped', JSON.stringify(data.equipped));
+             }
+        }
     };
 
     // 啟動
