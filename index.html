@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.8.4 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.8.5 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -385,7 +385,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.8.4 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.8.5 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -6309,7 +6309,7 @@
             const data = (item.levelData && item.levelData[targetLv]) ? item.levelData[targetLv] : { desc: '...' };
             
             // 1. 商人說話
-            const merchantMsg = `【${item.name}】(LV${targetLv})... ${data.desc || '這可是好東西。'} 價格公道，只要 ${data.price} G。`;
+            const merchantMsg = `【${item.name}】(LV${targetLv})... ${data.desc || '這可是好東西。'} 價格公道，只要 ${data.price} G。要注意相同物品只可裝備1種喔!`;
             app.handleMerchantDialogue('custom', merchantMsg); 
 
             // 2. 顯示提示
@@ -6412,109 +6412,109 @@
         },
 
         // [新增 v4.7.8.4] 黑市：販賣物品
-        handleBlackMarketSell: (itemId) => {
-            const list = app.state.globalSettings?.blackMarketList || [];
-            const item = list[itemId];
-            if (!item) return;
+    handleBlackMarketSell: (itemId) => {
+        const list = app.state.globalSettings?.blackMarketList || [];
+        const item = list[itemId];
+        if (!item) return;
 
-            // 1. 計算回收價格 (原價 1/10)
-            const targetLv = item.currentEditLv || 1;
-            const price = (item.levelData && item.levelData[targetLv]) ? item.levelData[targetLv].price : 100;
-            const sellPrice = Math.floor(price / 10);
+        // 1. 計算回收價格 (原價 1/10)
+        const targetLv = item.currentEditLv || 1;
+        const price = (item.levelData && item.levelData[targetLv]) ? item.levelData[targetLv].price : 100;
+        const sellPrice = Math.floor(price / 10);
 
-            // 2. 獲取當前持有數量 (需重讀以確保準確)
-            const checkAndSell = (userData) => {
-                const total = (userData.inventory && userData.inventory[itemId]) ? userData.inventory[itemId] : 0;
+        // 2. 獲取當前持有數量 (需重讀以確保準確)
+        const checkAndSell = (userData) => {
+            const total = (userData.inventory && userData.inventory[itemId]) ? userData.inventory[itemId] : 0;
+            
+            // 計算已裝備數量
+            let equippedCount = 0;
+            if (userData.equipped) {
+                Object.values(userData.equipped).forEach(id => { if(id == itemId) equippedCount++; });
+            }
+            
+            const available = total - equippedCount;
+
+            if (available <= 0) {
+                app.handleMerchantDialogue('custom', '這東西你全都裝備在身上了，脫下來才能賣給我啊。');
+                return app.toast('❌ 無閒置物品可賣 (請先卸下裝備)');
+            }
+
+            // 3. 詢問數量
+            const input = prompt(`💰 商人出價 ${sellPrice}G 回收【${item.name}】\n目前閒置數量: ${available}\n\n請輸入要賣出的數量：`, "1");
+            if (input === null) return;
+            
+            const qty = parseInt(input);
+            if (isNaN(qty) || qty <= 0) return app.toast('❌ 請輸入有效的數量');
+            if (qty > available) return app.toast(`❌ 數量不足！你只有 ${available} 個閒置物品。`);
+
+            const totalGet = sellPrice * qty;
+
+            if (!confirm(`🧛 確定要以總價 ${totalGet}G 賣出 ${qty} 個【${item.name}】嗎？`)) return;
+
+            // 4. 執行交易
+            const newGold = (userData.totalGold || (parseInt(app.el('bm-user-gold').textContent))) + totalGet; // 訪客取介面值
+            const newInvCount = total - qty;
+
+            if (app.state.user) {
+                // Google 登入
+                const updates = {};
+                updates[`inventory/${itemId}`] = newInvCount;
+                if (newInvCount <= 0) updates[`inventory/${itemId}`] = null; // 刪除節點
+                updates['totalGold'] = newGold;
                 
-                // 計算已裝備數量
-                let equippedCount = 0;
-                if (userData.equipped) {
-                    Object.values(userData.equipped).forEach(id => { if(id == itemId) equippedCount++; });
-                }
-                
-                const available = total - equippedCount;
-
-                if (available <= 0) {
-                    app.handleMerchantDialogue('custom', '這東西你全都裝備在身上了，脫下來才能賣給我啊。');
-                    return app.toast('❌ 無閒置物品可賣 (請先卸下裝備)');
-                }
-
-                // 3. 詢問數量
-                const input = prompt(`💰 商人出價 ${sellPrice}G 回收【${item.name}】\n目前閒置數量: ${available}\n\n請輸入要賣出的數量：`, "1");
-                if (input === null) return;
-                
-                const qty = parseInt(input);
-                if (isNaN(qty) || qty <= 0) return app.toast('❌ 請輸入有效的數量');
-                if (qty > available) return app.toast(`❌ 數量不足！你只有 ${available} 個閒置物品。`);
-
-                const totalGet = sellPrice * qty;
-
-                if (!confirm(`🧛 確定要以總價 ${totalGet}G 賣出 ${qty} 個【${item.name}】嗎？`)) return;
-
-                // 4. 執行交易
-                const newGold = (userData.totalGold || (parseInt(app.el('bm-user-gold').textContent))) + totalGet; // 訪客取介面值
-                const newInvCount = total - qty;
-
-                if (app.state.user) {
-                    // Google 登入
-                    const updates = {};
-                    updates[`inventory/${itemId}`] = newInvCount;
-                    if (newInvCount <= 0) updates[`inventory/${itemId}`] = null; // 刪除節點
-                    updates['totalGold'] = newGold;
+                db.ref(`users/${app.state.user.uid}`).update(updates).then(() => {
+                    app.toast(`💰 販賣成功！獲得 ${totalGet}G`);
+                    app.handleMerchantDialogue('custom', '呵呵呵... 交易愉快。');
                     
-                    db.ref(`users/${app.state.user.uid}`).update(updates).then(() => {
-                        app.toast(`💰 販賣成功！獲得 ${totalGet}G`);
-                        app.handleMerchantDialogue('custom', '呵呵呵... 交易愉快。');
-                        
-                        // 音效
-                        const audio = new Audio("https://taira-komori.net/sound_os2/game01/coin01.mp3");
-                        audio.volume = 0.3;
-                        audio.play().catch(()=>{});
-
-                        // 更新介面
-                        // 為了即時性，手動呼叫渲染，但 Firebase 監聽也會觸發，這裡選擇依賴監聽或手動更新
-                        // 由於 update 是非同步，這裡我們重新讀取並刷新介面
-                         db.ref(`users/${app.state.user.uid}`).once('value', snap => {
-                            const d = snap.val();
-                            app.renderBlackMarketUI(d.displayName, d.photoURL, d.totalGold, app.getAccountLevel(d.totalExp), d.inventory || {}, d.equipped || {});
-                            app.el('bm-item-detail-panel').classList.add('hidden'); // 關閉詳情
-                            app.el('bm-item-detail-panel').classList.remove('flex');
-                        });
-                    });
-                } else {
-                    // 訪客模式
-                    const localInv = userData.inventory;
-                    localInv[itemId] = newInvCount;
-                    if (localInv[itemId] <= 0) delete localInv[itemId];
-                    
-                    localStorage.setItem('pharaoh_guest_inventory', JSON.stringify(localInv));
-                    // 訪客金幣沒有存 localStorage 變數，只更新 UI
-                    app.el('bm-user-gold').textContent = newGold;
-                    
-                    app.renderAccountInventory(localInv, userData.equipped);
-                    app.toast(`💰 (訪客) 販賣成功！獲得 ${totalGet}G`);
-                     app.handleMerchantDialogue('custom', '呵呵呵... 交易愉快。');
-                     
                     // 音效
                     const audio = new Audio("https://taira-komori.net/sound_os2/game01/coin01.mp3");
                     audio.volume = 0.3;
                     audio.play().catch(()=>{});
 
-                    app.el('bm-item-detail-panel').classList.add('hidden');
-                    app.el('bm-item-detail-panel').classList.remove('flex');
-                }
-            };
-
-            // 獲取數據並執行
-            if (app.state.user) {
-                db.ref(`users/${app.state.user.uid}`).once('value', snap => checkAndSell(snap.val() || {}));
+                    // 更新介面 [v4.7.8.5 修正] 確保讀取 Google Auth 頭像
+                     db.ref(`users/${app.state.user.uid}`).once('value', snap => {
+                        const d = snap.val();
+                        // 優先使用 Auth 物件的 photoURL，若無才使用資料庫的
+                        const correctPhoto = app.state.user.photoURL || d.photoURL;
+                        app.renderBlackMarketUI(d.displayName, correctPhoto, d.totalGold, app.getAccountLevel(d.totalExp), d.inventory || {}, d.equipped || {});
+                        app.el('bm-item-detail-panel').classList.add('hidden'); // 關閉詳情
+                        app.el('bm-item-detail-panel').classList.remove('flex');
+                    });
+                });
             } else {
-                 const localInv = JSON.parse(localStorage.getItem('pharaoh_guest_inventory') || '{}');
-                 const localEq = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
-                 // 構造假資料物件以共用邏輯
-                 checkAndSell({ inventory: localInv, equipped: localEq, totalGold: parseInt(app.el('bm-user-gold').textContent) });
+                // 訪客模式
+                const localInv = userData.inventory;
+                localInv[itemId] = newInvCount;
+                if (localInv[itemId] <= 0) delete localInv[itemId];
+                
+                localStorage.setItem('pharaoh_guest_inventory', JSON.stringify(localInv));
+                // 訪客金幣沒有存 localStorage 變數，只更新 UI
+                app.el('bm-user-gold').textContent = newGold;
+                
+                app.renderAccountInventory(localInv, userData.equipped);
+                app.toast(`💰 (訪客) 販賣成功！獲得 ${totalGet}G`);
+                 app.handleMerchantDialogue('custom', '呵呵呵... 交易愉快。');
+                 
+                // 音效
+                const audio = new Audio("https://taira-komori.net/sound_os2/game01/coin01.mp3");
+                audio.volume = 0.3;
+                audio.play().catch(()=>{});
+
+                app.el('bm-item-detail-panel').classList.add('hidden');
+                app.el('bm-item-detail-panel').classList.remove('flex');
             }
-        },
+        };
+
+        // 獲取數據並執行
+        if (app.state.user) {
+            db.ref(`users/${app.state.user.uid}`).once('value', snap => checkAndSell(snap.val() || {}));
+        } else {
+             const localInv = JSON.parse(localStorage.getItem('pharaoh_guest_inventory') || '{}');
+             const localEq = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
+             // 構造假資料物件以共用邏輯
+             checkAndSell({ inventory: localInv, equipped: localEq, totalGold: parseInt(app.el('bm-user-gold').textContent) });
+        }
+    },
 
         // 購買邏輯
         buyBlackMarketItem: (index) => {
@@ -6536,7 +6536,7 @@
                 return app.toast('❌ 金幣不足，商人鄙視地看著你...', 1);
             }
 
-            if (!confirm(`🧛 確定要花費 ${price}G 購買「${item.name} (LV${targetLv})」嗎？`)) return;
+            if (!confirm(`🧛 確定要花費 ${price}G 購買「${item.name} (LV${targetLv})」嗎？相同物品只可裝備1種喔。`)) return;
 
             // 執行交易
             if (app.state.user) {
@@ -6878,51 +6878,67 @@
         },
 
         // 3. 裝備物品 (自動尋找符合等級的空位) [v4.7.8.3 修正：參照全域設定]
-        handleEquipItem: (itemId) => {
-            const data = app.state.currentBackpackData;
-            const accLv = app.getAccountLevel(data.exp);
-            const unlockLevels = [5, 15, 25, 35, 45, 55];
-            
-            // [v4.7.8.3] 讀取全域設定：裝備限制開關 (預設開啟)
-            const limitEnabled = app.state.globalSettings?.equipSlotLimitEnabled !== false;
-
-            // 尋找第一個「已解鎖」且「為空」的格子
-            let emptySlot = -1;
-            for (let i = 0; i < 6; i++) {
-                // 判斷條件：如果「限制被關閉」或者「玩家等級足夠」，則視為該格已解鎖
-                const isUnlocked = !limitEnabled || (accLv >= unlockLevels[i]);
-                
-                if (isUnlocked) {
-                    if (!data.equipped[i]) {
-                        emptySlot = i;
-                        break;
-                    }
+    handleEquipItem: (itemId) => {
+        const data = app.state.currentBackpackData;
+        
+        // [v4.7.8.5 新增] 同名物品限制檢查
+        const globalList = app.state.globalSettings?.blackMarketList || [];
+        const targetItem = globalList[itemId];
+        
+        if (targetItem) {
+            const currentEquippedIds = Object.values(data.equipped);
+            for (const eqId of currentEquippedIds) {
+                const equippedItem = globalList[eqId];
+                // 如果找到同名物品 (即使是不同等級，名稱若相同也會被阻擋)
+                if (equippedItem && equippedItem.name === targetItem.name) {
+                     return app.toast(`❌ 無法裝備：身上已有同名物品「${targetItem.name}」`, 1);
                 }
             }
+        }
 
-            if (emptySlot === -1) {
-                // 錯誤訊息判斷
-                // 如果限制開啟，且有欄位是因為等級不足而沒被選中
-                const hasLockedSlot = limitEnabled && unlockLevels.some(lv => accLv < lv);
-                
-                if (hasLockedSlot) {
-                    return app.toast('❌ 無可用欄位！(部分欄位需更高等級解鎖，或請管理員關閉限制)');
-                } else {
-                    return app.toast('❌ 裝備欄已滿！請先卸下舊裝備。');
+        const accLv = app.getAccountLevel(data.exp);
+        const unlockLevels = [5, 15, 25, 35, 45, 55];
+        
+        // [v4.7.8.3] 讀取全域設定：裝備限制開關 (預設開啟)
+        const limitEnabled = app.state.globalSettings?.equipSlotLimitEnabled !== false;
+
+        // 尋找第一個「已解鎖」且「為空」的格子
+        let emptySlot = -1;
+        for (let i = 0; i < 6; i++) {
+            // 判斷條件：如果「限制被關閉」或者「玩家等級足夠」，則視為該格已解鎖
+            const isUnlocked = !limitEnabled || (accLv >= unlockLevels[i]);
+            
+            if (isUnlocked) {
+                if (!data.equipped[i]) {
+                    emptySlot = i;
+                    break;
                 }
             }
+        }
 
-            // 執行裝備
-            data.equipped[emptySlot] = itemId;
-            app.saveBackpackData();
-            app.renderCharacterBackpackUI(); 
-            app.closeBackpackPanel(); // 裝備後關閉面板
+        if (emptySlot === -1) {
+            // 錯誤訊息判斷
+            // 如果限制開啟，且有欄位是因為等級不足而沒被選中
+            const hasLockedSlot = limitEnabled && unlockLevels.some(lv => accLv < lv);
             
-            // 音效
-            const audio = new Audio("https://taira-komori.net/sound_os2/game01/poka01.mp3");
-            audio.volume = 0.4;
-            audio.play().catch(()=>{});
-        },
+            if (hasLockedSlot) {
+                return app.toast('❌ 無可用欄位！(部分欄位需更高等級解鎖)', 1);
+            } else {
+                return app.toast('❌ 裝備欄已滿！請先卸下舊裝備。', 1);
+            }
+        }
+
+        // 執行裝備
+        data.equipped[emptySlot] = itemId;
+        app.saveBackpackData();
+        app.renderCharacterBackpackUI(); 
+        app.closeBackpackPanel(); // 裝備後關閉面板
+        
+        // 音效
+        const audio = new Audio("https://taira-komori.net/sound_os2/game01/poka01.mp3");
+        audio.volume = 0.4;
+        audio.play().catch(()=>{});
+    },
 
         // 4. 卸下裝備
         handleUnequipItem: (slotIndex) => {
