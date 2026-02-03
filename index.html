@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.8.1 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.8.2 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -385,7 +385,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.8.1 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.8.2 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -553,7 +553,7 @@
                     
                     <div id="tab-content-flow" class="admin-tab-content active space-y-4">
                         
-                        <!-- 2x2 控制網格 (自動擲骰 / 無盡模式 / 下一局按鈕 / 黑市按鈕) -->
+                        <!-- 控制網格 (自動擲骰 / 無盡模式 / 下一局按鈕 / 黑市按鈕 / 裝備限制) -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- 1. 自動擲骰 -->
                             <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between h-full">
@@ -598,6 +598,18 @@
                                     <span class="text-xs text-indigo-700">顯示大廳黑市按鈕</span>
                                     <label class="switch scale-90">
                                         <input type="checkbox" id="admin-show-blackmarket" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 5. 裝備欄位限制 (新增 v4.7.8.2) -->
+                            <div class="bg-rose-50 p-4 rounded-xl border border-rose-200 flex flex-col justify-between h-full">
+                                <h4 class="font-bold text-rose-800 mb-2 flex items-center gap-2">🎒 裝備欄位等級限制</h4>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-rose-700">限制開啟 (關閉則全員可用)</span>
+                                    <label class="switch scale-90">
+                                        <input type="checkbox" id="admin-equip-limit" checked>
                                         <span class="slider"></span>
                                     </label>
                                 </div>
@@ -2703,6 +2715,8 @@
                 // [v4.7.7.0] 讀取新按鈕顯示設定 (預設為 true)
                 app.el('admin-show-next-btn').checked = settings.showNextBtn !== false;
                 app.el('admin-show-blackmarket').checked = settings.showBlackMarket !== false;
+                // [v4.7.8.2] 讀取裝備欄位限制設定 (預設為 true: 開啟限制)
+                app.el('admin-equip-limit').checked = settings.equipSlotLimitEnabled !== false;
                 
                 // v4.5.0 時間設定讀取 (預設 120 與 45)
                 app.el('admin-timer-base').value = settings.baseTimer || 120;
@@ -2790,6 +2804,8 @@
                 // [v4.7.7.0] 儲存按鈕顯示設定
                 showNextBtn: app.el('admin-show-next-btn').checked,
                 showBlackMarket: app.el('admin-show-blackmarket').checked,
+                // [v4.7.8.2] 儲存裝備限制設定
+                equipSlotLimitEnabled: app.el('admin-equip-limit').checked,
                 
                 // v4.5.0 儲存時間設定
                 baseTimer: parseInt(app.el('admin-timer-base').value) || 120,
@@ -6570,11 +6586,15 @@
             // 定義每個格子的解鎖等級
             const unlockLevels = [5, 15, 25, 35, 45, 55];
             const slotLabels = ['LV.5','LV.15','LV.25','LV.35','LV.45','LV.55'];
+            
+            // [v4.7.8.2] 讀取是否啟用等級限制 (預設開啟)
+            const limitEnabled = app.state.globalSettings?.equipSlotLimitEnabled !== false;
 
             for (let i = 0; i < 6; i++) {
                 const slotEl = app.el(`equip-slot-${i}`);
                 const equippedItemId = data.equipped[i];
-                const isLocked = accLv < unlockLevels[i]; // 判斷是否鎖定
+                // 若限制開啟且等級不足，則鎖定；若限制關閉，則全開
+                const isLocked = limitEnabled && (accLv < unlockLevels[i]); 
 
                 // 清理舊的 class，保留定位與背景圖
                 const baseClasses = slotEl.className.split(' ').filter(c => 
