@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.8.3 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.8.4 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -385,7 +385,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.8.3 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.8.4 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -473,7 +473,7 @@
 
                         <!-- [新增 v4.7.7.4] 角色背包按鈕 -->
                         <div class="mt-4">
-                            <button onclick="app.openCharacterBackpack()" class="w-full bg-gradient-to-r from-slate-700 to-slate-800 text-amber-400 font-bold py-3 rounded-xl shadow-md border-2 border-slate-600 hover:border-amber-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-3 group relative overflow-hidden">
+                            <button onclick="app.openCharacterBackpack()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 rounded-xl shadow-md border-2 border-slate-600 hover:border-amber-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-3 group relative overflow-hidden">
                                 <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-20 transition-opacity"></div>
                                 <span class="text-2xl filter drop-shadow">🎒</span>
                                 <span class="text-lg tracking-widest">角色背包</span>
@@ -6125,7 +6125,7 @@
         },
 		// --- v4.7.6.4 黑市系統邏輯 ---
         
-       // 開啟黑市
+      // 開啟黑市
         openBlackMarket: () => {
             app.el('page-lobby').classList.add('hidden');
             app.el('black-market-interface').classList.remove('hidden');
@@ -6153,13 +6153,14 @@
                     userExp = data.totalExp || 0;
                     accLv = app.getAccountLevel(userExp);
                     
-                    // 渲染介面
-                    app.renderBlackMarketUI(userName, userPhoto, userGold, accLv, data.inventory || {});
+                    // 渲染介面 (傳入 inventory 與 equipped)
+                    app.renderBlackMarketUI(userName, userPhoto, userGold, accLv, data.inventory || {}, data.equipped || {});
                 });
             } else {
-                // 訪客模式：讀取本地暫存背包 (模擬)
+                // 訪客模式：讀取本地暫存背包與裝備
                 const localInv = JSON.parse(localStorage.getItem('pharaoh_guest_inventory') || '{}');
-                app.renderBlackMarketUI(userName, userPhoto, userGold, accLv, localInv);
+                const localEquipped = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
+                app.renderBlackMarketUI(userName, userPhoto, userGold, accLv, localInv, localEquipped);
             }
             
             // 播放音效與隨機台詞
@@ -6175,14 +6176,14 @@
             app.handleMerchantDialogue('leave');
         },
 
-        // 渲染黑市主介面
-        renderBlackMarketUI: (name, photo, gold, lv, inventory) => {
+        // 渲染黑市主介面 [v4.7.8.4] 新增 equipped 參數
+        renderBlackMarketUI: (name, photo, gold, lv, inventory, equipped = {}) => {
             app.el('bm-user-name').textContent = name;
             app.el('bm-user-avatar').src = photo;
             app.el('bm-user-gold').textContent = gold;
             app.el('bm-user-lv').textContent = lv;
             
-            // 計算背包數量
+            // 計算背包數量 (顯示總持有數)
             let invCount = 0;
             Object.values(inventory).forEach(c => invCount += c);
             app.el('bm-inventory-count').textContent = invCount;
@@ -6190,8 +6191,8 @@
             // 1. 渲染商品列表
             app.renderBlackMarketGoods(gold, lv, inventory);
             
-            // 2. 渲染背包
-            app.renderAccountInventory(inventory);
+            // 2. 渲染背包 (傳入 equipped 以計算剩餘可用數量)
+            app.renderAccountInventory(inventory, equipped);
         },
 
 // [v4.7.6.12] 渲染黑市商品列表 (高度修正版：強制限制在容器內)
@@ -6316,8 +6317,9 @@
         },
 
        // [v4.7.6.11] 渲染帳號背包 (修正版：縮小圖片、字體放大、LV1隱藏)
-        // [v4.7.6.12] 渲染帳號背包 (修復版：數量顯示修正、滾動條優化)
-        renderAccountInventory: (inventory) => {
+        // [v4.7.6.11] 渲染帳號背包 (修正版：縮小圖片、字體放大、LV1隱藏)
+        // [v4.7.8.4] 渲染帳號背包 (完善版：扣除已裝備數量)
+        renderAccountInventory: (inventory, equipped = {}) => {
             // [修正] 加入 min-h-0 確保滾動條正常運作
             const container = app.el('bm-inventory-grid');
             if (container) container.classList.add('min-h-0');
@@ -6326,9 +6328,21 @@
             let html = '';
             let hasItem = false;
 
+            // 統計已裝備的數量
+            const equippedCounts = {};
+            Object.values(equipped).forEach(id => {
+                equippedCounts[id] = (equippedCounts[id] || 0) + 1;
+            });
+
             Object.keys(inventory).forEach(key => {
-                const count = inventory[key];
-                if (count > 0) {
+                const totalCount = inventory[key];
+                const usedCount = equippedCounts[key] || 0;
+                // [v4.7.8.4] 計算實際可用數量 (背包內的閒置品)
+                const availableCount = Math.max(0, totalCount - usedCount);
+
+                // 只要總數大於0就顯示，但在顯示數量時標示 "閒置/總數" 或只顯示閒置
+                // 這裡依需求：若總數3，裝備1，顯示2。即顯示 availableCount。
+                if (availableCount > 0) {
                     hasItem = true;
                     const itemData = list[key] || { name: '未知物品', img1: '', maxLv: 1 };
                     
@@ -6340,9 +6354,8 @@
                         badgeHtml = `<div class="absolute top-0 left-0 bg-red-600 text-white text-[0.65rem] font-black px-1.5 py-0.5 rounded-br-lg border-b border-r border-white/50 shadow z-20">LV${targetLv}</div>`;
                     }
 
-                    // [修正 v4.7.6.12] 改回 relative 佈局，讓數量懸浮在右下角，避免被圖片擠壓遮擋
-                    // 圖片增加 p-2 留白，確保不貼邊
-                    html += `<div onclick="app.showInventoryItemDetail('${key}')" class="relative h-24 bg-slate-900 rounded-lg border-2 border-slate-700 cursor-pointer hover:border-amber-500 hover:shadow-[0_0_10px_rgba(217,119,6,0.3)] transition-all group overflow-hidden shadow-md">${badgeHtml}<div class="absolute inset-0 flex items-center justify-center p-2"><img src="${img}" class="w-full h-full object-contain opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-transform"></div><div class="absolute bottom-0 right-0 bg-slate-800 text-amber-400 text-xs font-bold px-2 py-0.5 rounded-tl-lg border-t border-l border-slate-600 shadow z-20">x${count}</div></div>`;
+                    // [修正] 傳遞 availableCount 到 HTML，並更新點擊事件
+                    html += `<div onclick="app.showInventoryItemDetail('${key}')" class="relative h-24 bg-slate-900 rounded-lg border-2 border-slate-700 cursor-pointer hover:border-amber-500 hover:shadow-[0_0_10px_rgba(217,119,6,0.3)] transition-all group overflow-hidden shadow-md">${badgeHtml}<div class="absolute inset-0 flex items-center justify-center p-2"><img src="${img}" class="w-full h-full object-contain opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-transform"></div><div class="absolute bottom-0 right-0 bg-slate-800 text-amber-400 text-xs font-bold px-2 py-0.5 rounded-tl-lg border-t border-l border-slate-600 shadow z-20">x${availableCount}</div></div>`;
                 }
             });
 
@@ -6354,12 +6367,12 @@
         },
 
         // 顯示背包物品詳情
+       // 顯示背包物品詳情 [v4.7.8.4] 更新按鈕與功能
         showInventoryItemDetail: (key) => {
             const list = app.state.globalSettings?.blackMarketList || [];
             const item = list[key];
             if (!item) return;
             
-            // [修正] 讀取正確的等級詳情
             const targetLv = item.currentEditLv || 1;
             const itemData = (item.levelData && item.levelData[targetLv]) ? item.levelData[targetLv] : {};
             const img = item[`img${targetLv}`] || item.img1 || '';
@@ -6370,8 +6383,137 @@
             app.el('bm-detail-name').textContent = `${item.name} (Lv${targetLv})`;
             app.el('bm-detail-desc').textContent = itemData.desc || '無說明';
             
+            // [v4.7.8.4] 更新按鈕介面：裝備、取消、販賣
+            // 移除舊的按鈕 HTML，改為動態生成或直接寫入
+            const btnContainer = app.el('bm-item-detail-panel').querySelector('.flex.gap-2.mt-2');
+            if(btnContainer) {
+                btnContainer.innerHTML = `
+                    <button onclick="app.handleBlackMarketEquip()" class="flex-1 bg-green-700 text-white text-xs py-1.5 rounded font-bold hover:bg-green-600 transition-colors shadow-md border-b-2 border-green-900 active:border-b-0 active:translate-y-0.5">裝備</button>
+                    <button onclick="app.el('bm-item-detail-panel').classList.add('hidden'); app.el('bm-item-detail-panel').classList.remove('flex');" class="flex-1 bg-slate-600 text-white text-xs py-1.5 rounded font-bold hover:bg-slate-500 transition-colors shadow-md border-b-2 border-slate-800 active:border-b-0 active:translate-y-0.5">取消</button>
+                    <button onclick="app.handleBlackMarketSell('${key}')" class="flex-1 bg-red-800 text-white text-xs py-1.5 rounded font-bold hover:bg-red-700 transition-colors shadow-md border-b-2 border-red-950 active:border-b-0 active:translate-y-0.5">販賣</button>
+                `;
+            } else {
+                // 若找不到容器(結構可能不同)，這裡補上備用方案
+                 const panel = app.el('bm-item-detail-panel');
+                 const existingBtns = panel.querySelectorAll('button');
+                 existingBtns.forEach(b => b.remove()); // 清除舊的
+                 // ... 這裡通常不會執行到，因為 HTML 結構是固定的
+            }
+
             // 觸發商人解說
-            app.handleMerchantDialogue('custom', `你背包裡的【${item.name}】，${itemData.desc || '看起來保存得不錯。'}`);
+            app.handleMerchantDialogue('custom', `你背包裡的【${item.name}】，${itemData.desc || '看起來保存得不錯。'} 如果不想要了，我可以低價回收。`);
+        },
+
+        // [新增 v4.7.8.4] 黑市：前往裝備 (開啟角色背包)
+        handleBlackMarketEquip: () => {
+            app.closeBlackMarket();
+            app.openCharacterBackpack();
+            app.toast('🎒 已開啟背包，請點擊物品進行裝備');
+        },
+
+        // [新增 v4.7.8.4] 黑市：販賣物品
+        handleBlackMarketSell: (itemId) => {
+            const list = app.state.globalSettings?.blackMarketList || [];
+            const item = list[itemId];
+            if (!item) return;
+
+            // 1. 計算回收價格 (原價 1/10)
+            const targetLv = item.currentEditLv || 1;
+            const price = (item.levelData && item.levelData[targetLv]) ? item.levelData[targetLv].price : 100;
+            const sellPrice = Math.floor(price / 10);
+
+            // 2. 獲取當前持有數量 (需重讀以確保準確)
+            const checkAndSell = (userData) => {
+                const total = (userData.inventory && userData.inventory[itemId]) ? userData.inventory[itemId] : 0;
+                
+                // 計算已裝備數量
+                let equippedCount = 0;
+                if (userData.equipped) {
+                    Object.values(userData.equipped).forEach(id => { if(id == itemId) equippedCount++; });
+                }
+                
+                const available = total - equippedCount;
+
+                if (available <= 0) {
+                    app.handleMerchantDialogue('custom', '這東西你全都裝備在身上了，脫下來才能賣給我啊。');
+                    return app.toast('❌ 無閒置物品可賣 (請先卸下裝備)');
+                }
+
+                // 3. 詢問數量
+                const input = prompt(`💰 商人出價 ${sellPrice}G 回收【${item.name}】\n目前閒置數量: ${available}\n\n請輸入要賣出的數量：`, "1");
+                if (input === null) return;
+                
+                const qty = parseInt(input);
+                if (isNaN(qty) || qty <= 0) return app.toast('❌ 請輸入有效的數量');
+                if (qty > available) return app.toast(`❌ 數量不足！你只有 ${available} 個閒置物品。`);
+
+                const totalGet = sellPrice * qty;
+
+                if (!confirm(`🧛 確定要以總價 ${totalGet}G 賣出 ${qty} 個【${item.name}】嗎？`)) return;
+
+                // 4. 執行交易
+                const newGold = (userData.totalGold || (parseInt(app.el('bm-user-gold').textContent))) + totalGet; // 訪客取介面值
+                const newInvCount = total - qty;
+
+                if (app.state.user) {
+                    // Google 登入
+                    const updates = {};
+                    updates[`inventory/${itemId}`] = newInvCount;
+                    if (newInvCount <= 0) updates[`inventory/${itemId}`] = null; // 刪除節點
+                    updates['totalGold'] = newGold;
+                    
+                    db.ref(`users/${app.state.user.uid}`).update(updates).then(() => {
+                        app.toast(`💰 販賣成功！獲得 ${totalGet}G`);
+                        app.handleMerchantDialogue('custom', '呵呵呵... 交易愉快。');
+                        
+                        // 音效
+                        const audio = new Audio("https://taira-komori.net/sound_os2/game01/coin01.mp3");
+                        audio.volume = 0.3;
+                        audio.play().catch(()=>{});
+
+                        // 更新介面
+                        // 為了即時性，手動呼叫渲染，但 Firebase 監聽也會觸發，這裡選擇依賴監聽或手動更新
+                        // 由於 update 是非同步，這裡我們重新讀取並刷新介面
+                         db.ref(`users/${app.state.user.uid}`).once('value', snap => {
+                            const d = snap.val();
+                            app.renderBlackMarketUI(d.displayName, d.photoURL, d.totalGold, app.getAccountLevel(d.totalExp), d.inventory || {}, d.equipped || {});
+                            app.el('bm-item-detail-panel').classList.add('hidden'); // 關閉詳情
+                            app.el('bm-item-detail-panel').classList.remove('flex');
+                        });
+                    });
+                } else {
+                    // 訪客模式
+                    const localInv = userData.inventory;
+                    localInv[itemId] = newInvCount;
+                    if (localInv[itemId] <= 0) delete localInv[itemId];
+                    
+                    localStorage.setItem('pharaoh_guest_inventory', JSON.stringify(localInv));
+                    // 訪客金幣沒有存 localStorage 變數，只更新 UI
+                    app.el('bm-user-gold').textContent = newGold;
+                    
+                    app.renderAccountInventory(localInv, userData.equipped);
+                    app.toast(`💰 (訪客) 販賣成功！獲得 ${totalGet}G`);
+                     app.handleMerchantDialogue('custom', '呵呵呵... 交易愉快。');
+                     
+                    // 音效
+                    const audio = new Audio("https://taira-komori.net/sound_os2/game01/coin01.mp3");
+                    audio.volume = 0.3;
+                    audio.play().catch(()=>{});
+
+                    app.el('bm-item-detail-panel').classList.add('hidden');
+                    app.el('bm-item-detail-panel').classList.remove('flex');
+                }
+            };
+
+            // 獲取數據並執行
+            if (app.state.user) {
+                db.ref(`users/${app.state.user.uid}`).once('value', snap => checkAndSell(snap.val() || {}));
+            } else {
+                 const localInv = JSON.parse(localStorage.getItem('pharaoh_guest_inventory') || '{}');
+                 const localEq = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
+                 // 構造假資料物件以共用邏輯
+                 checkAndSell({ inventory: localInv, equipped: localEq, totalGold: parseInt(app.el('bm-user-gold').textContent) });
+            }
         },
 
         // 購買邏輯
