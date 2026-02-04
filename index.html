@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.8.5 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.8.8 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -385,7 +385,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.8.5 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.8.8 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -2039,7 +2039,7 @@
         },
 
         // v4.0.2: 加入房間 (一鍵加入) - [v4.3.0] 新增 Session 記憶與斷線保護
-        joinLobbyRoom: (roomId) => {
+        joinLobbyRoom: async (roomId) => {
             const name = app.el('lobby-player-name').value.trim();
             if (!name) return app.toast('❌ 請先輸入你的冒險者名字');
             
@@ -2055,32 +2055,59 @@
             app.state.isHost = false; 
             app.state.myTeam = 'team1'; 
 
+            // [v4.7.8.6] 讀取玩家裝備並計算初始獎勵
+            let myEquipped = {};
+            if (app.state.user) {
+                const snap = await db.ref(`users/${app.state.user.uid}/equipped`).once('value');
+                myEquipped = snap.val() || {};
+            } else {
+                myEquipped = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
+            }
+            
+            // 計算初始道具
+            const startItems = app.calculateEquippedStartItems(myEquipped);
+
             // 檢查房間是否存在並加入
             const roomRef = db.ref(`classes/${roomId}`);
             roomRef.once('value', snapshot => {
                 if (snapshot.exists()) {
-                    // [關鍵] 使用 update 更新最後活動時間，且不設定 onDisconnect().remove()
-                    // 這樣玩家閃退再連回來，分數還在
-                    // [修改] 加入初始血量設定 (若原本已有血量則不覆蓋，這裡用 update 安全處理)
                     const playerRef = db.ref(`classes/${roomId}/players/team1/${name}`);
                     playerRef.once('value', sn => {
                         const exists = sn.exists();
                         const pData = sn.val() || {};
                         
-                        playerRef.update({
+                        // 準備更新資料
+                        const updates = {
                             name: name,
-                            // 若是新玩家或無血量資料，則補上 100
                             hp: (exists && pData.hp !== undefined) ? pData.hp : 100,
                             maxHp: 100,
+                            equipped: myEquipped, // [新增] 更新裝備資訊
                             lastActive: firebase.database.ServerValue.TIMESTAMP
-                        });
+                        };
+
+                        // [新增] 若是新玩家(或之前無道具數據)，則給予初始裝備道具獎勵
+                        if (!exists) {
+                            updates.items = startItems;
+                            
+                            // [v4.7.8.7] 動態檢查是否獲得道具並提示
+                            const gainedItems = [];
+                            const itemMapName = { hint: '提示卡', double: '聖甲蟲', herb: '草藥', potion: '治療劑', elixir: '補血瓶' };
+                            Object.keys(startItems).forEach(key => {
+                                if (startItems[key] > 0) gainedItems.push(`${itemMapName[key]}+${startItems[key]}`);
+                            });
+
+                            if (gainedItems.length > 0) {
+                                setTimeout(() => app.toast(`🎒 裝備效果發動！獲得：${gainedItems.join(', ')}`, 1), 1500);
+                            }
+                        }
+
+                        playerRef.update(updates);
                     });
                     
                     app.enterGameMode();
                     app.toast(`🚀 已加入 ${snapshot.val().hostName} 的冒險！`);
                 } else {
                     app.toast('❌ 房間已不存在');
-                    // 清除無效記憶
                     localStorage.removeItem('pharaoh_current_room_id');
                 }
             });
@@ -2088,7 +2115,8 @@
 
         // v4.0.1: 建立新房間 (成為房主+主控者) - [v4.3.0] 新增 Session 記憶
         // v4.0.1: 建立新房間 (成為房主+主控者) - [v4.3.0] 新增 Session 記憶
-     createRoom: () => {
+    // v4.0.1: 建立新房間 (成為房主+主控者) - [v4.3.0] 新增 Session 記憶
+     createRoom: async () => {
          const name = app.el('lobby-player-name').value.trim();
          if (!name) return app.toast('❌ 請先輸入你的冒險者名字');
          
@@ -2113,6 +2141,34 @@
          const initAutoRoll = (globalSet.autoRollDefault !== undefined) ? globalSet.autoRollDefault : true;
          const initEndless = (globalSet.endlessMode === true);
 
+         // [v4.7.8.6] 讀取玩家裝備並計算初始獎勵
+         let myEquipped = {};
+         if (app.state.user) {
+             // Google 登入：從 Firebase 讀取
+             const snap = await db.ref(`users/${app.state.user.uid}/equipped`).once('value');
+             myEquipped = snap.val() || {};
+         } else {
+             // 訪客：從 LocalStorage 讀取
+             myEquipped = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
+         }
+         
+         // 計算初始道具 [v4.7.8.7 優化動態提示]
+         const startItems = app.calculateEquippedStartItems(myEquipped);
+         
+         // 檢查是否有任何道具數量 > 0
+         const gainedItems = [];
+         const itemMapName = { hint: '提示卡', double: '聖甲蟲', herb: '草藥', potion: '治療劑', elixir: '補血瓶' };
+         
+         Object.keys(startItems).forEach(key => {
+             if (startItems[key] > 0) {
+                 gainedItems.push(`${itemMapName[key] || key}+${startItems[key]}`);
+             }
+         });
+
+         if (gainedItems.length > 0) {
+             setTimeout(() => app.toast(`🎒 裝備效果發動！獲得初始道具：${gainedItems.join(', ')}`, 1), 1000);
+         }
+
          // 寫入 Firebase
          const initialData = app.generateInitialGameData();
          db.ref(`classes/${roomId}`).set({
@@ -2127,18 +2183,20 @@
              pyramid: initialData.pyramid,
              decks: initialData.decks,
              lastActive: firebase.database.ServerValue.TIMESTAMP,
-             startTime: firebase.database.ServerValue.TIMESTAMP, // [v4.7.7.1 新增] 記錄遊戲開始時間
+             startTime: firebase.database.ServerValue.TIMESTAMP, 
              autoRoll: initAutoRoll, 
              endlessMode: initEndless
          }).then(() => {
-             // 加入自己為玩家
+             // 加入自己為玩家 (包含 items 與 equipped)
              db.ref(`classes/${roomId}/players/team1/${name}`).set({
                  name: name,
                  score: 0,
                  gold: 0, 
-                 sessionGold: 0, // [v4.7.7.1] 初始化本局金幣
+                 sessionGold: 0,
                  hp: 100,    
-                 maxHp: 100, 
+                 maxHp: 100,
+                 items: startItems, // [新增] 寫入初始道具
+                 equipped: myEquipped, // [新增] 寫入裝備資訊供戰鬥計算
                  lastActive: firebase.database.ServerValue.TIMESTAMP
              });
              
@@ -3360,7 +3418,31 @@
                         }
 
                         // [修改 v4.7.0] 更新 HTML 結構，加入 HP/MaxHP 顯示、受傷特效、復活遮罩 (無空白節點壓縮版)
-                        listHtml += `<div class="flex flex-col p-2 ${highlightClass} ${damageEffectClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01] relative overflow-hidden"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-1 overflow-hidden"><span class="text-xl filter drop-shadow-sm grayscale-[0.2]">${avatar}</span><span class="text-xs font-black text-white bg-slate-600 px-1 rounded transform scale-90">Lv.${expInfo.lv}</span><div class="flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 rounded border border-red-100 shadow-sm"><span class="text-[0.6rem] ${hpColorClass}">❤️</span><span class="text-[0.65rem] font-black text-slate-700 leading-none">${currentHp}/${maxHp}</span></div><span class="font-bold ${nameClass} text-sm truncate max-w-[60px] md:max-w-[100px]">${p.name}</span></div><div class="flex items-center gap-1 text-xs font-bold text-yellow-700 bg-yellow-100 px-1.5 rounded-full border border-yellow-200"><span>💰</span><span>${gold}</span></div></div><div class="flex items-center justify-between w-full gap-2"><div class="flex-1 flex flex-col justify-center h-full"><div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden border border-black/10"><div class="${barColor} h-full transition-all duration-500" style="width:${expInfo.percent}%"></div></div></div><div class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden flex-shrink-0 text-right min-w-[20px]">${itemsBadge}</div><div class="font-black text-amber-700 text-lg leading-none">${p.score}</div></div>${deadOverlayHtml}</div>`;
+                        // [v4.7.8.8] 生成裝備圖示 HTML
+                        let equippedHtml = '';
+                        if (p.equipped) {
+                            const globalList = app.state.globalSettings?.blackMarketList || [];
+                            Object.values(p.equipped).forEach(itemId => {
+                                const item = globalList[itemId];
+                                if (item) {
+                                    const lv = item.currentEditLv || 1;
+                                    const img = item[`img${lv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+                                    const maxLv = item.maxLv || 1;
+                                    // 若最高等級 > 1 才顯示 LV 標籤 (極簡版，僅顯示數字)
+                                    const lvTag = maxLv > 1 ? `<span class="absolute -bottom-1 -right-1 bg-black/80 text-amber-300 text-[0.5rem] px-0.5 rounded leading-none font-bold">${lv}</span>` : '';
+                                    
+                                    equippedHtml += `<div class="relative w-5 h-5 bg-slate-800 rounded border border-amber-500/50 flex items-center justify-center shadow-sm" title="${item.name}"><img src="${img}" class="w-full h-full object-contain p-0.5">${lvTag}</div>`;
+                                }
+                            });
+                        }
+                        
+                        // 包裝裝備容器 (如果有的話)
+                        if (equippedHtml) {
+                            equippedHtml = `<div class="flex items-center gap-0.5 ml-1 bg-black/10 p-0.5 rounded">${equippedHtml}</div>`;
+                        }
+
+                        // [修改 v4.7.8.8] 更新 HTML 結構，加入 HP/MaxHP 與 裝備顯示
+                        listHtml += `<div class="flex flex-col p-2 ${highlightClass} ${damageEffectClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01] relative overflow-hidden"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-1 overflow-hidden"><span class="text-xl filter drop-shadow-sm grayscale-[0.2]">${avatar}</span><span class="text-xs font-black text-white bg-slate-600 px-1 rounded transform scale-90">Lv.${expInfo.lv}</span><div class="flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 rounded border border-red-100 shadow-sm"><span class="text-[0.6rem] ${hpColorClass}">❤️</span><span class="text-[0.65rem] font-black text-slate-700 leading-none">${currentHp}/${maxHp}</span></div>${equippedHtml}<span class="font-bold ${nameClass} text-sm truncate max-w-[60px] md:max-w-[100px]">${p.name}</span></div><div class="flex items-center gap-1 text-xs font-bold text-yellow-700 bg-yellow-100 px-1.5 rounded-full border border-yellow-200"><span>💰</span><span>${gold}</span></div></div><div class="flex items-center justify-between w-full gap-2"><div class="flex-1 flex flex-col justify-center h-full"><div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden border border-black/10"><div class="${barColor} h-full transition-all duration-500" style="width:${expInfo.percent}%"></div></div></div><div class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden flex-shrink-0 text-right min-w-[20px]">${itemsBadge}</div><div class="font-black text-amber-700 text-lg leading-none">${p.score}</div></div>${deadOverlayHtml}</div>`;
                     });
                 }
                 return listHtml;
@@ -4727,15 +4809,22 @@
                                                     updates[pMaxHpPath] = pMaxHp + 5;
                                                 }
 
+                                                // [v4.7.8.6] 計算金幣 (含賞金獵人加成)
+                                                // 讀取該玩家的裝備資訊 (pData.equipped)
+                                                const multiplier = app.getGoldMultiplier(pData.equipped);
+                                                const finalGold = Math.floor(mGold * multiplier);
+                                                
                                                 // 累加 Gold (當前錢包 - 可消費)
                                                 const pGoldPath = `players/${tKey}/${pName}/gold`;
                                                 const pCurrentGold = pData.gold || 0;
-                                                updates[pGoldPath] = pCurrentGold + mGold;
+                                                updates[pGoldPath] = pCurrentGold + finalGold;
 
                                                 // [v4.6.6 新增] 累加 Session Gold (本局總累積 - 不可消費，用於結算)
                                                 const pSessionGoldPath = `players/${tKey}/${pName}/sessionGold`;
-                                                const pCurrentSessionGold = pData.sessionGold || 0; // 若無則從0開始，或承接舊的gold
-                                                updates[pSessionGoldPath] = pCurrentSessionGold + mGold;
+                                                const pCurrentSessionGold = pData.sessionGold || 0; 
+                                                updates[pSessionGoldPath] = pCurrentSessionGold + finalGold;
+                                                
+                                                // 若觸發賞金獵人，給予 Log 提示 (僅第一次或針對該玩家，這裡無法個別 toast，故省略)
                                             });
                                         }
                                     });
@@ -6634,7 +6723,60 @@
                 }
             }, speed);
         },
-// --- [新增 v4.7.7.4] 角色背包系統邏輯 ---
+// --- [新增 v4.7.8.6] 裝備效果計算輔助函數 ---
+        // 1. 計算進入遊戲時的初始道具 (法老王的護符、聖甲蟲徽章、草木精華)
+        calculateEquippedStartItems: (equippedMap) => {
+            // [v4.7.8.7] 擴充補血道具欄位
+            const items = { hint: 0, double: 0, herb: 0, potion: 0, elixir: 0 }; 
+            const globalList = app.state.globalSettings?.blackMarketList || [];
+            
+            if (equippedMap) {
+                Object.values(equippedMap).forEach(itemId => {
+                    const item = globalList[itemId];
+                    if (item) {
+                        // 讀取道具設定的等級 (若無則預設1)
+                        const lv = item.currentEditLv || 1;
+                        
+                        // 效果1: 法老王的護符 (獲得提示卡)
+                        if (item.name.includes('法老王的護符')) {
+                            items.hint += lv;
+                        }
+                        // 效果2: 聖甲蟲徽章 (獲得聖甲蟲)
+                        if (item.name.includes('聖甲蟲徽章')) {
+                            items.double += lv;
+                        }
+                        // 效果3: [v4.7.8.7] 草木精華 (依等級給予不同補血道具)
+                        if (item.name.includes('草木精華')) {
+                            if (lv === 1) items.herb += 1;        // Lv1: 草藥
+                            else if (lv === 2) items.potion += 1; // Lv2: 治療劑
+                            else if (lv >= 3) items.elixir += 1;  // Lv3+: 補血瓶
+                        }
+                    }
+                });
+            }
+            return items;
+        },
+
+        // 2. 計算金幣加成倍率 (賞金獵人)
+        getGoldMultiplier: (equippedMap) => {
+            let multiplier = 1.0;
+            const globalList = app.state.globalSettings?.blackMarketList || [];
+            
+            if (equippedMap) {
+                Object.values(equippedMap).forEach(itemId => {
+                    const item = globalList[itemId];
+                    if (item) {
+                        // 效果3: 賞金獵人 (擊敗魔物金幣 1.5 倍)
+                        if (item.name.includes('賞金獵人')) {
+                            multiplier = 1.5;
+                        }
+                    }
+                });
+            }
+            return multiplier;
+        },
+
+        // --- [新增 v4.7.7.4] 角色背包系統邏輯 ---
         
         // 1. 開啟背包 (判斷訪客或登入者)
         openCharacterBackpack: () => {
