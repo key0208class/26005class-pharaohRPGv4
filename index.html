@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.8.8 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.9.0 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -385,7 +385,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.8.8 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.9.0 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -3273,7 +3273,9 @@
                                     timerActive: false // 停止原本的倒數(如果有)
                                 });
                                 // 老師端負責在 4 秒後強制換局
-                                setTimeout(() => app.forceNextRound(), 4000);
+                               
+                                if (app.state.nextRoundTimeout) clearTimeout(app.state.nextRoundTimeout);
+                                app.state.nextRoundTimeout = setTimeout(() => app.forceNextRound(), 4000);
                             }
                         }
                     }
@@ -4135,6 +4137,8 @@
 
             const gameData = app.state.gameData;
             if (!gameData || !gameData.decks) return;
+			 // [v4.7.8.9 Fix] 若遊戲已結束，禁止執行下一局 (防止 Mode5 自殺後跳回遊戲)
+            if (gameData.status === 'ended') return;
 
             // --- [v4.4.9] 怪物攻擊判定邏輯 (Mode 1, 2, 4 精準分流與互斥) ---
             const monster = gameData.activeMonster;
@@ -4414,6 +4418,12 @@
         triggerEndGame: () => {
             // v4.0.8: 房主也有權限結束遊戲
             if (app.state.role === 'teacher' || app.state.isHost) {
+                // [v4.7.8.9 Fix] 強制清除所有換局排程
+                if (app.state.nextRoundTimeout) {
+                    clearTimeout(app.state.nextRoundTimeout);
+                    app.state.nextRoundTimeout = null;
+                }
+
                 db.ref(`classes/${app.state.classId}`).update({
                     status: 'ended',
                     timerActive: false
@@ -4621,6 +4631,15 @@
                             pRef.transaction(p => {
                                 if (p) p.hp = Math.max(0, (p.hp || 0) - damage);
                                 return p;
+                            }, (error, committed, snapshot) => {
+                                if (committed) {
+                                    const pVal = snapshot.val();
+                                    // [修正 v4.7.8.9] 檢查是否為房主且血量歸零 -> 強制結束遊戲
+                                    if (pVal && pVal.hp <= 0 && app.state.isHost) {
+                                        app.speak("隊長陣亡！冒險失敗！");
+                                        setTimeout(() => app.triggerEndGame(), 1500);
+                                    }
+                                }
                             });
                             
                             // 2. 觸發特效與提示
