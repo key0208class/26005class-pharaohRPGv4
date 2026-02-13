@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.9.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.9.1 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -385,7 +385,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.9.0 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.9.1 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -4771,8 +4771,17 @@
                    // [v4.3.7] 怪物扣血與特效同步邏輯
                     let monsterDied = false;
                     if (points > 0) {
-                        // [修改] 1分代表10點傷害
-                        const damage = points * 10;
+                        // [v4.7.9.1 修改] 計算傷害 (含冒險者之劍加成)
+                        // 基礎傷害: 1分 = 10傷害
+                        // 加成傷害: 冒險者之劍 (Lv1+2 ~ Lv5+6)
+                        const myPlayerData = app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName];
+                        const atkBonus = app.getAttackBonus(myPlayerData?.equipped);
+                        const damage = (points * 10) + atkBonus;
+
+                        // 若有觸發加成，更新提示訊息
+                        if (atkBonus > 0) {
+                             successMsg += ` (⚔️劍意+${atkBonus})`;
+                        }
                         
                         // [新增] 呼叫傷害數字顯示特效
                         app.showDamageText(damage);
@@ -6417,7 +6426,7 @@
             const data = (item.levelData && item.levelData[targetLv]) ? item.levelData[targetLv] : { desc: '...' };
             
             // 1. 商人說話
-            const merchantMsg = `【${item.name}】(LV${targetLv})... ${data.desc || '這可是好東西。'} 價格公道，只要 ${data.price} G。要注意相同物品只可裝備1種喔!`;
+            const merchantMsg = `【${item.name}】(LV${targetLv})， ${data.desc || '這可是好東西。'} 價格公道，只要 ${data.price} G。要注意相同物品只可裝備1種喔!`;
             app.handleMerchantDialogue('custom', merchantMsg); 
 
             // 2. 顯示提示
@@ -6528,7 +6537,7 @@
         // 1. 計算回收價格 (原價 1/10)
         const targetLv = item.currentEditLv || 1;
         const price = (item.levelData && item.levelData[targetLv]) ? item.levelData[targetLv].price : 100;
-        const sellPrice = Math.floor(price / 10);
+        const sellPrice = Math.floor(price / 5);
 
         // 2. 獲取當前持有數量 (需重讀以確保準確)
         const checkAndSell = (userData) => {
@@ -6793,6 +6802,26 @@
                 });
             }
             return multiplier;
+        },
+
+  // 3. 計算攻擊力加成 (冒險者之劍) [v4.7.9.1 新增]
+        getAttackBonus: (equippedMap) => {
+            let bonus = 0;
+            const globalList = app.state.globalSettings?.blackMarketList || [];
+            
+            if (equippedMap) {
+                Object.values(equippedMap).forEach(itemId => {
+                    const item = globalList[itemId];
+                    if (item) {
+                        // 效果: 冒險者之劍 (Lv1:+2, Lv2:+3... 公式: Lv+1)
+                        if (item.name.includes('冒險者之劍')) {
+                            const lv = item.currentEditLv || 1;
+                            bonus += (lv + 1);
+                        }
+                    }
+                });
+            }
+            return bonus;
         },
 
         // --- [新增 v4.7.7.4] 角色背包系統邏輯 ---
