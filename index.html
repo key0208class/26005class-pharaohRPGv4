@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.9.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.7.9.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -385,7 +385,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.9.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.9.3 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -483,9 +483,9 @@
                         <hr class="border-amber-200 my-4">
                         
                         <button onclick="app.createRoom()" class="w-full bg-gradient-to-r from-amber-600 to-amber-800 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-xl mb-2 flex items-center justify-center gap-2">
-                            <span>🏰</span> 建立新房間
+                            <span>🏰</span> <span id="lobby-create-room-text">隨機討伐</span>
                         </button>
-                        <p class="text-xs text-gray-400">建立後將自動成為房主</p>
+                        <p class="text-xs text-gray-400">隨機怪物模式，進入後自動成為隊長</p>
                     </div>
                 </div>
 
@@ -559,7 +559,7 @@
                             <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between h-full">
                                 <h4 class="font-bold text-slate-800 mb-2 flex items-center gap-2">🎲 自動擲骰系統</h4>
                                 <div class="flex items-center justify-between">
-                                    <span class="text-xs text-gray-600">預設開啟 (各房主可關)</span>
+                                    <span class="text-xs text-gray-600">預設開啟 (各隊長可關)</span>
                                     <label class="switch scale-90">
                                         <input type="checkbox" id="admin-auto-roll" checked>
                                         <span class="slider"></span>
@@ -1316,7 +1316,7 @@
         <div id="game-board" class="hidden fade-in">
             <div class="flex flex-wrap justify-between items-center mb-4 bg-white/80 backdrop-blur rounded-xl p-3 shadow border border-amber-200">
                 <div class="flex items-center gap-3">
-                    <span class="bg-amber-200 text-amber-900 px-3 py-1 rounded-full font-bold">班級: <span id="display-class-id">--</span></span>
+                    <span class="bg-amber-200 text-amber-900 px-3 py-1 rounded-full font-bold">房號: <span id="display-class-id">--</span></span>
                     <span class="bg-blue-100 text-blue-900 px-3 py-1 rounded-full font-bold" id="user-identity">--</span>
                 </div>
                <div class="flex items-center gap-3 mt-2 md:mt-0">
@@ -1830,7 +1830,7 @@
         leaveGame: () => {
             const isHost = app.state.isHost;
             const msg = isHost 
-                ? '⚠️ 警告：您是房主！\n離開將會「解散整個房間」，所有人的連線將中斷。\n確定要結束並返回大廳嗎？' 
+                ? '⚠️ 警告：您是隊長！\n離開將會「解散整個房間」，所有人的連線將中斷。\n確定要結束並返回大廳嗎？' 
                 : '🔙 確定要離開目前的冒險並返回大廳嗎？';
 
             if(!confirm(msg)) return;
@@ -1976,6 +1976,17 @@
                     if (showNext) nextBtn.classList.remove('hidden-logic');
                     else nextBtn.classList.add('hidden-logic');
                 }
+
+                // 3. 更新隨機討伐按鈕波數顯示 (v4.7.9.3)
+                const dist = settings.monsterDist || {1:2, 2:1, 3:1, 4:1, 5:0, 6:0, 7:0};
+                let totalWaves = 0;
+                for(let i=1; i<=7; i++) {
+                    totalWaves += (parseInt(dist[i]) || 0);
+                }
+                const lobbyBtnText = document.getElementById('lobby-create-room-text');
+                if (lobbyBtnText) {
+                    lobbyBtnText.textContent = `隨機討伐(${totalWaves}波)`;
+                }
             });
 
             // 讀取並顯示大廳房間
@@ -2028,7 +2039,7 @@
                     const statusClass = room.status === 'waiting' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
                     
                     // 壓縮 HTML 防止空白節點
-                    html += `<div onclick="app.joinLobbyRoom('${room.id}')" class="room-item"><div class="flex items-center gap-3"><div class="text-2xl">🏰</div><div><div class="font-bold text-amber-900">${room.roomName || '未命名房間'}</div><div class="text-xs text-gray-500 flex items-center gap-2"><span>房主: ${room.hostName}</span><span class="${statusClass} px-2 py-0.5 rounded-full text-[0.6rem] font-bold">${statusText}</span></div></div></div><div class="text-amber-600 font-bold text-sm">點擊加入 ➜</div></div>`;
+                    html += `<div onclick="app.joinLobbyRoom('${room.id}')" class="room-item"><div class="flex items-center gap-3"><div class="text-2xl">🏰</div><div><div class="font-bold text-amber-900">${room.roomName || '未命名隊伍'}</div><div class="text-xs text-gray-500 flex items-center gap-2"><span>隊長: ${room.hostName}</span><span class="${statusClass} px-2 py-0.5 rounded-full text-[0.6rem] font-bold">${statusText}</span></div></div></div><div class="text-amber-600 font-bold text-sm">點擊加入 ➜</div></div>`;
                 }
             });
 
@@ -2221,7 +2232,7 @@
             app.el('admin-gear-btn').classList.add('hidden');
             
             app.el('display-class-id').textContent = app.state.classId;
-            const roleText = app.state.isHost ? '👑 房主 (主控)' : '🤠 冒險者';
+            const roleText = app.state.isHost ? '👑 隊長 (主控)' : '🤠 冒險者';
             app.el('user-identity').textContent = `${roleText} ${app.state.myName}`;
             
             // 所有人都能看到操作面板
@@ -2988,7 +2999,7 @@
                     const overlayTitle = document.querySelector('#reset-overlay h2');
                     const overlayDesc = document.querySelector('#reset-overlay p');
                     if(overlayTitle) overlayTitle.textContent = "冒險已結束";
-                    if(overlayDesc) overlayDesc.textContent = "房主已解散房間，正在自動返回大廳...";
+                    if(overlayDesc) overlayDesc.textContent = "隊長已解散房間，正在自動返回大廳...";
                     
                     // 3. 延遲 1.5 秒後自動重整頁面，直接回到大廳初始狀態
                     app.toast("⚠️ 房間已解散，正在返回大廳...", 1);
@@ -4528,7 +4539,7 @@
             
             // 檢查是否處於怪物未召喚狀態
             if (app.state.gameData?.activeMonster?.state !== 'battle') {
-                return app.toast('🛡️ 請等待房主遭遇魔物後再進行攻擊！', 1);
+                return app.toast('🛡️ 請等待隊長遭遇魔物後再進行攻擊！', 1);
             }
 
             // [v4.7.3.1 新增] 寶箱出現時禁止攻擊
