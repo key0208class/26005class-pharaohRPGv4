@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.7.9.4 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.0.8 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -377,7 +377,114 @@
         #bm-goods-list::-webkit-scrollbar-track { background: #1a202c; }
         #bm-goods-list::-webkit-scrollbar-thumb { background: #78350f; border-radius: 3px; }
         #bm-goods-list::-webkit-scrollbar-thumb:hover { background: #b45309; }
-</style>    
+
+        /* --- v4.8.0 冒險戰役樣式 (Adventure Campaign) --- */
+        .campaign-map-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+        .stage-node {
+            position: relative;
+            aspect-ratio: 3/4;
+            background: #1e293b;
+            border: 4px solid #475569;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .stage-node:hover { transform: translateY(-5px); border-color: #fbbf24; box-shadow: 0 10px 15px rgba(251, 191, 36, 0.3); }
+        .stage-node.locked { filter: grayscale(100%) brightness(0.5); cursor: not-allowed; border-color: #334155; }
+        .stage-node.cleared { border-color: #22c55e; }
+        .stage-node.cleared::after {
+            content: 'CLEARED';
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: #22c55e; color: white; font-weight: 900;
+            font-size: 0.7rem; text-align: center; padding: 2px 0;
+        }
+        
+        /* DQ 風格隊伍移動特效 */
+        .dq-party-container {
+            position: absolute;
+            bottom: 10px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: -10px; z-index: 20;
+            pointer-events: none;
+        }
+        .dq-char {
+            width: 32px; height: 32px;
+            background-color: white; border: 2px solid black;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            animation: dq-bounce 0.6s infinite alternate;
+        }
+        .dq-char:nth-child(2) { animation-delay: 0.1s; z-index: -1; transform: scale(0.9); }
+        .dq-char:nth-child(3) { animation-delay: 0.2s; z-index: -2; transform: scale(0.8); }
+        .dq-char:nth-child(4) { animation-delay: 0.3s; z-index: -3; transform: scale(0.7); }
+        @keyframes dq-bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+
+        /* 章節標題卡 */
+        .chapter-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #fbbf24;
+            color: #fbbf24;
+            padding: 1rem; margin-bottom: 1rem;
+            border-radius: 0.5rem; text-align: center;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .chapter-card:hover { background: #334155; }
+        .chapter-card.active { background: #fbbf24; color: #0f172a; font-weight: bold; box-shadow: 0 0 15px #fbbf24; }
+
+        /* --- v4.8.0.8 角色圖示管理樣式 --- */
+        .sprite-preview-container {
+            position: relative;
+            width: 128px;
+            height: 160px;
+            background-color: #333;
+            background-image: linear-gradient(45deg, #444 25%, transparent 25%), linear-gradient(-45deg, #444 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #444 75%), linear-gradient(-45deg, transparent 75%, #444 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            border: 2px solid #94a3b8;
+            overflow: hidden;
+            cursor: grab;
+        }
+        .sprite-preview-container:active { cursor: grabbing; }
+        
+        /* 網格線 (不可拖曳，是基準線) */
+        .sprite-grid-overlay {
+            position: absolute; inset: 0; pointer-events: none; z-index: 10;
+        }
+        .grid-line-h { position: absolute; left: 0; right: 0; height: 1px; background-color: rgba(0, 255, 255, 0.5); }
+        .grid-line-v { position: absolute; top: 0; bottom: 0; width: 1px; background-color: rgba(0, 255, 255, 0.5); }
+        
+        /* 來源圖片 (可拖曳調整位置) */
+        .sprite-source-img {
+            position: absolute;
+            left: 0; top: 0;
+            width: 128px; height: 160px; /* 基礎尺寸 */
+            image-rendering: pixelated; /* 像素風格不模糊 */
+            user-select: none;
+            pointer-events: none; /* 讓滑鼠事件穿透到 container */
+        }
+
+        /* 動畫預覽畫布 */
+        .anim-canvas {
+            width: 64px; height: 64px; /* 放大顯示 */
+            background-color: #e2e8f0;
+            border: 2px solid #cbd5e1;
+            border-radius: 0.5rem;
+            image-rendering: pixelated;
+        }
+        .sprite-list-item {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;
+            background: #fff; transition: all 0.2s;
+        }
+        .sprite-list-item:hover { border-color: #d97706; background-color: #fffbeb; }
+        .sprite-list-item.selected { border-color: #b45309; background-color: #ffedd5; ring: 2px solid #fbbf24; }
+</style>  
 	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -385,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.7.9.4 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.0.8 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -486,6 +593,15 @@
                             <span>🏰</span> <span id="lobby-create-room-text">隨機討伐</span>
                         </button>
                         <p class="text-xs text-gray-400">隨機怪物模式，進入後自動成為隊長</p>
+                        
+                        <div class="my-4 border-t border-amber-200/50"></div>
+
+                        <button id="btn-campaign-mode" onclick="app.enterCampaignMode()" class="w-full bg-gradient-to-r from-slate-700 to-slate-900 text-amber-400 font-black py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-xl mb-1 flex items-center justify-center gap-2 border-2 border-amber-500/50 relative overflow-hidden group">
+                            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30"></div>
+                            <span class="text-2xl filter drop-shadow group-hover:animate-pulse">⚔️</span> 
+                            <span class="tracking-widest">冒險戰役</span>
+                        </button>
+                        <p class="text-xs text-gray-500 font-bold">透過困難的戰役，取得更豐富的獎勵</p>
                     </div>
                 </div>
 
@@ -546,7 +662,9 @@
                     <button onclick="app.switchAdminTab('monsters')" id="tab-btn-monsters" class="admin-tab-btn flex-1 whitespace-nowrap">👹 怪物設定</button>
                     <button onclick="app.switchAdminTab('shop')" id="tab-btn-shop" class="admin-tab-btn flex-1 whitespace-nowrap">🛒 冒險商店</button>
 					<!-- [新增 v4.7.6.0] 黑市分頁按鈕 -->
-                    <button onclick="app.switchAdminTab('blackmarket')" id="tab-btn-blackmarket" class="admin-tab-btn flex-1 whitespace-nowrap">🧛 黑市商品</button>
+                   <button onclick="app.switchAdminTab('blackmarket')" id="tab-btn-blackmarket" class="admin-tab-btn flex-1 whitespace-nowrap">🧛 黑市商品</button>
+                    <!-- [新增 v4.8.0.8] 角色圖示分頁按鈕 -->
+                    <button onclick="app.switchAdminTab('sprites')" id="tab-btn-sprites" class="admin-tab-btn flex-1 whitespace-nowrap">🧙 角色圖示</button>
                 </div>
                 
                 <div class="space-y-6 flex-1 overflow-y-auto pr-1 custom-scrollbar">
@@ -604,19 +722,31 @@
                             </div>
 
                             <!-- 5. 裝備欄位限制 (新增 v4.7.8.2) -->
-                            <div class="bg-rose-50 p-4 rounded-xl border border-rose-200 flex flex-col justify-between h-full">
-                                <h4 class="font-bold text-rose-800 mb-2 flex items-center gap-2">🎒 裝備欄位等級限制</h4>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs text-rose-700">限制開啟 (關閉則全員可用)</span>
-                                    <label class="switch scale-90">
-                                        <input type="checkbox" id="admin-equip-limit" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
+                        <div class="bg-rose-50 p-4 rounded-xl border border-rose-200 flex flex-col justify-between h-full">
+                            <h4 class="font-bold text-rose-800 mb-2 flex items-center gap-2">🎒 裝備欄位等級限制</h4>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-rose-700">限制開啟 (關閉則全員可用)</span>
+                                <label class="switch scale-90">
+                                    <input type="checkbox" id="admin-equip-limit" checked>
+                                    <span class="slider"></span>
+                                </label>
                             </div>
                         </div>
 
-                        <!-- 時間控制設定 (已修復外框容器) -->
+                        <!-- 6. 冒險戰役按鈕 (新增 v4.8.0.6) -->
+                        <div class="bg-cyan-50 p-4 rounded-xl border border-cyan-200 flex flex-col justify-between h-full">
+                            <h4 class="font-bold text-cyan-900 mb-2 flex items-center gap-2">⚔️ 冒險戰役入口</h4>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-cyan-700">顯示大廳按鈕</span>
+                                <label class="switch scale-90">
+                                    <input type="checkbox" id="admin-show-campaign" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 時間控制設定 (已修復外框容器) -->
                         <div class="bg-blue-50 p-4 rounded-xl border border-blue-200">
                             <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">⏱️ 時間控制設定</h4>
                             <div class="grid grid-cols-2 gap-4">
@@ -1060,6 +1190,87 @@
 
                     </div>				
 					
+					<!-- [新增 v4.8.0.8] 角色圖示設定分頁 -->
+                    <div id="tab-content-sprites" class="admin-tab-content space-y-4">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+                            
+                            <!-- 左側：編輯與預覽區 -->
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-300 flex flex-col gap-4">
+                                <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+                                    <h4 class="font-bold text-slate-800 text-lg">🧙 角色素材編輯器</h4>
+                                    <button onclick="app.addNewSprite()" class="text-xs bg-green-600 text-white px-3 py-1 rounded font-bold hover:bg-green-700">➕ 新增空白</button>
+                                </div>
+
+                                <input type="hidden" id="edit-sprite-idx">
+                                
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">角色名稱</label>
+                                    <input type="text" id="edit-sprite-name" class="w-full border-2 border-slate-300 rounded-lg p-2 font-bold text-slate-800 bg-white" placeholder="例如：勇者阿土">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">圖片網址 (128x160px)</label>
+                                    <input type="text" id="edit-sprite-url" oninput="app.loadSpritePreview()" class="w-full border-2 border-slate-300 rounded-lg p-2 text-xs font-mono text-gray-600 bg-white" placeholder="https://...">
+                                </div>
+
+                                <div class="flex gap-6 items-start">
+                                    <!-- 切圖校正區 -->
+                                    <div>
+                                        <div class="text-[0.6rem] font-bold text-slate-500 mb-1 flex justify-between">
+                                            <span>拖曳圖片調整位置</span>
+                                            <span id="sprite-offset-display">0, 0</span>
+                                        </div>
+                                        <div class="sprite-preview-container" id="sprite-crop-area" onmousedown="app.startSpriteDrag(event)">
+                                            <!-- 網格線 (5行4格, 每格32x32) -->
+                                            <div class="sprite-grid-overlay">
+                                                <!-- 橫線 -->
+                                                <div class="grid-line-h" style="top:32px"></div>
+                                                <div class="grid-line-h" style="top:64px"></div>
+                                                <div class="grid-line-h" style="top:96px"></div>
+                                                <div class="grid-line-h" style="top:128px"></div>
+                                                <!-- 直線 -->
+                                                <div class="grid-line-v" style="left:32px"></div>
+                                                <div class="grid-line-v" style="left:64px"></div>
+                                                <div class="grid-line-v" style="left:96px"></div>
+                                            </div>
+                                            <img id="edit-sprite-source" src="" class="sprite-source-img" style="transform: translate(0px, 0px);">
+                                        </div>
+                                        <div class="text-[0.6rem] text-center text-gray-400 mt-1">128x160 (32px/格)</div>
+                                    </div>
+
+                                    <!-- 動畫預覽區 -->
+                                    <div class="flex-1 flex flex-col items-center">
+                                        <div class="text-xs font-bold text-slate-500 mb-1">動作預覽</div>
+                                        <canvas id="sprite-anim-canvas" width="32" height="32" class="anim-canvas mb-2"></canvas>
+                                        
+                                        <div class="grid grid-cols-2 gap-1 w-full">
+                                            <button onclick="app.playSpriteAnimation(0)" class="bg-slate-200 text-slate-700 text-[0.6rem] py-1 rounded hover:bg-slate-300 font-bold border border-slate-300">⏹️ 待機</button>
+                                            <button onclick="app.playSpriteAnimation(4)" class="bg-amber-100 text-amber-800 text-[0.6rem] py-1 rounded hover:bg-amber-200 font-bold border border-amber-200">⬆️ 向北</button>
+                                            <button onclick="app.playSpriteAnimation(3)" class="bg-amber-100 text-amber-800 text-[0.6rem] py-1 rounded hover:bg-amber-200 font-bold border border-amber-200">⬅️ 向西</button>
+                                            <button onclick="app.playSpriteAnimation(1)" class="bg-amber-100 text-amber-800 text-[0.6rem] py-1 rounded hover:bg-amber-200 font-bold border border-amber-200">➡️ 向東</button>
+                                            <button onclick="app.playSpriteAnimation(2)" class="bg-amber-100 text-amber-800 text-[0.6rem] py-1 rounded hover:bg-amber-200 font-bold border border-amber-200">⬇️ 向南</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-auto pt-4 border-t border-slate-200 flex gap-2">
+                                    <button onclick="app.deleteCurrentSprite()" class="flex-1 bg-red-100 text-red-600 py-2 rounded-lg font-bold hover:bg-red-200 transition-colors">🗑️ 刪除</button>
+                                    <button onclick="app.saveCurrentSprite()" class="flex-[2] bg-blue-600 text-white py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition-transform active:scale-95">💾 暫存設定</button>
+                                </div>
+                            </div>
+
+                            <!-- 右側：已存列表 -->
+                            <div class="bg-white rounded-xl border border-slate-300 flex flex-col h-[500px] lg:h-auto overflow-hidden">
+                                <div class="bg-slate-100 p-3 border-b border-slate-200 font-bold text-slate-700 text-sm">
+                                    📂 已建立的角色圖示
+                                </div>
+                                <div id="sprite-list-container" class="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+                                    <!-- JS 生成 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+					
                 <div class="mt-4 pt-4 border-t border-gray-100">
                     <button onclick="app.saveAdminSettings()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-slate-900 active:scale-95 transition-transform">💾 儲存全域設定</button>
                 </div>
@@ -1313,8 +1524,233 @@
                 </div>
             </div>
         </div>
+
+        <!-- [v4.8.0] 冒險戰役專屬頁面 -->
+        <div id="page-campaign" class="max-w-6xl mx-auto hidden fade-in min-h-screen flex flex-col">
+            <!-- 頂部導覽 -->
+            
+            <div class="flex justify-between items-center mb-6 bg-slate-900 text-white p-4 rounded-xl shadow-lg border-2 border-amber-600">
+                <div class="flex items-center gap-3">
+                    <button onclick="app.returnToLobby()" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-sm font-bold border border-slate-500 transition-colors">🔙 返回大廳</button>
+                    <h2 class="text-2xl font-black text-amber-400 tracking-widest flex items-center gap-2">⚔️ 冒險戰役</h2>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div id="campaign-auth-status" class="hidden items-center gap-2 text-xs font-bold text-amber-200">
+                        <span>🛡️ 管理員模式</span>
+                        <button onclick="app.logoutCampaignAdmin()" class="text-red-400 hover:text-red-300 underline">登出</button>
+                    </div>
+                    <button onclick="app.openCampaignAdminAuth()" class="bg-amber-600 hover:bg-amber-500 text-white w-10 h-10 rounded-full font-bold shadow-lg flex items-center justify-center border-2 border-amber-300 transition-transform active:scale-95" title="戰役管理員設定">📖</button>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-12 gap-6 flex-1">
+                <!-- 左側：章節選擇 -->
+                <div class="md:col-span-3 space-y-4">
+                    <div class="bg-white/90 p-4 rounded-xl border-2 border-slate-300 shadow-md h-full flex flex-col">
+                        <h3 class="font-black text-slate-800 mb-3 border-b pb-2">📜 章節選擇</h3>
+                        <div id="campaign-chapter-list" class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                            <!-- 章節列表由 JS 生成 -->
+                            <div class="text-center text-gray-400 py-4 text-xs">讀取中...</div>
+                        </div>
+                        <button id="btn-add-chapter" onclick="app.addNewChapter()" class="hidden w-full mt-3 bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-700 text-sm">➕ 新增章節</button>
+                    </div>
+                </div>
+
+                <!-- 右側：關卡地圖 -->
+                <div class="md:col-span-9">
+                    <div class="bg-slate-800 rounded-2xl border-4 border-slate-600 shadow-2xl relative overflow-hidden min-h-[500px] flex flex-col" style="background-image: url('https://www.transparenttextures.com/patterns/dark-matter.png');">
+                        
+                        <!-- 地圖標頭 -->
+                        <div class="p-4 bg-slate-900/90 border-b border-slate-700 flex justify-between items-center z-10">
+                            <h3 id="current-chapter-title" class="text-xl font-black text-white">請選擇章節</h3>
+                            <div class="flex gap-2">
+                                <!-- 暫時隱藏隊伍人數 -->
+                            </div>
+                        </div>
+
+                        <!-- 關卡網格容器 -->
+                        <div id="campaign-stage-container" class="campaign-map-grid flex-1 overflow-y-auto custom-scrollbar relative">
+                            <!-- 關卡節點由 JS 生成 -->
+                        </div>
+
+                        <!-- 底部裝飾 -->
+                        <div class="h-8 bg-slate-900/80 border-t border-slate-700 flex items-center justify-center">
+                            <span class="text-[0.6rem] text-slate-500 font-mono">冒險戰役關卡BOSS</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 戰役管理員驗證視窗 -->
+        <div id="campaign-auth-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
+            <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border-4 border-amber-600 animate-[fadeIn_0.3s_ease-out]">
+                <h3 class="text-xl font-black text-amber-900 mb-4 text-center">📖 戰役編年史</h3>
+                <p class="text-xs text-gray-500 mb-4 text-center">請輸入古老的密碼以編輯歷史</p>
+                <input type="password" id="campaign-password-input" class="w-full p-3 border-2 border-amber-300 rounded-xl text-center text-lg mb-4 font-mono" placeholder="Password">
+                <div class="flex gap-2">
+                    <button onclick="app.el('campaign-auth-modal').classList.add('hidden')" class="flex-1 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-100">取消</button>
+                    <button onclick="app.verifyCampaignAdmin()" class="flex-1 bg-amber-700 text-white py-2 rounded-lg font-bold shadow hover:bg-amber-800">解鎖</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 關卡編輯器視窗 (管理員用) -->
+        <div id="stage-editor-modal" class="fixed inset-0 z-[80] hidden flex items-center justify-center modal-backdrop">
+            <div class="bg-white rounded-2xl p-4 max-w-[98vw] w-full h-[95vh] shadow-2xl border-4 border-slate-700 animate-[fadeIn_0.3s_ease-out] flex flex-col">
+                <div class="flex justify-between items-center mb-2 border-b pb-2 flex-shrink-0">
+                    <h3 class="text-xl font-black text-slate-900">✏️ 戰役關卡指揮中心</h3>
+                    <div class="flex gap-4">
+                        <button onclick="app.deleteCampaignStage()" class="text-red-500 font-bold hover:bg-red-50 px-3 rounded">🗑️ 刪除關卡</button>
+                        <button onclick="app.saveStageSettings()" class="bg-slate-800 text-white px-6 py-1 rounded-lg font-bold shadow hover:bg-slate-900 active:scale-95 transition-transform">💾 儲存設定</button>
+                        <button onclick="app.closeStageEditor()" class="text-gray-400 hover:text-gray-600 font-bold text-xl px-2">✕</button>
+                    </div>
+                </div>
+                
+                 <!-- [版面調整] lg:grid-cols-[第一欄寬度_第二欄寬度_第三欄自動] -->
+            <!-- [說明] 第一欄(BOSS設定): 340px (加大) / 第二欄(波次): 300px (縮小固定) / 第三欄(地圖): 1fr (剩餘空間) -->
+            <div class="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-[340px_1fr_1fr] gap-4">
+                    <input type="hidden" id="edit-stage-id">
+
+                    <!-- 第一欄：BOSS 設定與基礎參數 (縮窄版) -->
+                    <div class="flex flex-col gap-3 overflow-y-auto pr-1 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <h4 class="font-black text-slate-700 border-b border-slate-300 pb-1 text-sm">1. 關卡主宰設定</h4>
+                        
+                        <div>
+                            <label class="block text-[0.7rem] font-bold text-slate-500 mb-1">選擇鎮守 BOSS</label>
+                            <select id="edit-stage-boss" onchange="app.previewStageBoss()" class="w-full border-2 border-slate-300 rounded-lg p-1 font-bold text-slate-900 bg-white text-xs">
+                                <!-- JS 動態生成 -->
+                            </select>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="w-full aspect-square bg-slate-800 rounded border border-slate-500 overflow-hidden flex-shrink-0 shadow-md relative group">
+                                <img id="edit-stage-boss-preview" src="" class="w-full h-full object-contain">
+                                <div class="absolute bottom-0 w-full bg-black/60 text-white text-[0.6rem] text-center">預覽</div>
+                            </div>
+                            <div class="w-full space-y-2">
+                                <div>
+                                    <label class="block text-[0.6rem] font-bold text-slate-500 mb-1">全局強化倍率 (x)</label>
+                                    <div class="flex items-center gap-1">
+                                        <input type="number" id="edit-stage-multiplier" value="1.0" step="0.1" min="0.1" onchange="app.renderEditStageNodes()" class="w-full border-2 border-amber-300 rounded p-1 text-center font-bold text-amber-800">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[0.6rem] font-bold text-slate-500 mb-1">包含小關卡數量 (Nodes)</label>
+                                    <input type="number" id="edit-stage-sub-count" value="1" min="1" max="10" onchange="app.updateSubStageCount()" class="w-full border-2 border-blue-300 rounded p-1 text-center font-bold text-blue-900">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex-1">
+                            <label class="block text-[0.7rem] font-bold text-slate-500 mb-1">📜 故事背景</label>
+                            <textarea id="edit-stage-story" class="w-full h-full border-2 border-slate-300 rounded-lg p-2 text-xs font-medium bg-white resize-none" placeholder="輸入劇情描述..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 第二欄：波次配置 (含即時數值修改) -->
+                    <div class="flex flex-col gap-3 overflow-y-auto pr-1 bg-blue-50 p-3 rounded-xl border border-blue-200">
+                        <div class="flex justify-between items-center border-b border-blue-300 pb-1">
+                            <h4 class="font-black text-blue-800 text-sm">2. 關卡波次配置</h4>
+                            <span class="text-[0.6rem] text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">數值可手動微調</span>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-blue-600 mb-1">👇 設定目標子關卡 (自動切換)</label>
+                            <select id="edit-sub-stage-select" onchange="app.changeSubStage()" class="w-full border-2 border-blue-500 bg-white rounded-lg p-2 font-black text-blue-900 shadow-sm cursor-pointer text-sm">
+                                <!-- JS 動態生成 -->
+                            </select>
+                        </div>
+
+                        <div class="bg-white p-2 rounded-lg border-2 border-blue-200 shadow-sm flex-1 flex flex-col min-h-0">
+                            <div class="flex justify-between items-center mb-2 flex-shrink-0">
+                                <label class="block text-xs font-bold text-slate-500">怪物波次清單 (Waves)</label>
+                                <button onclick="app.addStageNode()" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold border border-green-200 hover:bg-green-200 active:scale-95">+ 新增一波</button>
+                            </div>
+                            <!-- 這裡的列表會自動產生帶有圖片與數值輸入框的項目 -->
+                            <div id="edit-stage-nodes-list" class="space-y-3 overflow-y-auto custom-scrollbar flex-1 p-1">
+                                <!-- JS 生成節點列表 -->
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-100 p-3 rounded-lg border-2 border-yellow-300 flex-shrink-0">
+                            <label class="block text-xs font-bold text-yellow-800 mb-2">🏆 通關獎勵 (完成本關所有波次)</label>
+                            <div class="grid grid-cols-1 gap-2">
+                                <div class="flex gap-2">
+                                    <div class="flex-1">
+                                        <label class="text-[0.6rem] font-bold text-gray-500 block">金幣</label>
+                                        <input type="number" id="edit-stage-reward-gold" class="w-full border border-yellow-400 rounded p-1 text-center text-sm font-bold bg-white" placeholder="0">
+                                    </div>
+                                    <div class="flex-1">
+                                        <label class="text-[0.6rem] font-bold text-gray-500 block">經驗</label>
+                                        <input type="number" id="edit-stage-reward-exp" class="w-full border border-yellow-400 rounded p-1 text-center text-sm font-bold bg-white" placeholder="0">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-[0.6rem] font-bold text-gray-500 block">獲得物品 (黑市商品)</label>
+                                    <!-- [修改] 改為下拉選單 -->
+                                    <select id="edit-stage-reward-item" class="w-full border border-yellow-400 rounded p-1 text-sm font-bold bg-white cursor-pointer text-slate-700">
+                                        <option value="">-- 無獎勵 --</option>
+                                        <!-- JS 填入黑市商品 -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 第三欄：地圖節點視覺化 (等比例預覽) -->
+                    <div class="flex flex-col gap-3 overflow-hidden bg-slate-800 p-3 rounded-xl border-4 border-slate-600 shadow-inner">
+                        <h4 class="font-black text-slate-300 border-b border-slate-600 pb-1 text-sm">3. 戰役地圖配置</h4>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">地圖背景 URL (建議 16:9)</label>
+                            <input type="text" id="edit-stage-map-url" oninput="app.updateStageMapBackground()" class="w-full border border-slate-600 bg-slate-900 text-slate-300 rounded p-1 text-xs font-mono" placeholder="輸入圖片網址...">
+                        </div>
+
+                        <!-- 地圖容器：使用 aspect-video 鎖定比例，確保預覽不變形 -->
+                        <div class="flex-1 bg-slate-900 rounded-lg border-2 border-slate-600 relative group shadow-lg overflow-hidden flex items-center justify-center" id="stage-map-editor-wrapper">
+                            
+                            <!-- 內層容器：相對定位，用來放置節點 -->
+                            <div id="stage-map-editor-container" class="relative w-full aspect-video bg-black/50">
+                                <img id="edit-stage-map-preview" src="" class="absolute inset-0 w-full h-full object-contain opacity-50 pointer-events-none select-none">
+                                
+                                <div class="absolute inset-0 pointer-events-none flex items-center justify-center text-slate-600 font-bold text-sm opacity-50 z-0">
+                                    (輸入網址後顯示預覽)
+                                </div>
+                                <!-- 節點容器 -->
+                                <div id="stage-map-nodes-layer" class="absolute inset-0 z-10 w-full h-full">
+                                    <!-- JS 動態生成可拖曳節點 -->
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-[0.6rem] text-slate-400 text-center">💡 拖曳紅色節點設定位置 (自動儲存 % 座標)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- 新增章節視窗 -->
+        <div id="add-chapter-modal" class="fixed inset-0 z-[80] hidden flex items-center justify-center modal-backdrop">
+            <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border-4 border-amber-600 animate-[fadeIn_0.3s_ease-out]">
+                <h3 class="text-xl font-black text-amber-900 mb-4 text-center">➕ 新增戰役章節</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">章節名稱</label>
+                        <input type="text" id="new-chapter-name" class="w-full p-2 border-2 border-amber-300 rounded-lg font-bold text-slate-800" placeholder="例如：沙漠遺跡">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">關卡數量 (BOSS戰役)</label>
+                        <input type="number" id="new-chapter-count" value="5" min="1" max="20" class="w-full p-2 border-2 border-amber-300 rounded-lg text-center font-bold text-slate-800">
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-6">
+                    <button onclick="document.getElementById('add-chapter-modal').classList.add('hidden')" class="flex-1 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-100">取消</button>
+                    <button onclick="app.saveNewChapter()" class="flex-1 bg-amber-600 text-white py-2 rounded-lg font-bold shadow hover:bg-amber-700">建立</button>
+                </div>
+            </div>
+        </div>
         <div id="game-board" class="hidden fade-in">
             <div class="flex flex-wrap justify-between items-center mb-4 bg-white/80 backdrop-blur rounded-xl p-3 shadow border border-amber-200">
+          
                 <div class="flex items-center gap-3">
                     <span class="bg-amber-200 text-amber-900 px-3 py-1 rounded-full font-bold">房號: <span id="display-class-id">--</span></span>
                     <span class="bg-blue-100 text-blue-900 px-3 py-1 rounded-full font-bold" id="user-identity">--</span>
@@ -1492,29 +1928,22 @@
         </div>
        <div id="game-over-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center modal-backdrop">
              <div class="game-over-modal-content bg-white rounded-3xl p-6 md:p-8 max-w-4xl w-full mx-4 relative overflow-hidden flex flex-col max-h-[90vh]">
-                <div class="text-center mb-4 z-10">
+                
+                <!-- 頂部標題區 (固定不壓縮) -->
+                <div class="text-center mb-4 z-10 flex-shrink-0">
                     <div class="text-6xl mb-2 animate-bounce">🎉</div>
                     <h2 class="text-3xl md:text-4xl font-black text-amber-800 drop-shadow-sm">冒險完成！</h2>
-                    
-                    <!-- 結算戰績儀表板容器 -->
-<div id="end-game-summary-container" class="mt-2 w-full">
-    <!-- JS 將動態生成詳細戰績 (金幣/經驗/時間/BOSS圖) -->
-</div>
                 </div>
                 
-                <div class="flex-1 overflow-y-auto z-10 px-1 py-2 custom-scrollbar">
-                    <div class="bg-amber-50/50 rounded-xl p-4 border border-amber-200">
-                        <h3 class="font-bold text-amber-900 border-b-2 border-amber-200 pb-2 mb-3 text-center text-lg flex justify-center items-center gap-2">
-                            <span>🏆</span> 傳奇冒險家
-                        </h3>
-                        <div id="end-player-ranks" class="space-y-2">
-                            </div>
+                <!-- 結算戰績儀表板容器 (新增滾動屬性，人數再多也不怕) -->
+                <div class="flex-1 overflow-y-auto z-10 px-1 py-2 custom-scrollbar min-h-0">
+                    <div id="end-game-summary-container" class="w-full">
+                        <!-- JS 將動態生成詳細戰績 (金幣/經驗/時間/BOSS圖/排行榜) -->
                     </div>
                 </div>
 
-                <div class="mt-4 text-center z-10 pt-4 border-t border-amber-100">
-
-                <div class="mt-6 text-center z-10 pt-4 border-t border-amber-100">
+                <!-- 底部操作區 (固定在最下面) -->
+                <div class="mt-4 text-center z-10 pt-4 border-t border-amber-100 flex-shrink-0">
                     <p class="text-sm text-gray-500 mb-3">隊長確認後可開啟新的一局</p>
                     <div class="flex flex-col md:flex-row justify-center gap-3">
                         <button onclick="app.leaveGame()" class="bg-slate-500 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg hover:bg-slate-600 transition-transform">🔙 返回大廳</button>
@@ -1978,18 +2407,33 @@
                 }
 
                 // 3. 更新隨機討伐按鈕波數顯示 (v4.7.9.3)
-                const dist = settings.monsterDist || {1:2, 2:1, 3:1, 4:1, 5:0, 6:0, 7:0};
-                let totalWaves = 0;
-                for(let i=1; i<=7; i++) {
-                    totalWaves += (parseInt(dist[i]) || 0);
-                }
-                const lobbyBtnText = document.getElementById('lobby-create-room-text');
-                if (lobbyBtnText) {
-                    lobbyBtnText.textContent = `隨機討伐(${totalWaves}波)`;
-                }
-            });
+            const dist = settings.monsterDist || {1:2, 2:1, 3:1, 4:1, 5:0, 6:0, 7:0};
+            let totalWaves = 0;
+            for(let i=1; i<=7; i++) {
+                totalWaves += (parseInt(dist[i]) || 0);
+            }
+            const lobbyBtnText = document.getElementById('lobby-create-room-text');
+            if (lobbyBtnText) {
+                lobbyBtnText.textContent = `隨機討伐(${totalWaves}波)`;
+            }
 
-            // 讀取並顯示大廳房間
+            // 4. 控制冒險戰役按鈕顯示 (v4.8.0.6)
+            const campBtn = document.getElementById('btn-campaign-mode');
+            // 雖然此按鈕旁邊有文字 p 標籤，但隱藏按鈕本身即可達到主要目的
+            // 若要連同下方文字一起隱藏，需操作 parentElement 或相鄰元素，這裡先隱藏按鈕
+            if (campBtn) {
+                const showCamp = settings.showCampaignBtn !== false; // 預設顯示
+                if (showCamp) {
+                    campBtn.classList.remove('hidden-logic');
+                    if(campBtn.nextElementSibling) campBtn.nextElementSibling.classList.remove('hidden-logic'); // 嘗試隱藏說明文字
+                } else {
+                    campBtn.classList.add('hidden-logic');
+                    if(campBtn.nextElementSibling) campBtn.nextElementSibling.classList.add('hidden-logic');
+                }
+            }
+        });
+
+        // 讀取並顯示大廳房間
             app.refreshLobby();
             
             // 預設載入大廳
@@ -2338,6 +2782,8 @@
             app.renderBlackMarketListUI();
         } else if (tabName === 'monsters') {
             app.renderMonsterListUI();
+        } else if (tabName === 'sprites') {
+            app.renderSpriteListUI();
         }
     },
 
@@ -2639,6 +3085,218 @@
                 app.switchBlackMarketView('list');
             }
         },
+		
+
+        // --- v4.8.0.8 角色圖示管理系統 ---
+        
+        // 渲染已儲存的角色列表
+        renderSpriteListUI: () => {
+            const list = app.state.tempSpriteList || [];
+            const container = app.el('sprite-list-container');
+            const currentIdx = parseInt(app.el('edit-sprite-idx').value);
+            
+            let html = '';
+            if (list.length === 0) {
+                html = '<div class="text-center text-gray-400 py-10 text-xs">暫無角色資料</div>';
+            } else {
+                list.forEach((s, idx) => {
+                    const isSelected = idx === currentIdx ? 'selected' : '';
+                    // 這裡使用 canvas 來繪製靜態預覽圖太耗資源，改用 CSS 背景定位顯示第一格(待機)
+                    // 背景位移: left -offsetX, top -offsetY
+                    const bgPos = `-${s.offsetX || 0}px -${s.offsetY || 0}px`;
+                    
+                    html += `<div onclick="app.editSprite(${idx})" class="sprite-list-item ${isSelected} cursor-pointer"><div class="w-8 h-8 rounded bg-slate-200 border border-slate-300 overflow-hidden relative flex-shrink-0"><div style="width:32px; height:32px; background-image: url('${s.url}'); background-position: ${bgPos}; background-size: auto; image-rendering: pixelated;"></div></div><div class="font-bold text-slate-700 text-sm truncate flex-1">${s.name}</div><div class="text-[0.6rem] text-gray-400 font-mono">#${idx+1}</div></div>`;
+                });
+            }
+            container.innerHTML = html;
+        },
+
+        // 新增空白角色
+        addNewSprite: () => {
+            if (!app.state.tempSpriteList) app.state.tempSpriteList = [];
+            
+            // 預設空白資料
+            const newSprite = {
+                name: '新角色',
+                url: '',
+                offsetX: 0,
+                offsetY: 0
+            };
+            app.state.tempSpriteList.push(newSprite);
+            
+            // 選中新角色並編輯
+            const newIdx = app.state.tempSpriteList.length - 1;
+            app.editSprite(newIdx);
+            app.renderSpriteListUI();
+        },
+
+        // 編輯角色 (載入資料到編輯器)
+        editSprite: (idx) => {
+            const s = app.state.tempSpriteList[idx];
+            if (!s) return;
+
+            app.el('edit-sprite-idx').value = idx;
+            app.el('edit-sprite-name').value = s.name;
+            app.el('edit-sprite-url').value = s.url;
+            
+            // 設定圖片與偏移
+            const img = app.el('edit-sprite-source');
+            img.src = s.url;
+            img.style.transform = `translate(-${s.offsetX || 0}px, -${s.offsetY || 0}px)`;
+            
+            // 更新偏移顯示
+            app.el('sprite-offset-display').textContent = `${s.offsetX || 0}, ${s.offsetY || 0}`;
+            
+            // 重置動畫與列表狀態
+            app.stopSpriteAnimation();
+            app.renderSpriteListUI(); // 更新選取狀態
+        },
+
+        // 讀取圖片預覽 (輸入網址時觸發)
+        loadSpritePreview: () => {
+            const url = app.el('edit-sprite-url').value;
+            app.el('edit-sprite-source').src = url;
+            // 重置偏移
+            app.el('edit-sprite-source').style.transform = `translate(0px, 0px)`;
+            app.el('sprite-offset-display').textContent = `0, 0`;
+        },
+
+        // 儲存當前編輯
+        saveCurrentSprite: () => {
+            const idx = parseInt(app.el('edit-sprite-idx').value);
+            if (isNaN(idx)) return app.toast('請先新增或選擇一個角色');
+
+            const name = app.el('edit-sprite-name').value.trim();
+            const url = app.el('edit-sprite-url').value.trim();
+            
+            // 從 DOM 讀取目前的偏移量 (在 drag 結束時會更新到 dataset 或直接讀 style)
+            // 這裡我們直接解析 style.transform
+            const img = app.el('edit-sprite-source');
+            const transform = img.style.transform; // "translate(-10px, -5px)"
+            let offX = 0, offY = 0;
+            const match = transform.match(/translate\((-?\d+)px,\s*(-?\d+)px\)/);
+            if (match) {
+                offX = Math.abs(parseInt(match[1])); // 存正數
+                offY = Math.abs(parseInt(match[2]));
+            }
+
+            if (!name || !url) return app.toast('名稱與圖片網址不可為空', 1);
+
+            app.state.tempSpriteList[idx] = {
+                name: name,
+                url: url,
+                offsetX: offX,
+                offsetY: offY
+            };
+
+            app.renderSpriteListUI();
+            app.toast('✅ 角色設定已暫存 (記得儲存全域設定)');
+        },
+
+        deleteCurrentSprite: () => {
+            const idx = parseInt(app.el('edit-sprite-idx').value);
+            if (isNaN(idx)) return;
+            
+            if (confirm('🗑️ 確定要刪除此角色嗎？')) {
+                app.state.tempSpriteList.splice(idx, 1);
+                // 清空編輯區
+                app.el('edit-sprite-idx').value = '';
+                app.el('edit-sprite-name').value = '';
+                app.el('edit-sprite-url').value = '';
+                app.el('edit-sprite-source').src = '';
+                app.renderSpriteListUI();
+            }
+        },
+
+        // --- 拖曳校正邏輯 ---
+        startSpriteDrag: (e) => {
+            e.preventDefault();
+            const img = app.el('edit-sprite-source');
+            if (!img.src) return;
+
+            const startX = e.clientX;
+            const startY = e.clientY;
+            
+            // 解析目前的 translate 值
+            const transform = img.style.transform;
+            let initialOffX = 0, initialOffY = 0;
+            const match = transform.match(/translate\((-?\d+)px,\s*(-?\d+)px\)/);
+            if (match) {
+                initialOffX = parseInt(match[1]);
+                initialOffY = parseInt(match[2]);
+            }
+
+            const onMove = (moveEvent) => {
+                const dx = moveEvent.clientX - startX;
+                const dy = moveEvent.clientY - startY;
+                
+                // 計算新位置 (限制不要拖太遠，例如 +/- 64px)
+                const newX = initialOffX + dx;
+                const newY = initialOffY + dy;
+                
+                img.style.transform = `translate(${newX}px, ${newY}px)`;
+                // 顯示絕對值的偏移量 (儲存用)
+                app.el('sprite-offset-display').textContent = `${Math.abs(newX)}, ${Math.abs(newY)}`;
+            };
+
+            const onUp = () => {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            };
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        },
+
+        // --- 動畫播放邏輯 ---
+        playSpriteAnimation: (row) => {
+            const img = app.el('edit-sprite-source');
+            if (!img.src) return;
+
+            const canvas = app.el('sprite-anim-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 讀取偏移量
+            const transform = img.style.transform;
+            let offX = 0, offY = 0;
+            const match = transform.match(/translate\((-?\d+)px,\s*(-?\d+)px\)/);
+            if (match) {
+                offX = Math.abs(parseInt(match[1]));
+                offY = Math.abs(parseInt(match[2]));
+            }
+
+            app.stopSpriteAnimation(); // 先停止舊的
+
+            let frame = 0;
+            const totalFrames = 4;
+            const frameWidth = 32;
+            const frameHeight = 32;
+            
+            // 為了讓動畫清楚，設定 FPS (例如 150ms 一張)
+            app.state.spriteAnimInterval = setInterval(() => {
+                // 清空畫布
+                ctx.clearRect(0, 0, 32, 32);
+                
+                // 計算來源座標: 
+                // X = (col * 32) + offsetX
+                // Y = (row * 32) + offsetY
+                const srcX = (frame * frameWidth) + offX;
+                const srcY = (row * frameHeight) + offY;
+
+                // 繪製
+                ctx.drawImage(img, srcX, srcY, frameWidth, frameHeight, 0, 0, 32, 32);
+
+                // 下一格
+                frame = (frame + 1) % totalFrames;
+            }, 200); // 速度
+        },
+
+        stopSpriteAnimation: () => {
+            if (app.state.spriteAnimInterval) {
+                clearInterval(app.state.spriteAnimInterval);
+                app.state.spriteAnimInterval = null;
+            }
+        },
 	   // --- v4.2.2 怪物列表管理系統 ---
         // 切換列表/編輯視圖
         switchMonsterView: (view) => {
@@ -2786,7 +3444,8 @@
                 app.el('admin-show-blackmarket').checked = settings.showBlackMarket !== false;
                 // [v4.7.8.2] 讀取裝備欄位限制設定 (預設為 true: 開啟限制)
                 app.el('admin-equip-limit').checked = settings.equipSlotLimitEnabled !== false;
-                
+                 // [v4.8.0.6] 讀取冒險戰役按鈕顯示 (預設 true)
+            app.el('admin-show-campaign').checked = settings.showCampaignBtn !== false;
                 // v4.5.0 時間設定讀取 (預設 120 與 45)
                 app.el('admin-timer-base').value = settings.baseTimer || 120;
                 app.el('admin-timer-reset').value = settings.resetTimer || 45;
@@ -2818,10 +3477,14 @@
                     app.state.tempMonsterList = [];
                 }
                 
-				// [v4.7.6.0] 讀取黑市設定
-                app.state.tempBlackMarketList = settings.blackMarketList || [];
-                // [v4.6.8] 讀取商店設定 (新增)
-                const shopConfig = settings.shopConfig || {};
+			// [v4.7.6.0] 讀取黑市設定
+            app.state.tempBlackMarketList = settings.blackMarketList || [];
+            // [v4.8.0.6] 確保讀取戰役資料到 state，避免存檔時遺失
+            app.state.campaigns = settings.campaigns || [];
+            // [v4.8.0.8] 讀取角色圖示設定
+            app.state.tempSpriteList = settings.spriteList || [];
+            // [v4.6.8] 讀取商店設定 (新增)
+            const shopConfig = settings.shopConfig || {};
                 const shopItems = ['hint', 'double', 'horus', 'nile', 'time', 'shard', 'seal', 'anubis', 'mummy', 'herb', 'potion', 'elixir'];
                 shopItems.forEach(item => {
                     // 預設值: 價格100, 等級1, 上限1
@@ -2875,7 +3538,8 @@
                 showBlackMarket: app.el('admin-show-blackmarket').checked,
                 // [v4.7.8.2] 儲存裝備限制設定
                 equipSlotLimitEnabled: app.el('admin-equip-limit').checked,
-                
+                 // [v4.8.0.6] 儲存冒險戰役按鈕顯示
+            showCampaignBtn: app.el('admin-show-campaign').checked,
                 // v4.5.0 儲存時間設定
                 baseTimer: parseInt(app.el('admin-timer-base').value) || 120,
                 resetTimer: parseInt(app.el('admin-timer-reset').value) || 45,
@@ -2902,11 +3566,15 @@
                 // [v4.6.8] 儲存商店設定
                 shopConfig: shopConfig,
                 // [v4.7.6.0] 儲存黑市商品列表
-                blackMarketList: app.state.tempBlackMarketList || [],
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
+            blackMarketList: app.state.tempBlackMarketList || [],
+            // [v4.8.0.6] 確保戰役資料被寫回，避免遺失
+            campaigns: app.state.campaigns || [],
+            // [v4.8.0.8] 儲存角色圖示列表
+            spriteList: app.state.tempSpriteList || [],
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
 
-            db.ref('global_settings').set(settings).then(() => {
+        db.ref('global_settings').set(settings).then(() => {
                 app.state.globalSettings = settings; 
                 app.el('admin-settings-modal').classList.add('hidden');
                 
@@ -3633,17 +4301,12 @@
              playerHtml = '<div class="text-center text-gray-400 py-4 text-sm">本次冒險無人得分</div>';
          }
 
-         // 5. 生成雙欄位儀表板 HTML (左側數據與BOSS圖，右側排行榜)
+        // 5. 生成雙欄位儀表板 HTML (左側數據與BOSS圖，右側排行榜)
          const summaryContainer = app.el('end-game-summary-container');
          if (summaryContainer) {
-             // 使用 grid-cols-2 切分左右，並設定 h-full 讓排行榜可滾動
-             // 左側：BOSS大圖 + 4格數據
-             // 右側：排行榜標題 + 滾動列表
-             summaryContainer.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-full text-left mt-2"><div class="flex flex-col gap-2"><div class="relative bg-gradient-to-br from-stone-800 to-black rounded-xl p-1 shadow-lg border-2 border-amber-600 overflow-hidden flex-shrink-0 group h-40 md:h-48 flex items-center justify-center"><div class="absolute top-2 left-2 bg-red-700 text-white text-[0.6rem] font-black px-2 py-0.5 rounded shadow z-10 tracking-widest border border-red-500">擊敗強大魔物</div><img src="${bossImg}" class="h-full w-auto object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] group-hover:scale-110 transition-transform duration-700"><div class="absolute bottom-0 w-full bg-black/80 text-amber-500 text-center text-xs py-1 font-bold border-t border-amber-900/50">${bossName}</div></div><div class="grid grid-cols-2 gap-2"><div class="bg-yellow-50 border border-yellow-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-yellow-800 font-bold">💰 總獲金幣</div><div class="text-lg font-black text-yellow-600">${totalGold}</div></div><div class="bg-purple-50 border border-purple-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-purple-800 font-bold">✨ 累積經驗</div><div class="text-lg font-black text-purple-600">${totalExp}</div></div><div class="bg-blue-50 border border-blue-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-blue-800 font-bold">⏱️ 冒險耗時</div><div class="text-base font-black text-blue-600">${durationStr}</div></div><div class="bg-stone-100 border border-stone-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-stone-600 font-bold">🔄 回合數</div><div class="text-base font-black text-stone-600">${gameData.round || 1}</div></div></div></div><div class="flex flex-col h-64 md:h-auto bg-amber-50/50 rounded-xl border border-amber-200 overflow-hidden"><div class="bg-amber-100/80 p-2 text-center font-bold text-amber-900 border-b border-amber-200 text-sm flex-shrink-0">🏆 傳奇冒險家排行榜</div><div class="flex-1 overflow-y-auto custom-scrollbar p-2">${playerHtml}</div></div></div>`;
+             // 確保所有標籤緊密相連，杜絕空白節點異常
+             summaryContainer.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mt-2"><div class="flex flex-col gap-2"><div class="relative bg-gradient-to-br from-stone-800 to-black rounded-xl p-1 shadow-lg border-2 border-amber-600 overflow-hidden flex-shrink-0 group h-40 md:h-48 flex items-center justify-center"><div class="absolute top-2 left-2 bg-red-700 text-white text-[0.6rem] font-bold px-2 py-0.5 rounded shadow z-10 tracking-widest border border-red-500">擊敗強大魔物</div><img src="${bossImg}" class="h-full w-auto object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] group-hover:scale-110 transition-transform duration-700"><div class="absolute bottom-0 w-full bg-black/80 text-amber-500 text-center text-xs py-1 font-bold border-t border-amber-900/50">${bossName}</div></div><div class="grid grid-cols-2 gap-2"><div class="bg-yellow-50 border border-yellow-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-yellow-800 font-bold">💰 總獲金幣</div><div class="text-lg font-black text-yellow-600">${totalGold}</div></div><div class="bg-purple-50 border border-purple-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-purple-800 font-bold">✨ 累積經驗</div><div class="text-lg font-black text-purple-600">${totalExp}</div></div><div class="bg-blue-50 border border-blue-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-blue-800 font-bold">⏱️ 冒險耗時</div><div class="text-base font-black text-blue-600">${durationStr}</div></div><div class="bg-stone-100 border border-stone-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-stone-600 font-bold">🔄 回合數</div><div class="text-base font-black text-stone-600">${gameData.round || 1}</div></div></div></div><div class="flex flex-col bg-amber-50/50 rounded-xl border border-amber-200 overflow-hidden"><div class="bg-amber-100/80 p-2 text-center font-bold text-amber-900 border-b border-amber-200 text-sm flex-shrink-0">🏆 傳奇冒險家排行榜</div><div class="p-2">${playerHtml}</div></div></div>`;
          }
-         
-         // 清空舊的排行榜容器 (因為已經整合進 summaryContainer 了)
-         app.el('end-player-ranks').innerHTML = '';
      },
 
    showTeamModal: (teamKey) => {
@@ -7191,6 +7854,704 @@
                 localStorage.setItem('pharaoh_guest_inventory', JSON.stringify(data.inventory));
                 localStorage.setItem('pharaoh_guest_equipped', JSON.stringify(data.equipped));
              }
+        }, // saveBackpackData 結束
+
+        // --- v4.8.0 冒險戰役系統邏輯 ---
+
+       // 1. 進入戰役模式介面
+        enterCampaignMode: () => {
+            app.el('page-lobby').classList.add('hidden');
+            app.el('page-campaign').classList.remove('hidden');
+            app.el('black-market-interface').classList.add('hidden'); // 確保黑市關閉
+            
+            // 檢查管理員權限
+            const isAdmin = localStorage.getItem('campaign_admin_token') === 'valid';
+            if (isAdmin) {
+                app.el('campaign-auth-status').classList.remove('hidden');
+                app.el('campaign-auth-status').classList.add('flex'); // [修正] 明確加入 flex
+                app.el('btn-add-chapter').classList.remove('hidden');
+            } else {
+                app.el('campaign-auth-status').classList.add('hidden');
+                app.el('campaign-auth-status').classList.remove('flex'); // [修正] 明確移除 flex
+                app.el('btn-add-chapter').classList.add('hidden');
+            }
+
+            // 讀取章節與關卡資料
+            app.loadCampaignData();
+        },
+
+        returnToLobby: () => {
+            app.el('page-campaign').classList.add('hidden');
+            app.el('page-lobby').classList.remove('hidden');
+        },
+
+        // 2. 戰役管理員驗證
+        openCampaignAdminAuth: () => {
+            // 若已登入則不需再驗證
+            if (localStorage.getItem('campaign_admin_token') === 'valid') {
+                app.toast('📚 您已處於管理員模式', 1);
+                return;
+            }
+            app.el('campaign-auth-modal').classList.remove('hidden');
+            app.el('campaign-password-input').value = '';
+            app.el('campaign-password-input').focus();
+        },
+
+        verifyCampaignAdmin: () => {
+            const pwd = app.el('campaign-password-input').value;
+            if (pwd === '6317261') {
+                localStorage.setItem('campaign_admin_token', 'valid');
+                app.el('campaign-auth-modal').classList.add('hidden');
+                app.toast('🔓 戰役管理員權限已解鎖', 1);
+                
+                // 更新介面
+                app.el('campaign-auth-status').classList.remove('hidden');
+                app.el('btn-add-chapter').classList.remove('hidden');
+                app.loadCampaignData(); // 重繪以顯示編輯按鈕
+            } else {
+                app.toast('❌ 密碼錯誤', 1);
+            }
+        },
+
+        logoutCampaignAdmin: () => {
+            localStorage.removeItem('campaign_admin_token');
+            app.el('campaign-auth-status').classList.add('hidden');
+            app.el('btn-add-chapter').classList.add('hidden');
+            app.toast('🔒 管理員已登出', 1);
+            app.loadCampaignData();
+        },
+
+        // 3. 載入戰役資料 (CRUD)
+        loadCampaignData: () => {
+            // 從 global_settings 讀取戰役定義
+            db.ref('global_settings/campaigns').once('value', snap => {
+                const campaigns = snap.val() || [];
+                app.state.campaigns = campaigns;
+                app.renderCampaignChapters(campaigns);
+            });
+        },
+
+       // 渲染章節列表
+        renderCampaignChapters: (campaigns) => {
+            const listEl = app.el('campaign-chapter-list');
+            const isAdmin = localStorage.getItem('campaign_admin_token') === 'valid';
+            let html = '';
+
+            if (!campaigns || campaigns.length === 0) {
+                html = '<div class="text-center text-gray-400 py-4">尚無章節資料</div>';
+            } else {
+                campaigns.forEach((chap, idx) => {
+                    // 預設選中第一個章節
+                    if (app.state.currentChapterIdx === undefined) app.state.currentChapterIdx = 0;
+                    const isActive = idx === app.state.currentChapterIdx;
+                    const activeClass = isActive ? 'active' : '';
+                    
+                    // [v4.8.0.2] 章節鎖定邏輯：非管理員且不是第一章，則鎖定 (需先完成前章)
+                    // 這裡先做簡單的順序鎖定，若 idx > 0 且非管理員則鎖住
+                    const isLocked = !isAdmin && idx > 0;
+                    const lockStyle = isLocked ? 'opacity-50 cursor-not-allowed pointer-events-none grayscale' : '';
+                    const lockIcon = isLocked ? '🔒 ' : '';
+
+                    html += `<div onclick="app.selectChapter(${idx})" class="chapter-card ${activeClass} ${lockStyle} flex justify-between items-center group"><span>${lockIcon}${chap.name}</span>${isAdmin ? `<button onclick="event.stopPropagation(); app.deleteChapter(${idx})" class="text-xs text-red-500 opacity-0 group-hover:opacity-100 hover:text-red-300 px-2 pointer-events-auto">🗑️</button>` : ''}</div>`;
+                });
+            }
+            listEl.innerHTML = html;
+            
+            // 渲染當前選中章節的地圖
+            if (campaigns.length > 0 && campaigns[app.state.currentChapterIdx]) {
+                app.renderCampaignMap(campaigns[app.state.currentChapterIdx], app.state.currentChapterIdx);
+            } else {
+                // [v4.8.0.2] 若無章節或選中章節無效，清空右側地圖
+                app.el('campaign-stage-container').innerHTML = '';
+                app.el('current-chapter-title').textContent = '請選擇章節';
+            }
+        },
+
+        selectChapter: (idx) => {
+            app.state.currentChapterIdx = idx;
+            app.renderCampaignChapters(app.state.campaigns);
+        },
+
+        addNewChapter: () => {
+            // [修正] 改為開啟彈出視窗
+            app.el('new-chapter-name').value = '';
+            app.el('new-chapter-count').value = 5;
+            app.el('add-chapter-modal').classList.remove('hidden');
+            // 延遲聚焦優化體驗
+            setTimeout(() => app.el('new-chapter-name').focus(), 100);
+        },
+
+        saveNewChapter: () => {
+            const name = app.el('new-chapter-name').value.trim();
+            const count = parseInt(app.el('new-chapter-count').value) || 5;
+            
+            if (!name) return app.toast('❌ 請輸入章節名稱', 1);
+            if (count < 1) return app.toast('❌ 關卡數量至少為 1');
+
+            const newChap = { name: name, stages: [] };
+            // 根據輸入數量建立空關卡
+            for(let i=0; i<count; i++) newChap.stages.push({ id: i, locked: true });
+            
+            if (!app.state.campaigns) app.state.campaigns = [];
+            app.state.campaigns.push(newChap);
+            
+            app.saveCampaignData();
+            app.el('add-chapter-modal').classList.add('hidden');
+            app.toast(`✅ 已建立章節：${name} (${count}關)`);
+        },
+
+        deleteChapter: (idx) => {
+            if (confirm('🗑️ 確定要刪除此章節及其所有關卡嗎？')) {
+                app.state.campaigns.splice(idx, 1);
+                app.state.currentChapterIdx = 0;
+                
+                // [v4.8.0.2] 若刪除後已無章節，強制清空右側視圖
+                if (app.state.campaigns.length === 0) {
+                     app.el('campaign-stage-container').innerHTML = '';
+                     app.el('current-chapter-title').textContent = '請選擇章節';
+                }
+
+                app.saveCampaignData();
+            }
+        },
+
+        saveCampaignData: () => {
+            db.ref('global_settings/campaigns').set(app.state.campaigns).then(() => {
+                app.toast('💾 戰役設定已儲存', 1);
+                app.loadCampaignData();
+            });
+        },
+
+        // 4. 渲染關卡地圖 (核心視覺)
+        renderCampaignMap: (chapter, chapIdx) => {
+            const container = app.el('campaign-stage-container');
+            const titleEl = app.el('current-chapter-title');
+            // const teamSizeEl = app.el('campaign-team-size'); // [已移除] 
+            
+            if (titleEl) titleEl.textContent = chapter.name;
+            
+            // 模擬讀取玩家進度 (這裡簡化，實際應讀取 user progress)
+            // 預設第一關解鎖，其餘鎖定。若為管理員則全解鎖以便編輯。
+            const isAdmin = localStorage.getItem('campaign_admin_token') === 'valid';
+            
+            let html = '';
+            
+            // [修正] 移除 DQ 風格隊伍移動特效 & 隊伍人數顯示代碼
+            // (此處已刪除導致錯誤的 teamSizeEl 操作)
+
+            chapter.stages.forEach((stage, sIdx) => {
+                const isLocked = !isAdmin && sIdx > 0; // 暫時邏輯：只有第1關解鎖
+                const lockClass = isLocked ? 'locked' : '';
+                const bossImg = stage.bossImg || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
+                const bossName = stage.bossName || '未設定BOSS';
+                const multiplier = stage.multiplier || 1.0;
+                
+                // 管理員編輯按鈕
+                const editBtn = isAdmin ? `<button onclick="event.stopPropagation(); app.openStageEditor(${chapIdx}, ${sIdx})" class="absolute top-1 right-1 bg-slate-800 text-white text-[0.6rem] px-1.5 rounded z-30 hover:bg-amber-600">✏️</button>` : '';
+                
+              // 無空白 HTML (已移除 currentParty 變數) [v4.8.0.3] 移除倍率顯示
+                html += `<div onclick="app.enterCampaignStage(${chapIdx}, ${sIdx}, ${isLocked})" class="stage-node ${lockClass} relative flex flex-col group"><div class="flex-1 bg-slate-900 relative"><img src="${bossImg}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"><div class="absolute bottom-0 w-full bg-black/70 text-white text-[0.65rem] text-center py-1 truncate">${bossName}</div>${editBtn}</div><div class="h-6 bg-slate-800 flex items-center justify-center border-t border-slate-600"><span class="text-xs font-black text-slate-400">STAGE ${sIdx+1}</span></div></div>`;
+            });
+
+            // 新增關卡按鈕 (管理員)
+            if (isAdmin) {
+                html += `<div onclick="app.addCampaignStage(${chapIdx})" class="stage-node flex items-center justify-center border-dashed border-slate-500 hover:border-green-500 opacity-50 hover:opacity-100"><span class="text-4xl text-green-500">+</span></div>`;
+            }
+
+            container.innerHTML = html;
+        },
+
+        addCampaignStage: (chapIdx) => {
+            if (!app.state.campaigns[chapIdx].stages) app.state.campaigns[chapIdx].stages = [];
+            app.state.campaigns[chapIdx].stages.push({
+                bossName: '新關卡',
+                nodes: []
+            });
+            app.saveCampaignData();
+        },
+
+       // 5. 關卡編輯器邏輯 (v4.8.0.5 數值微調版)
+        openStageEditor: (chapIdx, sIdx) => {
+            const originalStage = app.state.campaigns[chapIdx].stages[sIdx];
+            
+            // 初始化暫存物件
+            const tempData = JSON.parse(JSON.stringify(originalStage));
+            
+            if (!tempData.subStages) {
+                tempData.subStages = {};
+                tempData.subStages[1] = {
+                    nodes: tempData.nodes || [],
+                    rewards: {
+                        gold: tempData.rewardGold || 0,
+                        exp: tempData.rewardExp || 0,
+                        item: tempData.rewardItem || ''
+                    }
+                };
+                tempData.subStageCount = 1;
+            } else {
+                tempData.subStageCount = tempData.subStageCount || 1;
+            }
+
+            // 初始化地圖節點座標資料
+            if (!tempData.mapNodes) tempData.mapNodes = {};
+
+            app.state.editingStage = { 
+                chapIdx, 
+                sIdx, 
+                data: tempData,
+                currentSubIdx: 1 
+            }; 
+            
+            app.el('stage-editor-modal').classList.remove('hidden');
+            
+            // 填入資料
+            app.el('edit-stage-multiplier').value = tempData.multiplier || 1.0;
+            app.el('edit-stage-sub-count').value = tempData.subStageCount;
+            app.el('edit-stage-story').value = tempData.storyIntro || '';
+            app.el('edit-stage-map-url').value = tempData.mapUrl || '';
+            
+            // [Fix] 即時更新地圖預覽
+            app.updateStageMapBackground();
+
+            // [New] 載入獎勵物品 (黑市清單) 到下拉選單
+            const blackMarketList = app.state.globalSettings?.blackMarketList || [];
+            const rewardSelect = app.el('edit-stage-reward-item');
+            let rewardHtml = '<option value="">-- 無獎勵 --</option>';
+            blackMarketList.forEach((item, idx) => {
+                if(item) {
+                    const lv = item.currentEditLv || 1; // 顯示主要等級名稱
+                    rewardHtml += `<option value="${idx}">[黑市] ${item.name} (Lv${lv})</option>`;
+                }
+            });
+            rewardSelect.innerHTML = rewardHtml;
+
+            // 載入 BOSS 清單
+            const globalMonsters = app.state.globalSettings?.monsterList || [];
+            const bossSelect = app.el('edit-stage-boss');
+            let bossHtml = '<option value="">-- 請選擇鎮守 BOSS --</option>';
+            
+            globalMonsters.forEach((m, idx) => {
+                if ((m.cardBack >= 4) && m.img3) {
+                    bossHtml += `<option value="${idx}" ${m.name === tempData.bossName ? 'selected' : ''}>[Lv.${m.cardBack}] ${m.name}</option>`;
+                }
+            });
+            bossSelect.innerHTML = bossHtml;
+            app.previewStageBoss(); 
+
+            // 初始化下拉選單與介面
+            app.updateSubStageCount(false);
+            app.loadSubStageUI(1);
+            
+            // 渲染地圖節點
+            app.renderStageMapEditor();
+        },
+
+        previewStageBoss: () => {
+            const idx = app.el('edit-stage-boss').value;
+            const globalMonsters = app.state.globalSettings?.monsterList || [];
+            if (idx !== '' && globalMonsters[idx]) {
+                app.el('edit-stage-boss-preview').src = globalMonsters[idx].img3;
+            } else {
+                app.el('edit-stage-boss-preview').src = '';
+            }
+        },
+
+        // 更新下拉選單選項 (當修改關卡數量時)
+        updateSubStageCount: (resetSelection = true) => {
+            const count = parseInt(app.el('edit-stage-sub-count').value) || 1;
+            const select = app.el('edit-sub-stage-select');
+            const { chapIdx, sIdx } = app.state.editingStage;
+            
+            // 更新 state 中的數量
+            app.state.editingStage.data.subStageCount = count;
+
+            // 產生選項
+            let html = '';
+            // 顯示格式： Stage 1-1, 1-2 (根據 sIdx+1)
+            const mainStageNum = sIdx + 1; 
+            for(let i=1; i<=count; i++) {
+                html += `<option value="${i}">${mainStageNum}-${i} 關卡配置</option>`;
+            }
+            select.innerHTML = html;
+            
+            if (resetSelection) {
+                // 如果是手動修改數量，可能需要切換或是保留
+                // 這裡簡單處理：若當前索引還在範圍內則保留，否則切到 1
+                if (app.state.editingStage.currentSubIdx > count) {
+                    app.changeSubStage(1);
+                } else {
+                    select.value = app.state.editingStage.currentSubIdx;
+                }
+            }
+        },
+
+        // 切換子關卡 (下拉選單觸發)
+        changeSubStage: (forceIdx = null) => {
+            // 1. 先儲存當前 UI 上的數據到暫存變數
+            app.saveCurrentSubStageToMemory();
+
+            // 2. 切換到新索引
+            const newIdx = forceIdx !== null ? forceIdx : parseInt(app.el('edit-sub-stage-select').value);
+            app.state.editingStage.currentSubIdx = newIdx;
+            
+            // 3. 更新下拉選單顯示 (如果是強制切換)
+            if (forceIdx !== null) app.el('edit-sub-stage-select').value = newIdx;
+
+            // 4. 載入新數據到 UI
+            app.loadSubStageUI(newIdx);
+            
+            app.toast(`📂 已切換至 ${app.state.editingStage.sIdx+1}-${newIdx} 設定`, 1);
+        },
+
+        // 將 UI 上的數據寫入 temp state
+        saveCurrentSubStageToMemory: () => {
+            const { currentSubIdx, data } = app.state.editingStage;
+            
+            // 確保物件存在
+            if (!data.subStages) data.subStages = {};
+            if (!data.subStages[currentSubIdx]) data.subStages[currentSubIdx] = {};
+
+            // 收集小怪波次 (nodes) - 從 DOM 讀取不太方便，直接用 editingStage.nodes 暫存比較好？
+            // 為了簡化，我們假設 edit-stage-nodes-list 的渲染函數已經維護了 data.subStages[currentSubIdx].nodes
+            // 但因為我們是直接修改 UI，所以這裡需要讀取 UI 值 (獎勵部分)
+            
+            const rewards = {
+                gold: parseInt(app.el('edit-stage-reward-gold').value) || 0,
+                exp: parseInt(app.el('edit-stage-reward-exp').value) || 0,
+                item: app.el('edit-stage-reward-item').value.trim()
+            };
+            
+            data.subStages[currentSubIdx].rewards = rewards;
+            // nodes 已經在 updateStageNode 時即時寫入 state，所以不用這裡讀取
+        },
+
+        // 從 temp state 載入數據到 UI
+        loadSubStageUI: (subIdx) => {
+            const { data } = app.state.editingStage;
+            
+            // 確保資料結構存在
+            if (!data.subStages[subIdx]) {
+                data.subStages[subIdx] = { nodes: [], rewards: {} };
+            }
+            
+            const subData = data.subStages[subIdx];
+            
+            // 載入獎勵
+            const rw = subData.rewards || {};
+            app.el('edit-stage-reward-gold').value = rw.gold || 0;
+            app.el('edit-stage-reward-exp').value = rw.exp || 0;
+            app.el('edit-stage-reward-item').value = rw.item || '';
+
+            // 載入波次列表
+            app.renderEditStageNodes(subData.nodes);
+        },
+
+        // [v4.8.0.5] 渲染波次列表 (含預覽圖與可編輯數值)
+        renderEditStageNodes: (nodesArray = null) => {
+            if (!nodesArray) {
+                const { currentSubIdx, data } = app.state.editingStage;
+                nodesArray = data.subStages[currentSubIdx].nodes || [];
+            }
+
+            const listEl = app.el('edit-stage-nodes-list');
+            const globalMonsters = app.state.globalSettings?.monsterList || [];
+            const multiplier = parseFloat(app.el('edit-stage-multiplier').value) || 1.0;
+
+            if (nodesArray.length === 0) {
+                listEl.innerHTML = '<div class="text-xs text-gray-400 text-center py-4 bg-white/50 rounded border-dashed border-2 border-slate-300">無怪物波次，請點擊上方按鈕新增</div>';
+                return;
+            } 
+
+            let html = '';
+            
+            // 卡背選項
+            const cardBackOptions = [
+                {v:'', t:'篩選'}, 
+                {v:'1', t:'Lv.1'}, {v:'2', t:'Lv.2'}, {v:'3', t:'Lv.3'},
+                {v:'4', t:'Lv.4'}, {v:'5', t:'Lv.5'}, {v:'6', t:'Lv.6'}, {v:'7', t:'Lv.7'}
+            ];
+
+            nodesArray.forEach((node, i) => {
+                // 1. 取得當前怪物資訊
+                const currentMonster = (node.monsterIdx !== null && globalMonsters[node.monsterIdx]) ? globalMonsters[node.monsterIdx] : null;
+                
+                // 2. 決定篩選等級
+                const filterLv = node.filterLv || (currentMonster ? currentMonster.cardBack : 1);
+
+                // 3. 生成篩選選單
+                let lvOpts = '';
+                cardBackOptions.forEach(opt => {
+                    lvOpts += `<option value="${opt.v}" ${String(filterLv) === String(opt.v) ? 'selected' : ''}>${opt.t}</option>`;
+                });
+
+                // 4. 生成怪物選單
+                let monsterOpts = '<option value="">--選擇怪物--</option>';
+                globalMonsters.forEach((m, mIdx) => {
+                    if (String(m.cardBack) === String(filterLv)) {
+                        monsterOpts += `<option value="${mIdx}" ${String(node.monsterIdx) === String(mIdx) ? 'selected' : ''}>${m.name}</option>`;
+                    }
+                });
+
+                // 5. 圖片預覽
+                const previewImg = currentMonster ? (currentMonster.img1 || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png') : 'https://placehold.co/40x40?text=?';
+
+                // 6. 數值輸入框 (優先使用 node 內儲存的自訂值，若無則計算預設值)
+                let hp, atk, exp, gold;
+                if (currentMonster) {
+                    hp = (node.customHp !== undefined) ? node.customHp : Math.floor(currentMonster.hp * multiplier);
+                    atk = (node.customAtk !== undefined) ? node.customAtk : Math.floor(currentMonster.atk * multiplier);
+                    exp = (node.customExp !== undefined) ? node.customExp : Math.floor((currentMonster.exp || 0) * multiplier);
+                    gold = (node.customGold !== undefined) ? node.customGold : Math.floor(currentMonster.gold * multiplier);
+                } else {
+                    hp = 0; atk = 0; exp = 0; gold = 0;
+                }
+
+                // [HTML] 緊湊佈局
+                html += `
+                <div class="bg-white p-2 rounded border border-slate-300 shadow-sm relative group">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-black px-2 py-1 rounded whitespace-nowrap">第${i+1}波</span>
+                        <div class="flex-1 flex flex-col gap-1">
+                            <div class="flex gap-1">
+                                <select onchange="app.updateNodeFilter(${i}, this.value)" class="w-16 border rounded text-xs py-1 bg-slate-50 font-bold text-slate-700">${lvOpts}</select>
+                                <select onchange="app.updateStageNode(${i}, this.value)" class="flex-1 border rounded text-xs py-1 font-bold text-slate-800 text-ellipsis overflow-hidden">${monsterOpts}</select>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 bg-gray-200 rounded border border-gray-300 overflow-hidden flex-shrink-0">
+                            <img src="${previewImg}" class="w-full h-full object-cover">
+                        </div>
+                        <button onclick="app.removeStageNode(${i})" class="text-red-400 hover:text-red-600 font-bold px-1 ml-1 text-lg">×</button>
+                    </div>
+                    
+                    <div class="grid grid-cols-4 gap-1 bg-slate-50 p-1 rounded border border-slate-200">
+                        <div class="flex flex-col">
+                            <label class="text-[0.55rem] text-red-600 font-bold text-center">HP</label>
+                            <input type="number" value="${hp}" onchange="app.updateStageNodeStat(${i}, 'customHp', this.value)" class="w-full border border-red-200 rounded text-center text-xs font-bold text-red-800 bg-white">
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-[0.55rem] text-orange-600 font-bold text-center">ATK</label>
+                            <input type="number" value="${atk}" onchange="app.updateStageNodeStat(${i}, 'customAtk', this.value)" class="w-full border border-orange-200 rounded text-center text-xs font-bold text-orange-800 bg-white">
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-[0.55rem] text-purple-600 font-bold text-center">EXP</label>
+                            <input type="number" value="${exp}" onchange="app.updateStageNodeStat(${i}, 'customExp', this.value)" class="w-full border border-purple-200 rounded text-center text-xs font-bold text-purple-800 bg-white">
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-[0.55rem] text-yellow-600 font-bold text-center">GOLD</label>
+                            <input type="number" value="${gold}" onchange="app.updateStageNodeStat(${i}, 'customGold', this.value)" class="w-full border border-yellow-200 rounded text-center text-xs font-bold text-yellow-800 bg-white">
+                        </div>
+                    </div>
+                </div>`;
+            });
+            
+            listEl.innerHTML = html;
+        },
+
+        addStageNode: () => {
+            const { currentSubIdx, data } = app.state.editingStage;
+            if (!data.subStages[currentSubIdx]) data.subStages[currentSubIdx] = { nodes: [], rewards: {} };
+            if (!data.subStages[currentSubIdx].nodes) data.subStages[currentSubIdx].nodes = [];
+            
+            data.subStages[currentSubIdx].nodes.push({ monsterIdx: null });
+            app.renderEditStageNodes();
+        },
+
+// [New] 更新節點的等級篩選器 (觸發重新渲染以更新怪物清單)
+        updateNodeFilter: (nodeIdx, val) => {
+            const { currentSubIdx, data } = app.state.editingStage;
+            const nodes = data.subStages[currentSubIdx].nodes;
+            if (nodes && nodes[nodeIdx]) {
+                nodes[nodeIdx].filterLv = val;
+                // 切換等級時，暫時清空已選怪物，避免等級不符
+                nodes[nodeIdx].monsterIdx = null; 
+            }
+            app.renderEditStageNodes();
+        },
+
+        // 更新節點怪物 (選擇怪物時，自動帶入計算後的數值)
+        updateStageNode: (nodeIdx, val) => {
+            const { currentSubIdx, data } = app.state.editingStage;
+            const nodes = data.subStages[currentSubIdx].nodes;
+            const globalMonsters = app.state.globalSettings?.monsterList || [];
+            const multiplier = parseFloat(app.el('edit-stage-multiplier').value) || 1.0;
+
+            if (nodes && nodes[nodeIdx]) {
+                nodes[nodeIdx].monsterIdx = val;
+                
+                // 當切換怪物時，重置並自動計算數值
+                if (val !== "" && globalMonsters[val]) {
+                    const m = globalMonsters[val];
+                    nodes[nodeIdx].customHp = Math.floor(m.hp * multiplier);
+                    nodes[nodeIdx].customAtk = Math.floor(m.atk * multiplier);
+                    nodes[nodeIdx].customExp = Math.floor((m.exp || 0) * multiplier);
+                    nodes[nodeIdx].customGold = Math.floor(m.gold * multiplier);
+                } else {
+                    // 若取消選擇，歸零
+                    nodes[nodeIdx].customHp = 0;
+                    nodes[nodeIdx].customAtk = 0;
+                    nodes[nodeIdx].customExp = 0;
+                    nodes[nodeIdx].customGold = 0;
+                }
+            }
+            app.renderEditStageNodes();
+        },
+
+        // [New] 手動修改節點數值 (HP, ATK, EXP, GOLD)
+        updateStageNodeStat: (nodeIdx, field, val) => {
+            const { currentSubIdx, data } = app.state.editingStage;
+            const nodes = data.subStages[currentSubIdx].nodes;
+            if (nodes && nodes[nodeIdx]) {
+                nodes[nodeIdx][field] = parseInt(val) || 0;
+            }
+            // 不需重新 render，避免輸入焦點跑掉 (因為是 onchange 事件，已經離開焦點了，但為了保險起見不重繪也可以，不過為了數據一致性建議不重繪 DOM)
+            // 這裡我們選擇不呼叫 renderEditStageNodes，因為 input value 已經變了
+        },
+
+        removeStageNode: (nodeIdx) => {
+            const { currentSubIdx, data } = app.state.editingStage;
+            data.subStages[currentSubIdx].nodes.splice(nodeIdx, 1);
+            app.renderEditStageNodes();
+        },
+
+        // [v4.8.0.4] 儲存整個 Stage 設定 (包含三欄所有資料)
+        saveStageSettings: () => {
+            // 1. 先把當前 UI 的資料存入 state
+            app.saveCurrentSubStageToMemory();
+
+            const { chapIdx, sIdx, data } = app.state.editingStage;
+            
+            // 2. 儲存 Col 1 資料
+            const bossIdx = app.el('edit-stage-boss').value;
+            const globalMonsters = app.state.globalSettings?.monsterList || [];
+            
+            if (bossIdx !== '' && globalMonsters[bossIdx]) {
+                data.bossName = globalMonsters[bossIdx].name;
+                data.bossImg = globalMonsters[bossIdx].img3; 
+                data.bossDataIdx = bossIdx; 
+            } else {
+                data.bossName = "未設定";
+                data.bossImg = "";
+            }
+
+            data.multiplier = parseFloat(app.el('edit-stage-multiplier').value) || 1.0;
+            data.storyIntro = app.el('edit-stage-story').value; // [New]
+            
+            // 3. 儲存 Col 3 資料 (地圖)
+            data.mapUrl = app.el('edit-stage-map-url').value;   // [New]
+            // mapNodes 已經在拖曳時即時寫入 app.state.editingStage.data.mapNodes
+
+            // 4. 清理與寫回
+            delete data.nodes; delete data.rewardGold; delete data.rewardExp; delete data.rewardItem;
+
+            app.state.campaigns[chapIdx].stages[sIdx] = data;
+            
+            app.saveCampaignData();
+            app.closeStageEditor();
+            app.toast('✅ 完整戰役設定已儲存', 1);
+        },
+
+        deleteCampaignStage: () => {
+             const { chapIdx, sIdx } = app.state.editingStage;
+             if(confirm('🗑️ 確定要刪除此戰役節點嗎？(刪除後不可復原)')) {
+                 app.state.campaigns[chapIdx].stages.splice(sIdx, 1);
+                 app.saveCampaignData();
+                 app.closeStageEditor();
+                 app.renderCampaignMap(app.state.campaigns[chapIdx], chapIdx);
+                 app.toast('🗑️ 關卡已刪除', 1);
+             }
+        },
+
+// [Fix] 更新編輯器的地圖背景 (即時預覽)
+        updateStageMapBackground: () => {
+            const url = app.el('edit-stage-map-url').value.trim();
+            const img = app.el('edit-stage-map-preview');
+            
+            if (url) {
+                img.src = url;
+                img.style.opacity = '1'; // 預覽時不透明，清楚看到地圖
+            } else {
+                img.src = 'https://www.transparenttextures.com/patterns/dark-matter.png';
+                img.style.opacity = '0.3';
+            }
+        },
+
+        // [New] 渲染地圖編輯器上的可拖曳節點
+        renderStageMapEditor: () => {
+            const container = app.el('stage-map-nodes-layer');
+            const { data } = app.state.editingStage;
+            const count = data.subStageCount || 1;
+            const mapNodes = data.mapNodes || {}; // { 1: {x:10, y:10}, 2: {x:20, y:20} }
+
+            let html = '';
+            // 根據關卡數量生成節點
+            for (let i = 1; i <= count; i++) {
+                // 讀取儲存的座標，若無則預設排列
+                const pos = mapNodes[i] || { x: 10 + (i-1)*15, y: 50 }; 
+                // 限制邊界 (0-90%)
+                const safeX = Math.min(90, Math.max(0, pos.x));
+                const safeY = Math.min(90, Math.max(0, pos.y));
+
+                // 產生節點 HTML (紅色未通關圖示)
+                // 加入 onmousedown 事件來啟動拖曳
+                html += `<div id="drag-node-${i}" onmousedown="app.initMapNodeDrag(event, ${i})" class="absolute w-8 h-8 cursor-move hover:scale-125 transition-transform z-20 flex flex-col items-center justify-center group" style="left:${safeX}%; top:${safeY}%;"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%B4%85%E8%89%B2%E6%9C%AA%E9%80%9A%E9%97%9C.png" class="w-full h-full object-contain filter drop-shadow-md select-none pointer-events-none"><div class="absolute -bottom-4 bg-black/70 text-white text-[0.6rem] px-1 rounded font-bold pointer-events-none whitespace-nowrap">${app.state.editingStage.sIdx+1}-${i}</div></div>`;
+            }
+            container.innerHTML = html;
+        },
+
+        // [New] 初始化節點拖曳 (滑鼠事件)
+        initMapNodeDrag: (e, subIdx) => {
+            e.preventDefault();
+            const nodeEl = document.getElementById(`drag-node-${subIdx}`);
+            const container = app.el('stage-map-editor-container');
+            const rect = container.getBoundingClientRect();
+
+            // 拖曳處理函式
+            const onMove = (moveEvent) => {
+                // 計算相對位置 (百分比)
+                let x = ((moveEvent.clientX - rect.left) / rect.width) * 100;
+                let y = ((moveEvent.clientY - rect.top) / rect.height) * 100;
+                
+                // 限制範圍 (避免拖出去)
+                x = Math.min(92, Math.max(0, x));
+                y = Math.min(92, Math.max(0, y));
+
+                // 即時更新視覺
+                nodeEl.style.left = `${x}%`;
+                nodeEl.style.top = `${y}%`;
+
+                // 即時寫入資料 (Memory)
+                if (!app.state.editingStage.data.mapNodes) app.state.editingStage.data.mapNodes = {};
+                app.state.editingStage.data.mapNodes[subIdx] = { x: x, y: y };
+            };
+
+            const onUp = () => {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            };
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        },
+
+        closeStageEditor: () => {
+            app.el('stage-editor-modal').classList.add('hidden');
+            app.state.editingStage = null;
+        },
+
+        enterCampaignStage: (chapIdx, sIdx, isLocked) => {
+            if (isLocked) {
+                app.toast('🔒 此關卡尚未解鎖！請先通關前置關卡。', 1);
+                return;
+            }
+            
+            const stage = app.state.campaigns[chapIdx].stages[sIdx];
+            const subCount = stage.subStageCount || 1;
+            
+            if (confirm(`⚔️ 準備進入戰役關卡：${stage.bossName}？\n(共 ${subCount} 個連續關卡)`)) {
+                // 創建一個特殊類型的房間，並標記為 Campaign Mode
+                app.toast('🚀 正在前往戰場... (功能開發中)', 1);
+                // 實際開發時，這裡會呼叫 createRoom 但帶有 campaign 參數
+            }
         }
     };
 
