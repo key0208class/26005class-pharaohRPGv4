@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.0.9 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.1.1 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -492,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.0.9 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.1.1 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -774,6 +774,20 @@
                                 <div><label class="block text-[0.6rem] font-bold text-stone-500">Lv.6 黑金</label><input type="number" id="admin-md-6" value="0" min="0" class="w-full border border-stone-300 rounded p-1 text-center font-bold"></div>
                                 <div><label class="block text-[0.6rem] font-bold text-stone-500">Lv.7 藍金</label><input type="number" id="admin-md-7" value="0" min="0" class="w-full border border-stone-300 rounded p-1 text-center font-bold"></div>
                             </div>
+                        </div>
+
+                       <!-- 設定檔備份與還原 -->
+                        <div class="bg-gray-100 p-4 rounded-xl border border-gray-300 mb-4">
+                            <h4 class="font-bold text-gray-800 mb-3 flex items-center gap-2">💾 設定檔備份與還原</h4>
+                            <div class="flex gap-4">
+                                <button onclick="app.exportSettings()" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition-colors shadow">📥 匯出設定檔</button>
+                                <div class="flex-1 relative">
+                                    <!-- 將 input file 放在上面，並設為隱形，使其蓋過整個按鈕 -->
+                                    <input type="file" accept=".json" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="app.importSettings(event)">
+                                    <button class="w-full bg-emerald-600 text-white font-bold py-2 rounded-lg hover:bg-emerald-700 transition-colors shadow pointer-events-none">📤 匯入設定檔</button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">包含：遊戲流程、道具發放、怪物設定、商店、黑市、角色圖示等所有全域資料。</p>
                         </div>
 
                         <!-- 數據清理 -->
@@ -1777,7 +1791,7 @@
                             <div class="grid grid-cols-3 gap-2">
                                 <button onclick="app.handleRewardSelect(1)" class="flex flex-col items-center justify-center p-2 bg-gradient-to-b from-red-50 to-red-100 border-2 border-red-300 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-transform group">
                                     <span class="text-2xl mb-1 filter drop-shadow-sm group-hover:scale-110 transition-transform">❤️</span>
-                                    <span class="text-[0.65rem] font-black text-red-800 leading-tight">最大血量<br>+5</span>
+                                    <span class="text-[0.65rem] font-black text-red-800 leading-tight">最大血量<br>+10</span>
                                 </button>
                                 <button onclick="app.handleRewardSelect(2)" class="flex flex-col items-center justify-center p-2 bg-gradient-to-b from-yellow-50 to-yellow-100 border-2 border-yellow-300 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-transform group">
                                     <span class="text-2xl mb-1 filter drop-shadow-sm group-hover:scale-110 transition-transform">💰</span>
@@ -3592,6 +3606,61 @@
                 // 實作清除邏輯
                 app.toast('🗑️ 清除指令已發送');
             }
+        },
+
+        // --- 設定檔備份與還原 ---
+        exportSettings: () => {
+            // 從記憶體中抓取最新的全域設定
+            const settings = app.state.globalSettings || {};
+            // 更新一下匯出時間做標記
+            settings.exportTimestamp = new Date().toISOString();
+            
+            // 轉為 JSON 格式字串並啟動下載
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(settings, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            // 檔名加上時間戳記
+            downloadAnchorNode.setAttribute("download", `神殿試煉_全域設定_${new Date().getTime()}.json`);
+            document.body.appendChild(downloadAnchorNode); 
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            
+            app.toast('📥 設定檔已成功匯出壓縮檔');
+        },
+
+        importSettings: (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedSettings = JSON.parse(e.target.result);
+                    
+                    if (confirm('⚠️ 警告：匯入設定將會立刻寫入伺服器，並覆蓋當前【所有】的全域設定，確定要繼續嗎？')) {
+                        // 寫入 Firebase 資料庫
+                        db.ref('global_settings').set(importedSettings).then(() => {
+                            app.state.globalSettings = importedSettings;
+                            // 強制觸發 UI 重新渲染以套用新設定
+                            app.fetchGlobalSettingsToUI();
+                            app.toast('✅ 全域設定檔已成功匯入並生效！', 1);
+                            
+                            // 匯入完成後，清空選擇的檔案，以便下次能再選同一個檔案
+                            event.target.value = '';
+                        }).catch((err) => {
+                            console.error("匯入寫入至資料庫失敗:", err);
+                            app.toast('❌ 設定匯入失敗，請檢查資料庫連線或權限。');
+                        });
+                    } else {
+                        // 使用者取消匯入時重置檔案，使得再次點擊有反應
+                        event.target.value = '';
+                    }
+                } catch (err) {
+                    console.error("JSON 解析錯誤:", err);
+                    app.toast('❌ 設定檔解析失敗，請確認上傳的是正確的 Json 檔案。');
+                }
+            };
+            reader.readAsText(file);
         },
         saveLocalState: () => {
             const data = {
@@ -6638,8 +6707,9 @@
             app.state.currentRandomGold = rndGold; // 暫存起來，等按下按鈕時使用
 
             // 2. 動態生成按鈕 HTML (無空白節點寫法)，將金幣數值直接顯示
+            
             const panel = app.el('reward-selection-panel');
-            panel.innerHTML = `<div class="text-sm font-bold text-amber-900 mb-2 animate-bounce">🎁 戰鬥勝利！請選擇一項戰利品：</div><div class="grid grid-cols-3 gap-2"><button onclick="app.handleRewardSelect(1)" class="flex flex-col items-center justify-center p-2 bg-gradient-to-b from-red-50 to-red-100 border-2 border-red-300 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-transform group"><span class="text-2xl mb-1 filter drop-shadow-sm group-hover:scale-110 transition-transform">❤️</span><span class="text-[0.65rem] font-black text-red-800 leading-tight">最大血量<br>+5</span></button><button onclick="app.handleRewardSelect(2)" class="flex flex-col items-center justify-center p-2 bg-gradient-to-b from-yellow-50 to-yellow-100 border-2 border-yellow-300 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-transform group"><span class="text-2xl mb-1 filter drop-shadow-sm group-hover:scale-110 transition-transform">💰</span><span class="text-[0.65rem] font-black text-yellow-800 leading-tight">獲得金幣<br>${rndGold} G</span></button><button onclick="app.handleRewardSelect(3)" class="flex flex-col items-center justify-center p-2 bg-gradient-to-b from-indigo-50 to-indigo-100 border-2 border-indigo-300 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-transform group"><span class="text-2xl mb-1 filter drop-shadow-sm group-hover:scale-110 transition-transform">🛒</span><span class="text-[0.65rem] font-black text-indigo-800 leading-tight">進入<br>商店</span></button></div>`;
+            panel.innerHTML = `<div class="text-sm font-bold text-amber-900 mb-2 animate-bounce">🎁 戰鬥勝利！請選擇一項戰利品：</div><div class="grid grid-cols-3 gap-2"><button onclick="app.handleRewardSelect(1)" class="flex flex-col items-center justify-center p-2 bg-gradient-to-b from-red-50 to-red-100 border-2 border-red-300 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-transform group"><span class="text-2xl mb-1 filter drop-shadow-sm group-hover:scale-110 transition-transform">❤️</span><span class="text-[0.65rem] font-black text-red-800 leading-tight">最大血量<br>+10</span></button><button onclick="app.handleRewardSelect(2)" class="flex flex-col items-center justify-center p-2 bg-gradient-to-b from-yellow-50 to-yellow-100 border-2 border-yellow-300 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-transform group"><span class="text-2xl mb-1 filter drop-shadow-sm group-hover:scale-110 transition-transform">💰</span><span class="text-[0.65rem] font-black text-yellow-800 leading-tight">獲得金幣<br>${rndGold} G</span></button><button onclick="app.handleRewardSelect(3)" class="flex flex-col items-center justify-center p-2 bg-gradient-to-b from-indigo-50 to-indigo-100 border-2 border-indigo-300 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-transform group"><span class="text-2xl mb-1 filter drop-shadow-sm group-hover:scale-110 transition-transform">🛒</span><span class="text-[0.65rem] font-black text-indigo-800 leading-tight">進入<br>商店</span></button></div>`;
 
             // 3. 隱藏倒數計時與狀態文字，顯示獎勵面板
             app.el('game-status-text').classList.add('hidden');
@@ -6669,15 +6739,15 @@
 
             // 2. 處理選項與交易
             if (option === 1) {
-                // 選項1: 最大血量 +5 (同時補血)
+                // 選項1: 最大血量 +10 (同時補血)
                 playerRef.transaction(p => {
                     if (p) {
-                        p.maxHp = (p.maxHp || 100) + 5;
-                        p.hp = (p.hp || 0) + 5;
+                        p.maxHp = (p.maxHp || 100) + 10;
+                        p.hp = (p.hp || 0) + 10;
                     }
                     return p;
                 });
-                app.toast('💪 體力充沛！最大血量與生命 +5', 1);
+                app.toast('💪 體力充沛！最大血量與生命 +10', 1);
                 app.showDamageText(5, '#22c55e', app.state.isHost ? 'teacher-personal-board' : 'student-squad-section'); // 綠色補血特效
 
             } else if (option === 2) {
