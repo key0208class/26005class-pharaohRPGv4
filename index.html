@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.1.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.1.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -492,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.1.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.1.3 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -599,7 +599,7 @@
                         <button id="btn-campaign-mode" onclick="app.enterCampaignMode()" class="w-full bg-gradient-to-r from-slate-700 to-slate-900 text-amber-400 font-black py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-xl mb-1 flex items-center justify-center gap-2 border-2 border-amber-500/50 relative overflow-hidden group">
                             <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30"></div>
                             <span class="text-2xl filter drop-shadow group-hover:animate-pulse">⚔️</span> 
-                            <span class="tracking-widest">冒險戰役</span>
+                            <span class="tracking-widest">冒險戰役(未開放)</span>
                         </button>
                         <p class="text-xs text-gray-500 font-bold">透過困難的戰役，取得更豐富的獎勵</p>
                     </div>
@@ -1621,9 +1621,9 @@
                     </div>
                 </div>
                 
-                 <!-- [版面調整] lg:grid-cols-[第一欄寬度_第二欄寬度_第三欄自動] -->
-            <!-- [說明] 第一欄(BOSS設定): 340px (加大) / 第二欄(波次): 300px (縮小固定) / 第三欄(地圖): 1fr (剩餘空間) -->
-            <div class="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-[340px_1fr_1fr] gap-4">
+               <!-- [版面調整] lg:grid-cols-[第一欄寬度_第二欄寬度_第三欄自動] -->
+            <!-- [說明] 第一欄(BOSS設定): 260px / 第二欄(波次): 1fr / 第三欄(獎勵): 280px / 第四欄(地圖): 1fr -->
+            <div class="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-[260px_1fr_280px_1fr] gap-3">
                     <input type="hidden" id="edit-stage-id">
 
                     <!-- 第一欄：BOSS 設定與基礎參數 (縮窄版) -->
@@ -1681,40 +1681,44 @@
                                 <label class="block text-xs font-bold text-slate-500">怪物波次清單 (Waves)</label>
                                 <button onclick="app.addStageNode()" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold border border-green-200 hover:bg-green-200 active:scale-95">+ 新增一波</button>
                             </div>
-                            <!-- 這裡的列表會自動產生帶有圖片與數值輸入框的項目 -->
                             <div id="edit-stage-nodes-list" class="space-y-3 overflow-y-auto custom-scrollbar flex-1 p-1">
                                 <!-- JS 生成節點列表 -->
                             </div>
                         </div>
+                    </div>
 
-                        <div class="bg-yellow-100 p-3 rounded-lg border-2 border-yellow-300 flex-shrink-0">
-                            <label class="block text-xs font-bold text-yellow-800 mb-2">🏆 通關獎勵 (完成本關所有波次)</label>
-                            <div class="grid grid-cols-1 gap-2">
-                                <div class="flex gap-2">
-                                    <div class="flex-1">
-                                        <label class="text-[0.6rem] font-bold text-gray-500 block">金幣</label>
-                                        <input type="number" id="edit-stage-reward-gold" class="w-full border border-yellow-400 rounded p-1 text-center text-sm font-bold bg-white" placeholder="0">
-                                    </div>
-                                    <div class="flex-1">
-                                        <label class="text-[0.6rem] font-bold text-gray-500 block">經驗</label>
-                                        <input type="number" id="edit-stage-reward-exp" class="w-full border border-yellow-400 rounded p-1 text-center text-sm font-bold bg-white" placeholder="0">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="text-[0.6rem] font-bold text-gray-500 block">獲得物品 (黑市商品)</label>
-                                    <!-- [修改] 改為下拉選單 -->
-                                    <select id="edit-stage-reward-item" class="w-full border border-yellow-400 rounded p-1 text-sm font-bold bg-white cursor-pointer text-slate-700">
-                                        <option value="">-- 無獎勵 --</option>
-                                        <!-- JS 填入黑市商品 -->
-                                    </select>
-                                </div>
+                    <!-- 第三欄：通關獎勵配置 -->
+                    <div class="flex flex-col gap-3 overflow-y-auto pr-1 bg-yellow-50 p-3 rounded-xl border border-yellow-200">
+                        <div class="flex justify-between items-center border-b border-yellow-300 pb-1">
+                            <h4 class="font-black text-yellow-800 text-sm">3. 通關獎勵</h4>
+                            <span class="text-[0.6rem] text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded-full">完成所有波次獲得</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[0.7rem] font-bold text-slate-500 block mb-1">獲得金幣</label>
+                                <input type="number" id="edit-stage-reward-gold" class="w-full border-2 border-yellow-300 rounded-lg p-2 text-center text-sm font-bold bg-white" placeholder="0">
+                            </div>
+                            <div>
+                                <label class="text-[0.7rem] font-bold text-slate-500 block mb-1">獲得經驗</label>
+                                <input type="number" id="edit-stage-reward-exp" class="w-full border-2 border-yellow-300 rounded-lg p-2 text-center text-sm font-bold bg-white" placeholder="0">
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-2 rounded-lg border-2 border-yellow-200 shadow-sm flex-1 flex flex-col min-h-0 mt-2">
+                            <div class="flex justify-between items-center mb-2 flex-shrink-0">
+                                <label class="block text-xs font-bold text-slate-500">機率掉落物品 (黑市)</label>
+                                <button onclick="app.addRewardItem()" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold border border-green-200 hover:bg-green-200 active:scale-95">+ 新增物品</button>
+                            </div>
+                            <div id="edit-stage-rewards-list" class="space-y-2 overflow-y-auto custom-scrollbar flex-1 p-1">
+                                <!-- JS 生成獎勵列表 -->
                             </div>
                         </div>
                     </div>
 
-                    <!-- 第三欄：地圖節點視覺化 (等比例預覽) -->
+                    <!-- 第四欄：地圖節點視覺化 (等比例預覽) -->
                     <div class="flex flex-col gap-3 overflow-hidden bg-slate-800 p-3 rounded-xl border-4 border-slate-600 shadow-inner">
-                        <h4 class="font-black text-slate-300 border-b border-slate-600 pb-1 text-sm">3. 戰役地圖配置</h4>
+                        <h4 class="font-black text-slate-300 border-b border-slate-600 pb-1 text-sm">4. 戰役地圖配置</h4>
                         
                         <div>
                             <label class="block text-xs font-bold text-slate-400 mb-1">地圖背景 URL (建議 16:9)</label>
@@ -8164,7 +8168,7 @@
                     rewards: {
                         gold: tempData.rewardGold || 0,
                         exp: tempData.rewardExp || 0,
-                        item: tempData.rewardItem || ''
+                        items: [] 
                     }
                 };
                 tempData.subStageCount = 1;
@@ -8192,18 +8196,6 @@
             
             // [Fix] 即時更新地圖預覽
             app.updateStageMapBackground();
-
-            // [New] 載入獎勵物品 (黑市清單) 到下拉選單
-            const blackMarketList = app.state.globalSettings?.blackMarketList || [];
-            const rewardSelect = app.el('edit-stage-reward-item');
-            let rewardHtml = '<option value="">-- 無獎勵 --</option>';
-            blackMarketList.forEach((item, idx) => {
-                if(item) {
-                    const lv = item.currentEditLv || 1; // 顯示主要等級名稱
-                    rewardHtml += `<option value="${idx}">[黑市] ${item.name} (Lv${lv})</option>`;
-                }
-            });
-            rewardSelect.innerHTML = rewardHtml;
 
             // 載入 BOSS 清單
             const globalMonsters = app.state.globalSettings?.monsterList || [];
@@ -8290,19 +8282,14 @@
             // 確保物件存在
             if (!data.subStages) data.subStages = {};
             if (!data.subStages[currentSubIdx]) data.subStages[currentSubIdx] = {};
-
-            // 收集小怪波次 (nodes) - 從 DOM 讀取不太方便，直接用 editingStage.nodes 暫存比較好？
-            // 為了簡化，我們假設 edit-stage-nodes-list 的渲染函數已經維護了 data.subStages[currentSubIdx].nodes
-            // 但因為我們是直接修改 UI，所以這裡需要讀取 UI 值 (獎勵部分)
             
             const rewards = {
                 gold: parseInt(app.el('edit-stage-reward-gold').value) || 0,
                 exp: parseInt(app.el('edit-stage-reward-exp').value) || 0,
-                item: app.el('edit-stage-reward-item').value.trim()
+                items: app.state.tempRewardItems || [] // 儲存多物品陣列
             };
             
             data.subStages[currentSubIdx].rewards = rewards;
-            // nodes 已經在 updateStageNode 時即時寫入 state，所以不用這裡讀取
         },
 
         // 從 temp state 載入數據到 UI
@@ -8320,12 +8307,77 @@
             const rw = subData.rewards || {};
             app.el('edit-stage-reward-gold').value = rw.gold || 0;
             app.el('edit-stage-reward-exp').value = rw.exp || 0;
-            app.el('edit-stage-reward-item').value = rw.item || '';
+            
+            // 相容舊版 item 並載入
+            let rItems = rw.items || [];
+            if (rItems.length === 0 && rw.item) {
+                rItems.push({ id: rw.item, prob: 100 });
+            }
+            app.state.tempRewardItems = [...rItems];
+            app.renderEditRewardItems(); // 渲染第三欄物品清單
 
             // 載入波次列表
             app.renderEditStageNodes(subData.nodes);
         },
+addRewardItem: () => {
+            if (!app.state.tempRewardItems) app.state.tempRewardItems = [];
+            // 預設新增一個空物品，機率 100%
+            app.state.tempRewardItems.push({ id: '', prob: 100 });
+            app.renderEditRewardItems();
+        },
 
+        updateRewardItem: (idx, field, val) => {
+            if (app.state.tempRewardItems && app.state.tempRewardItems[idx]) {
+                if (field === 'prob') {
+                    // 限制機率在 1 ~ 100 之間
+                    app.state.tempRewardItems[idx][field] = Math.max(1, Math.min(100, parseInt(val) || 1));
+                } else {
+                    app.state.tempRewardItems[idx][field] = val;
+                }
+            }
+        },
+
+        removeRewardItem: (idx) => {
+            if (app.state.tempRewardItems) {
+                app.state.tempRewardItems.splice(idx, 1);
+                app.renderEditRewardItems();
+            }
+        },
+
+        renderEditRewardItems: () => {
+            const listEl = app.el('edit-stage-rewards-list');
+            if (!listEl) return;
+            const items = app.state.tempRewardItems || [];
+            const blackMarketList = app.state.globalSettings?.blackMarketList || [];
+
+            if (items.length === 0) {
+                listEl.innerHTML = '<div class="text-xs text-gray-400 text-center py-4 bg-slate-50 rounded border-dashed border-2 border-slate-300">尚未設定掉落物品</div>';
+                return;
+            }
+
+            // 產生黑市選項字串 (效能考量，先產生一次)
+            let optsHtml = '<option value="">--選擇物品--</option>';
+            blackMarketList.forEach((bm, i) => {
+                // [修改] 移除了 bm.isSold !== false 的限制，讓未販賣的隱藏道具也能設定為掉落物
+                if (bm) {
+                    const lv = bm.currentEditLv || 1;
+                    optsHtml += `<option value="${i}">[Lv${lv}] ${bm.name}</option>`;
+                }
+            });
+
+            let html = '';
+            items.forEach((item, idx) => {
+                // 自動套用選擇狀態 (無空白節點壓縮)
+                let itemOpts = optsHtml.replace(`value="${item.id}"`, `value="${item.id}" selected`);
+                
+                // 顯示該物品圖片
+                const bmItem = blackMarketList[item.id];
+                const img = bmItem ? (bmItem[`img${bmItem.currentEditLv||1}`] || bmItem.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png') : 'https://placehold.co/30x30?text=?';
+
+                html += `<div class="bg-slate-50 p-2 rounded border border-slate-200 flex items-center gap-2 relative group mb-1"><div class="w-8 h-8 bg-white rounded border border-slate-300 overflow-hidden flex-shrink-0"><img src="${img}" class="w-full h-full object-contain"></div><div class="flex-1 flex flex-col gap-1"><select onchange="app.updateRewardItem(${idx}, 'id', this.value); app.renderEditRewardItems();" class="w-full border border-slate-300 rounded text-xs py-1 px-1 font-bold text-slate-800 bg-white">${itemOpts}</select><div class="flex items-center gap-1"><span class="text-[0.6rem] text-slate-500 font-bold">掉落率</span><input type="number" value="${item.prob}" min="1" max="100" onchange="app.updateRewardItem(${idx}, 'prob', this.value)" class="w-16 border border-slate-300 rounded text-center text-xs font-bold text-blue-700 bg-white"><span class="text-[0.6rem] text-slate-500 font-bold">%</span></div></div><button onclick="app.removeRewardItem(${idx})" class="text-red-400 hover:text-red-600 font-bold px-1 text-lg self-start transition-transform hover:scale-125">×</button></div>`;
+            });
+            listEl.innerHTML = html;
+        },
         // [v4.8.0.5] 渲染波次列表 (含預覽圖與可編輯數值)
         renderEditStageNodes: (nodesArray = null) => {
             if (!nodesArray) {
