@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.1.3 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.1.6.2 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -492,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.1.3 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.1.6.2 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -1582,9 +1582,51 @@
                             </div>
                         </div>
 
-                        <!-- 關卡網格容器 -->
+                        <!-- 關卡網格容器 (章節選擇) -->
                         <div id="campaign-stage-container" class="campaign-map-grid flex-1 overflow-y-auto custom-scrollbar relative">
                             <!-- 關卡節點由 JS 生成 -->
+                        </div>
+                        
+                        <!-- 戰役地圖容器 (實際遊玩節點) -->
+                        <div id="campaign-node-map-container" class="hidden flex-1 relative bg-black/50 overflow-hidden flex items-center justify-center">
+                            <div class="relative w-full max-w-3xl aspect-video bg-black/80 shadow-[0_0_30px_rgba(0,0,0,0.8)] border-2 border-slate-600 rounded-xl overflow-hidden">
+                                <img id="campaign-map-bg" src="" class="absolute inset-0 w-full h-full object-cover opacity-60">
+                                <div id="campaign-play-nodes-layer" class="absolute inset-0 z-10 w-full h-full">
+                                    <!-- 遊玩節點由 JS 生成 -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 戰前準備視窗 (彈出式) -->
+                        <div id="campaign-prebattle-modal" class="fixed inset-0 z-[75] hidden flex items-center justify-center modal-backdrop">
+                            <div class="bg-slate-900 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl border-4 border-amber-600 animate-[fadeIn_0.3s_ease-out] flex flex-col relative overflow-hidden text-center">
+                                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-600 to-amber-500"></div>
+                                <h3 id="prebattle-title" class="text-2xl font-black text-amber-400 mb-2 mt-2 tracking-widest drop-shadow-md">戰役 1-1</h3>
+                                <div class="text-sm font-bold text-slate-400 mb-4" id="prebattle-waves">共 3 波魔物</div>
+                                
+                                <div class="w-24 h-24 mx-auto bg-black rounded-full border-2 border-amber-500 overflow-hidden shadow-[0_0_15px_rgba(217,119,6,0.5)] mb-4">
+                                    <img id="prebattle-boss-img" src="" class="w-full h-full object-cover">
+                                </div>
+                                
+                                <div class="bg-slate-800 p-3 rounded-xl border border-slate-600 mb-6 text-left">
+                                    <div class="text-xs font-bold text-slate-500 mb-2 border-b border-slate-700 pb-1">🎁 通關預期獎勵</div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <div class="flex gap-4">
+                                            <span class="text-yellow-400 font-bold text-sm bg-slate-900 px-2 py-0.5 rounded border border-yellow-900">💰 <span id="prebattle-gold">0</span></span>
+                                            <span class="text-purple-400 font-bold text-sm bg-slate-900 px-2 py-0.5 rounded border border-purple-900">✨ <span id="prebattle-exp">0</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="text-[0.65rem] text-slate-400 mb-1">機率掉落珍稀物品：</div>
+                                    <div id="prebattle-items" class="flex flex-wrap gap-2 mt-1">
+                                        <!-- JS 生成掉落物 -->
+                                    </div>
+                                </div>
+                                
+                                <div class="flex gap-3">
+                                    <button onclick="app.el('campaign-prebattle-modal').classList.add('hidden')" class="flex-1 bg-slate-700 text-slate-300 py-3 rounded-xl font-bold shadow hover:bg-slate-600 active:scale-95 transition-colors border-b-4 border-slate-800 active:border-b-0 active:translate-y-1">返回地圖</button>
+                                    <button onclick="app.startCampaignBattle()" class="flex-1 bg-red-700 text-white py-3 rounded-xl font-black shadow-[0_0_15px_rgba(185,28,28,0.5)] hover:bg-red-600 active:scale-95 transition-colors border-b-4 border-red-900 active:border-b-0 active:translate-y-1 tracking-widest text-lg">⚔️ 出擊</button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- 底部裝飾 -->
@@ -1696,11 +1738,11 @@
                         
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="text-[0.7rem] font-bold text-slate-500 block mb-1">獲得金幣</label>
+                                <label class="text-[0.7rem] font-bold text-slate-500 block mb-1">額外獲得金幣</label>
                                 <input type="number" id="edit-stage-reward-gold" class="w-full border-2 border-yellow-300 rounded-lg p-2 text-center text-sm font-bold bg-white" placeholder="0">
                             </div>
                             <div>
-                                <label class="text-[0.7rem] font-bold text-slate-500 block mb-1">獲得經驗</label>
+                                <label class="text-[0.7rem] font-bold text-slate-500 block mb-1">額外獲得經驗</label>
                                 <input type="number" id="edit-stage-reward-exp" class="w-full border-2 border-yellow-300 rounded-lg p-2 text-center text-sm font-bold bg-white" placeholder="0">
                             </div>
                         </div>
@@ -2440,7 +2482,11 @@
             // 雖然此按鈕旁邊有文字 p 標籤，但隱藏按鈕本身即可達到主要目的
             // 若要連同下方文字一起隱藏，需操作 parentElement 或相鄰元素，這裡先隱藏按鈕
             if (campBtn) {
-                const showCamp = settings.showCampaignBtn !== false; // 預設顯示
+                // [修改] 檢查是否具備管理員權限 (一般管理員 或 戰役管理員)
+                const isAdmin = localStorage.getItem('pharaoh_admin_token') === 'valid' || localStorage.getItem('campaign_admin_token') === 'valid';
+                // 如果是管理員，強制顯示；否則依照全域設定
+                const showCamp = settings.showCampaignBtn !== false || isAdmin; 
+                
                 if (showCamp) {
                     campBtn.classList.remove('hidden-logic');
                     if(campBtn.nextElementSibling) campBtn.nextElementSibling.classList.remove('hidden-logic'); // 嘗試隱藏說明文字
@@ -2500,8 +2546,14 @@
                     const statusText = room.status === 'waiting' ? '等待中' : '冒險進行中';
                     const statusClass = room.status === 'waiting' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
                     
+                    // [新增] 判斷房間類型，加入不同的標籤與圖示
+                    const roomTypeTag = room.isCampaign 
+                        ? `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded border border-red-300 text-[0.6rem] font-black shadow-sm mr-2">⚔️ 戰役模式</span>` 
+                        : `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded border border-blue-300 text-[0.6rem] font-black shadow-sm mr-2">🎲 隨機討伐</span>`;
+                    const roomIcon = room.isCampaign ? '🗺️' : '🏰';
+
                     // 壓縮 HTML 防止空白節點
-                    html += `<div onclick="app.joinLobbyRoom('${room.id}')" class="room-item"><div class="flex items-center gap-3"><div class="text-2xl">🏰</div><div><div class="font-bold text-amber-900">${room.roomName || '未命名隊伍'}</div><div class="text-xs text-gray-500 flex items-center gap-2"><span>隊長: ${room.hostName}</span><span class="${statusClass} px-2 py-0.5 rounded-full text-[0.6rem] font-bold">${statusText}</span></div></div></div><div class="text-amber-600 font-bold text-sm">點擊加入 ➜</div></div>`;
+                    html += `<div onclick="app.joinLobbyRoom('${room.id}')" class="room-item"><div class="flex items-center gap-3"><div class="text-2xl">${roomIcon}</div><div><div class="font-bold text-amber-900 flex items-center">${roomTypeTag}${room.roomName || '未命名隊伍'}</div><div class="text-xs text-gray-500 flex items-center gap-2 mt-1"><span>隊長: ${room.hostName}</span><span class="${statusClass} px-2 py-0.5 rounded-full text-[0.6rem] font-bold">${statusText}</span></div></div></div><div class="text-amber-600 font-bold text-sm">點擊加入 ➜</div></div>`;
                 }
             });
 
@@ -3976,6 +4028,13 @@
                                     userData.highScore = myData.score;
                                 }
                                 userData.lastActive = firebase.database.ServerValue.TIMESTAMP;
+								// [新增] 同步戰役掉落物到帳號背包
+                                if (data.isCampaign && data.campaignDroppedItems && data.campaignDroppedItems.length > 0) {
+                                    if (!userData.inventory) userData.inventory = {};
+                                    data.campaignDroppedItems.forEach(itemId => {
+                                        userData.inventory[itemId] = (userData.inventory[itemId] || 0) + 1;
+                                    });
+                                }
                                 return userData;
                             }, (error, committed) => {
                                 if (committed) {
@@ -4323,20 +4382,23 @@
          
          const gameData = app.state.gameData || {};
          
-         // 1. 統計總數據
+         // 1. 統計數據 (改為個人數據優先)
          let allPlayers = [];
          let totalScore = 0;
-         let totalGold = 0;
-         let totalExp = 0;
+         let myGold = 0; // [修改] 儲存個人獲得金幣
+         let myExp = 0;  // [修改] 儲存個人獲得經驗
 
          Object.keys(players).forEach(teamKey => {
              if(players[teamKey]) {
                  Object.values(players[teamKey]).forEach(p => {
                      allPlayers.push(p);
                      totalScore += (p.score || 0);
-                     // 優先使用本局戰績 (sessionGold)，若無則用持有金幣
-                     totalGold += (p.sessionGold !== undefined ? p.sessionGold : (p.gold || 0));
-                     totalExp += (p.exp || 0);
+                     
+                     // [修改] 只提取自己的金幣與經驗做為展示
+                     if (p.name === app.state.myName) {
+                         myGold = (p.sessionGold !== undefined ? p.sessionGold : (p.gold || 0));
+                         myExp = (p.exp || 0);
+                     }
                  });
              }
          });
@@ -4350,47 +4412,114 @@
              durationStr = `${minutes}分${seconds}秒`;
          }
 
-         // 3. [修正] 決定 BOSS 圖片
-         // 預設圖: 藍金卡背 (通關證明)
+         // 3. 決定 BOSS 圖片
          let bossImg = "https://class.kh.edu.tw/sites/30033/upload_file/6/AuMVWei.jpg"; 
          let bossName = "最終試煉完成";
          
          const monster = gameData.activeMonster;
-         
-         // [v4.7.7.3] 優先讀取紀錄中的「最後擊敗BOSS」，這最準確
          if (gameData.lastDefeatedBoss) {
              if (gameData.lastDefeatedBoss.img) bossImg = gameData.lastDefeatedBoss.img;
              if (gameData.lastDefeatedBoss.name) bossName = `擊敗: ${gameData.lastDefeatedBoss.name}`;
          } 
-         // 如果沒有紀錄 (例如舊版相容)，且場上還有活著的怪 (強制結束)，則顯示當前怪物
-         // 排除寶箱 (寶箱不應被視為 BOSS)
          else if (monster && monster.img1 && monster.type !== 'chest') {
              bossImg = monster.img1;
              bossName = monster.name;
          }
-         // 若是寶箱或無怪且無紀錄，則維持預設通關證明圖
 
-         // 4. 渲染排行榜 HTML (生成排名列表)
+         // 4. 渲染排行榜 HTML
          allPlayers.sort((a, b) => (b.score || 0) - (a.score || 0));
          let playerHtml = '';
          if (allPlayers.length > 0) {
              allPlayers.forEach((p, i) => {
                  const rankClass = i===0 ? 'rank-1' : (i===1 ? 'rank-2' : (i===2 ? 'rank-3' : 'rank-other'));
                  const rowBg = i < 3 ? 'bg-white' : 'bg-slate-50';
-                 // 壓縮 HTML
                  playerHtml += `<div class="flex items-center justify-between p-2 rounded-lg border border-amber-100 ${rowBg} shadow-sm mb-1"><div class="flex items-center gap-2"><span class="rank-badge ${rankClass} text-sm shadow-sm w-6 h-6">${i+1}</span><span class="font-bold text-slate-700 text-sm truncate max-w-[100px]">${p.name}</span></div><span class="font-black text-amber-700 text-base">${p.score || 0}</span></div>`;
              });
          } else {
              playerHtml = '<div class="text-center text-gray-400 py-4 text-sm">本次冒險無人得分</div>';
          }
 
-        // 5. 生成雙欄位儀表板 HTML (左側數據與BOSS圖，右側排行榜)
+         // 5. 生成雙欄位儀表板 HTML (替換顯示個人數值 myGold / myExp)
          const summaryContainer = app.el('end-game-summary-container');
          if (summaryContainer) {
              // 確保所有標籤緊密相連，杜絕空白節點異常
-             summaryContainer.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mt-2"><div class="flex flex-col gap-2"><div class="relative bg-gradient-to-br from-stone-800 to-black rounded-xl p-1 shadow-lg border-2 border-amber-600 overflow-hidden flex-shrink-0 group h-40 md:h-48 flex items-center justify-center"><div class="absolute top-2 left-2 bg-red-700 text-white text-[0.6rem] font-bold px-2 py-0.5 rounded shadow z-10 tracking-widest border border-red-500">擊敗強大魔物</div><img src="${bossImg}" class="h-full w-auto object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] group-hover:scale-110 transition-transform duration-700"><div class="absolute bottom-0 w-full bg-black/80 text-amber-500 text-center text-xs py-1 font-bold border-t border-amber-900/50">${bossName}</div></div><div class="grid grid-cols-2 gap-2"><div class="bg-yellow-50 border border-yellow-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-yellow-800 font-bold">💰 總獲金幣</div><div class="text-lg font-black text-yellow-600">${totalGold}</div></div><div class="bg-purple-50 border border-purple-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-purple-800 font-bold">✨ 累積經驗</div><div class="text-lg font-black text-purple-600">${totalExp}</div></div><div class="bg-blue-50 border border-blue-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-blue-800 font-bold">⏱️ 冒險耗時</div><div class="text-base font-black text-blue-600">${durationStr}</div></div><div class="bg-stone-100 border border-stone-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-stone-600 font-bold">🔄 回合數</div><div class="text-base font-black text-stone-600">${gameData.round || 1}</div></div></div></div><div class="flex flex-col bg-amber-50/50 rounded-xl border border-amber-200 overflow-hidden"><div class="bg-amber-100/80 p-2 text-center font-bold text-amber-900 border-b border-amber-200 text-sm flex-shrink-0">🏆 傳奇冒險家排行榜</div><div class="p-2">${playerHtml}</div></div></div>`;
+             summaryContainer.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mt-2"><div class="flex flex-col gap-2"><div class="relative bg-gradient-to-br from-stone-800 to-black rounded-xl p-1 shadow-lg border-2 border-amber-600 overflow-hidden flex-shrink-0 group h-40 md:h-48 flex items-center justify-center"><div class="absolute top-2 left-2 bg-red-700 text-white text-[0.6rem] font-bold px-2 py-0.5 rounded shadow z-10 tracking-widest border border-red-500">擊敗強大魔物</div><img src="${bossImg}" class="h-full w-auto object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] group-hover:scale-110 transition-transform duration-700"><div class="absolute bottom-0 w-full bg-black/80 text-amber-500 text-center text-xs py-1 font-bold border-t border-amber-900/50">${bossName}</div></div><div class="grid grid-cols-2 gap-2"><div class="bg-yellow-50 border border-yellow-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm relative"><div class="text-[0.6rem] text-yellow-800 font-bold">💰 個人金幣</div><div id="end-game-gold-val" class="text-lg font-black text-yellow-600">${myGold}</div></div><div class="bg-purple-50 border border-purple-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm relative"><div class="text-[0.6rem] text-purple-800 font-bold">✨ 個人經驗</div><div id="end-game-exp-val" class="text-lg font-black text-purple-600">${myExp}</div></div><div class="bg-blue-50 border border-blue-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-blue-800 font-bold">⏱️ 冒險耗時</div><div class="text-base font-black text-blue-600">${durationStr}</div></div><div class="bg-stone-100 border border-stone-200 rounded-lg p-1.5 flex flex-col items-center justify-center shadow-sm"><div class="text-[0.6rem] text-stone-600 font-bold">🔄 回合數</div><div class="text-base font-black text-stone-600">${gameData.round || 1}</div></div></div><div id="end-game-drops-container" class="hidden flex-wrap gap-2 justify-center p-2 bg-slate-800 border-2 border-amber-500 rounded-lg shadow-inner"></div></div><div class="flex flex-col bg-amber-50/50 rounded-xl border border-amber-200 overflow-hidden"><div class="bg-amber-100/80 p-2 text-center font-bold text-amber-900 border-b border-amber-200 text-sm flex-shrink-0">🏆 傳奇冒險家排行榜</div><div class="p-2">${playerHtml}</div></div></div>`;
+             
+             // --- [修改] 執行戰役通關的動畫 (計算個人獎勵) ---
+             // 只有當 gameData 標記 campaignRewarded = true (完全通關) 才會有動畫
+             if (gameData.isCampaign && gameData.campaignRewarded && gameData.campaignRewards) {
+                 // 取得個人的額外獎勵數值
+                 const extraGold = (gameData.campaignRewards.gold || 0);
+                 const extraExp = (gameData.campaignRewards.exp || 0);
+                 
+                 // 反推尚未加上獎勵的原始數值
+                 const startGold = Math.max(0, myGold - extraGold);
+                 const startExp = Math.max(0, myExp - extraExp);
+                 
+                 // 執行數字滾動 (從 start 滾動到 myGold/myExp，顯示 +bonus)
+                 app.animateRollValue('end-game-gold-val', startGold, myGold, extraGold);
+                 app.animateRollValue('end-game-exp-val', startExp, myExp, extraExp);
+                 
+                 // 若有掉落物，延遲顯示
+                 if (gameData.campaignDroppedItems && gameData.campaignDroppedItems.length > 0) {
+                     setTimeout(() => {
+                         const dropContainer = app.el('end-game-drops-container');
+                         const globalBm = app.state.globalSettings?.blackMarketList || [];
+                         let dropHtml = '<div class="w-full text-[0.6rem] text-amber-400 font-bold text-center mb-1">🎁 戰利品掉落！</div>';
+                         
+                         gameData.campaignDroppedItems.forEach(itemId => {
+                             const bmItem = globalBm[itemId];
+                             if (bmItem) {
+                                 const img = bmItem[`img${bmItem.currentEditLv||1}`] || bmItem.img1 || '';
+                                 dropHtml += `<div class="bg-black/50 p-1 rounded border border-amber-600 animate-[popIn_0.5s_ease-out]"><img src="${img}" class="w-8 h-8 object-contain" title="${bmItem.name}"></div>`;
+                             }
+                         });
+                         dropContainer.innerHTML = dropHtml;
+                         dropContainer.classList.remove('hidden');
+                         dropContainer.classList.add('flex');
+                         app.speak('獲得稀有戰利品');
+                     }, 2000); // 等待數字滾完
+                 }
+             }
          }
      },
+
+     // [新增] 數字滾動動畫輔助函式
+     animateRollValue: (elId, start, end, bonus) => {
+         const el = document.getElementById(elId);
+         if (!el || bonus <= 0) return;
+         
+         el.textContent = start; // 先顯示基礎數值
+         
+         setTimeout(() => {
+             // 產生 +Bonus 浮動特效
+             const bonusEl = document.createElement('div');
+             bonusEl.textContent = `+${bonus} 通關獎勵!`;
+             bonusEl.className = 'absolute top-0 left-1/2 -translate-x-1/2 text-[0.65rem] font-black text-green-500 whitespace-nowrap animate-[damage-float-up_2s_ease-out_forwards] z-50 drop-shadow-md';
+             el.parentElement.appendChild(bonusEl);
+             
+             // 數字滾動迴圈
+             let current = start;
+             const steps = 30;
+             const stepValue = (end - start) / steps;
+             let count = 0;
+             
+             const timer = setInterval(() => {
+                 count++;
+                 current += stepValue;
+                 el.textContent = Math.floor(current);
+                 if (count >= steps) {
+                     clearInterval(timer);
+                     el.textContent = end;
+                     // 結束時放大閃爍一下
+                     el.classList.add('scale-125', 'text-red-600', 'transition-transform');
+                     setTimeout(() => el.classList.remove('scale-125', 'text-red-600'), 1000);
+                 }
+             }, 30);
+         }, 1200); // 延遲 0.8 秒開始動畫，讓玩家先看清原本的數值
+     },
+
+  
 
    showTeamModal: (teamKey) => {
             if (!app.state.latestTeamStats) return;
@@ -5138,7 +5267,7 @@
                     }
                 });
 
-                // [v4.7.5.1] 處理封印回合遞減
+               // [v4.7.5.1] 處理封印回合遞減
                 let newSealRounds = (gameData.activeMonster && gameData.activeMonster.sealRounds) || 0;
                 if (newSealRounds > 0) newSealRounds--; 
 
@@ -5151,8 +5280,6 @@
                 // 準備更新物件
                 const updates = {
                     status: 'waiting',
-                    'activeMonster/sealRounds': newSealRounds, // 更新剩餘封印回合
-                    'activeMonster/curseRounds': newCurseRounds, // [v4.7.5.5] 更新剩餘詛咒回合
                     dice: { d8: '-', d10: '-', d12: '-' },
                     timerActive: false,
                     timeSandActive: null, // [v4.7.5.4] 換局時清除時之沙凍結狀態
@@ -5163,6 +5290,12 @@
                     // [v4.4.1 修正] 每次換局都更新活躍時間，防止房間在大廳消失
                     lastActive: firebase.database.ServerValue.TIMESTAMP
                 };
+
+                // [修復] 只有當怪物真實存在時，才更新其封印與詛咒狀態，避免產生幽靈怪物資料卡死通關判定
+                if (gameData.activeMonster) {
+                    updates['activeMonster/sealRounds'] = newSealRounds;
+                    updates['activeMonster/curseRounds'] = newCurseRounds;
+                }
 
                 // [v4.7.5.9] 時之沙安全鎖機制：若偵測到當下有使用時之沙，則啟動鎖定
                 // 這能防止 Firebase 監聽器因 timeSandActive 變更而重複觸發此函數
@@ -5202,10 +5335,51 @@
                     app.state.nextRoundTimeout = null;
                 }
 
-                db.ref(`classes/${app.state.classId}`).update({
+                const updates = {
                     status: 'ended',
                     timerActive: false
-                });
+                };
+
+                // [新增] 戰役模式：通關發放額外獎勵與掉落物
+               
+                const gameData = app.state.gameData || {};
+                
+              // [防弊修改] 判斷是否「完全通關」 (確保牌庫為空，且場上無存活的攻擊性怪物)
+                const isDeckEmpty = (!gameData.monsterDeck || gameData.monsterDeck.length === 0);
+                // [修復] 增設 !gameData.activeMonster.name 條件，主動過濾掉任何異常的殘留幽靈物件
+                const isNoActiveMonster = (!gameData.activeMonster || gameData.activeMonster.type === 'chest' || gameData.activeMonster.currentHp <= 0 || !gameData.activeMonster.name);
+                const isFullyCleared = isDeckEmpty && isNoActiveMonster;
+
+                // 只有在戰役模式、尚未發放獎勵，且「完全通關」的狀況下才發放
+                if (gameData.isCampaign && !gameData.campaignRewarded && isFullyCleared) {
+                    updates.campaignRewarded = true;
+                    const rw = gameData.campaignRewards || {};
+                    const extraGold = rw.gold || 0;
+                    const extraExp = rw.exp || 0;
+                    
+                    // 抽掉落物 (根據機率)
+                    const droppedItems = [];
+                    (rw.items || []).forEach(item => {
+                        if (Math.random() * 100 <= item.prob) {
+                            droppedItems.push(item.id);
+                        }
+                    });
+                    updates.campaignDroppedItems = droppedItems; // 存入 DB 讓所有端知道掉了什麼
+
+                    // 將獎勵寫入每一位玩家
+                    if (gameData.players) {
+                        Object.keys(gameData.players).forEach(tKey => {
+                            Object.keys(gameData.players[tKey]).forEach(pName => {
+                                const p = gameData.players[tKey][pName];
+                                updates[`players/${tKey}/${pName}/exp`] = (p.exp || 0) + extraExp;
+                                updates[`players/${tKey}/${pName}/sessionGold`] = (p.sessionGold || 0) + extraGold;
+                                updates[`players/${tKey}/${pName}/gold`] = (p.gold || 0) + extraGold;
+                            });
+                        });
+                    }
+                }
+
+                db.ref(`classes/${app.state.classId}`).update(updates);
             }
         },
         
@@ -8051,8 +8225,11 @@
             }
         },
 
-        selectChapter: (idx) => {
+       selectChapter: (idx) => {
             app.state.currentChapterIdx = idx;
+            // [修復] 切換章節時，強制回到地圖路線圖視圖，避免卡在節點內沒有返回按鈕
+            app.el('campaign-node-map-container').classList.add('hidden');
+            app.el('campaign-stage-container').classList.remove('hidden');
             app.renderCampaignChapters(app.state.campaigns);
         },
 
@@ -8676,14 +8853,224 @@ addRewardItem: () => {
                 return;
             }
             
+            app.state.currentPlayingStage = { chapIdx, sIdx };
+            app.renderCampaignNodesMap(chapIdx, sIdx);
+        },
+
+        // [新增] 渲染實際遊玩的地圖節點
+        renderCampaignNodesMap: (chapIdx, sIdx) => {
             const stage = app.state.campaigns[chapIdx].stages[sIdx];
-            const subCount = stage.subStageCount || 1;
+            const titleEl = app.el('current-chapter-title');
             
-            if (confirm(`⚔️ 準備進入戰役關卡：${stage.bossName}？\n(共 ${subCount} 個連續關卡)`)) {
-                // 創建一個特殊類型的房間，並標記為 Campaign Mode
-                app.toast('🚀 正在前往戰場... (功能開發中)', 1);
-                // 實際開發時，這裡會呼叫 createRoom 但帶有 campaign 參數
+            // 更改標題並加入返回按鈕
+            if (titleEl) {
+                titleEl.innerHTML = `<button onclick="app.returnToStageSelect()" class="mr-3 bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-sm border border-slate-500 transition-colors">🔙 返回章節</button> ${stage.bossName} - 冒險戰役`;
             }
+
+            // 切換視圖
+            app.el('campaign-stage-container').classList.add('hidden');
+            app.el('campaign-node-map-container').classList.remove('hidden');
+
+            // 繪製地圖背景
+            const mapBg = stage.mapUrl || 'https://www.transparenttextures.com/patterns/dark-matter.png';
+            app.el('campaign-map-bg').src = mapBg;
+
+            // 繪製節點
+            const nodesLayer = app.el('campaign-play-nodes-layer');
+            let html = '';
+            const count = stage.subStageCount || 1;
+            const mapNodes = stage.mapNodes || {};
+
+            for (let i = 1; i <= count; i++) {
+                const pos = mapNodes[i] || { x: 10 + (i-1)*15, y: 50 };
+                
+                // 這裡目前預設解鎖第一關 (i===1)，後續可接上玩家進度系統
+                // 為了方便測試，如果管理員登入，全解鎖；否則只解鎖第一關
+                const isAdmin = localStorage.getItem('campaign_admin_token') === 'valid';
+                const isNodeLocked = !isAdmin && i > 1; 
+                
+                const iconUrl = isNodeLocked ? 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%81%B0%E8%89%B2%E6%9C%AA%E9%80%9A%E9%97%9C.png' : 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%B4%85%E8%89%B2%E6%9C%AA%E9%80%9A%E9%97%9C.png';
+                const clickAction = isNodeLocked ? `app.toast('🔒 戰線尚未推進至此！', 1)` : `app.showNodeDetail(${chapIdx}, ${sIdx}, ${i})`;
+                const pulseClass = !isNodeLocked ? 'animate-pulse cursor-pointer hover:scale-125' : 'opacity-50 cursor-not-allowed';
+
+                html += `<div onclick="${clickAction}" class="absolute w-12 h-12 transition-transform z-20 flex flex-col items-center justify-center group ${pulseClass}" style="left:${pos.x}%; top:${pos.y}%; transform: translate(-50%, -50%);"><img src="${iconUrl}" class="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]"><div class="absolute -bottom-6 bg-black/90 text-amber-400 text-[0.7rem] px-2 py-0.5 rounded shadow-lg font-black whitespace-nowrap border border-amber-600/50">${sIdx+1}-${i}</div></div>`;
+            }
+            nodesLayer.innerHTML = html;
+        },
+
+        // [新增] 返回章節選擇
+        returnToStageSelect: () => {
+            app.el('campaign-node-map-container').classList.add('hidden');
+            app.el('campaign-stage-container').classList.remove('hidden');
+            
+            // 恢復標題
+            const chapIdx = app.state.currentChapterIdx || 0;
+            const chapter = app.state.campaigns[chapIdx];
+            if (app.el('current-chapter-title') && chapter) {
+                app.el('current-chapter-title').textContent = chapter.name;
+            }
+        },
+
+        // [新增] 顯示戰前準備視窗
+        showNodeDetail: (chapIdx, sIdx, subIdx) => {
+            const stage = app.state.campaigns[chapIdx].stages[sIdx];
+            const subData = stage.subStages[subIdx];
+            if(!subData) return app.toast('⚠️ 找不到關卡資料', 1);
+
+            // 儲存待會出擊要用的參數
+            app.state.pendingCampaignBattle = { chapIdx, sIdx, subIdx };
+
+            // 填入視窗資料
+            app.el('prebattle-title').textContent = `戰役 ${sIdx+1}-${subIdx}`;
+            
+            // 這裡預設抓取該關卡第一隻怪物的圖片作為代表圖，如果沒有就用 BOSS 圖
+            let repImg = stage.bossImg || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
+            if (subData.nodes && subData.nodes.length > 0 && subData.nodes[0].monsterIdx !== null) {
+                const mIdx = subData.nodes[0].monsterIdx;
+                const globalMonsters = app.state.globalSettings?.monsterList || [];
+                if(globalMonsters[mIdx] && globalMonsters[mIdx].img1) {
+                    repImg = globalMonsters[mIdx].img1;
+                }
+            }
+            app.el('prebattle-boss-img').src = repImg;
+
+            // 獎勵填寫
+            const rw = subData.rewards || {};
+            app.el('prebattle-gold').textContent = rw.gold || 0;
+            app.el('prebattle-exp').textContent = rw.exp || 0;
+
+            // 掉落物填寫
+            const itemsList = rw.items || [];
+            let itemsHtml = '';
+            const globalBm = app.state.globalSettings?.blackMarketList || [];
+            
+            if (itemsList.length === 0) {
+                itemsHtml = '<div class="text-xs text-slate-500 w-full">無特殊掉落</div>';
+            } else {
+                itemsList.forEach(it => {
+                    const bmItem = globalBm[it.id];
+                    if (bmItem) {
+                        const img = bmItem[`img${bmItem.currentEditLv||1}`] || bmItem.img1 || '';
+                        itemsHtml += `<div class="flex flex-col items-center bg-slate-900/50 p-1.5 rounded-lg border border-slate-700" title="${bmItem.name}"><img src="${img}" class="w-7 h-7 object-contain drop-shadow-md"><span class="text-[0.55rem] text-amber-300 mt-1 font-bold">${it.prob}%</span></div>`;
+                    }
+                });
+            }
+            app.el('prebattle-items').innerHTML = itemsHtml;
+
+            // 波次資訊
+            const nodesCount = (subData.nodes || []).length;
+            app.el('prebattle-waves').textContent = `共 ${nodesCount} 波魔物來襲`;
+
+            app.el('campaign-prebattle-modal').classList.remove('hidden');
+        },
+
+        // [新增] 正式開始戰役戰鬥
+        startCampaignBattle: async () => {
+            app.el('campaign-prebattle-modal').classList.add('hidden');
+            const { chapIdx, sIdx, subIdx } = app.state.pendingCampaignBattle;
+            const stage = app.state.campaigns[chapIdx].stages[sIdx];
+            const subData = stage.subStages[subIdx];
+
+            // 1. 產生自訂的戰役怪物牌庫
+            const customDeck = [];
+            const globalMonsters = app.state.globalSettings?.monsterList || [];
+            
+            (subData.nodes || []).forEach((node, i) => {
+                let baseMonster = null;
+                if (node.monsterIdx !== null && globalMonsters[node.monsterIdx]) {
+                    baseMonster = JSON.parse(JSON.stringify(globalMonsters[node.monsterIdx])); // 深拷貝
+                } else {
+                    // 若無設定，給予預設假怪
+                    baseMonster = {
+                        name: `未知魔物`, hp: 100, maxHp: 100, cardBack: 1, atk: 10, exp: 10, gold: 10,
+                        img1: 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png'
+                    };
+                }
+
+                // 套用編輯器內設定的自訂數值
+                baseMonster.hp = node.customHp !== undefined ? node.customHp : baseMonster.hp;
+                baseMonster.maxHp = baseMonster.hp; // 確保滿血
+                baseMonster.atk = node.customAtk !== undefined ? node.customAtk : baseMonster.atk;
+                baseMonster.exp = node.customExp !== undefined ? node.customExp : baseMonster.exp;
+                baseMonster.gold = node.customGold !== undefined ? node.customGold : baseMonster.gold;
+                
+                // 給予唯一ID，避免渲染出錯
+                baseMonster.uniqueId = `camp_${chapIdx}_${sIdx}_${subIdx}_${i}`;
+
+                customDeck.push(baseMonster);
+            });
+
+            if(customDeck.length === 0) return app.toast('❌ 指揮中心回報：此關卡尚未部署任何魔物！', 1);
+
+            // 2. 建立房間流程 (仿造 createRoom)
+            const name = app.el('lobby-player-name').value.trim() || app.state.myName || '勇者';
+            localStorage.setItem('pharaoh_player_name', name);
+            app.state.myName = name;
+
+            // 產生專屬房間號 (加 CAMP 前綴以利辨識)
+            const roomId = 'CAMP' + Math.floor(1000 + Math.random() * 9000).toString();
+            app.state.classId = roomId;
+            app.state.role = 'student';
+            app.state.isHost = true; // 戰役模式玩家即為房主
+            app.state.myTeam = 'team1';
+
+            localStorage.setItem('pharaoh_current_room_id', roomId);
+            localStorage.setItem('pharaoh_is_host', 'true');
+            localStorage.setItem('pharaoh_role', 'student');
+
+            // 讀取裝備與計算初始道具
+            let myEquipped = {};
+            if (app.state.user) {
+                const snap = await db.ref(`users/${app.state.user.uid}/equipped`).once('value');
+                myEquipped = snap.val() || {};
+            } else {
+                myEquipped = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
+            }
+            const startItems = app.calculateEquippedStartItems(myEquipped);
+            
+            // 提示裝備發動
+            const gainedItems = [];
+            const itemMapName = { hint: '提示卡', double: '聖甲蟲', herb: '草藥', potion: '治療劑', elixir: '補血瓶' };
+            Object.keys(startItems).forEach(key => {
+                if (startItems[key] > 0) gainedItems.push(`${itemMapName[key] || key}+${startItems[key]}`);
+            });
+            if (gainedItems.length > 0) {
+                setTimeout(() => app.toast(`🎒 裝備效果發動！獲得：${gainedItems.join(', ')}`, 1), 1000);
+            }
+
+            const initialData = app.generateInitialGameData();
+
+            // 3. 寫入 Firebase
+            db.ref(`classes/${roomId}`).set({
+                hostName: name,
+                roomName: `戰役：${stage.bossName} (${sIdx+1}-${subIdx})`,
+                status: 'waiting',
+                monsterDeck: customDeck, // 帶入戰役專屬牌庫
+                dice: { d8: '-', d10: '-', d12: '-' },
+                round: 1,
+                timer: 30,
+                timerActive: false,
+                pyramid: initialData.pyramid,
+                decks: initialData.decks,
+                lastActive: firebase.database.ServerValue.TIMESTAMP,
+                startTime: firebase.database.ServerValue.TIMESTAMP, 
+                autoRoll: app.state.globalSettings?.autoRollDefault !== false,
+                endlessMode: false, // 戰役模式絕對不可無限循環
+                isCampaign: true,   // 戰役模式標記
+                campaignRewards: subData.rewards // 將額外獎勵存入房間，待結算時發放
+            }).then(() => {
+                db.ref(`classes/${roomId}/players/team1/${name}`).set({
+                    name: name,
+                    score: 0, gold: 0, sessionGold: 0, hp: 100, maxHp: 100,
+                    items: startItems, equipped: myEquipped,
+                    lastActive: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                app.el('page-campaign').classList.add('hidden'); // 隱藏戰役地圖
+                app.enterGameMode();
+                app.toast(`🚀 戰役開始！`, 1);
+                app.speak('出擊！');
+            });
         }
     };
 
