@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.1.6.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.1.7 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -492,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.1.6.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.1.7 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -2192,6 +2192,9 @@
             userRef.on('value', snapshot => {
                 const data = snapshot.val() || {};
                 
+                // [新增] 讀取戰役通關紀錄
+                app.state.campaignProgress = data.campaignProgress || {};
+                
                 // 1. 處理名稱與等級
                 const finalName = data.displayName || user.displayName;
                 app.state.myName = finalName;
@@ -2438,9 +2441,12 @@
                         app.state.myName = savedName;
                         app.el('lobby-player-name').value = savedName;
                     }
+                    // [新增] 訪客讀取本地通關紀錄
+                    app.state.campaignProgress = JSON.parse(localStorage.getItem('pharaoh_guest_progress') || '{}');
                     app.el('lobby-high-score').textContent = localStorage.getItem('pharaoh_high_score') || '0';
                 }
                 
+                               
                 // [關鍵] 登入狀態確認後，執行斷線重連檢查
                 app.checkPreviousSession();
             });
@@ -4011,10 +4017,27 @@
                     // 防止重複寫入 (檢查本地標記)
                     const sessionKey = `synced_${app.state.classId}`;
                     if (myData && !sessionStorage.getItem(sessionKey)) {
+                        
+                        // [新增] 紀錄戰役通關進度
+                        if (data.isCampaign && data.campaignRewarded && data.campaignMeta) {
+                            const { chapIdx, sIdx, subIdx } = data.campaignMeta;
+                            const progKey = `chap_${chapIdx}_stage_${sIdx}_sub_${subIdx}`;
+                            
+                            // 更新本地狀態
+                            if (!app.state.campaignProgress) app.state.campaignProgress = {};
+                            app.state.campaignProgress[progKey] = true;
+                            
+                            // 寫入資料庫或 LocalStorage
+                            if (app.state.user) {
+                                db.ref(`users/${app.state.user.uid}/campaignProgress/${progKey}`).set(true);
+                            } else {
+                                localStorage.setItem('pharaoh_guest_progress', JSON.stringify(app.state.campaignProgress));
+                            }
+                        }
+
                         const earnedExp = myData.exp || 0;
                         
                         // [v4.6.6 修正] 同步「本局累積總金幣 (sessionGold)」到 Google 帳號
-                        // 這樣即使玩家在遊戲內花光了金幣，大廳帳戶還是會增加他實際「賺到」的數量
                         const earnedGold = (myData.sessionGold !== undefined) ? myData.sessionGold : (myData.gold || 0);
                         
                         if (earnedExp > 0 || earnedGold > 0) {
@@ -4028,7 +4051,7 @@
                                     userData.highScore = myData.score;
                                 }
                                 userData.lastActive = firebase.database.ServerValue.TIMESTAMP;
-								// [新增] 同步戰役掉落物到帳號背包
+                                // [新增] 同步戰役掉落物到帳號背包
                                 if (data.isCampaign && data.campaignDroppedItems && data.campaignDroppedItems.length > 0) {
                                     if (!userData.inventory) userData.inventory = {};
                                     data.campaignDroppedItems.forEach(itemId => {
@@ -7727,9 +7750,9 @@
                         }
                         // 效果3: [v4.7.8.7] 草木精華 (依等級給予不同補血道具)
                         if (item.name.includes('草木精華')) {
-                            if (lv === 1) items.herb += 1;        // Lv1: 草藥
-                            else if (lv === 2) items.potion += 1; // Lv2: 治療劑
-                            else if (lv >= 3) items.elixir += 1;  // Lv3+: 補血瓶
+                            if (lv === 1) items.herb += 2;        // Lv1: 草藥
+                            else if (lv === 2) items.potion += 2; // Lv2: 治療劑
+                            else if (lv >= 3) items.elixir += 2;  // Lv3+: 補血瓶
                         }
                     }
                 });
@@ -8857,43 +8880,69 @@ addRewardItem: () => {
             app.renderCampaignNodesMap(chapIdx, sIdx);
         },
 
-        // [新增] 渲染實際遊玩的地圖節點
+        // [新增] 渲染實際遊玩的地圖節點 (含進度解鎖與亮度調整)
         renderCampaignNodesMap: (chapIdx, sIdx) => {
             const stage = app.state.campaigns[chapIdx].stages[sIdx];
             const titleEl = app.el('current-chapter-title');
             
-            // 更改標題並加入返回按鈕
             if (titleEl) {
                 titleEl.innerHTML = `<button onclick="app.returnToStageSelect()" class="mr-3 bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-sm border border-slate-500 transition-colors">🔙 返回章節</button> ${stage.bossName} - 冒險戰役`;
             }
 
-            // 切換視圖
             app.el('campaign-stage-container').classList.add('hidden');
             app.el('campaign-node-map-container').classList.remove('hidden');
 
-            // 繪製地圖背景
-            const mapBg = stage.mapUrl || 'https://www.transparenttextures.com/patterns/dark-matter.png';
-            app.el('campaign-map-bg').src = mapBg;
+            // [修改] 動態調整地圖容器與圖片的亮度
+            const mapBgEl = app.el('campaign-map-bg');
+            mapBgEl.src = stage.mapUrl || 'https://www.transparenttextures.com/patterns/dark-matter.png';
+            mapBgEl.className = 'absolute inset-0 w-full h-full object-cover opacity-80'; // 調亮圖片
+            mapBgEl.parentElement.className = 'relative w-full max-w-3xl aspect-video bg-slate-700 shadow-[0_0_30px_rgba(0,0,0,0.8)] border-2 border-slate-500 rounded-xl overflow-hidden'; // 調亮底色
 
-            // 繪製節點
             const nodesLayer = app.el('campaign-play-nodes-layer');
             let html = '';
             const count = stage.subStageCount || 1;
             const mapNodes = stage.mapNodes || {};
+            
+            const isAdmin = localStorage.getItem('campaign_admin_token') === 'valid';
+            const progress = app.state.campaignProgress || {};
+            
+            // 追蹤前一關是否通關 (第1關預設其前置為true)
+            let previousCleared = true; 
 
             for (let i = 1; i <= count; i++) {
                 const pos = mapNodes[i] || { x: 10 + (i-1)*15, y: 50 };
+                const progKey = `chap_${chapIdx}_stage_${sIdx}_sub_${i}`;
+                const isCleared = progress[progKey] === true;
                 
-                // 這裡目前預設解鎖第一關 (i===1)，後續可接上玩家進度系統
-                // 為了方便測試，如果管理員登入，全解鎖；否則只解鎖第一關
-                const isAdmin = localStorage.getItem('campaign_admin_token') === 'valid';
-                const isNodeLocked = !isAdmin && i > 1; 
+                // 節點解鎖條件：管理員全開、此關已通關、或上一關已通關
+                const isUnlocked = isAdmin || isCleared || previousCleared;
                 
-                const iconUrl = isNodeLocked ? 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%81%B0%E8%89%B2%E6%9C%AA%E9%80%9A%E9%97%9C.png' : 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%B4%85%E8%89%B2%E6%9C%AA%E9%80%9A%E9%97%9C.png';
-                const clickAction = isNodeLocked ? `app.toast('🔒 戰線尚未推進至此！', 1)` : `app.showNodeDetail(${chapIdx}, ${sIdx}, ${i})`;
-                const pulseClass = !isNodeLocked ? 'animate-pulse cursor-pointer hover:scale-125' : 'opacity-50 cursor-not-allowed';
+                let iconUrl, clickAction, pulseClass, labelColor;
+                
+                if (isCleared && !isAdmin) {
+                    // 已通關 (綠色)
+                    iconUrl = 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%B6%A0%E8%89%B2%E9%80%9A%E9%97%9C.png';
+                    clickAction = `app.showNodeDetail(${chapIdx}, ${sIdx}, ${i})`;
+                    pulseClass = 'cursor-pointer hover:scale-110';
+                    labelColor = 'text-green-400 border-green-600/50';
+                } else if (isUnlocked) {
+                    // 下一關 / 可挑戰 (紅色)
+                    iconUrl = 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%B4%85%E8%89%B2%E6%9C%AA%E9%80%9A%E9%97%9C.png';
+                    clickAction = `app.showNodeDetail(${chapIdx}, ${sIdx}, ${i})`;
+                    pulseClass = 'animate-pulse cursor-pointer hover:scale-125';
+                    labelColor = 'text-amber-400 border-amber-600/50';
+                } else {
+                    // 尚未解鎖 (迷霧)
+                    iconUrl = 'https://class.kh.edu.tw/sites/30033/album_file/1/%E8%BF%B7%E9%9C%A71.png';
+                    clickAction = `app.toast('🔒 戰線尚未推進至此！請先完成前面的任務。', 1)`;
+                    pulseClass = 'opacity-80 cursor-not-allowed grayscale-[50%]';
+                    labelColor = 'text-slate-400 border-slate-600/50';
+                }
 
-                html += `<div onclick="${clickAction}" class="absolute w-12 h-12 transition-transform z-20 flex flex-col items-center justify-center group ${pulseClass}" style="left:${pos.x}%; top:${pos.y}%; transform: translate(-50%, -50%);"><img src="${iconUrl}" class="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]"><div class="absolute -bottom-6 bg-black/90 text-amber-400 text-[0.7rem] px-2 py-0.5 rounded shadow-lg font-black whitespace-nowrap border border-amber-600/50">${sIdx+1}-${i}</div></div>`;
+                // 供下一關判定使用
+                previousCleared = isCleared;
+
+                html += `<div onclick="${clickAction}" class="absolute w-12 h-12 transition-transform z-20 flex flex-col items-center justify-center group ${pulseClass}" style="left:${pos.x}%; top:${pos.y}%; transform: translate(-50%, -50%);"><img src="${iconUrl}" class="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]"><div class="absolute -bottom-6 bg-black/90 ${labelColor} text-[0.7rem] px-2 py-0.5 rounded shadow-lg font-black whitespace-nowrap border">${sIdx+1}-${i}</div></div>`;
             }
             nodesLayer.innerHTML = html;
         },
@@ -8923,13 +8972,16 @@ addRewardItem: () => {
             // 填入視窗資料
             app.el('prebattle-title').textContent = `戰役 ${sIdx+1}-${subIdx}`;
             
-            // 這裡預設抓取該關卡第一隻怪物的圖片作為代表圖，如果沒有就用 BOSS 圖
+            // [修改] 抓取該關卡「最後一隻怪物」的圖片作為代表圖
             let repImg = stage.bossImg || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
-            if (subData.nodes && subData.nodes.length > 0 && subData.nodes[0].monsterIdx !== null) {
-                const mIdx = subData.nodes[0].monsterIdx;
-                const globalMonsters = app.state.globalSettings?.monsterList || [];
-                if(globalMonsters[mIdx] && globalMonsters[mIdx].img1) {
-                    repImg = globalMonsters[mIdx].img1;
+            if (subData.nodes && subData.nodes.length > 0) {
+                const lastNode = subData.nodes[subData.nodes.length - 1]; // 取得最後一波
+                if (lastNode.monsterIdx !== null) {
+                    const mIdx = lastNode.monsterIdx;
+                    const globalMonsters = app.state.globalSettings?.monsterList || [];
+                    if(globalMonsters[mIdx] && globalMonsters[mIdx].img1) {
+                        repImg = globalMonsters[mIdx].img1;
+                    }
                 }
             }
             app.el('prebattle-boss-img').src = repImg;
@@ -9057,6 +9109,7 @@ addRewardItem: () => {
                 autoRoll: app.state.globalSettings?.autoRollDefault !== false,
                 endlessMode: false, // 戰役模式絕對不可無限循環
                 isCampaign: true,   // 戰役模式標記
+				  campaignMeta: { chapIdx, sIdx, subIdx }, // [新增] 紀錄目前打的是哪一關
                 campaignRewards: subData.rewards // 將額外獎勵存入房間，待結算時發放
             }).then(() => {
                 db.ref(`classes/${roomId}/players/team1/${name}`).set({
