@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.1.8 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.1.9 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -492,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.1.8 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.1.9 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -2595,8 +2595,10 @@
                 myEquipped = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
             }
             
-            // 計算初始道具
+     // 計算初始道具與血量加成
             const startItems = app.calculateEquippedStartItems(myEquipped);
+            const hpBonus = app.getHpBonus(myEquipped);
+            const initMaxHp = 100 + hpBonus;
 
             // 檢查房間是否存在並加入
             const roomRef = db.ref(`classes/${roomId}`);
@@ -2607,11 +2609,11 @@
                         const exists = sn.exists();
                         const pData = sn.val() || {};
                         
-                        // 準備更新資料
+                        // 準備更新資料 (若為新玩家則套用裝備加成血量)
                         const updates = {
                             name: name,
-                            hp: (exists && pData.hp !== undefined) ? pData.hp : 100,
-                            maxHp: 100,
+                            hp: (exists && pData.hp !== undefined) ? pData.hp : initMaxHp,
+                            maxHp: (exists && pData.maxHp !== undefined) ? Math.max(pData.maxHp, initMaxHp) : initMaxHp,
                             equipped: myEquipped, // [新增] 更新裝備資訊
                             lastActive: firebase.database.ServerValue.TIMESTAMP
                         };
@@ -2700,6 +2702,10 @@
              setTimeout(() => app.toast(`🎒 裝備效果發動！獲得初始道具：${gainedItems.join(', ')}`, 1), 1000);
          }
 
+        // 計算血量加成
+         const hpBonus = app.getHpBonus(myEquipped);
+         const initMaxHp = 100 + hpBonus;
+
          // 寫入 Firebase
          const initialData = app.generateInitialGameData();
          db.ref(`classes/${roomId}`).set({
@@ -2724,8 +2730,8 @@
                  score: 0,
                  gold: 0, 
                  sessionGold: 0,
-                 hp: 100,    
-                 maxHp: 100,
+                 hp: initMaxHp,    
+                 maxHp: initMaxHp,
                  items: startItems, // [新增] 寫入初始道具
                  equipped: myEquipped, // [新增] 寫入裝備資訊供戰鬥計算
                  lastActive: firebase.database.ServerValue.TIMESTAMP
@@ -7783,7 +7789,7 @@
             return multiplier;
         },
 
-  // 3. 計算攻擊力加成 (冒險者之劍) [v4.7.9.1 新增]
+// 3. 計算攻擊力加成 (冒險者之劍) [v4.7.9.1 新增]
         getAttackBonus: (equippedMap) => {
             let bonus = 0;
             const globalList = app.state.globalSettings?.blackMarketList || [];
@@ -7797,6 +7803,23 @@
                             const lv = item.currentEditLv || 1;
                             bonus += (lv + 1);
                         }
+                    }
+                });
+            }
+            return bonus;
+        },
+
+        // 4. 計算最大血量加成 (狩獵證明) [新增]
+        getHpBonus: (equippedMap) => {
+            let bonus = 0;
+            const globalList = app.state.globalSettings?.blackMarketList || [];
+            if (equippedMap) {
+                Object.values(equippedMap).forEach(itemId => {
+                    const item = globalList[itemId];
+                    if (item) {
+                        if (item.name.includes('初級狩獵證明')) bonus += 10;
+                        else if (item.name.includes('中級狩獵證明')) bonus += 15;
+                        else if (item.name.includes('高級狩獵證明')) bonus += 20;
                     }
                 });
             }
@@ -8318,27 +8341,50 @@
             
             if (titleEl) titleEl.textContent = chapter.name;
             
-            // 模擬讀取玩家進度 (這裡簡化，實際應讀取 user progress)
-            // 預設第一關解鎖，其餘鎖定。若為管理員則全解鎖以便編輯。
+           // 讀取玩家進度
             const isAdmin = localStorage.getItem('campaign_admin_token') === 'valid';
+            const progress = app.state.campaignProgress || {};
             
             let html = '';
             
-            // [修正] 移除 DQ 風格隊伍移動特效 & 隊伍人數顯示代碼
-            // (此處已刪除導致錯誤的 teamSizeEl 操作)
-
             chapter.stages.forEach((stage, sIdx) => {
-                const isLocked = !isAdmin && sIdx > 0; // 暫時邏輯：只有第1關解鎖
+                // [修改] 判斷該關卡是否全破 (檢查所有子節點)
+                const count = stage.subStageCount || 1;
+                let isCurrentCleared = true;
+                for(let i=1; i<=count; i++) {
+                    if (!progress[`chap_${chapIdx}_stage_${sIdx}_sub_${i}`]) {
+                        isCurrentCleared = false;
+                        break;
+                    }
+                }
+
+                // [修改] 判斷前一關是否全破 (用來解鎖本關)
+                let isPrevCleared = true;
+                if (sIdx > 0) {
+                    const prevStage = chapter.stages[sIdx - 1];
+                    const prevCount = prevStage.subStageCount || 1;
+                    for(let i=1; i<=prevCount; i++) {
+                        if (!progress[`chap_${chapIdx}_stage_${sIdx-1}_sub_${i}`]) {
+                            isPrevCleared = false;
+                            break;
+                        }
+                    }
+                }
+
+                // 第0關預設解鎖，其餘關卡需前一關全破
+                const isLocked = !isAdmin && sIdx > 0 && !isPrevCleared; 
                 const lockClass = isLocked ? 'locked' : '';
                 const bossImg = stage.bossImg || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
                 const bossName = stage.bossName || '未設定BOSS';
-                const multiplier = stage.multiplier || 1.0;
                 
                 // 管理員編輯按鈕
                 const editBtn = isAdmin ? `<button onclick="event.stopPropagation(); app.openStageEditor(${chapIdx}, ${sIdx})" class="absolute top-1 right-1 bg-slate-800 text-white text-[0.6rem] px-1.5 rounded z-30 hover:bg-amber-600">✏️</button>` : '';
                 
-              // 無空白 HTML (已移除 currentParty 變數) [v4.8.0.3] 移除倍率顯示
-                html += `<div onclick="app.enterCampaignStage(${chapIdx}, ${sIdx}, ${isLocked})" class="stage-node ${lockClass} relative flex flex-col group"><div class="flex-1 bg-slate-900 relative"><img src="${bossImg}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"><div class="absolute bottom-0 w-full bg-black/70 text-white text-[0.65rem] text-center py-1 truncate">${bossName}</div>${editBtn}</div><div class="h-6 bg-slate-800 flex items-center justify-center border-t border-slate-600"><span class="text-xs font-black text-slate-400">STAGE ${sIdx+1}</span></div></div>`;
+                // PASS 印章特效 (如果該關卡全破就顯示)
+                const passStamp = isCurrentCleared ? `<img src="https://class.kh.edu.tw/sites/30033/upload_file/6/BOSSPasse.png" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 object-contain z-10 filter drop-shadow-md pointer-events-none">` : '';
+
+                // 無空白 HTML
+                html += `<div onclick="app.enterCampaignStage(${chapIdx}, ${sIdx}, ${isLocked})" class="stage-node ${lockClass} relative flex flex-col group"><div class="flex-1 bg-slate-900 relative"><img src="${bossImg}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">${passStamp}<div class="absolute bottom-0 w-full bg-black/70 text-white text-[0.65rem] text-center py-1 truncate">${bossName}</div>${editBtn}</div><div class="h-6 bg-slate-800 flex items-center justify-center border-t border-slate-600"><span class="text-xs font-black text-slate-400">STAGE ${sIdx+1}</span></div></div>`;
             });
 
             // 新增關卡按鈕 (管理員)
@@ -9094,7 +9140,11 @@ addRewardItem: () => {
                 setTimeout(() => app.toast(`🎒 裝備效果發動！獲得：${gainedItems.join(', ')}`, 1), 1000);
             }
 
-            const initialData = app.generateInitialGameData();
+           const initialData = app.generateInitialGameData();
+            
+            // 計算血量加成
+            const hpBonus = app.getHpBonus(myEquipped);
+            const initMaxHp = 100 + hpBonus;
 
             // 3. 寫入 Firebase
             db.ref(`classes/${roomId}`).set({
@@ -9118,7 +9168,7 @@ addRewardItem: () => {
             }).then(() => {
                 db.ref(`classes/${roomId}/players/team1/${name}`).set({
                     name: name,
-                    score: 0, gold: 0, sessionGold: 0, hp: 100, maxHp: 100,
+                    score: 0, gold: 0, sessionGold: 0, hp: initMaxHp, maxHp: initMaxHp,
                     items: startItems, equipped: myEquipped,
                     lastActive: firebase.database.ServerValue.TIMESTAMP
                 });
