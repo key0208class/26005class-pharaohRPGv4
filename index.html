@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.1.7 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.1.8 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -492,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.1.7 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.1.8 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -5237,19 +5237,23 @@
                 { idx: 6, color: 'yellow' }, { idx: 7, color: 'yellow' }, { idx: 8, color: 'yellow' }, { idx: 9, color: 'yellow' }
             ];
 
-            // --- [v4.2.4 優化] 預先檢查：是否需要全域洗牌 (無盡模式) ---
+           // --- [v4.2.4 優化 & v4.8.1.8 修復] 預先檢查：是否需要全域洗牌 ---
             let needsGlobalRefill = false;
+            
+            // [修復關鍵] 檢查場上是否還有存活的怪物。如果有，絕對不能因為卡牌用光而結束遊戲，必須強制洗牌補充彈藥。
+            const hasAliveMonster = gameData.activeMonster && gameData.activeMonster.state === 'battle' && gameData.activeMonster.type !== 'chest';
 
             for (const slot of slots) {
                 // 若該位置是空的或已被拿走，需要補牌
                 if (!newPyramid[slot.idx] || newPyramid[slot.idx].isTaken) {
                     // 檢查對應顏色的牌庫是否為空
                     if (!newDecks[slot.color] || newDecks[slot.color].length === 0) {
-                        if (isEndless === true) {
+                        // 只要是無盡模式，或是「怪物還活著」，就強制洗牌
+                        if (isEndless === true || hasAliveMonster) {
                             needsGlobalRefill = true; // 標記需要全域重置
                             break; // 只要有一個顏色缺牌，就跳出檢查，直接觸發全體重置
                         } else {
-                            cannotRefill = true; // 非無盡模式，標記為無法補牌 (遊戲結束)
+                            cannotRefill = true; // 非無盡模式且無怪，標記為無法補牌 (遊戲結束)
                         }
                     }
                 }
