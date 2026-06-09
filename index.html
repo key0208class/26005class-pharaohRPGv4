@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.1.9 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.2.1 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -492,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.1.9 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.2.1 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -1601,8 +1601,7 @@
                         <div id="campaign-prebattle-modal" class="fixed inset-0 z-[75] hidden flex items-center justify-center modal-backdrop">
                             <div class="bg-slate-900 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl border-4 border-amber-600 animate-[fadeIn_0.3s_ease-out] flex flex-col relative overflow-hidden text-center">
                                 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-600 to-amber-500"></div>
-                                <h3 id="prebattle-title" class="text-2xl font-black text-amber-400 mb-2 mt-2 tracking-widest drop-shadow-md">戰役 1-1</h3>
-                                <div class="text-sm font-bold text-slate-400 mb-4" id="prebattle-waves">共 3 波魔物</div>
+                                <h3 id="prebattle-title" class="text-2xl font-black text-amber-400 mb-2 mt-2 tracking-widest drop-shadow-md">戰役 1-1</h3><div id="prebattle-stars-info" class="w-full mb-3 border border-amber-500/30 bg-black/40 rounded-lg p-2 shadow-inner"></div><div class="text-sm font-bold text-slate-400 mb-4" id="prebattle-waves">共 3 波魔物</div>
                                 
                                 <div class="w-24 h-24 mx-auto bg-black rounded-full border-2 border-amber-500 overflow-hidden shadow-[0_0_15px_rgba(217,119,6,0.5)] mb-4">
                                     <img id="prebattle-boss-img" src="" class="w-full h-full object-cover">
@@ -1715,10 +1714,45 @@
                             <label class="block text-xs font-bold text-blue-600 mb-1">👇 設定目標子關卡 (自動切換)</label>
                             <select id="edit-sub-stage-select" onchange="app.changeSubStage()" class="w-full border-2 border-blue-500 bg-white rounded-lg p-2 font-black text-blue-900 shadow-sm cursor-pointer text-sm">
                                 <!-- JS 動態生成 -->
-                            </select>
+                           </select>
                         </div>
 
-                        <div class="bg-white p-2 rounded-lg border-2 border-blue-200 shadow-sm flex-1 flex flex-col min-h-0">
+                        <!-- 戰役星級回合設定區 (新增) -->
+                        <div class="bg-white p-2 rounded-lg border-2 border-indigo-200 shadow-sm">
+                            <div class="flex justify-between items-center mb-1 border-b border-indigo-100 pb-1">
+                                <label class="block text-xs font-bold text-indigo-800">⭐ 星級通關條件 (機率加成)</label>
+                                <button onclick="app.autoCalculateTurnLimits()" class="text-[0.6rem] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-bold hover:bg-indigo-200 transition-colors">🔄 依血量自算</button>
+                            </div>
+                            <div class="flex items-center justify-between text-[0.65rem] text-slate-500 mb-1">
+                                <span>當前怪物總血量: <span id="edit-stage-total-hp" class="font-black text-red-600 text-sm">0</span></span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-1">
+                                <div class="flex flex-col bg-amber-50 border border-amber-200 p-1 rounded text-center">
+                                    <span class="text-[0.6rem] font-bold text-amber-700">3星 (+20%)</span>
+                                    <div class="flex items-center justify-center gap-1 mt-1">
+                                        <span class="text-[0.6rem] font-bold">≤</span>
+                                        <input type="number" id="edit-limit-star3" class="w-10 text-center text-xs font-black border border-amber-300 rounded focus:bg-amber-100" value="0">
+                                    </div>
+                                </div>
+                                <div class="flex flex-col bg-slate-50 border border-slate-300 p-1 rounded text-center">
+                                    <span class="text-[0.6rem] font-bold text-slate-700">2星 (+12%)</span>
+                                    <div class="flex items-center justify-center gap-1 mt-1">
+                                        <span class="text-[0.6rem] font-bold">≤</span>
+                                        <input type="number" id="edit-limit-star2" class="w-10 text-center text-xs font-black border border-slate-400 rounded focus:bg-slate-200" value="0">
+                                    </div>
+                                </div>
+                                <div class="flex flex-col bg-orange-50 border border-orange-200 p-1 rounded text-center">
+                                    <span class="text-[0.6rem] font-bold text-orange-800">1星 (+4%)</span>
+                                    <div class="flex items-center justify-center gap-1 mt-1">
+                                        <span class="text-[0.6rem] font-bold">≤</span>
+                                        <input type="number" id="edit-limit-star1" class="w-10 text-center text-xs font-black border border-orange-300 rounded focus:bg-orange-100" value="0">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-[0.55rem] text-center text-gray-400 mt-1">超過1星回合數即為0星 (掉落機率固定為1%)</div>
+                        </div>
+
+                        <div class="bg-white p-2 rounded-lg border-2 border-blue-200 shadow-sm flex-1 flex flex-col min-h-0 mt-2">
                             <div class="flex justify-between items-center mb-2 flex-shrink-0">
                                 <label class="block text-xs font-bold text-slate-500">怪物波次清單 (Waves)</label>
                                 <button onclick="app.addStageNode()" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold border border-green-200 hover:bg-green-200 active:scale-95">+ 新增一波</button>
@@ -4031,11 +4065,20 @@
                             
                             // 更新本地狀態
                             if (!app.state.campaignProgress) app.state.campaignProgress = {};
-                            app.state.campaignProgress[progKey] = true;
+                            const newStars = data.campaignAchievedStars || 0;
+                            const currentProg = app.state.campaignProgress[progKey];
+                            
+                            // 保留歷史最高星級
+                            let bestStars = newStars;
+                            if (currentProg !== undefined) {
+                                const oldStars = typeof currentProg === 'number' ? currentProg : (currentProg === true ? 1 : 0);
+                                bestStars = Math.max(oldStars, newStars);
+                            }
+                            app.state.campaignProgress[progKey] = bestStars;
                             
                             // 寫入資料庫或 LocalStorage
                             if (app.state.user) {
-                                db.ref(`users/${app.state.user.uid}/campaignProgress/${progKey}`).set(true);
+                                db.ref(`users/${app.state.user.uid}/campaignProgress/${progKey}`).set(bestStars);
                             } else {
                                 localStorage.setItem('pharaoh_guest_progress', JSON.stringify(app.state.campaignProgress));
                             }
@@ -4489,20 +4532,38 @@
                  app.animateRollValue('end-game-gold-val', startGold, myGold, extraGold);
                  app.animateRollValue('end-game-exp-val', startExp, myExp, extraExp);
                  
-                 // 若有掉落物，延遲顯示
-                 if (gameData.campaignDroppedItems && gameData.campaignDroppedItems.length > 0) {
+                // 若有掉落物或星級結算，延遲顯示
+                 if ((gameData.campaignDroppedItems && gameData.campaignDroppedItems.length > 0) || gameData.campaignAchievedStars !== undefined) {
                      setTimeout(() => {
                          const dropContainer = app.el('end-game-drops-container');
                          const globalBm = app.state.globalSettings?.blackMarketList || [];
-                         let dropHtml = '<div class="w-full text-[0.6rem] text-amber-400 font-bold text-center mb-1">🎁 戰利品掉落！</div>';
                          
-                         gameData.campaignDroppedItems.forEach(itemId => {
-                             const bmItem = globalBm[itemId];
-                             if (bmItem) {
-                                 const img = bmItem[`img${bmItem.currentEditLv||1}`] || bmItem.img1 || '';
-                                 dropHtml += `<div class="bg-black/50 p-1 rounded border border-amber-600 animate-[popIn_0.5s_ease-out]"><img src="${img}" class="w-8 h-8 object-contain" title="${bmItem.name}"></div>`;
-                             }
-                         });
+                         // 產生星級 UI
+                         let starHtml = '';
+                         if (gameData.campaignAchievedStars !== undefined) {
+                             const s = gameData.campaignAchievedStars;
+                             const b = gameData.campaignDropBonus;
+                             const starsStr = '⭐'.repeat(s) + '🌑'.repeat(3 - s);
+                             let bonusText = s === 0 ? '超時通關：掉落率降至 1%' : `掉落率 +${b}%`;
+                             let bonusColor = s === 0 ? 'text-gray-400 border-gray-600' : 'text-green-400 border-green-500/50';
+                             starHtml = `<div class="w-full text-center mb-1 animate-[popIn_0.5s_ease-out]"><div class="text-2xl drop-shadow-md tracking-widest">${starsStr}</div><div class="text-[0.65rem] ${bonusColor} font-bold bg-black/50 inline-block px-2 py-0.5 rounded-full border shadow-inner mt-1">${bonusText}</div></div>`;
+                         }
+
+                         let dropHtml = starHtml + '<div class="w-full text-[0.6rem] text-amber-400 font-bold text-center mb-1 mt-1">🎁 戰利品結算！</div>';
+                         
+                         // 產生掉落物 UI
+                         if (gameData.campaignDroppedItems && gameData.campaignDroppedItems.length > 0) {
+                             gameData.campaignDroppedItems.forEach(itemId => {
+                                 const bmItem = globalBm[itemId];
+                                 if (bmItem) {
+                                     const img = bmItem[`img${bmItem.currentEditLv||1}`] || bmItem.img1 || '';
+                                     dropHtml += `<div class="bg-black/50 p-1 rounded border border-amber-600 animate-[popIn_0.5s_ease-out] mx-1"><img src="${img}" class="w-8 h-8 object-contain" title="${bmItem.name}"></div>`;
+                                 }
+                             });
+                         } else {
+                             dropHtml += `<div class="w-full text-center text-xs text-gray-500 py-1">本次無特殊掉落</div>`;
+                         }
+                         
                          dropContainer.innerHTML = dropHtml;
                          dropContainer.classList.remove('hidden');
                          dropContainer.classList.add('flex');
@@ -5381,7 +5442,7 @@
                 const isDeckEmpty = (!gameData.monsterDeck || gameData.monsterDeck.length === 0);
                 // [修復] 增設 !gameData.activeMonster.name 條件，主動過濾掉任何異常的殘留幽靈物件
                 const isNoActiveMonster = (!gameData.activeMonster || gameData.activeMonster.type === 'chest' || gameData.activeMonster.currentHp <= 0 || !gameData.activeMonster.name);
-                const isFullyCleared = isDeckEmpty && isNoActiveMonster;
+               const isFullyCleared = isDeckEmpty && isNoActiveMonster;
 
                 // 只有在戰役模式、尚未發放獎勵，且「完全通關」的狀況下才發放
                 if (gameData.isCampaign && !gameData.campaignRewarded && isFullyCleared) {
@@ -5390,10 +5451,26 @@
                     const extraGold = rw.gold || 0;
                     const extraExp = rw.exp || 0;
                     
-                    // 抽掉落物 (根據機率)
+                    // --- 星級判定計算 ---
+                    const turnLimits = gameData.campaignMeta.turnLimits || { star3: 0, star2: 0, star1: 0 };
+                    const currentRound = gameData.round || 1;
+                    let achievedStars = 0;
+                    let dropBonus = 0;
+
+                    if (turnLimits.star3 > 0 && currentRound <= turnLimits.star3) { achievedStars = 3; dropBonus = 20; }
+                    else if (turnLimits.star2 > 0 && currentRound <= turnLimits.star2) { achievedStars = 2; dropBonus = 12; }
+                    else if (turnLimits.star1 > 0 && currentRound <= turnLimits.star1) { achievedStars = 1; dropBonus = 4; }
+                    else { achievedStars = 0; dropBonus = 0; } // 0星通關
+
+                    updates.campaignAchievedStars = achievedStars;
+                    updates.campaignDropBonus = dropBonus;
+
+                    // 抽掉落物 (根據機率 + 星級加成)
                     const droppedItems = [];
                     (rw.items || []).forEach(item => {
-                        if (Math.random() * 100 <= item.prob) {
+                        // 0星強制1%機率，其他則為 原本機率 + 星級加成
+                        let finalProb = achievedStars === 0 ? 1 : (item.prob + dropBonus); 
+                        if (Math.random() * 100 <= finalProb) {
                             droppedItems.push(item.id);
                         }
                     });
@@ -8352,7 +8429,7 @@
                 const count = stage.subStageCount || 1;
                 let isCurrentCleared = true;
                 for(let i=1; i<=count; i++) {
-                    if (!progress[`chap_${chapIdx}_stage_${sIdx}_sub_${i}`]) {
+                    if (progress[`chap_${chapIdx}_stage_${sIdx}_sub_${i}`] === undefined) {
                         isCurrentCleared = false;
                         break;
                     }
@@ -8364,10 +8441,10 @@
                     const prevStage = chapter.stages[sIdx - 1];
                     const prevCount = prevStage.subStageCount || 1;
                     for(let i=1; i<=prevCount; i++) {
-                        if (!progress[`chap_${chapIdx}_stage_${sIdx-1}_sub_${i}`]) {
-                            isPrevCleared = false;
-                            break;
-                        }
+                        if (progress[`chap_${chapIdx}_stage_${sIdx-1}_sub_${i}`] === undefined) {
+                        isPrevCleared = false;
+                        break;
+                    }
                     }
                 }
 
@@ -8525,6 +8602,7 @@
             app.toast(`📂 已切換至 ${app.state.editingStage.sIdx+1}-${newIdx} 設定`, 1);
         },
 
+        
         // 將 UI 上的數據寫入 temp state
         saveCurrentSubStageToMemory: () => {
             const { currentSubIdx, data } = app.state.editingStage;
@@ -8539,19 +8617,33 @@
                 items: app.state.tempRewardItems || [] // 儲存多物品陣列
             };
             
+            // 儲存星級回合限制
+            const turnLimits = {
+                star3: parseInt(app.el('edit-limit-star3').value) || 0,
+                star2: parseInt(app.el('edit-limit-star2').value) || 0,
+                star1: parseInt(app.el('edit-limit-star1').value) || 0
+            };
+            
             data.subStages[currentSubIdx].rewards = rewards;
+            data.subStages[currentSubIdx].turnLimits = turnLimits;
         },
 
-        // 從 temp state 載入數據到 UI
+       // 從 temp state 載入數據到 UI
         loadSubStageUI: (subIdx) => {
             const { data } = app.state.editingStage;
             
             // 確保資料結構存在
             if (!data.subStages[subIdx]) {
-                data.subStages[subIdx] = { nodes: [], rewards: {} };
+                data.subStages[subIdx] = { nodes: [], rewards: {}, turnLimits: { star3: 0, star2: 0, star1: 0 } };
             }
             
             const subData = data.subStages[subIdx];
+            
+            // 載入星級回合限制
+            const tLimits = subData.turnLimits || { star3: 0, star2: 0, star1: 0 };
+            app.el('edit-limit-star3').value = tLimits.star3 || 0;
+            app.el('edit-limit-star2').value = tLimits.star2 || 0;
+            app.el('edit-limit-star1').value = tLimits.star1 || 0;
             
             // 載入獎勵
             const rw = subData.rewards || {};
@@ -8628,7 +8720,7 @@ addRewardItem: () => {
             });
             listEl.innerHTML = html;
         },
-        // [v4.8.0.5] 渲染波次列表 (含預覽圖與可編輯數值)
+       // [v4.8.0.5] 渲染波次列表 (含預覽圖與可編輯數值)
         renderEditStageNodes: (nodesArray = null) => {
             if (!nodesArray) {
                 const { currentSubIdx, data } = app.state.editingStage;
@@ -8638,6 +8730,18 @@ addRewardItem: () => {
             const listEl = app.el('edit-stage-nodes-list');
             const globalMonsters = app.state.globalSettings?.monsterList || [];
             const multiplier = parseFloat(app.el('edit-stage-multiplier').value) || 1.0;
+
+            // 計算怪物總血量並更新 UI
+            let totalHp = 0;
+            nodesArray.forEach(node => {
+                if (node.customHp !== undefined) {
+                    totalHp += node.customHp;
+                } else if (node.monsterIdx !== null && globalMonsters[node.monsterIdx]) {
+                    totalHp += Math.floor(globalMonsters[node.monsterIdx].hp * multiplier);
+                }
+            });
+            const hpDisplay = app.el('edit-stage-total-hp');
+            if (hpDisplay) hpDisplay.textContent = totalHp;
 
             if (nodesArray.length === 0) {
                 listEl.innerHTML = '<div class="text-xs text-gray-400 text-center py-4 bg-white/50 rounded border-dashed border-2 border-slate-300">無怪物波次，請點擊上方按鈕新增</div>';
@@ -8794,7 +8898,42 @@ addRewardItem: () => {
             data.subStages[currentSubIdx].nodes.splice(nodeIdx, 1);
             app.renderEditStageNodes();
         },
+// 自動依照怪物總血量計算 3星/2星/1星 通關回合標準
+        autoCalculateTurnLimits: () => {
+            const { currentSubIdx, data } = app.state.editingStage;
+            const nodes = data.subStages[currentSubIdx].nodes || [];
+            const globalMonsters = app.state.globalSettings?.monsterList || [];
+            const multiplier = parseFloat(app.el('edit-stage-multiplier').value) || 1.0;
 
+            // 統計總血量
+            let totalHp = 0;
+            nodes.forEach(node => {
+                if (node.customHp !== undefined) {
+                    totalHp += node.customHp;
+                } else if (node.monsterIdx !== null && globalMonsters[node.monsterIdx]) {
+                    totalHp += Math.floor(globalMonsters[node.monsterIdx].hp * multiplier);
+                }
+            });
+
+            if (totalHp <= 0) {
+                return app.toast('⚠️ 當前怪物總血量為 0，請先設定怪物波次！', 1);
+            }
+
+            // 計算 3星 基準回合數
+            let baseTurns = 0;
+            if (totalHp <= 800) {
+                baseTurns = Math.ceil(totalHp / 30);
+            } else {
+                baseTurns = Math.ceil(totalHp / 45);
+            }
+
+            // 寫入 UI 輸入框
+            app.el('edit-limit-star3').value = baseTurns;           // 3星: 基準
+            app.el('edit-limit-star2').value = baseTurns + 2;       // 2星: 基準 + 2
+            app.el('edit-limit-star1').value = baseTurns + 8;       // 1星: 基準 + 8
+
+            app.toast(`✅ 已根據總血量 (${totalHp}) 更新星級回合數！`, 1);
+        },
         // [v4.8.0.4] 儲存整個 Stage 設定 (包含三欄所有資料)
         saveStageSettings: () => {
             // 1. 先把當前 UI 的資料存入 state
@@ -8962,12 +9101,17 @@ addRewardItem: () => {
             for (let i = 1; i <= count; i++) {
                 const pos = mapNodes[i] || { x: 10 + (i-1)*15, y: 50 };
                 const progKey = `chap_${chapIdx}_stage_${sIdx}_sub_${i}`;
-                const isCleared = progress[progKey] === true;
+                const progValue = progress[progKey];
+                const isCleared = progValue !== undefined;
+                
+                // 計算星級 (相容舊紀錄)
+                const stars = typeof progValue === 'number' ? progValue : (progValue === true ? 1 : 0);
                 
                 // 節點解鎖條件：管理員全開、此關已通關、或上一關已通關
                 const isUnlocked = isAdmin || isCleared || previousCleared;
                 
                 let iconUrl, clickAction, pulseClass, labelColor;
+                let starUI = ''; // 用來放星星的 HTML
                 
                 if (isCleared && !isAdmin) {
                     // 已通關 (綠色)
@@ -8975,6 +9119,14 @@ addRewardItem: () => {
                     clickAction = `app.showNodeDetail(${chapIdx}, ${sIdx}, ${i})`;
                     pulseClass = 'cursor-pointer hover:scale-110';
                     labelColor = 'text-green-400 border-green-600/50';
+                    
+                    // 產生頂部星星 UI
+                    starUI = `<div class="absolute -top-3 flex gap-0.5 z-30">`;
+                    for(let s=1; s<=3; s++) {
+                        starUI += `<span class="text-[0.55rem] ${s <= stars ? 'text-yellow-400 drop-shadow-[0_0_2px_rgba(250,204,21,1)]' : 'text-gray-800 grayscale drop-shadow-none'}">⭐</span>`;
+                    }
+                    starUI += `</div>`;
+                    
                 } else if (isUnlocked) {
                     // 下一關 / 可挑戰 (紅色)
                     iconUrl = 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%B4%85%E8%89%B2%E6%9C%AA%E9%80%9A%E9%97%9C.png';
@@ -8992,7 +9144,7 @@ addRewardItem: () => {
                 // 供下一關判定使用
                 previousCleared = isCleared;
 
-                html += `<div onclick="${clickAction}" class="absolute w-12 h-12 transition-transform z-20 flex flex-col items-center justify-center group ${pulseClass}" style="left:${pos.x}%; top:${pos.y}%; transform: translate(-50%, -50%);"><img src="${iconUrl}" class="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]"><div class="absolute -bottom-6 bg-black/90 ${labelColor} text-[0.7rem] px-2 py-0.5 rounded shadow-lg font-black whitespace-nowrap border">${sIdx+1}-${i}</div></div>`;
+                html += `<div onclick="${clickAction}" class="absolute w-12 h-12 transition-transform z-20 flex flex-col items-center justify-center group ${pulseClass}" style="left:${pos.x}%; top:${pos.y}%; transform: translate(-50%, -50%);">${starUI}<img src="${iconUrl}" class="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]"><div class="absolute -bottom-6 bg-black/90 ${labelColor} text-[0.7rem] px-2 py-0.5 rounded shadow-lg font-black whitespace-nowrap border">${sIdx+1}-${i}</div></div>`;
             }
             nodesLayer.innerHTML = html;
         },
@@ -9058,6 +9210,11 @@ addRewardItem: () => {
                 });
             }
             app.el('prebattle-items').innerHTML = itemsHtml;
+
+            // 星級挑戰條件資訊
+            const tLimits = subData.turnLimits || { star3: 0, star2: 0, star1: 0 };
+            const starsHtml = `<div class="text-[0.6rem] text-slate-400 mb-1">⭐ 星級挑戰條件 (通關回合越少獎勵越高)</div><div class="flex justify-around items-center"><div class="flex flex-col items-center"><span class="text-xs text-yellow-400 drop-shadow">⭐⭐⭐</span><span class="text-[0.65rem] font-bold text-white">≤ ${tLimits.star3}回</span><span class="text-[0.55rem] text-green-400 bg-green-900/30 px-1 rounded">+20%掉落</span></div><div class="flex flex-col items-center"><span class="text-xs text-slate-300 drop-shadow">⭐⭐</span><span class="text-[0.65rem] font-bold text-white">≤ ${tLimits.star2}回</span><span class="text-[0.55rem] text-green-400 bg-green-900/30 px-1 rounded">+12%掉落</span></div><div class="flex flex-col items-center"><span class="text-xs text-orange-400 drop-shadow">⭐</span><span class="text-[0.65rem] font-bold text-white">≤ ${tLimits.star1}回</span><span class="text-[0.55rem] text-green-400 bg-green-900/30 px-1 rounded">+4%掉落</span></div></div>`;
+            app.el('prebattle-stars-info').innerHTML = starsHtml;
 
             // 波次資訊
             const nodesCount = (subData.nodes || []).length;
@@ -9163,7 +9320,7 @@ addRewardItem: () => {
                 autoRoll: app.state.globalSettings?.autoRollDefault !== false,
                 endlessMode: false, // 戰役模式絕對不可無限循環
                 isCampaign: true,   // 戰役模式標記
-				  campaignMeta: { chapIdx, sIdx, subIdx }, // [新增] 紀錄目前打的是哪一關
+                campaignMeta: { chapIdx, sIdx, subIdx, turnLimits: subData.turnLimits || { star3: 0, star2: 0, star1: 0 } }, // [新增] 紀錄目前打的是哪一關與回合條件
                 campaignRewards: subData.rewards // 將額外獎勵存入房間，待結算時發放
             }).then(() => {
                 db.ref(`classes/${roomId}/players/team1/${name}`).set({
