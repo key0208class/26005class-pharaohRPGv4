@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.2.1 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.2.2 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -492,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.2.1 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.2.2 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -1599,23 +1599,26 @@
                         
                         <!-- 戰前準備視窗 (彈出式) -->
                         <div id="campaign-prebattle-modal" class="fixed inset-0 z-[75] hidden flex items-center justify-center modal-backdrop">
-                            <div class="bg-slate-900 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl border-4 border-amber-600 animate-[fadeIn_0.3s_ease-out] flex flex-col relative overflow-hidden text-center">
+                            <!-- [修改] 寬度從 max-w-md 加寬為 max-w-lg，讓大字體不擁擠 -->
+                            <div class="bg-slate-900 rounded-2xl p-6 max-w-lg w-full mx-4 shadow-2xl border-4 border-amber-600 animate-[fadeIn_0.3s_ease-out] flex flex-col relative overflow-hidden text-center">
                                 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-600 to-amber-500"></div>
-                                <h3 id="prebattle-title" class="text-2xl font-black text-amber-400 mb-2 mt-2 tracking-widest drop-shadow-md">戰役 1-1</h3><div id="prebattle-stars-info" class="w-full mb-3 border border-amber-500/30 bg-black/40 rounded-lg p-2 shadow-inner"></div><div class="text-sm font-bold text-slate-400 mb-4" id="prebattle-waves">共 3 波魔物</div>
+                                <h3 id="prebattle-title" class="text-3xl md:text-4xl font-black text-amber-400 mb-3 mt-2 tracking-widest drop-shadow-md">戰役 1-1</h3>
+                                <div id="prebattle-stars-info" class="w-full mb-3 border border-amber-500/30 bg-black/40 rounded-lg p-3 shadow-inner"></div>
+                                <div class="text-base md:text-lg font-bold text-slate-300 mb-4" id="prebattle-waves">共 3 波魔物</div>
                                 
-                                <div class="w-24 h-24 mx-auto bg-black rounded-full border-2 border-amber-500 overflow-hidden shadow-[0_0_15px_rgba(217,119,6,0.5)] mb-4">
+                                <div class="w-28 h-28 mx-auto bg-black rounded-full border-2 border-amber-500 overflow-hidden shadow-[0_0_15px_rgba(217,119,6,0.5)] mb-4">
                                     <img id="prebattle-boss-img" src="" class="w-full h-full object-cover">
                                 </div>
                                 
-                                <div class="bg-slate-800 p-3 rounded-xl border border-slate-600 mb-6 text-left">
-                                    <div class="text-xs font-bold text-slate-500 mb-2 border-b border-slate-700 pb-1">🎁 通關預期獎勵</div>
-                                    <div class="flex justify-between items-center mb-2">
+                                <div class="bg-slate-800 p-4 rounded-xl border border-slate-600 mb-6 text-left shadow-md">
+                                    <div class="text-sm md:text-base font-bold text-slate-400 mb-3 border-b border-slate-700 pb-2">🎁 通關預期獎勵</div>
+                                    <div class="flex justify-between items-center mb-3">
                                         <div class="flex gap-4">
-                                            <span class="text-yellow-400 font-bold text-sm bg-slate-900 px-2 py-0.5 rounded border border-yellow-900">💰 <span id="prebattle-gold">0</span></span>
-                                            <span class="text-purple-400 font-bold text-sm bg-slate-900 px-2 py-0.5 rounded border border-purple-900">✨ <span id="prebattle-exp">0</span></span>
+                                            <span class="text-yellow-400 font-bold text-base md:text-lg bg-slate-900 px-3 py-1 rounded border border-yellow-900 shadow-sm">💰 <span id="prebattle-gold">0</span></span>
+                                            <span class="text-purple-400 font-bold text-base md:text-lg bg-slate-900 px-3 py-1 rounded border border-purple-900 shadow-sm">✨ <span id="prebattle-exp">0</span></span>
                                         </div>
                                     </div>
-                                    <div class="text-[0.65rem] text-slate-400 mb-1">機率掉落珍稀物品：</div>
+                                    <div class="text-xs md:text-sm text-slate-300 mb-2">機率掉落珍稀物品：</div>
                                     <div id="prebattle-items" class="flex flex-wrap gap-2 mt-1">
                                         <!-- JS 生成掉落物 -->
                                     </div>
@@ -9199,13 +9202,14 @@ addRewardItem: () => {
             const globalBm = app.state.globalSettings?.blackMarketList || [];
             
             if (itemsList.length === 0) {
-                itemsHtml = '<div class="text-xs text-slate-500 w-full">無特殊掉落</div>';
+                itemsHtml = '<div class="text-sm md:text-base text-slate-500 w-full py-1">無特殊掉落</div>';
             } else {
                 itemsList.forEach(it => {
                     const bmItem = globalBm[it.id];
                     if (bmItem) {
                         const img = bmItem[`img${bmItem.currentEditLv||1}`] || bmItem.img1 || '';
-                        itemsHtml += `<div class="flex flex-col items-center bg-slate-900/50 p-1.5 rounded-lg border border-slate-700" title="${bmItem.name}"><img src="${img}" class="w-7 h-7 object-contain drop-shadow-md"><span class="text-[0.55rem] text-amber-300 mt-1 font-bold">${it.prob}%</span></div>`;
+                        // [修改] 放大掉落物圖片從 w-7 h-7 改為 w-10 h-10，並放大機率字體為 text-[0.7rem] md:text-sm
+                        itemsHtml += `<div class="flex flex-col items-center bg-slate-900/50 p-2 rounded-lg border border-slate-700 hover:border-amber-500 transition-colors" title="${bmItem.name}"><img src="${img}" class="w-10 h-10 object-contain drop-shadow-md"><span class="text-[0.7rem] md:text-sm text-amber-300 mt-1 font-bold">${it.prob}%</span></div>`;
                     }
                 });
             }
@@ -9213,7 +9217,8 @@ addRewardItem: () => {
 
             // 星級挑戰條件資訊
             const tLimits = subData.turnLimits || { star3: 0, star2: 0, star1: 0 };
-            const starsHtml = `<div class="text-[0.6rem] text-slate-400 mb-1">⭐ 星級挑戰條件 (通關回合越少獎勵越高)</div><div class="flex justify-around items-center"><div class="flex flex-col items-center"><span class="text-xs text-yellow-400 drop-shadow">⭐⭐⭐</span><span class="text-[0.65rem] font-bold text-white">≤ ${tLimits.star3}回</span><span class="text-[0.55rem] text-green-400 bg-green-900/30 px-1 rounded">+20%掉落</span></div><div class="flex flex-col items-center"><span class="text-xs text-slate-300 drop-shadow">⭐⭐</span><span class="text-[0.65rem] font-bold text-white">≤ ${tLimits.star2}回</span><span class="text-[0.55rem] text-green-400 bg-green-900/30 px-1 rounded">+12%掉落</span></div><div class="flex flex-col items-center"><span class="text-xs text-orange-400 drop-shadow">⭐</span><span class="text-[0.65rem] font-bold text-white">≤ ${tLimits.star1}回</span><span class="text-[0.55rem] text-green-400 bg-green-900/30 px-1 rounded">+4%掉落</span></div></div>`;
+            // [修改] 全面放大星級字體與邊距，改善手機與電腦的閱讀體驗
+            const starsHtml = `<div class="text-sm md:text-base font-bold text-amber-200 mb-2 border-b border-amber-500/30 pb-1">⭐ 星級挑戰條件 (通關越快獎勵越高)</div><div class="flex justify-around items-center pt-1 pb-2"><div class="flex flex-col items-center gap-1"><span class="text-base md:text-lg text-yellow-400 drop-shadow">⭐⭐⭐</span><span class="text-sm md:text-base font-black text-white">≤ ${tLimits.star3} 回合</span><span class="text-xs md:text-sm font-bold text-green-300 bg-green-900/60 px-2 py-0.5 rounded shadow-sm border border-green-800">+20% 掉落</span></div><div class="flex flex-col items-center gap-1"><span class="text-base md:text-lg text-slate-300 drop-shadow">⭐⭐</span><span class="text-sm md:text-base font-black text-white">≤ ${tLimits.star2} 回合</span><span class="text-xs md:text-sm font-bold text-green-300 bg-green-900/60 px-2 py-0.5 rounded shadow-sm border border-green-800">+12% 掉落</span></div><div class="flex flex-col items-center gap-1"><span class="text-base md:text-lg text-orange-400 drop-shadow">⭐</span><span class="text-sm md:text-base font-black text-white">≤ ${tLimits.star1} 回合</span><span class="text-xs md:text-sm font-bold text-green-300 bg-green-900/60 px-2 py-0.5 rounded shadow-sm border border-green-800">+4% 掉落</span></div></div>`;
             app.el('prebattle-stars-info').innerHTML = starsHtml;
 
             // 波次資訊
