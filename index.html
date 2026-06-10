@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.2.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.2.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -492,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.2.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.2.3 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -599,7 +599,7 @@
                         <button id="btn-campaign-mode" onclick="app.enterCampaignMode()" class="w-full bg-gradient-to-r from-slate-700 to-slate-900 text-amber-400 font-black py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-xl mb-1 flex items-center justify-center gap-2 border-2 border-amber-500/50 relative overflow-hidden group">
                             <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30"></div>
                             <span class="text-2xl filter drop-shadow group-hover:animate-pulse">⚔️</span> 
-                            <span class="tracking-widest">冒險戰役(未開放)</span>
+                            <span class="tracking-widest">冒險戰役(開放STAGE1)</span>
                         </button>
                         <p class="text-xs text-gray-500 font-bold">透過困難的戰役，取得更豐富的獎勵</p>
                     </div>
@@ -5826,6 +5826,42 @@
                             updates[hpPath] = curHp + 5;
                             updates[maxHpPath] = curMaxHp + 5;
                         }
+
+                        // --- [新增] 史萊姆的王冠：吸血效果 ---
+                        const myEquipped = app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName]?.equipped;
+                        const globalList = app.state.globalSettings?.blackMarketList || [];
+                        let hasSlimeCrown = false;
+                        
+                        if (myEquipped) {
+                            Object.values(myEquipped).forEach(itemId => {
+                                const item = globalList[itemId];
+                                if (item && item.name.includes('史萊姆的王冠')) {
+                                    hasSlimeCrown = true;
+                                }
+                            });
+                        }
+
+                        if (hasSlimeCrown) {
+                            const healAmt = Math.floor(Math.random() * 2) + 1; // 隨機回復 1~2 點血量
+                            const hpPath = `players/${app.state.myTeam}/${app.state.myName}/hp`;
+                            const maxHpPath = `players/${app.state.myTeam}/${app.state.myName}/maxHp`;
+                            
+                            // 取得最新的血量與上限 (考慮到剛剛如果有升級的話，需抓取 updates 中的最新資料)
+                            const currentHpForHeal = updates[hpPath] !== undefined ? updates[hpPath] : ((app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName]?.hp !== undefined) ? app.state.gameData.players[app.state.myTeam][app.state.myName].hp : 100);
+                            const maxHpForHeal = updates[maxHpPath] !== undefined ? updates[maxHpPath] : ((app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName]?.maxHp !== undefined) ? app.state.gameData.players[app.state.myTeam][app.state.myName].maxHp : 100);
+
+                            if (currentHpForHeal < maxHpForHeal) {
+                                let finalHp = currentHpForHeal + healAmt;
+                                if (finalHp > maxHpForHeal) finalHp = maxHpForHeal; // 確保不超過上限
+                                updates[hpPath] = finalHp;
+
+                                // 顯示吸血數字特效 (綠色)，設定 300 毫秒延遲避免與攻擊傷害數字完全重疊
+                                setTimeout(() => {
+                                    app.showDamageText(healAmt, '#22c55e', app.state.isHost ? 'teacher-personal-board' : 'student-squad-section');
+                                }, 300);
+                            }
+                        }
+
                     } // 🟢 這裡補上了原本遺失的右大括號，結束 if (points > 0)
 
                     updates['lastWinner'] = {
@@ -7889,7 +7925,7 @@
             return bonus;
         },
 
-        // 4. 計算最大血量加成 (狩獵證明) [新增]
+       // 4. 計算最大血量加成 (狩獵證明 & 史萊姆的王冠) [新增]
         getHpBonus: (equippedMap) => {
             let bonus = 0;
             const globalList = app.state.globalSettings?.blackMarketList || [];
@@ -7900,6 +7936,7 @@
                         if (item.name.includes('初級狩獵證明')) bonus += 10;
                         else if (item.name.includes('中級狩獵證明')) bonus += 15;
                         else if (item.name.includes('高級狩獵證明')) bonus += 20;
+                        else if (item.name.includes('史萊姆的王冠')) bonus += 30; // 👑 史萊姆王冠血量加成
                     }
                 });
             }
