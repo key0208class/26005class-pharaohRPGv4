@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.2.3 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.2.4 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -492,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.2.3 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.2.4 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -2240,9 +2240,9 @@
                 const totalExp = data.totalExp || 0;
                 const accountLv = app.getAccountLevel(totalExp);
                 
-                // 計算經驗條百分比 (v4.7.8.0)
-                const currentLevelExpBase = 10 * Math.pow(accountLv - 1, 2);
-                const nextLevelExp = 10 * Math.pow(accountLv, 2);
+                // 計算經驗條百分比 (支援動態倍率版)
+                const currentLevelExpBase = app.getAccumulatedExp(accountLv);
+                const nextLevelExp = app.getAccumulatedExp(accountLv + 1);
                 const levelRange = nextLevelExp - currentLevelExpBase;
                 const currentProgress = totalExp - currentLevelExpBase;
                 const percent = Math.min(100, Math.max(0, (currentProgress / levelRange) * 100));
@@ -6163,13 +6163,40 @@
         createPredefinedCards: () => { /* 佔位符 */ },
         
         // --- [新增] DQ 風格等級計算系統 ---
-        // 1. Google 帳號永久等級 (1-99等) - 曲線較陡
+        // 1. Google 帳號永久等級 (1-99等) - 曲線動態加成版
         getAccountLevel: (totalExp) => {
-            if (!totalExp) return 1;
-            // 簡易公式：等級 = 根號(EXP / 10) + 1，反推 EXP = 10 * (Lv-1)^2
-            // Lv10=810, Lv50=24000, Lv99=96000
-            let lv = Math.floor(Math.sqrt(totalExp / 10)) + 1;
-            return Math.min(99, lv);
+            if (!totalExp || totalExp <= 0) return 1;
+            let lv = 1;
+            while (lv < 99) {
+                // 檢查是否滿足升到下一級的總經驗需求
+                if (totalExp >= app.getAccumulatedExp(lv + 1)) {
+                    lv++;
+                } else {
+                    break;
+                }
+            }
+            return lv;
+        },
+
+        // [新增] 計算到達特定等級所需的總經驗值 (支援階段性倍率)
+        getAccumulatedExp: (targetLv) => {
+            if (targetLv <= 1) return 0;
+            let total = 0;
+            // 逐級累加所需的經驗差距
+            for (let i = 1; i < targetLv; i++) {
+                // 原始公式兩級之間的差距
+                let gap = 10 * Math.pow(i, 2) - 10 * Math.pow(i - 1, 2);
+                
+                // 依據當前等級套用難度倍率
+                let multiplier = 1.0;
+                if (i >= 86) multiplier = 3.0;      // 86~99級：3倍
+                else if (i >= 76) multiplier = 2.5; // 76~85級：2.5倍
+                else if (i >= 66) multiplier = 2.0; // 66~75級：2倍
+                else if (i >= 56) multiplier = 1.5; // 56~65級：1.5倍
+                
+                total += gap * multiplier;
+            }
+            return total;
         },
         
         // 2. 局內冒險等級 (1-10等) - v4.6.5 擴充
@@ -8003,10 +8030,10 @@
             const hsEl = app.el('bp-user-highscore');
             if(hsEl) hsEl.textContent = data.highScore;
             
-            // 計算經驗條與等級
+            // 計算經驗條與等級 (支援動態倍率版)
             const accLv = app.getAccountLevel(data.exp);
-            const currentLevelExpBase = 10 * Math.pow(accLv - 1, 2);
-            const nextLevelExp = 10 * Math.pow(accLv, 2);
+            const currentLevelExpBase = app.getAccumulatedExp(accLv);
+            const nextLevelExp = app.getAccumulatedExp(accLv + 1);
             const levelRange = nextLevelExp - currentLevelExpBase;
             const currentProgress = data.exp - currentLevelExpBase;
             const percent = Math.min(100, Math.max(0, (currentProgress / levelRange) * 100));
