@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.2.8 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.2.9 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -492,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.2.8 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.2.9 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -5879,11 +5879,10 @@
                         const atkBonus = app.getAttackBonus(myPlayerData?.equipped, formula);
                         const damage = (points * 10) + atkBonus;
 
-                      
+                        // [新增] 檢查並觸發裝備專屬攻擊特效 (森之律動等)
+                        app.checkAndTriggerEquipmentEffects(myPlayerData?.equipped, formula);
                         
                         // [新增] 呼叫傷害數字顯示特效
-                        
-                  
                         app.showDamageText(damage);
 
                         const currentMonsterHp = app.state.gameData.activeMonster?.currentHp || 0;
@@ -6556,6 +6555,95 @@
             setTimeout(() => {
                 if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
             }, 600); // 動畫時間 0.5s + 緩衝
+        },
+
+        // [新增] 裝備專屬攻擊視覺特效 (由左至右擊打怪物)
+        triggerEquipmentEffect: (imgUrl, shadowColor = 'rgba(132, 204, 22, 0.8)') => {
+            // 找尋怪物目標位置 (預設為畫面中央，若有怪物卡則定位到怪物卡)
+            const targetEl = document.getElementById('active-monster-card');
+            let targetX = window.innerWidth / 2;
+            let targetY = window.innerHeight / 2;
+
+            if (targetEl) {
+                const rect = targetEl.getBoundingClientRect();
+                targetX = rect.left + rect.width / 2;
+                targetY = rect.top + rect.height / 2;
+            }
+
+            const effect = document.createElement('div');
+            // 由目標左側 300px 處開始飛向怪物
+            const startX = targetX - 300;
+            
+            effect.style.cssText = `
+                position: fixed;
+                left: ${startX}px;
+                top: ${targetY}px;
+                width: 250px;
+                height: 250px;
+                transform: translate(-50%, -50%) rotate(-25deg) scale(0.5);
+                background-image: url('${imgUrl}');
+                background-size: contain;
+                background-position: center;
+                background-repeat: no-repeat;
+                pointer-events: none;
+                z-index: 9999;
+                opacity: 0;
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 帶有彈性的衝擊感 */
+                filter: drop-shadow(0 0 15px ${shadowColor});
+            `;
+            document.body.appendChild(effect);
+
+            // 觸發震動
+            if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+
+            // 強制重繪以啟動 CSS Transition
+            void effect.offsetWidth;
+
+            // 階段一：衝擊動畫 (飛向怪物並放大)
+            effect.style.left = `${targetX}px`;
+            effect.style.opacity = '1';
+            effect.style.transform = `translate(-50%, -50%) rotate(0deg) scale(1.5)`;
+
+            // 階段二：擊中後爆開淡出
+            setTimeout(() => {
+                effect.style.transition = 'all 0.3s ease-out';
+                effect.style.opacity = '0';
+                effect.style.transform = `translate(-50%, -50%) rotate(15deg) scale(2.5)`;
+                effect.style.filter = `drop-shadow(0 0 30px ${shadowColor}) brightness(2)`;
+                
+                setTimeout(() => effect.remove(), 300);
+            }, 400); // 等待飛行結束後爆開
+        },
+
+        // [新增] 檢查玩家裝備與算式，並觸發對應特效
+        checkAndTriggerEquipmentEffects: (equippedMap, formula) => {
+            if (!equippedMap) return;
+            const globalList = app.state.globalSettings?.blackMarketList || [];
+            
+            const countAdd = (formula.match(/\+/g) || []).length;
+            const countSub = (formula.match(/\-/g) || []).length;
+            const countMul = (formula.match(/×/g) || []).length;
+            const countDiv = (formula.match(/÷/g) || []).length;
+
+            Object.values(equippedMap).forEach(itemId => {
+                const item = globalList[itemId];
+                if (item) {
+                    const lv = item.currentEditLv || 1;
+                    
+                    // 特效：森之律動 (+)
+                    if (item.name.includes('森之律動') && countAdd > 0) {
+                        // 條件：LV2以上 且 連續使用2個以上的加號 -> 觸發進階特效
+                        if (countAdd >= 2 && lv >= 2) {
+                            app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a2.png', 'rgba(34, 197, 94, 0.9)');
+                        } else {
+                            // 否則觸發基礎特效
+                            app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a1.png', 'rgba(132, 204, 22, 0.8)');
+                        }
+                    }
+                    
+                    // 未來可以繼續在這裡擴充 爆炎刻印(×)、冰蝕咒紋(-)、深淵之印(÷) 的判定...
+                }
+            });
         },
         // [新增] 顯示傷害數字浮動特效
         // [新增] 顯示傷害數字浮動特效 (v4.6.4 優化：放慢速度、加大字體)
