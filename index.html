@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.2.6 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.2.8 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -492,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.2.6 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.2.8 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -1731,21 +1731,21 @@
                             </div>
                             <div class="grid grid-cols-3 gap-1">
                                 <div class="flex flex-col bg-amber-50 border border-amber-200 p-1 rounded text-center">
-                                    <span class="text-[0.6rem] font-bold text-amber-700">3星 (+20%)</span>
+                                    <span class="text-[0.6rem] font-bold text-amber-700">3星 (+15%)</span>
                                     <div class="flex items-center justify-center gap-1 mt-1">
                                         <span class="text-[0.6rem] font-bold">≤</span>
                                         <input type="number" id="edit-limit-star3" class="w-10 text-center text-xs font-black border border-amber-300 rounded focus:bg-amber-100" value="0">
                                     </div>
                                 </div>
                                 <div class="flex flex-col bg-slate-50 border border-slate-300 p-1 rounded text-center">
-                                    <span class="text-[0.6rem] font-bold text-slate-700">2星 (+12%)</span>
+                                    <span class="text-[0.6rem] font-bold text-slate-700">2星 (+10%)</span>
                                     <div class="flex items-center justify-center gap-1 mt-1">
                                         <span class="text-[0.6rem] font-bold">≤</span>
                                         <input type="number" id="edit-limit-star2" class="w-10 text-center text-xs font-black border border-slate-400 rounded focus:bg-slate-200" value="0">
                                     </div>
                                 </div>
                                 <div class="flex flex-col bg-orange-50 border border-orange-200 p-1 rounded text-center">
-                                    <span class="text-[0.6rem] font-bold text-orange-800">1星 (+4%)</span>
+                                    <span class="text-[0.6rem] font-bold text-orange-800">1星 (+5%)</span>
                                     <div class="flex items-center justify-center gap-1 mt-1">
                                         <span class="text-[0.6rem] font-bold">≤</span>
                                         <input type="number" id="edit-limit-star1" class="w-10 text-center text-xs font-black border border-orange-300 rounded focus:bg-orange-100" value="0">
@@ -5460,9 +5460,9 @@
                     let achievedStars = 0;
                     let dropBonus = 0;
 
-                    if (turnLimits.star3 > 0 && currentRound <= turnLimits.star3) { achievedStars = 3; dropBonus = 20; }
-                    else if (turnLimits.star2 > 0 && currentRound <= turnLimits.star2) { achievedStars = 2; dropBonus = 12; }
-                    else if (turnLimits.star1 > 0 && currentRound <= turnLimits.star1) { achievedStars = 1; dropBonus = 4; }
+                    if (turnLimits.star3 > 0 && currentRound <= turnLimits.star3) { achievedStars = 3; dropBonus = 15; }
+                    else if (turnLimits.star2 > 0 && currentRound <= turnLimits.star2) { achievedStars = 2; dropBonus = 10; }
+                    else if (turnLimits.star1 > 0 && currentRound <= turnLimits.star1) { achievedStars = 1; dropBonus = 5; }
                     else { achievedStars = 0; dropBonus = 0; } // 0星通關
 
                     updates.campaignAchievedStars = achievedStars;
@@ -5872,11 +5872,11 @@
                    // [v4.3.7] 怪物扣血與特效同步邏輯
                     let monsterDied = false;
                     if (points > 0) {
-                        // [v4.7.9.1 修改] 計算傷害 (含冒險者之劍加成)
+                        // [v4.7.9.1 修改] 計算傷害 (含冒險者之劍與元素符號飾品加成)
                         // 基礎傷害: 1分 = 10傷害
-                        // 加成傷害: 冒險者之劍 (Lv1+2 ~ Lv5+6)
+                        // 加成傷害: 冒險者之劍、森之律動(+)、爆炎刻印(×)、冰蝕咒紋(-)、深淵之印(÷)
                         const myPlayerData = app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName];
-                        const atkBonus = app.getAttackBonus(myPlayerData?.equipped);
+                        const atkBonus = app.getAttackBonus(myPlayerData?.equipped, formula);
                         const damage = (points * 10) + atkBonus;
 
                       
@@ -7938,19 +7938,75 @@
             return multiplier;
         },
 
-// 3. 計算攻擊力加成 (冒險者之劍) [v4.7.9.1 新增]
-        getAttackBonus: (equippedMap) => {
+// 3. 計算攻擊力加成 (冒險者之劍與元素符號飾品) [v4.7.9.1 修改]
+        getAttackBonus: (equippedMap, formula = '') => {
             let bonus = 0;
             const globalList = app.state.globalSettings?.blackMarketList || [];
             
+            // 計算公式中各符號出現的次數
+            const countAdd = (formula.match(/\+/g) || []).length;
+            const countSub = (formula.match(/\-/g) || []).length;
+            const countMul = (formula.match(/×/g) || []).length;
+            const countDiv = (formula.match(/÷/g) || []).length;
+
             if (equippedMap) {
                 Object.values(equippedMap).forEach(itemId => {
                     const item = globalList[itemId];
                     if (item) {
+                        const lv = item.currentEditLv || 1;
+                        
                         // 效果: 冒險者之劍 (Lv1:+2, Lv2:+3... 公式: Lv+1)
                         if (item.name.includes('冒險者之劍')) {
-                            const lv = item.currentEditLv || 1;
                             bonus += (lv + 1);
+                        }
+                        
+                        // 效果: 森之律動 (+)
+                        if (item.name.includes('森之律動')) {
+                            if (countAdd >= 2) {
+                                if (lv === 1) bonus += 1;
+                                else if (lv === 2) bonus += 2;
+                                else if (lv >= 3) bonus += 3;
+                            } else if (countAdd === 1) {
+                                if (lv === 1) bonus += 1;
+                                else if (lv === 2) bonus += 1;
+                                else if (lv >= 3) bonus += 2;
+                            }
+                        }
+                        // 效果: 爆炎刻印 (x)
+                        if (item.name.includes('爆炎刻印')) {
+                            if (countMul >= 2) {
+                                if (lv === 1) bonus += 1;
+                                else if (lv === 2) bonus += 2;
+                                else if (lv >= 3) bonus += 3;
+                            } else if (countMul === 1) {
+                                if (lv === 1) bonus += 1;
+                                else if (lv === 2) bonus += 1;
+                                else if (lv >= 3) bonus += 2;
+                            }
+                        }
+                        // 效果: 冰蝕咒紋 (-)
+                        if (item.name.includes('冰蝕咒紋')) {
+                            if (countSub >= 2) {
+                                if (lv === 1) bonus += 1;
+                                else if (lv === 2) bonus += 3;
+                                else if (lv >= 3) bonus += 5;
+                            } else if (countSub === 1) {
+                                if (lv === 1) bonus += 1;
+                                else if (lv === 2) bonus += 1;
+                                else if (lv >= 3) bonus += 2;
+                            }
+                        }
+                        // 效果: 深淵之印 (÷)
+                        if (item.name.includes('深淵之印')) {
+                            if (countDiv >= 2) {
+                                if (lv === 1) bonus += 1;
+                                else if (lv === 2) bonus += 4;
+                                else if (lv >= 3) bonus += 8;
+                            } else if (countDiv === 1) {
+                                if (lv === 1) bonus += 1;
+                                else if (lv === 2) bonus += 1;
+                                else if (lv >= 3) bonus += 3;
+                            }
                         }
                     }
                 });
@@ -9288,7 +9344,7 @@ addRewardItem: () => {
             // 星級挑戰條件資訊
             const tLimits = subData.turnLimits || { star3: 0, star2: 0, star1: 0 };
             // [修改] 全面放大星級字體與邊距，改善手機與電腦的閱讀體驗
-            const starsHtml = `<div class="text-sm md:text-base font-bold text-amber-200 mb-2 border-b border-amber-500/30 pb-1">⭐ 星級挑戰條件 (通關越快獎勵越高)</div><div class="flex justify-around items-center pt-1 pb-2"><div class="flex flex-col items-center gap-1"><span class="text-base md:text-lg text-yellow-400 drop-shadow">⭐⭐⭐</span><span class="text-sm md:text-base font-black text-white">≤ ${tLimits.star3} 回合</span><span class="text-xs md:text-sm font-bold text-green-300 bg-green-900/60 px-2 py-0.5 rounded shadow-sm border border-green-800">+20% 掉落</span></div><div class="flex flex-col items-center gap-1"><span class="text-base md:text-lg text-slate-300 drop-shadow">⭐⭐</span><span class="text-sm md:text-base font-black text-white">≤ ${tLimits.star2} 回合</span><span class="text-xs md:text-sm font-bold text-green-300 bg-green-900/60 px-2 py-0.5 rounded shadow-sm border border-green-800">+12% 掉落</span></div><div class="flex flex-col items-center gap-1"><span class="text-base md:text-lg text-orange-400 drop-shadow">⭐</span><span class="text-sm md:text-base font-black text-white">≤ ${tLimits.star1} 回合</span><span class="text-xs md:text-sm font-bold text-green-300 bg-green-900/60 px-2 py-0.5 rounded shadow-sm border border-green-800">+4% 掉落</span></div></div>`;
+            const starsHtml = `<div class="text-sm md:text-base font-bold text-amber-200 mb-2 border-b border-amber-500/30 pb-1">⭐ 星級挑戰條件 (通關越快獎勵越高)</div><div class="flex justify-around items-center pt-1 pb-2"><div class="flex flex-col items-center gap-1"><span class="text-base md:text-lg text-yellow-400 drop-shadow">⭐⭐⭐</span><span class="text-sm md:text-base font-black text-white">≤ ${tLimits.star3} 回合</span><span class="text-xs md:text-sm font-bold text-green-300 bg-green-900/60 px-2 py-0.5 rounded shadow-sm border border-green-800">+15% 掉落</span></div><div class="flex flex-col items-center gap-1"><span class="text-base md:text-lg text-slate-300 drop-shadow">⭐⭐</span><span class="text-sm md:text-base font-black text-white">≤ ${tLimits.star2} 回合</span><span class="text-xs md:text-sm font-bold text-green-300 bg-green-900/60 px-2 py-0.5 rounded shadow-sm border border-green-800">+10% 掉落</span></div><div class="flex flex-col items-center gap-1"><span class="text-base md:text-lg text-orange-400 drop-shadow">⭐</span><span class="text-sm md:text-base font-black text-white">≤ ${tLimits.star1} 回合</span><span class="text-xs md:text-sm font-bold text-green-300 bg-green-900/60 px-2 py-0.5 rounded shadow-sm border border-green-800">+5% 掉落</span></div></div>`;
             app.el('prebattle-stars-info').innerHTML = starsHtml;
 
             // 波次資訊
