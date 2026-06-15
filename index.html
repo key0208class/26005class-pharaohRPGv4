@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.3.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.3.2 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -492,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.3.0 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.3.2 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -589,7 +589,7 @@
 
                         <hr class="border-amber-200 my-4">
                         
-                        <button onclick="app.createRoom()" class="w-full bg-gradient-to-r from-amber-600 to-amber-800 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-xl mb-2 flex items-center justify-center gap-2">
+                        <button onclick="app.openCreateRoomModal()" class="w-full bg-gradient-to-r from-amber-600 to-amber-800 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-xl mb-2 flex items-center justify-center gap-2">
                             <span>🏰</span> <span id="lobby-create-room-text">隨機討伐</span>
                         </button>
                         <p class="text-xs text-gray-400">隨機怪物模式，進入後自動成為隊長</p>
@@ -634,7 +634,27 @@
                 </div>
             </div>
         </div>
-
+<!-- 建立房間設定視窗開始 -->
+        <div id="create-room-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
+            <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border-4 border-amber-600 animate-[fadeIn_0.3s_ease-out]">
+                <h3 class="text-xl font-black text-amber-900 mb-4 text-center">🏰 建立新冒險房間</h3>
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">房間密碼 (選填，不設請留空)</label>
+                        <input type="text" id="create-room-pwd" class="w-full p-3 border-2 border-amber-300 rounded-lg text-center font-bold text-slate-800 placeholder-amber-200" placeholder="無密碼">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">人數上限 (選填，0為不限制)</label>
+                        <input type="number" id="create-room-max" class="w-full p-3 border-2 border-amber-300 rounded-lg text-center font-bold text-slate-800" value="0" min="0" max="50">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="document.getElementById('create-room-modal').classList.add('hidden')" class="flex-1 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-100 transition-colors">取消</button>
+                    <button onclick="app.confirmCreateRoom()" class="flex-1 bg-amber-600 text-white py-2 rounded-lg font-bold shadow hover:bg-amber-700 transition-colors">確認建立</button>
+                </div>
+            </div>
+        </div>
+        <!-- 建立房間設定視窗結束 -->
         <div id="admin-auth-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
             <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border-4 border-slate-600 animate-[fadeIn_0.3s_ease-out]">
                 <h3 class="text-xl font-black text-slate-800 mb-4 text-center">🛡️ 管理員驗證</h3>
@@ -1624,6 +1644,18 @@
                                     </div>
                                 </div>
                                 
+                                <!-- [新增] 戰役房間設定 -->
+                                <div class="flex gap-3 mb-4 text-left">
+                                    <div class="flex-1">
+                                        <label class="block text-[0.65rem] font-bold text-slate-400 mb-1">房間密碼 (不設留空)</label>
+                                        <input type="text" id="campaign-room-pwd" class="w-full p-2 border border-slate-600 bg-slate-800 rounded-lg text-center text-sm font-bold text-white placeholder-slate-500" placeholder="無密碼">
+                                    </div>
+                                    <div class="flex-1">
+                                        <label class="block text-[0.65rem] font-bold text-slate-400 mb-1">人數上限 (0為不限)</label>
+                                        <input type="number" id="campaign-room-max" class="w-full p-2 border border-slate-600 bg-slate-800 rounded-lg text-center text-sm font-bold text-white" value="0" min="0" max="50">
+                                    </div>
+                                </div>
+                                
                                 <div class="flex gap-3">
                                     <button onclick="app.el('campaign-prebattle-modal').classList.add('hidden')" class="flex-1 bg-slate-700 text-slate-300 py-3 rounded-xl font-bold shadow hover:bg-slate-600 active:scale-95 transition-colors border-b-4 border-slate-800 active:border-b-0 active:translate-y-1">返回地圖</button>
                                     <button onclick="app.startCampaignBattle()" class="flex-1 bg-red-700 text-white py-3 rounded-xl font-black shadow-[0_0_15px_rgba(185,28,28,0.5)] hover:bg-red-600 active:scale-95 transition-colors border-b-4 border-red-900 active:border-b-0 active:translate-y-1 tracking-widest text-lg">⚔️ 出擊</button>
@@ -2594,9 +2626,14 @@
                         ? `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded border border-red-300 text-[0.6rem] font-black shadow-sm mr-2">⚔️ 戰役模式</span>` 
                         : `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded border border-blue-300 text-[0.6rem] font-black shadow-sm mr-2">🎲 隨機討伐</span>`;
                     const roomIcon = room.isCampaign ? '🗺️' : '🏰';
+                    
+                    // [新增] 計算當前人數與判斷是否上鎖
+                    const currentPlayers = room.players && room.players.team1 ? Object.keys(room.players.team1).length : 0;
+                    const maxPlayersText = (room.maxPlayers && room.maxPlayers > 0) ? `👥 ${currentPlayers}/${room.maxPlayers}` : `👥 ${currentPlayers}`;
+                    const pwdTag = room.password ? `<span class="bg-slate-700 text-white px-1.5 py-0.5 rounded text-[0.6rem] ml-1 shadow-sm" title="需要密碼">🔒</span>` : '';
 
                     // 壓縮 HTML 防止空白節點
-                    html += `<div onclick="app.joinLobbyRoom('${room.id}')" class="room-item"><div class="flex items-center gap-3"><div class="text-2xl">${roomIcon}</div><div><div class="font-bold text-amber-900 flex items-center">${roomTypeTag}${room.roomName || '未命名隊伍'}</div><div class="text-xs text-gray-500 flex items-center gap-2 mt-1"><span>隊長: ${room.hostName}</span><span class="${statusClass} px-2 py-0.5 rounded-full text-[0.6rem] font-bold">${statusText}</span></div></div></div><div class="text-amber-600 font-bold text-sm">點擊加入 ➜</div></div>`;
+                    html += `<div onclick="app.joinLobbyRoom('${room.id}')" class="room-item"><div class="flex items-center gap-3"><div class="text-2xl">${roomIcon}</div><div><div class="font-bold text-amber-900 flex items-center">${roomTypeTag}${room.roomName || '未命名隊伍'}</div><div class="text-xs text-gray-500 flex items-center gap-2 mt-1"><span>隊長: ${room.hostName}</span><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-[0.6rem] font-bold border border-amber-200">${maxPlayersText}</span><span class="${statusClass} px-2 py-0.5 rounded-full text-[0.6rem] font-bold">${statusText}</span>${pwdTag}</div></div></div><div class="text-amber-600 font-bold text-sm">點擊加入 ➜</div></div>`;
                 }
             });
 
@@ -2607,22 +2644,11 @@
         },
 
         // v4.0.2: 加入房間 (一鍵加入) - [v4.3.0] 新增 Session 記憶與斷線保護
+        // v4.0.2: 加入房間 (一鍵加入) - [v4.3.0] 新增 Session 記憶與斷線保護、密碼與人數檢查
         joinLobbyRoom: async (roomId) => {
             const name = app.el('lobby-player-name').value.trim();
             if (!name) return app.toast('❌ 請先輸入你的冒險者名字');
             
-            // 寫入本地記憶
-            localStorage.setItem('pharaoh_player_name', name);
-            localStorage.setItem('pharaoh_current_room_id', roomId);
-            localStorage.setItem('pharaoh_is_host', 'false');
-            localStorage.setItem('pharaoh_role', 'student');
-
-            app.state.myName = name;
-            app.state.classId = roomId;
-            app.state.role = 'student';
-            app.state.isHost = false; 
-            app.state.myTeam = 'team1'; 
-
             // [v4.7.8.6] 讀取玩家裝備並計算初始獎勵
             let myEquipped = {};
             if (app.state.user) {
@@ -2632,7 +2658,7 @@
                 myEquipped = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
             }
             
-     // 計算初始道具與血量加成
+            // 計算初始道具與血量加成
             const startItems = app.calculateEquippedStartItems(myEquipped);
             const hpBonus = app.getHpBonus(myEquipped);
             const initMaxHp = 100 + hpBonus;
@@ -2640,153 +2666,193 @@
             // 檢查房間是否存在並加入
             const roomRef = db.ref(`classes/${roomId}`);
             roomRef.once('value', snapshot => {
-                if (snapshot.exists()) {
-                    const playerRef = db.ref(`classes/${roomId}/players/team1/${name}`);
-                    playerRef.once('value', sn => {
-                        const exists = sn.exists();
-                        const pData = sn.val() || {};
-                        
-                        // 準備更新資料 (若為新玩家則套用裝備加成血量)
-                        const updates = {
-                            name: name,
-                            hp: (exists && pData.hp !== undefined) ? pData.hp : initMaxHp,
-                            maxHp: (exists && pData.maxHp !== undefined) ? Math.max(pData.maxHp, initMaxHp) : initMaxHp,
-                            equipped: myEquipped, // [新增] 更新裝備資訊
-                            lastActive: firebase.database.ServerValue.TIMESTAMP
-                        };
-
-                        // [新增] 若是新玩家(或之前無道具數據)，則給予初始裝備道具獎勵
-                        if (!exists) {
-                            updates.items = startItems;
-                            
-                            // [v4.7.8.7] 動態檢查是否獲得道具並提示
-                            const gainedItems = [];
-                            const itemMapName = { hint: '提示卡', double: '聖甲蟲', herb: '草藥', potion: '治療劑', elixir: '補血瓶' };
-                            Object.keys(startItems).forEach(key => {
-                                if (startItems[key] > 0) gainedItems.push(`${itemMapName[key]}+${startItems[key]}`);
-                            });
-
-                            if (gainedItems.length > 0) {
-                                setTimeout(() => app.toast(`🎒 裝備效果發動！獲得：${gainedItems.join(', ')}`, 1), 1500);
-                            }
-                        }
-
-                        playerRef.update(updates);
-                    });
-                    
-                    app.enterGameMode();
-                    app.toast(`🚀 已加入 ${snapshot.val().hostName} 的冒險！`);
-                } else {
+                if (!snapshot.exists()) {
                     app.toast('❌ 房間已不存在');
-                    localStorage.removeItem('pharaoh_current_room_id');
+                    return localStorage.removeItem('pharaoh_current_room_id');
                 }
+
+                const roomData = snapshot.val();
+                
+                // [新增] 判斷目前人數與是否在房內
+                const currentPlayersCount = roomData.players && roomData.players.team1 ? Object.keys(roomData.players.team1).length : 0;
+                const isAlreadyInRoom = roomData.players && roomData.players.team1 && roomData.players.team1[name];
+
+                // [新增] 檢查人數上限 (如果是重新連線就不受限)
+                if (!isAlreadyInRoom && roomData.maxPlayers && roomData.maxPlayers > 0 && currentPlayersCount >= roomData.maxPlayers) {
+                    return app.toast('❌ 房間人數已滿！無法加入。');
+                }
+
+                // [新增] 檢查密碼 (如果是重新連線就免密碼)
+                if (!isAlreadyInRoom && roomData.password) {
+                    const inputPwd = prompt('🔒 此房間設有密碼，請輸入通行密碼：');
+                    if (inputPwd === null) return; // 使用者按取消
+                    if (inputPwd !== roomData.password) {
+                        return app.toast('❌ 密碼錯誤，無法加入！');
+                    }
+                }
+
+                // 驗證通過，寫入本地記憶
+                localStorage.setItem('pharaoh_player_name', name);
+                localStorage.setItem('pharaoh_current_room_id', roomId);
+                localStorage.setItem('pharaoh_is_host', 'false');
+                localStorage.setItem('pharaoh_role', 'student');
+
+                app.state.myName = name;
+                app.state.classId = roomId;
+                app.state.role = 'student';
+                app.state.isHost = false; 
+                app.state.myTeam = 'team1'; 
+
+                const playerRef = db.ref(`classes/${roomId}/players/team1/${name}`);
+                playerRef.once('value', sn => {
+                    const exists = sn.exists();
+                    const pData = sn.val() || {};
+                    
+                    // 準備更新資料
+                    const updates = {
+                        name: name,
+                        hp: (exists && pData.hp !== undefined) ? pData.hp : initMaxHp,
+                        maxHp: (exists && pData.maxHp !== undefined) ? Math.max(pData.maxHp, initMaxHp) : initMaxHp,
+                        equipped: myEquipped, 
+                        lastActive: firebase.database.ServerValue.TIMESTAMP
+                    };
+
+                    if (!exists) {
+                        updates.items = startItems;
+                        const gainedItems = [];
+                        const itemMapName = { hint: '提示卡', double: '聖甲蟲', herb: '草藥', potion: '治療劑', elixir: '補血瓶' };
+                        Object.keys(startItems).forEach(key => {
+                            if (startItems[key] > 0) gainedItems.push(`${itemMapName[key] || key}+${startItems[key]}`);
+                        });
+
+                        if (gainedItems.length > 0) {
+                            setTimeout(() => app.toast(`🎒 裝備效果發動！獲得：${gainedItems.join(', ')}`, 1), 1500);
+                        }
+                    }
+
+                    playerRef.update(updates);
+                });
+                
+                app.enterGameMode();
+                app.toast(`🚀 已加入 ${roomData.hostName} 的冒險！`);
             });
         },
-
-        // v4.0.1: 建立新房間 (成為房主+主控者) - [v4.3.0] 新增 Session 記憶
         // v4.0.1: 建立新房間 (成為房主+主控者) - [v4.3.0] 新增 Session 記憶
     // v4.0.1: 建立新房間 (成為房主+主控者) - [v4.3.0] 新增 Session 記憶
-     createRoom: async () => {
-         const name = app.el('lobby-player-name').value.trim();
-         if (!name) return app.toast('❌ 請先輸入你的冒險者名字');
-         
-         // 儲存名字與身分標記
-         localStorage.setItem('pharaoh_player_name', name);
-         app.state.myName = name;
+     // [新增] 開啟建立房間設定視窗
+        openCreateRoomModal: () => {
+            const name = app.el('lobby-player-name').value.trim();
+            if (!name) return app.toast('❌ 請先輸入你的冒險者名字');
+            
+            // 重置輸入框
+            app.el('create-room-pwd').value = '';
+            app.el('create-room-max').value = '0';
+            
+            // 開啟彈窗
+            app.el('create-room-modal').classList.remove('hidden');
+        },
 
-         // 生成隨機房間代碼 (6碼數字)
-         const roomId = Math.floor(100000 + Math.random() * 900000).toString();
-         app.state.classId = roomId;
-         app.state.role = 'student'; 
-         app.state.isHost = true;    
-         app.state.myTeam = 'team1'; 
+        // v4.0.1: 確認建立新房間 (寫入密碼與人數上限)
+        confirmCreateRoom: async () => {
+             const name = app.el('lobby-player-name').value.trim();
+             if (!name) return app.toast('❌ 請先輸入你的冒險者名字');
 
-         // [關鍵] 寫入 Session，做為斷線重連的憑證
-         localStorage.setItem('pharaoh_current_room_id', roomId);
-         localStorage.setItem('pharaoh_is_host', 'true');
-         localStorage.setItem('pharaoh_role', 'student');
+             const pwd = app.el('create-room-pwd').value.trim();
+             const maxPlayers = parseInt(app.el('create-room-max').value) || 0;
+             
+             // 隱藏設定視窗
+             app.el('create-room-modal').classList.add('hidden');
+             
+             // 儲存名字與身分標記
+             localStorage.setItem('pharaoh_player_name', name);
+             app.state.myName = name;
 
-         // [v4.2.5 修正] 確保讀取正確的全域設定預設值
-         const globalSet = app.state.globalSettings || {};
-         const initAutoRoll = (globalSet.autoRollDefault !== undefined) ? globalSet.autoRollDefault : true;
-         const initEndless = (globalSet.endlessMode === true);
+             // 生成隨機房間代碼 (6碼數字)
+             const roomId = Math.floor(100000 + Math.random() * 900000).toString();
+             app.state.classId = roomId;
+             app.state.role = 'student'; 
+             app.state.isHost = true;    
+             app.state.myTeam = 'team1'; 
 
-         // [v4.7.8.6] 讀取玩家裝備並計算初始獎勵
-         let myEquipped = {};
-         if (app.state.user) {
-             // Google 登入：從 Firebase 讀取
-             const snap = await db.ref(`users/${app.state.user.uid}/equipped`).once('value');
-             myEquipped = snap.val() || {};
-         } else {
-             // 訪客：從 LocalStorage 讀取
-             myEquipped = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
-         }
-         
-         // 計算初始道具 [v4.7.8.7 優化動態提示]
-         const startItems = app.calculateEquippedStartItems(myEquipped);
-         
-         // 檢查是否有任何道具數量 > 0
-         const gainedItems = [];
-         const itemMapName = { hint: '提示卡', double: '聖甲蟲', herb: '草藥', potion: '治療劑', elixir: '補血瓶' };
-         
-         Object.keys(startItems).forEach(key => {
-             if (startItems[key] > 0) {
-                 gainedItems.push(`${itemMapName[key] || key}+${startItems[key]}`);
+             // 寫入 Session，做為斷線重連的憑證
+             localStorage.setItem('pharaoh_current_room_id', roomId);
+             localStorage.setItem('pharaoh_is_host', 'true');
+             localStorage.setItem('pharaoh_role', 'student');
+
+             const globalSet = app.state.globalSettings || {};
+             const initAutoRoll = (globalSet.autoRollDefault !== undefined) ? globalSet.autoRollDefault : true;
+             const initEndless = (globalSet.endlessMode === true);
+
+             let myEquipped = {};
+             if (app.state.user) {
+                 const snap = await db.ref(`users/${app.state.user.uid}/equipped`).once('value');
+                 myEquipped = snap.val() || {};
+             } else {
+                 myEquipped = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
              }
-         });
-
-         if (gainedItems.length > 0) {
-             setTimeout(() => app.toast(`🎒 裝備效果發動！獲得初始道具：${gainedItems.join(', ')}`, 1), 1000);
-         }
-
-        // 計算血量加成
-         const hpBonus = app.getHpBonus(myEquipped);
-         const initMaxHp = 100 + hpBonus;
-
-         // 寫入 Firebase
-         const initialData = app.generateInitialGameData();
-         db.ref(`classes/${roomId}`).set({
-             hostName: name,
-             roomName: `${name} 的冒險`,
-             status: 'waiting',
-             monsterDeck: app.generateMonsterDeck(),
-             dice: { d8: '-', d10: '-', d12: '-' },
-             round: 1,
-             timer: 30,
-             timerActive: false,
-             pyramid: initialData.pyramid,
-             decks: initialData.decks,
-             lastActive: firebase.database.ServerValue.TIMESTAMP,
-             startTime: firebase.database.ServerValue.TIMESTAMP, 
-             autoRoll: initAutoRoll, 
-             endlessMode: initEndless
-         }).then(() => {
-             // 加入自己為玩家 (包含 items 與 equipped)
-             db.ref(`classes/${roomId}/players/team1/${name}`).set({
-                 name: name,
-                 score: 0,
-                 gold: 0, 
-                 sessionGold: 0,
-                 hp: initMaxHp,    
-                 maxHp: initMaxHp,
-                 items: startItems, // [新增] 寫入初始道具
-                 equipped: myEquipped, // [新增] 寫入裝備資訊供戰鬥計算
-                 lastActive: firebase.database.ServerValue.TIMESTAMP
+             
+             const startItems = app.calculateEquippedStartItems(myEquipped);
+             const gainedItems = [];
+             const itemMapName = { hint: '提示卡', double: '聖甲蟲', herb: '草藥', potion: '治療劑', elixir: '補血瓶' };
+             
+             Object.keys(startItems).forEach(key => {
+                 if (startItems[key] > 0) {
+                     gainedItems.push(`${itemMapName[key] || key}+${startItems[key]}`);
+                 }
              });
-             
-             app.enterGameMode();
-             app.toast(`🏰 冒險小隊建立成功！代碼：${roomId}`, 1);
-             app.speak('小隊建立！');
-             
-             if (initEndless) {
-                 setTimeout(() => {
-                     app.toast('♾️ 無盡戰鬥模式：已啟用', 1);
-                     app.speak('戰鬥準備中！');
-                 }, 1200);
-             }
-         });
-     },
 
+             if (gainedItems.length > 0) {
+                 setTimeout(() => app.toast(`🎒 裝備效果發動！獲得初始道具：${gainedItems.join(', ')}`, 1), 1000);
+             }
+
+             const hpBonus = app.getHpBonus(myEquipped);
+             const initMaxHp = 100 + hpBonus;
+
+             const initialData = app.generateInitialGameData();
+             
+             // 寫入 Firebase
+             db.ref(`classes/${roomId}`).set({
+                 hostName: name,
+                 roomName: `${name} 的冒險`,
+                 password: pwd,           // [新增] 寫入房間密碼
+                 maxPlayers: maxPlayers,  // [新增] 寫入人數上限
+                 status: 'waiting',
+                 monsterDeck: app.generateMonsterDeck(),
+                 dice: { d8: '-', d10: '-', d12: '-' },
+                 round: 1,
+                 timer: 30,
+                 timerActive: false,
+                 pyramid: initialData.pyramid,
+                 decks: initialData.decks,
+                 lastActive: firebase.database.ServerValue.TIMESTAMP,
+                 startTime: firebase.database.ServerValue.TIMESTAMP, 
+                 autoRoll: initAutoRoll, 
+                 endlessMode: initEndless
+             }).then(() => {
+                 db.ref(`classes/${roomId}/players/team1/${name}`).set({
+                     name: name,
+                     score: 0,
+                     gold: 0, 
+                     sessionGold: 0,
+                     hp: initMaxHp,    
+                     maxHp: initMaxHp,
+                     items: startItems, 
+                     equipped: myEquipped, 
+                     lastActive: firebase.database.ServerValue.TIMESTAMP
+                 });
+                 
+                 app.enterGameMode();
+                 app.toast(`🏰 冒險小隊建立成功！代碼：${roomId}`, 1);
+                 app.speak('小隊建立！');
+                 
+                 if (initEndless) {
+                     setTimeout(() => {
+                         app.toast('♾️ 無盡戰鬥模式：已啟用', 1);
+                         app.speak('戰鬥準備中！');
+                     }, 1200);
+                 }
+             });
+        },
         // v4.0.3: 進入遊戲介面 (房主權限控制)
        // v4.1.0: 進入遊戲介面 (修正主控者倒數計時與語音按鈕顯示)
         enterGameMode: () => {
@@ -9407,6 +9473,10 @@ addRewardItem: () => {
             // 儲存待會出擊要用的參數
             app.state.pendingCampaignBattle = { chapIdx, sIdx, subIdx };
 
+            // [新增] 每次開啟時重置房間設定
+            if(app.el('campaign-room-pwd')) app.el('campaign-room-pwd').value = '';
+            if(app.el('campaign-room-max')) app.el('campaign-room-max').value = '0';
+
             // 填入視窗資料
             app.el('prebattle-title').textContent = `戰役 ${sIdx+1}-${subIdx}`;
             
@@ -9504,6 +9574,10 @@ addRewardItem: () => {
             localStorage.setItem('pharaoh_player_name', name);
             app.state.myName = name;
 
+            // [新增] 讀取戰役房間設定 (密碼與人數上限)
+            const pwd = app.el('campaign-room-pwd') ? app.el('campaign-room-pwd').value.trim() : '';
+            const maxPlayers = app.el('campaign-room-max') ? parseInt(app.el('campaign-room-max').value) || 0 : 0;
+
             // 產生專屬房間號 (加 CAMP 前綴以利辨識)
             const roomId = 'CAMP' + Math.floor(1000 + Math.random() * 9000).toString();
             app.state.classId = roomId;
@@ -9545,6 +9619,8 @@ addRewardItem: () => {
             db.ref(`classes/${roomId}`).set({
                 hostName: name,
                 roomName: `戰役：${stage.bossName} (${sIdx+1}-${subIdx})`,
+                password: pwd,           // [新增] 寫入房間密碼
+                maxPlayers: maxPlayers,  // [新增] 寫入人數上限
                 status: 'waiting',
                 monsterDeck: customDeck, // 帶入戰役專屬牌庫
                 dice: { d8: '-', d10: '-', d12: '-' },
@@ -9558,8 +9634,8 @@ addRewardItem: () => {
                 autoRoll: app.state.globalSettings?.autoRollDefault !== false,
                 endlessMode: false, // 戰役模式絕對不可無限循環
                 isCampaign: true,   // 戰役模式標記
-                campaignMeta: { chapIdx, sIdx, subIdx, turnLimits: subData.turnLimits || { star3: 0, star2: 0, star1: 0 } }, // [新增] 紀錄目前打的是哪一關與回合條件
-                campaignRewards: subData.rewards // 將額外獎勵存入房間，待結算時發放
+                campaignMeta: { chapIdx, sIdx, subIdx, turnLimits: subData.turnLimits || { star3: 0, star2: 0, star1: 0 } }, 
+                campaignRewards: subData.rewards 
             }).then(() => {
                 db.ref(`classes/${roomId}/players/team1/${name}`).set({
                     name: name,
