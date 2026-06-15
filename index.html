@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.3.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.3.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -492,7 +492,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.3.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.3.3 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -599,7 +599,7 @@
                         <button id="btn-campaign-mode" onclick="app.enterCampaignMode()" class="w-full bg-gradient-to-r from-slate-700 to-slate-900 text-amber-400 font-black py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-xl mb-1 flex items-center justify-center gap-2 border-2 border-amber-500/50 relative overflow-hidden group">
                             <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30"></div>
                             <span class="text-2xl filter drop-shadow group-hover:animate-pulse">⚔️</span> 
-                            <span class="tracking-widest">冒險戰役(開放STAGE1)</span>
+                            <span class="tracking-widest">冒險戰役(開放STAGE2)</span>
                         </button>
                         <p class="text-xs text-gray-500 font-bold">透過困難的戰役，取得更豐富的獎勵</p>
                     </div>
@@ -1424,9 +1424,8 @@
                             </div>
                             <!-- 操作按鈕 -->
                             <div class="flex gap-3 mt-3">
-                                <button id="btn-bp-equip" class="flex-1 bg-gradient-to-r from-amber-600 to-amber-700 text-white font-bold py-2 rounded-lg shadow-md active:scale-95 transition-transform flex justify-center items-center gap-2">
-                                    <span>⚔️</span> 裝備
-                                </button>
+                                <button id="btn-bp-use" class="hidden flex-1 bg-gradient-to-r from-red-600 to-red-800 text-white font-bold py-2 rounded-lg shadow-md hover:from-red-500 hover:to-red-700 active:scale-95 transition-transform justify-center items-center gap-2"><span>🔥</span> 使用</button><button id="btn-bp-equip" class="flex-1 bg-gradient-to-r from-amber-600 to-amber-700 text-white font-bold py-2 rounded-lg shadow-md active:scale-95 transition-transform flex justify-center items-center gap-2"><span>⚔️</span> 裝備</button>
+								
                                 <button onclick="app.closeBackpackPanel()" class="flex-1 bg-slate-500 text-white font-bold py-2 rounded-lg shadow-md hover:bg-slate-600 active:scale-95 transition-colors flex justify-center items-center gap-2">
                                     <span>✕</span> 取消
                                 </button>
@@ -8086,6 +8085,12 @@
                             else if (lv === 2) items.potion += 2; // Lv2: 治療劑
                             else if (lv >= 3) items.elixir += 2;  // Lv3+: 補血瓶
                         }
+						// 效果4: 聖光恩典 (獲得3個法老王提示，3個聖甲蟲徽章，2個補血瓶)
+                        if (item.name.includes('聖光恩典')) {
+                            items.hint += 3;
+                            items.double += 3;
+                            items.elixir += 2;
+                        }
                     }
                 });
             }
@@ -8400,8 +8405,25 @@
             app.el('bp-panel-desc').textContent = lvData.desc || '暫無說明';
             app.el('bp-panel-icon').innerHTML = `<img src="${img}" class="w-full h-full object-contain filter drop-shadow-sm">`;
 
-            // 設定按鈕事件
-            app.el('btn-bp-equip').onclick = () => app.handleEquipItem(itemId);
+            // 設定按鈕事件與按鈕切換顯示
+            const btnEquip = app.el('btn-bp-equip');
+            const btnUse = app.el('btn-bp-use');
+            
+            // 如果道具名稱包含特定字眼(消耗品)，則顯示「使用」並隱藏「裝備」
+            if (itemData.name.includes('熔爐')) {
+                btnEquip.classList.add('hidden');
+                btnEquip.classList.remove('flex');
+                btnUse.classList.remove('hidden');
+                btnUse.classList.add('flex');
+                btnUse.onclick = () => app.useBackpackItem(itemId);
+            } else {
+                btnEquip.classList.remove('hidden');
+                btnEquip.classList.add('flex');
+                btnUse.classList.add('hidden');
+                btnUse.classList.remove('flex');
+                btnEquip.onclick = () => app.handleEquipItem(itemId);
+            }
+
             app.el('btn-bp-discard').onclick = () => app.handleDiscardItem(itemId);
 
             // 顯示面板
@@ -8414,7 +8436,74 @@
             app.el('bp-item-action-panel').classList.add('hidden');
             app.el('bp-item-action-panel').classList.remove('flex');
         },
+// [新增] 使用背包消耗品道具 (烈焰熔爐合成系統)
+        useBackpackItem: (itemId) => {
+            const data = app.state.currentBackpackData;
+            const globalList = app.state.globalSettings?.blackMarketList || [];
+            const item = globalList[itemId];
+            if (!item) return;
 
+            if (item.name.includes('烈焰熔爐')) {
+                // 尋找合成材料與目標道具ID
+                let idAmulet = null, idScarab = null, idHerb = null, idGrace = null;
+
+                // 1. 先確認黑市中是否存在「聖光恩典」
+                Object.keys(globalList).forEach(gId => {
+                    const gItem = globalList[gId];
+                    if (gItem && gItem.name.includes('聖光恩典')) idGrace = gId;
+                });
+
+                if (!idGrace) {
+                    return app.toast('❌ 系統錯誤：黑市中尚未建立「聖光恩典」道具！請聯絡GM。', 1);
+                }
+
+                // 2. 檢查背包中是否有符合的材料 (LV3)
+                Object.keys(data.inventory).forEach(invId => {
+                    const invItem = globalList[invId];
+                    if (!invItem) return;
+                    const lv = invItem.currentEditLv || 1;
+                    
+                    if (invItem.name.includes('法老王的護符') && lv >= 3 && data.inventory[invId] > 0) idAmulet = invId;
+                    if (invItem.name.includes('聖甲蟲徽章') && lv >= 3 && data.inventory[invId] > 0) idScarab = invId;
+                    if (invItem.name.includes('草木精華') && lv >= 3 && data.inventory[invId] > 0) idHerb = invId;
+                });
+
+                if (!idAmulet || !idScarab || !idHerb) {
+                    return app.toast('❌ 材料不足！需要：法老王護符(LV3)、聖甲蟲徽章(LV3)、草木精華(LV3) 各1個。', 1);
+                }
+
+                // 3. 確認合成
+                if (!confirm('🔥 確定要啟動「烈焰熔爐」進行合成嗎？\n\n這將消耗熔爐與三個LV3材料，鍊成傳說道具「聖光恩典」！')) return;
+
+                // 4. 消耗材料
+                data.inventory[itemId] -= 1;
+                data.inventory[idAmulet] -= 1;
+                data.inventory[idScarab] -= 1;
+                data.inventory[idHerb] -= 1;
+
+                // 清除歸零的道具
+                if (data.inventory[itemId] <= 0) delete data.inventory[itemId];
+                if (data.inventory[idAmulet] <= 0) delete data.inventory[idAmulet];
+                if (data.inventory[idScarab] <= 0) delete data.inventory[idScarab];
+                if (data.inventory[idHerb] <= 0) delete data.inventory[idHerb];
+
+                // 5. 給予聖光恩典
+                data.inventory[idGrace] = (data.inventory[idGrace] || 0) + 1;
+
+                // 6. 特效與介面更新
+                app.toast('✨ 鍊金成功！獲得「聖光恩典」！', 1);
+                app.showDamageText('鍊成成功!', '#fbbf24', 'bp-inventory-grid'); // 金色特效
+                
+                if (navigator.vibrate) navigator.vibrate([100, 100, 200]);
+                const audio = new Audio("https://taira-komori.net/sound_os2/game01/magic01.mp3");
+                audio.volume = 0.5;
+                audio.play().catch(()=>{});
+
+                app.saveBackpackData();
+                app.renderCharacterBackpackUI();
+                app.closeBackpackPanel();
+            }
+        },
         // [新增] 丟棄物品邏輯
         handleDiscardItem: (itemId) => {
             const data = app.state.currentBackpackData;
