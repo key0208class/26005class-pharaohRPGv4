@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.3.7 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.4.1 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -493,7 +493,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.3.8 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.4.1 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -600,7 +600,7 @@
                         <button id="btn-campaign-mode" onclick="app.enterCampaignMode()" class="w-full bg-gradient-to-r from-slate-700 to-slate-900 text-amber-400 font-black py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-xl mb-1 flex items-center justify-center gap-2 border-2 border-amber-500/50 relative overflow-hidden group">
                             <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30"></div>
                             <span class="text-2xl filter drop-shadow group-hover:animate-pulse">⚔️</span> 
-                            <span class="tracking-widest">冒險戰役(開放STAGE2)</span>
+                            <span class="tracking-widest">冒險戰役(開放STAGE3)</span>
                         </button>
                         <p class="text-xs text-gray-500 font-bold">透過困難的戰役，取得更豐富的獎勵</p>
                     </div>
@@ -669,7 +669,7 @@
 
        <div id="admin-settings-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
              <div class="bg-white rounded-2xl p-6 max-w-5xl w-full mx-4 shadow-2xl border-4 border-b-8 border-slate-700 animate-[fadeIn_0.3s_ease-out] max-h-[90vh] overflow-y-auto flex flex-col">
-                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <div class="flex justify-between items-center mb-4 border-b pb-2 shrink-0">
                     <h3 class="text-2xl font-black text-slate-900">⚙️ 全域遊戲設定</h3>
                     <div class="flex items-center gap-3">
                         <button onclick="app.logoutAdmin()" class="bg-slate-200 text-slate-600 px-3 py-1 rounded-lg text-sm font-bold hover:bg-red-100 hover:text-red-600 transition-colors">🔒 登出</button>
@@ -677,7 +677,7 @@
                     </div>
                 </div>
 
-                <div class="flex border-b border-slate-200 mb-4 overflow-x-auto">
+                <div class="flex border-b border-slate-200 mb-4 overflow-x-auto shrink-0">
                     <button onclick="app.switchAdminTab('flow')" id="tab-btn-flow" class="admin-tab-btn admin-tab-active flex-1 whitespace-nowrap">🎮 遊戲流程</button>
                     <button onclick="app.switchAdminTab('items')" id="tab-btn-items" class="admin-tab-btn flex-1 whitespace-nowrap">🎁 道具發放</button>
                     <button onclick="app.switchAdminTab('monsters')" id="tab-btn-monsters" class="admin-tab-btn flex-1 whitespace-nowrap">👹 怪物設定</button>
@@ -1112,9 +1112,14 @@
                         <div id="blackmarket-list-view" class="block animate-[fadeIn_0.3s_ease-out]">
                             <div class="flex justify-between items-center mb-4">
                                 <h4 class="font-bold text-slate-800 flex items-center gap-2 text-xl">🏴‍☠️ 黑市商品總表</h4>
-                                <button onclick="app.addNewBlackMarketItem()" class="bg-slate-700 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-slate-800 active:scale-95 transition-transform flex items-center gap-2">
-                                    <span>➕</span> 新增商品
-                                </button>
+                                <div class="flex gap-2">
+                                    <button onclick="app.openCraftingSystem()" class="bg-red-700 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-red-800 active:scale-95 transition-transform flex items-center gap-2">
+                                        <span>🔥</span> 合成系統
+                                    </button>
+                                    <button onclick="app.addNewBlackMarketItem()" class="bg-slate-700 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-slate-800 active:scale-95 transition-transform flex items-center gap-2">
+                                        <span>➕</span> 新增商品
+                                    </button>
+                                </div>
                             </div>
                             
                             <div class="bg-slate-100 rounded-xl border border-slate-300 overflow-hidden">
@@ -1224,7 +1229,21 @@
                         </div>
 
                     </div>				
-					
+					<!-- 合成系統編輯視圖 -->
+                        <div id="crafting-system-view" class="hidden animate-[fadeIn_0.3s_ease-out] flex-col h-full">
+                            <div class="flex justify-between items-center mb-4 bg-slate-100 p-3 rounded-xl border border-slate-200 shrink-0">
+                                <button onclick="app.switchBlackMarketView('list')" class="bg-gray-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-600 active:scale-95 transition-transform flex items-center gap-2">
+                                    <span>🔙</span> 返回黑市列表
+                                </button>
+                                <h4 class="font-bold text-red-800 text-lg">🔥 烈焰熔爐合成配方管理</h4>
+                                <button onclick="app.addNewCraftingRecipe()" class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-red-700 active:scale-95 transition-transform flex items-center gap-2">
+                                    <span>➕</span> 新增配方
+                                </button>
+                            </div>
+                            <div id="crafting-recipe-container" class="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-2 pb-32">
+                                <!-- JS 動態生成配方列表 -->
+                            </div>
+                        </div>
 					<!-- [新增 v4.8.0.8] 角色圖示設定分頁 -->
                     <div id="tab-content-sprites" class="admin-tab-content space-y-4">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -1676,7 +1695,26 @@
                 </div>
             </div>
         </div>
-
+<!-- [新增] 玩家合成系統視窗 -->
+        <div id="player-crafting-modal" class="fixed inset-0 z-[90] hidden flex items-center justify-center modal-backdrop backdrop-blur-md">
+            <div class="bg-stone-900 rounded-2xl w-full max-w-4xl mx-4 shadow-2xl border-4 border-red-700 flex flex-col overflow-hidden relative animate-[popIn_0.3s_ease-out] max-h-[85vh]">
+                <div class="bg-gradient-to-r from-red-900 to-red-700 p-3 flex justify-between items-center border-b-2 border-red-500 shadow-md z-10 shrink-0">
+                    <h3 class="text-xl font-black text-amber-200 flex items-center gap-2"><span>🔥</span> 烈焰熔爐</h3>
+                    <button onclick="app.el('player-crafting-modal').classList.add('hidden')" class="text-red-200 hover:text-white font-black text-xl px-2 transition-colors">✕</button>
+                </div>
+                <div class="flex-1 flex flex-col md:flex-row overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')]">
+                    <!-- 左側：配方列表 -->
+                    <div class="w-full md:w-1/3 border-b-2 md:border-b-0 md:border-r-2 border-red-900/50 bg-black/40 flex flex-col">
+                        <div class="p-2 text-center text-red-400 font-bold text-sm bg-black/60 border-b border-red-900/50">📜 可用配方</div>
+                        <div id="crafting-recipe-list" class="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar"></div>
+                    </div>
+                    <!-- 右側：材料與合成 -->
+                    <div id="crafting-detail-area" class="w-full md:w-2/3 p-4 flex flex-col items-center justify-center relative">
+                        <div class="text-slate-500 font-bold text-center">請先從左側選擇要合成的配方</div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- 戰役管理員驗證視窗 -->
         <div id="campaign-auth-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
             <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border-4 border-amber-600 animate-[fadeIn_0.3s_ease-out]">
@@ -2975,7 +3013,7 @@
             }
         },
 // v4.1.8: 管理員分頁切換
-    switchAdminTab: (tabName) => {
+   switchAdminTab: (tabName) => {
         // 隱藏所有內容
         document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('admin-tab-active'));
@@ -2983,6 +3021,11 @@
         // 顯示目標內容
         app.el(`tab-content-${tabName}`).classList.add('active');
         app.el(`tab-btn-${tabName}`).classList.add('admin-tab-active');
+
+        // ★ [新增] 強制重置黑市內部視圖，防止合成系統與編輯器卡在下方重疊
+        if(app.el('crafting-system-view')) app.el('crafting-system-view').classList.add('hidden');
+        if(app.el('blackmarket-editor-view')) app.el('blackmarket-editor-view').classList.add('hidden');
+        if(app.el('blackmarket-list-view')) app.el('blackmarket-list-view').classList.remove('hidden');
 
         // [修正 v4.7.6.2] 切換分頁時，強制重新渲染對應列表，確保資料即時顯示
         if (tabName === 'blackmarket') {
@@ -3016,39 +3059,39 @@
 	   // --- v4.7.6.0 黑市商品管理系統 ---
         // 切換黑市視圖
       
-        switchBlackMarketView: (view) => {
+       switchBlackMarketView: (view) => {
+            // 確保切換時，其他不要的視窗都要隱藏
             if (view === 'list') {
                 app.el('blackmarket-list-view').classList.remove('hidden');
                 app.el('blackmarket-editor-view').classList.add('hidden');
+                if(app.el('crafting-system-view')) app.el('crafting-system-view').classList.add('hidden');
                 app.renderBlackMarketListUI();
-            } else {
+            } else if (view === 'editor') {
                 app.el('blackmarket-list-view').classList.add('hidden');
                 app.el('blackmarket-editor-view').classList.remove('hidden');
+                if(app.el('crafting-system-view')) app.el('crafting-system-view').classList.add('hidden');
             }
         },
 
-        // 新增黑市商品
+        // --- 黑市其餘原有功能 (不變) ---
         addNewBlackMarketItem: () => {
             if (!app.state.tempBlackMarketList) app.state.tempBlackMarketList = [];
             app.state.tempBlackMarketList.push({
                 name: '神秘商品',
                 maxLv: 1,
-                currentEditLv: 1, // [v4.7.6.7] 預設當前編輯等級為 1
+                currentEditLv: 1, 
                 isSold: true, 
                 img1: 'https://cdn-icons-png.flaticon.com/512/272/272527.png',
                 img2: '', img3: '',
-                // 儲存各等級數據
                 levelData: { 1: { price: 100, minLv: 1, desc: '來自黑市的稀有寶物' } }
             });
             app.renderBlackMarketListUI();
-             // 自動捲動到底部
             setTimeout(() => {
                 const c = app.el('blackmarket-list-container');
                 if(c) c.scrollTop = c.scrollHeight;
             }, 100);
         },
 
-        // 渲染黑市列表 (無空白 HTML) [v4.7.6.11 修正：MaxLV=1 不顯示標籤]
         renderBlackMarketListUI: () => {
             const list = app.state.tempBlackMarketList || [];
             const container = app.el('blackmarket-list-container');
@@ -3064,7 +3107,6 @@
                     const isSoldChecked = (item.isSold !== false) ? 'checked' : '';
                     const maxLv = item.maxLv || 1;
                     
-                    // [v4.7.6.11] 修正：只有當 MaxLV > 1 時才顯示 LV 標籤，避免誤會
                     let lvTag = '';
                     if (maxLv > 1) {
                         lvTag = `<div class="absolute bottom-0 right-0 bg-black/70 text-amber-400 text-[0.5rem] px-0.5 rounded-tl font-black leading-none backdrop-blur-[1px]">LV${activeLv}</div>`;
@@ -3076,34 +3118,25 @@
             container.innerHTML = html;
         },
 
-        // 列表直接更新 (更新 基礎資料 與 當前等級數值)
         updateBlackMarketDirect: (index, field, value) => {
             const item = app.state.tempBlackMarketList[index];
             if (!item) return;
-            
-            // 取得當前顯示的等級
             const activeLv = item.currentEditLv || 1;
 
             if (field === 'isSold') {
-                item.isSold = value; // boolean
+                item.isSold = value; 
             } else if (field === 'maxLv') {
                 item.maxLv = parseInt(value) || 1;
             } else if (field === 'price' || field === 'minLv') {
-                // 更新當前等級 (activeLv) 的資料
                 if (!item.levelData) item.levelData = {};
                 if (!item.levelData[activeLv]) {
-                    // 若該等級資料不存在，先從 LV1 複製或是建立空的
                     const base = item.levelData[1] || { price: 100, minLv: 1, desc: '' };
                     item.levelData[activeLv] = { ...base };
                 }
                 item.levelData[activeLv][field] = parseInt(value) || 0;
             }
-            // 強制重繪列表以更新圖片或數值顯示
-            // (因為修改 maxLv 可能會影響邏輯，修改 price 也要確保 UI 同步)
-            // 但為了效能，input 失去焦點後通常介面已變。若需要即時反應可呼叫 render
         },
 
-        // 進入詳細編輯
         editBlackMarketDetail: (index) => {
             const item = app.state.tempBlackMarketList[index];
             if (!item) return;
@@ -3113,15 +3146,12 @@
             app.el('edit-bm-maxlv').value = item.maxLv;
             app.el('edit-bm-is-sold').checked = (item.isSold !== false);
             
-            // [v4.7.6.7] 讀取並設定當前編輯等級 (預設為 item.currentEditLv，若無則 1)
             const targetLv = item.currentEditLv || 1;
 
-            // 重新產生下拉選單，並選中 targetLv
             app.renderBlackMarketLevelSelect(targetLv);
             app.switchBlackMarketView('editor');
         },
 
-        // [v4.7.6.5] 渲染等級下拉選單 (並觸發圖片輸入框生成)
         renderBlackMarketLevelSelect: (selectLv = 1) => {
             const max = parseInt(app.el('edit-bm-maxlv').value) || 1;
             const select = app.el('edit-bm-level-select');
@@ -3132,13 +3162,10 @@
             select.innerHTML = html;
             select.value = selectLv;
             
-            // 生成圖片輸入框 (根據 maxLv)
             app.renderBlackMarketImageInputs(max);
-            
-            app.loadBlackMarketLevelData(); // 載入選定等級的數據
+            app.loadBlackMarketLevelData(); 
         },
 
-        // [v4.7.6.5] 動態生成圖片輸入欄位
         renderBlackMarketImageInputs: (maxLv) => {
             const idx = app.el('edit-bm-index').value;
             const item = app.state.tempBlackMarketList[idx];
@@ -3147,9 +3174,7 @@
 
             let html = '<div class="text-xs font-bold text-slate-500 mb-2">圖片設定 (若缺圖將自動遞補)</div>';
             
-            // 根據最高等級生成對應數量的輸入框
             for (let i = 1; i <= maxLv; i++) {
-                // 讀取現有值，若無則為空
                 const val = item[`img${i}`] || '';
                 const label = i === 1 ? `圖1 URL (LV1 / 預設)` : `圖${i} URL (飾品LV${i})`;
                 
@@ -3159,7 +3184,6 @@
             container.innerHTML = html;
         },
 
-        // 載入當前選定等級的數據 & 預覽圖更新
         loadBlackMarketLevelData: () => {
             const idx = app.el('edit-bm-index').value;
             const item = app.state.tempBlackMarketList[idx];
@@ -3168,7 +3192,6 @@
             const lv = parseInt(app.el('edit-bm-level-select').value) || 1;
             const maxLv = parseInt(app.el('edit-bm-maxlv').value) || 1;
             
-            // 確保該等級資料存在
             if (!item.levelData) item.levelData = {};
             if (!item.levelData[lv]) {
                 const base = item.levelData[1] || { price: 100, minLv: 1, desc: '' };
@@ -3185,7 +3208,6 @@
             app.el('edit-bm-desc').value = data.desc || '';
             app.el('display-bm-lv').textContent = lv;
 
-            // 圖片預覽邏輯：嘗試讀取輸入框值 -> item值 -> 遞補上一級
             let previewSrc = '';
             const inputEl = document.getElementById(`edit-bm-img-${lv}`);
             
@@ -3195,7 +3217,6 @@
                 previewSrc = item[`img${lv}`]; 
             }
 
-            // 自動遞補邏輯
             if (!previewSrc) {
                 for (let k = lv - 1; k >= 1; k--) {
                     const prevInput = document.getElementById(`edit-bm-img-${k}`);
@@ -3210,25 +3231,20 @@
             }
             
             app.el('edit-bm-preview-img').src = previewSrc || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-            
             const tagEl = app.el('edit-bm-preview-tag');
-            // [v4.7.6.7] 預覽標籤一律顯示當前 LV
             tagEl.classList.remove('hidden');
             tagEl.textContent = `LV${lv}`;
         },
 
-        // 暫存編輯內容 [v4.7.6.7] 同步儲存 currentEditLv
         saveCurrentBlackMarketEdit: () => {
             const idx = app.el('edit-bm-index').value;
             const item = app.state.tempBlackMarketList[idx];
             if (!item) return;
 
-            // 儲存基礎資訊
             item.name = app.el('edit-bm-name').value;
             item.maxLv = parseInt(app.el('edit-bm-maxlv').value) || 1;
             item.isSold = app.el('edit-bm-is-sold').checked;
             
-            // 儲存所有動態生成的圖片欄位
             for (let i = 1; i <= item.maxLv; i++) {
                 const input = document.getElementById(`edit-bm-img-${i}`);
                 if (input) {
@@ -3236,10 +3252,7 @@
                 }
             }
 
-            // 儲存當前等級的數據
             const lv = parseInt(app.el('edit-bm-level-select').value) || 1;
-            
-            // [v4.7.6.7] 記錄當前編輯的等級，以便列表顯示正確資訊
             item.currentEditLv = lv;
 
             if (!item.levelData) item.levelData = {};
@@ -3253,32 +3266,19 @@
             app.switchBlackMarketView('list');
         },
 
-        // [v4.7.6.7 新增] 複製當前商品 (已修正：強制重置等級為 1)
         duplicateCurrentBlackMarketItem: () => {
             const idx = parseInt(app.el('edit-bm-index').value);
             const originalItem = app.state.tempBlackMarketList[idx];
-            
             if (!originalItem) return;
 
-            // 深拷貝物件
             const newItem = JSON.parse(JSON.stringify(originalItem));
-            
-            // 修改名稱以示區別
             newItem.name = newItem.name + " (複製)";
-            
-            // [修正關鍵] 強制重置當前編輯等級為 1
-            // 避免繼承原商品的 LV 狀態 (例如原商品停在 LV3)，導致新商品在列表修改時改錯層級
             newItem.currentEditLv = 1;
 
-            // 插入到原商品下方 (解決索引偏移問題：先插入資料，再重新渲染列表)
             app.state.tempBlackMarketList.splice(idx + 1, 0, newItem);
-            
             app.toast('✅ 商品已複製 (已重置為 LV1 狀態)');
-            
-            // 切換回列表視圖，這會觸發 renderBlackMarketListUI() 重新產生正確的索引
             app.switchBlackMarketView('list');
             
-            // 自動捲動到新商品位置
              setTimeout(() => {
                 const row = document.querySelectorAll('#blackmarket-list-container > div')[idx + 1];
                 if(row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -3292,8 +3292,102 @@
                 app.switchBlackMarketView('list');
             }
         },
-		
 
+        // --- [新增] 合成系統後台管理邏輯 ---
+        openCraftingSystem: () => {
+            // 開啟合成系統，並將黑市的其它介面都隱藏
+            app.el('blackmarket-list-view').classList.add('hidden');
+            app.el('blackmarket-editor-view').classList.add('hidden');
+            app.el('crafting-system-view').classList.remove('hidden');
+            
+            if(!app.state.tempCraftingRecipes) app.state.tempCraftingRecipes = [];
+            app.renderCraftingRecipesUI();
+        },
+
+        addNewCraftingRecipe: () => {
+            app.state.tempCraftingRecipes.push({
+                targetId: "",
+                materials: []
+            });
+            app.renderCraftingRecipesUI();
+            setTimeout(() => {
+                const c = app.el('crafting-recipe-container');
+                if(c) c.scrollTop = c.scrollHeight;
+            }, 100);
+        },
+
+        deleteCraftingRecipe: (idx) => {
+            if (confirm('🗑️ 確定要刪除此配方嗎？')) {
+                app.state.tempCraftingRecipes.splice(idx, 1);
+                app.renderCraftingRecipesUI();
+            }
+        },
+
+        addCraftingMaterial: (recipeIdx) => {
+            // [防呆保護] 如果 materials 未定義，則初始化
+            if (!app.state.tempCraftingRecipes[recipeIdx].materials) {
+                app.state.tempCraftingRecipes[recipeIdx].materials = [];
+            }
+            app.state.tempCraftingRecipes[recipeIdx].materials.push({ itemId: "", count: 1 });
+            app.renderCraftingRecipesUI();
+        },
+
+        removeCraftingMaterial: (recipeIdx, matIdx) => {
+            if (app.state.tempCraftingRecipes[recipeIdx].materials) {
+                app.state.tempCraftingRecipes[recipeIdx].materials.splice(matIdx, 1);
+                app.renderCraftingRecipesUI();
+            }
+        },
+
+        updateCraftingData: (recipeIdx, field, matIdx, val) => {
+            const recipe = app.state.tempCraftingRecipes[recipeIdx];
+            if (field === 'targetId') {
+                recipe.targetId = val;
+            } else if (field === 'matId') {
+                recipe.materials[matIdx].itemId = val;
+            } else if (field === 'matCount') {
+                recipe.materials[matIdx].count = Math.max(1, parseInt(val) || 1);
+            }
+        },
+
+        renderCraftingRecipesUI: () => {
+            const container = app.el('crafting-recipe-container');
+            const list = app.state.tempCraftingRecipes || [];
+            const bmList = app.state.tempBlackMarketList || [];
+            
+            let optsHtml = '<option value="">--選擇道具--</option>';
+            bmList.forEach((bm, i) => {
+                if (bm) {
+                    const lv = bm.currentEditLv || 1;
+                    optsHtml += `<option value="${i}">[Lv${lv}] ${bm.name}</option>`;
+                }
+            });
+
+            let html = '';
+            if (list.length === 0) {
+                html = '<div class="text-center text-gray-400 py-10 font-bold border-2 border-dashed border-slate-300 rounded-xl">尚未設定任何合成配方</div>';
+            } else {
+                list.forEach((recipe, rIdx) => {
+                    let targetOpts = optsHtml.replace(`value="${recipe.targetId}"`, `value="${recipe.targetId}" selected`);
+                    
+                    let matsHtml = '';
+                    // [修復核心] 確保 materials 是陣列，防止舊資料造成的 .length 報錯
+                    const materials = recipe.materials || [];
+                    
+                    if (materials.length === 0) {
+                        matsHtml = '<div class="text-[0.65rem] text-red-500 font-bold mb-1">⚠️ 請至少新增一項材料</div>';
+                    } else {
+                        materials.forEach((mat, mIdx) => {
+                            let matOpts = optsHtml.replace(`value="${mat.itemId}"`, `value="${mat.itemId}" selected`);
+                            matsHtml += `<div class="flex items-center gap-2 mb-1"><span class="text-xs text-slate-500">➕ 材料:</span><select onchange="app.updateCraftingData(${rIdx}, 'matId', ${mIdx}, this.value)" class="flex-1 border rounded text-xs py-1 px-1 bg-white font-bold">${matOpts}</select><span class="text-xs text-slate-500">數量:</span><input type="number" min="1" value="${mat.count}" onchange="app.updateCraftingData(${rIdx}, 'matCount', ${mIdx}, this.value)" class="w-12 border rounded text-center text-xs font-bold py-1 bg-white"><button onclick="app.removeCraftingMaterial(${rIdx}, ${mIdx})" class="text-red-400 hover:text-red-600 font-bold px-1">✕</button></div>`;
+                        });
+                    }
+
+                    html += `<div class="bg-white p-3 rounded-xl border-2 border-red-200 shadow-sm relative"><button onclick="app.deleteCraftingRecipe(${rIdx})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 bg-red-50 px-2 py-0.5 rounded text-xs font-bold">刪除配方</button><div class="mb-3 border-b border-slate-200 pb-2 w-5/6"><label class="block text-xs font-bold text-red-700 mb-1">🎁 合成目標產物</label><select onchange="app.updateCraftingData(${rIdx}, 'targetId', null, this.value)" class="w-full border-2 border-red-300 rounded p-1 text-sm font-black bg-red-50 text-red-900">${targetOpts}</select></div><div><div class="flex justify-between items-center mb-2"><label class="block text-xs font-bold text-slate-600">🛠️ 所需消耗材料 (自動包含烈焰熔爐)</label><button onclick="app.addCraftingMaterial(${rIdx})" class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[0.6rem] font-bold border border-green-300 hover:bg-green-200">+ 新增材料</button></div>${matsHtml}</div></div>`;
+                });
+            }
+            container.innerHTML = html;
+        },
         // --- v4.8.0.8 角色圖示管理系統 ---
         
         // 渲染已儲存的角色列表
@@ -3686,6 +3780,8 @@
                 
 			// [v4.7.6.0] 讀取黑市設定
             app.state.tempBlackMarketList = settings.blackMarketList || [];
+            // [新增] 讀取合成配方
+            app.state.tempCraftingRecipes = settings.craftingRecipes || [];
             // [v4.8.0.6] 確保讀取戰役資料到 state，避免存檔時遺失
             app.state.campaigns = settings.campaigns || [];
             // [v4.8.0.8] 讀取角色圖示設定
@@ -3774,6 +3870,8 @@
                 shopConfig: shopConfig,
                 // [v4.7.6.0] 儲存黑市商品列表
             blackMarketList: app.state.tempBlackMarketList || [],
+            // [新增] 儲存合成配方
+            craftingRecipes: app.state.tempCraftingRecipes || [],
             // [v4.8.0.6] 確保戰役資料被寫回，避免遺失
             campaigns: app.state.campaigns || [],
             // [v4.8.0.8] 儲存角色圖示列表
@@ -8469,73 +8567,135 @@ for (const slot of slots) {
             app.el('bp-item-action-panel').classList.add('hidden');
             app.el('bp-item-action-panel').classList.remove('flex');
         },
-// [新增] 使用背包消耗品道具 (烈焰熔爐合成系統)
+// [修改] 使用背包消耗品道具 (動態合成系統)
         useBackpackItem: (itemId) => {
-            const data = app.state.currentBackpackData;
             const globalList = app.state.globalSettings?.blackMarketList || [];
             const item = globalList[itemId];
             if (!item) return;
 
             if (item.name.includes('烈焰熔爐')) {
-                // 尋找合成材料與目標道具ID
-                let idAmulet = null, idScarab = null, idHerb = null, idGrace = null;
-
-                // 1. 先確認黑市中是否存在「聖光恩典」
-                Object.keys(globalList).forEach(gId => {
-                    const gItem = globalList[gId];
-                    if (gItem && gItem.name.includes('聖光恩典')) idGrace = gId;
-                });
-
-                if (!idGrace) {
-                    return app.toast('❌ 系統錯誤：黑市中尚未建立「聖光恩典」道具！請聯絡GM。', 1);
-                }
-
-                // 2. 檢查背包中是否有符合的材料 (LV3)
-                Object.keys(data.inventory).forEach(invId => {
-                    const invItem = globalList[invId];
-                    if (!invItem) return;
-                    const lv = invItem.currentEditLv || 1;
-                    
-                    if (invItem.name.includes('法老王的護符') && lv >= 3 && data.inventory[invId] > 0) idAmulet = invId;
-                    if (invItem.name.includes('聖甲蟲徽章') && lv >= 3 && data.inventory[invId] > 0) idScarab = invId;
-                    if (invItem.name.includes('草木精華') && lv >= 3 && data.inventory[invId] > 0) idHerb = invId;
-                });
-
-                if (!idAmulet || !idScarab || !idHerb) {
-                    return app.toast('❌ 材料不足！需要：法老王護符(LV3)、聖甲蟲徽章(LV3)、草木精華(LV3) 各1個。', 1);
-                }
-
-                // 3. 確認合成
-                if (!confirm('🔥 確定要啟動「烈焰熔爐」進行合成嗎？\n\n這將消耗熔爐與三個LV3材料，鍊成傳說道具「聖光恩典」！')) return;
-
-                // 4. 消耗材料
-                data.inventory[itemId] -= 1;
-                data.inventory[idAmulet] -= 1;
-                data.inventory[idScarab] -= 1;
-                data.inventory[idHerb] -= 1;
-
-                // 清除歸零的道具
-                if (data.inventory[itemId] <= 0) delete data.inventory[itemId];
-                if (data.inventory[idAmulet] <= 0) delete data.inventory[idAmulet];
-                if (data.inventory[idScarab] <= 0) delete data.inventory[idScarab];
-                if (data.inventory[idHerb] <= 0) delete data.inventory[idHerb];
-
-                // 5. 給予聖光恩典
-                data.inventory[idGrace] = (data.inventory[idGrace] || 0) + 1;
-
-                // 6. 特效與介面更新
-                app.toast('✨ 鍊金成功！獲得「聖光恩典」！', 1);
-                app.showDamageText('鍊成成功!', '#fbbf24', 'bp-inventory-grid'); // 金色特效
-                
-                if (navigator.vibrate) navigator.vibrate([100, 100, 200]);
-                const audio = new Audio("https://taira-komori.net/sound_os2/game01/magic01.mp3");
-                audio.volume = 0.5;
-                audio.play().catch(()=>{});
-
-                app.saveBackpackData();
-                app.renderCharacterBackpackUI();
-                app.closeBackpackPanel();
+                app.state.currentForgeItemId = itemId; // 記錄使用的熔爐ID
+                app.openPlayerCraftingUI();
             }
+        },
+
+        // --- [新增] 玩家合成系統 UI 與邏輯 ---
+        openPlayerCraftingUI: () => {
+            app.el('player-crafting-modal').classList.remove('hidden');
+            app.renderPlayerCraftingList();
+            app.el('crafting-detail-area').innerHTML = '<div class="text-slate-500 font-bold text-center">請先從左側選擇要合成的配方</div>';
+        },
+
+        renderPlayerCraftingList: () => {
+            const listEl = app.el('crafting-recipe-list');
+            const recipes = app.state.globalSettings?.craftingRecipes || [];
+            const globalList = app.state.globalSettings?.blackMarketList || [];
+            
+            if (recipes.length === 0) {
+                listEl.innerHTML = '<div class="text-center text-slate-500 text-xs py-4">尚無任何合成配方</div>';
+                return;
+            }
+
+            let html = '';
+            recipes.forEach((r, idx) => {
+                const targetItem = globalList[r.targetId];
+                if (targetItem) {
+                    const lv = targetItem.currentEditLv || 1;
+                    const img = targetItem[`img${lv}`] || targetItem.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+                    // [修改] 加上 LV 標示
+                    html += `<div onclick="app.selectCraftingRecipe(${idx})" class="flex items-center gap-2 p-2 rounded-lg bg-black/50 border border-slate-700 hover:border-amber-500 cursor-pointer transition-colors group"><img src="${img}" class="w-8 h-8 object-contain rounded bg-slate-800 p-0.5"><div class="font-bold text-amber-200 text-sm truncate group-hover:text-amber-400"><span class="text-xs text-slate-400 font-mono mr-1">LV${lv}</span>${targetItem.name}</div></div>`;
+                }
+            });
+            listEl.innerHTML = html;
+        },
+
+        selectCraftingRecipe: (recipeIdx) => {
+            const recipes = app.state.globalSettings?.craftingRecipes || [];
+            const globalList = app.state.globalSettings?.blackMarketList || [];
+            const recipe = recipes[recipeIdx];
+            const data = app.state.currentBackpackData;
+            if (!recipe) return;
+
+            const targetItem = globalList[recipe.targetId];
+            if (!targetItem) return;
+            const targetLv = targetItem.currentEditLv || 1;
+            const targetImg = targetItem[`img${targetLv}`] || targetItem.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+
+            // 檢查材料與計算可合成狀態
+            let canCraft = true;
+            let matsHtml = '';
+            
+            // 統計已裝備的數量，避免把裝備在身上的材料融掉
+            const equippedCounts = {};
+            Object.values(data.equipped || {}).forEach(id => { equippedCounts[id] = (equippedCounts[id] || 0) + 1; });
+
+            recipe.materials.forEach(mat => {
+                const mItem = globalList[mat.itemId];
+                if (mItem) {
+                    const mLv = mItem.currentEditLv || 1;
+                    const mImg = mItem[`img${mLv}`] || mItem.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+                    const totalQty = data.inventory[mat.itemId] || 0;
+                    const usedCount = equippedCounts[mat.itemId] || 0;
+                    const availableQty = Math.max(0, totalQty - usedCount);
+
+                    const isEnough = availableQty >= mat.count;
+                    if (!isEnough) canCraft = false;
+
+                    const colorClass = isEnough ? 'text-green-400' : 'text-red-500 font-black animate-pulse';
+                    
+                    // [修改] 加上材料的 LV 標示
+                    matsHtml += `<div class="flex items-center justify-between bg-black/40 p-2 rounded border border-slate-700"><div class="flex items-center gap-2"><img src="${mImg}" class="w-6 h-6 object-contain rounded"><span class="text-slate-300 text-xs md:text-sm font-bold truncate max-w-[120px]"><span class="text-[0.65rem] text-slate-500 font-mono mr-1">LV${mLv}</span>${mItem.name}</span></div><div class="text-xs font-mono bg-black/60 px-2 py-1 rounded shadow-inner"><span class="${colorClass}">${availableQty}</span> / <span class="text-slate-400">${mat.count}</span></div></div>`;
+                }
+            });
+
+            // 按鈕狀態
+            const btnClass = canCraft 
+                ? "bg-gradient-to-r from-red-600 to-amber-600 text-white border-b-4 border-red-900 hover:from-red-500 hover:to-amber-500 active:border-b-0 active:translate-y-1 shadow-[0_0_15px_rgba(220,38,38,0.5)]" 
+                : "bg-slate-700 text-slate-400 border-b-4 border-slate-900 cursor-not-allowed opacity-70";
+            
+            const btnState = canCraft ? "" : "disabled";
+            const btnLabel = canCraft ? "🔥 開始鍊成" : "材料不足";
+
+            // [修改] 目標產物也加上 LV 標示
+            app.el('crafting-detail-area').innerHTML = `<div class="w-full max-w-sm mx-auto flex flex-col h-full"><div class="flex flex-col items-center mb-6 relative"><div class="absolute inset-0 bg-red-900/20 blur-xl rounded-full"></div><img src="${targetImg}" class="w-20 h-20 md:w-24 md:h-24 object-contain filter drop-shadow-[0_0_15px_rgba(251,191,36,0.6)] z-10"><h4 class="text-xl font-black text-amber-300 mt-2 z-10 drop-shadow-md text-center"><span class="text-sm text-slate-400 font-mono mr-1">LV${targetLv}</span>${targetItem.name}</h4><div class="text-xs text-amber-500/80 mt-1 font-bold z-10 bg-black/50 px-2 py-0.5 rounded-full border border-amber-900/50">合成目標產物</div></div><div class="flex-1 overflow-y-auto custom-scrollbar pr-1 mb-4 space-y-2"><div class="text-xs text-slate-400 mb-1 border-b border-slate-700 pb-1 flex justify-between"><span>必備材料 (未裝備)</span><span>持有/需求</span></div>${matsHtml}</div><button onclick="app.executeCrafting(${recipeIdx})" ${btnState} class="w-full py-3 md:py-4 rounded-xl font-black text-lg md:text-xl tracking-widest transition-all ${btnClass}">${btnLabel}</button></div>`;
+        },
+
+        executeCrafting: (recipeIdx) => {
+            const recipes = app.state.globalSettings?.craftingRecipes || [];
+            const recipe = recipes[recipeIdx];
+            const data = app.state.currentBackpackData;
+            const forgeId = app.state.currentForgeItemId;
+
+            if (!recipe || !forgeId) return;
+
+            if (!confirm('🔥 確定要啟動「烈焰熔爐」進行合成嗎？\n\n這將消耗熔爐與清單上的所有材料！')) return;
+
+            // 1. 扣除材料
+            recipe.materials.forEach(mat => {
+                data.inventory[mat.itemId] -= mat.count;
+                if (data.inventory[mat.itemId] <= 0) delete data.inventory[mat.itemId];
+            });
+
+            // 2. 扣除烈焰熔爐
+            data.inventory[forgeId] -= 1;
+            if (data.inventory[forgeId] <= 0) delete data.inventory[forgeId];
+
+            // 3. 給予目標產物
+            data.inventory[recipe.targetId] = (data.inventory[recipe.targetId] || 0) + 1;
+
+            // 4. 特效與介面更新
+            app.el('player-crafting-modal').classList.add('hidden');
+            app.toast('✨ 鍊金成功！獲得新裝備！', 1);
+            app.showDamageText('鍊成成功!', '#fbbf24', 'bp-inventory-grid'); // 金色特效
+            
+            if (navigator.vibrate) navigator.vibrate([100, 100, 200]);
+            const audio = new Audio("https://taira-komori.net/sound_os2/game01/magic01.mp3");
+            audio.volume = 0.5;
+            audio.play().catch(()=>{});
+
+            app.saveBackpackData();
+            app.renderCharacterBackpackUI();
+            app.closeBackpackPanel();
         },
         // [新增] 丟棄物品邏輯
         handleDiscardItem: (itemId) => {
