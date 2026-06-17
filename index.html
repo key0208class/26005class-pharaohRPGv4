@@ -493,7 +493,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.3.7 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.3.8 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -1973,34 +1973,38 @@
 
                <div class="tablet-right flex flex-col h-full">
                     
-                  <div id="panel-teacher" class="hidden bg-white rounded-2xl p-4 shadow-lg border-2 border-amber-600 flex-shrink-0 overflow-hidden lg:max-h-[40vh] transition-all">
-                        <div class="teacher-panel-grid h-full">
-                            
-                            <div class="flex flex-col gap-2 lg:h-full overflow-y-auto">
-                                <div class="flex justify-between items-center mb-2 border-b pb-2 flex-shrink-0">
-                                    <h3 class="text-1x1 font-bold text-amber-900">🏛️ 神殿試煉</h3>
-                                    <div class="flex items-center gap-2 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
-                                        <span class="text-1x1 font-bold text-amber-900">🤖 擲骰</span>
-                                        <label class="switch scale-75">
-                                            <input type="checkbox" id="auto-roll-toggle" onchange="app.toggleAutoRoll()">
-                                            <span class="slider"></span>
-                                        </label>
+                <div id="panel-teacher" class="hidden bg-white rounded-2xl p-2 md:p-4 shadow-lg border-2 border-amber-600 flex-shrink-0 transition-all">
+                        <!-- 將標題與自動擲骰開關移至最上層，並加上摺疊功能 -->
+                        <div class="flex justify-between items-center border-b border-amber-200 pb-2 cursor-pointer" onclick="app.toggleCollapse('teacher-panel-content', this.querySelector('.toggle-icon'))">
+                            <h3 class="text-lg md:text-xl font-bold text-amber-900 flex items-center gap-1">🏛️ 神殿試煉</h3>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200" onclick="event.stopPropagation();">
+                                    <span class="text-[0.65rem] md:text-xs font-bold text-amber-900">🤖 擲骰</span>
+                                    <label class="switch scale-75" style="margin: 0;">
+                                        <input type="checkbox" id="auto-roll-toggle" onchange="app.toggleAutoRoll()">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <span class="toggle-icon text-xs text-amber-700 font-bold bg-amber-100 px-2 py-1 rounded shadow-sm">▲ 收起</span>
+                            </div>
+                        </div>
+
+                        <!-- 可摺疊的內容區塊 (包一層 div 避免 grid 覆蓋 hidden) -->
+                        <div id="teacher-panel-content">
+                            <div class="teacher-panel-grid pt-2" style="min-height: 0;">
+                                <div class="flex flex-col gap-2">
+                                    <div class="grid grid-cols-2 gap-2 flex-shrink-0">
+                                        <button id="btn-roll" onclick="app.teacherRollDice()" class="col-span-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white py-3 md:py-4 rounded-xl font-bold text-xl md:text-2xl shadow hover:scale-105 transition-transform active:scale-95">🎲 擲骰子</button>
+                                        <button id="btn-teacher-next-round" onclick="app.forceNextRound()" class="bg-slate-600 text-white py-2 md:py-3 rounded-xl font-bold shadow hover:bg-slate-700 text-sm md:text-base active:scale-95">下一局</button>
+                                        <button onclick="app.triggerEndGame()" class="bg-red-700 text-white py-2 md:py-3 rounded-xl font-bold shadow hover:bg-red-800 text-sm md:text-base active:scale-95">🏁 冒險結束</button>
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-3 mb-2 flex-shrink-0">
-                                    <button id="btn-roll" onclick="app.teacherRollDice()" class="col-span-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white py-4 rounded-xl font-bold text-2xl shadow hover:scale-105 transition-transform active:scale-95">🎲 擲骰子</button>
-                                    <button id="btn-teacher-next-round" onclick="app.forceNextRound()" class="bg-slate-600 text-white py-3 rounded-xl font-bold shadow hover:bg-slate-700 text-base active:scale-95">下一局</button>
-                                    <button onclick="app.triggerEndGame()" class="bg-red-700 text-white py-3 rounded-xl font-bold shadow hover:bg-red-800 text-base active:scale-95">🏁 冒險結束</button>
-                                </div>
-                                
-                            </div>
-
-                            <div class="flex flex-col min-h-[250px] lg:h-full overflow-hidden bg-amber-50/50 rounded-xl border border-amber-100 flex-1">
-                                <div id="teacher-personal-board" class="overflow-y-auto flex-1 p-2 space-y-1 custom-scrollbar">
+                                <div class="flex flex-col min-h-[150px] lg:min-h-0 lg:h-full overflow-hidden bg-amber-50/50 rounded-xl border border-amber-100 flex-1">
+                                    <div id="teacher-personal-board" class="overflow-y-auto flex-1 p-2 space-y-1 custom-scrollbar">
+                                    </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
 
