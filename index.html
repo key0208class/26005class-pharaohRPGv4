@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.4.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.4.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -493,7 +493,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.4.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.4.3 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -6811,7 +6811,7 @@ for (const slot of slots) {
             }, 400); // 等待飛行結束後爆開
         },
 
-        // [新增] 檢查玩家裝備與算式，並觸發對應特效
+       // [新增] 檢查玩家裝備與算式，並觸發對應特效
         checkAndTriggerEquipmentEffects: (equippedMap, formula) => {
             if (!equippedMap) return;
             const globalList = app.state.globalSettings?.blackMarketList || [];
@@ -6827,7 +6827,7 @@ for (const slot of slots) {
                     const lv = item.currentEditLv || 1;
                     
                     // 為了避免多重特效同時觸發時重疊，依據裝備排序給予微小延遲 (連擊感)
-                    const comboDelay = index * 150; 
+                    const comboDelay = index * 200; 
 
                     // 特效：森之律動 (+)
                     if (item.name.includes('森之律動') && countAdd > 0) {
@@ -6856,7 +6856,33 @@ for (const slot of slots) {
                         }, comboDelay);
                     }
                     
-                    // 未來可以繼續在這裡擴充 冰蝕咒紋(-)、深淵之印(÷) 的判定...
+                    // 特效：冰蝕咒紋 (-)
+                    if (item.name.includes('冰蝕咒紋') && countSub > 0) {
+                        setTimeout(() => {
+                            // 條件：LV2以上 且 連續使用2個以上的減號 -> 觸發進階特效
+                            if (countSub >= 2 && lv >= 2) {
+                                // 寒冰深藍色陰影
+                                app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8Ba2.png', 'rgba(2, 132, 199, 0.9)'); 
+                            } else {
+                                // 淺藍色基礎陰影
+                                app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8Ba1.png', 'rgba(56, 189, 248, 0.8)');
+                            }
+                        }, comboDelay);
+                    }
+
+                    // 特效：深淵之印 (÷)
+                    if (item.name.includes('深淵之印') && countDiv > 0) {
+                        setTimeout(() => {
+                            // 條件：LV2以上 且 連續使用2個以上的除號 -> 觸發進階特效
+                            if (countDiv >= 2 && lv >= 2) {
+                                // 深淵暗紫色陰影
+                                app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0a2.png', 'rgba(88, 28, 135, 0.9)'); 
+                            } else {
+                                // 淺紫色基礎陰影
+                                app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0a1.png', 'rgba(168, 85, 247, 0.8)');
+                            }
+                        }, comboDelay);
+                    }
                 }
             });
         },
