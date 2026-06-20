@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.4.6 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.4.7 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -493,7 +493,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.4.6 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.4.7 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -8682,7 +8682,7 @@ for (const slot of slots) {
             listEl.innerHTML = html;
         },
 
-        selectCraftingRecipe: (recipeIdx) => {
+       selectCraftingRecipe: (recipeIdx) => {
             const recipes = app.state.globalSettings?.craftingRecipes || [];
             const globalList = app.state.globalSettings?.blackMarketList || [];
             const recipe = recipes[recipeIdx];
@@ -8702,22 +8702,97 @@ for (const slot of slots) {
             const equippedCounts = {};
             Object.values(data.equipped || {}).forEach(id => { equippedCounts[id] = (equippedCounts[id] || 0) + 1; });
 
-            recipe.materials.forEach(mat => {
+            recipe.materials.forEach((mat, mIdx) => {
                 const mItem = globalList[mat.itemId];
                 if (mItem) {
                     const mLv = mItem.currentEditLv || 1;
-                    const mImg = mItem[`img${mLv}`] || mItem.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-                    const totalQty = data.inventory[mat.itemId] || 0;
-                    const usedCount = equippedCounts[mat.itemId] || 0;
-                    const availableQty = Math.max(0, totalQty - usedCount);
-
-                    const isEnough = availableQty >= mat.count;
-                    if (!isEnough) canCraft = false;
-
-                    const colorClass = isEnough ? 'text-green-400' : 'text-red-500 font-black animate-pulse';
                     
-                    // [修改] 加上材料的 LV 標示
-                    matsHtml += `<div class="flex items-center justify-between bg-black/40 p-2 rounded border border-slate-700"><div class="flex items-center gap-2"><img src="${mImg}" class="w-6 h-6 object-contain rounded"><span class="text-slate-300 text-xs md:text-sm font-bold truncate max-w-[120px]"><span class="text-[0.65rem] text-slate-500 font-mono mr-1">LV${mLv}</span>${mItem.name}</span></div><div class="text-xs font-mono bg-black/60 px-2 py-1 rounded shadow-inner"><span class="${colorClass}">${availableQty}</span> / <span class="text-slate-400">${mat.count}</span></div></div>`;
+                    // 判斷是否為「冒險者之劍」系列，若是則啟動智慧變體搜尋
+                    let isSwordSeries = mItem.name.includes('冒險者之劍');
+                    let availableVariants = [];
+                    
+                    if (isSwordSeries) {
+                        // 搜尋背包內所有同為冒險者之劍的物品
+                        Object.keys(data.inventory).forEach(invId => {
+                            const invItem = globalList[invId];
+                            if (invItem && invItem.name.includes('冒險者之劍')) {
+                                
+                                // 智慧等級比對：優先檢查名稱是否包含 LV 標示 (例如 LV5)
+                                const matchLv = mItem.name.match(/lv\.?\s*\d+/i);
+                                let isSameLevel = true;
+                                
+                                if (matchLv) {
+                                    // 如果原材料有名稱標記(如 LV5)，玩家包包裡的變體名稱也必須包含 LV5
+                                    const expectedLvStr = matchLv[0].toLowerCase().replace(/\s/g, '');
+                                    const invNameLower = invItem.name.toLowerCase().replace(/\s/g, '');
+                                    if (!invNameLower.includes(expectedLvStr)) {
+                                        isSameLevel = false;
+                                    }
+                                } else {
+                                    // 若名稱沒寫 LV，則比對商品設定中的等級
+                                    if ((invItem.currentEditLv || 1) !== mLv) {
+                                        isSameLevel = false;
+                                    }
+                                }
+
+                                if (isSameLevel) {
+                                    const totalQty = data.inventory[invId] || 0;
+                                    const usedCount = equippedCounts[invId] || 0;
+                                    const availableQty = Math.max(0, totalQty - usedCount);
+                                    if (availableQty > 0) {
+                                        // 【修正】精準抓取該等級 (mLv) 對應的圖片，而非預設的 currentEditLv 或 img1
+                                        availableVariants.push({ 
+                                            id: invId, 
+                                            name: invItem.name, 
+                                            qty: availableQty, 
+                                            img: invItem[`img${mLv}`] || invItem.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png' 
+                                        });
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        // 一般物品原本邏輯 (非冒險者之劍)
+                        const totalQty = data.inventory[mat.itemId] || 0;
+                        const usedCount = equippedCounts[mat.itemId] || 0;
+                        const availableQty = Math.max(0, totalQty - usedCount);
+                        if (availableQty > 0) {
+                            availableVariants.push({ 
+                                id: mat.itemId, 
+                                name: mItem.name, 
+                                qty: availableQty, 
+                                img: mItem[`img${mLv}`] || mItem.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png' 
+                            });
+                        }
+                    }
+
+                    // 過濾出數量足夠的變體 (簡化處理：單一變體數量必須 >= 需求數量)
+                    let validVariants = availableVariants.filter(v => v.qty >= mat.count);
+
+                    if (validVariants.length === 0) {
+                        canCraft = false;
+                        const mImg = mItem[`img${mLv}`] || mItem.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+                        // 若是劍系，提示玩家可替換
+                        let subText = isSwordSeries ? ' <span class="text-[0.55rem] text-amber-500"><br>(可替換同級系列劍)</span>' : '';
+                        matsHtml += `<div class="flex items-center justify-between bg-black/40 p-2 rounded border border-slate-700"><div class="flex items-center gap-2"><img src="${mImg}" class="w-6 h-6 object-contain rounded"><span class="text-slate-300 text-xs md:text-sm font-bold truncate max-w-[150px]"><span class="text-[0.65rem] text-slate-500 font-mono mr-1">LV${mLv}</span>${mItem.name}${subText}</span></div><div class="text-xs font-mono bg-black/60 px-2 py-1 rounded shadow-inner"><span class="text-red-500 font-black animate-pulse">0</span> / <span class="text-slate-400">${mat.count}</span></div></div>`;
+                    } else {
+                        // 如果是劍系，強制顯示下拉選單
+                        if (isSwordSeries) {
+                            let selectOpts = '';
+                            validVariants.forEach(v => {
+                                // 【修正】將該武器專屬的圖片 URL 綁定在 data-img 屬性上
+                                selectOpts += `<option value="${v.id}" data-img="${v.img}">${v.name} (可用:${v.qty})</option>`;
+                            });
+                            const defaultImg = validVariants[0].img;
+                            // 【修正】在 onchange 中讀取 selectedIndex 上的 data-img 來即時替換圖片
+                            matsHtml += `<div class="flex items-center justify-between bg-black/40 p-2 rounded border border-slate-700"><div class="flex items-center gap-2"><img id="craft-img-${mIdx}" src="${defaultImg}" class="w-6 h-6 object-contain rounded"><select id="craft-mat-${mIdx}" onchange="document.getElementById('craft-img-${mIdx}').src = this.options[this.selectedIndex].getAttribute('data-img')" class="text-slate-900 text-xs font-bold w-[120px] md:w-[150px] truncate bg-amber-100 rounded outline-none cursor-pointer border-2 border-amber-400 shadow-sm px-1 py-0.5">${selectOpts}</select></div><div class="text-xs font-mono bg-black/60 px-2 py-1 rounded shadow-inner"><span class="text-green-400">充足</span> / <span class="text-slate-400">${mat.count}</span></div></div>`;
+                        } else {
+                            // 一般物品單一選擇 (隱藏下拉單)
+                            const v = validVariants[0];
+                            const mImg = v.img;
+                            matsHtml += `<div class="flex items-center justify-between bg-black/40 p-2 rounded border border-slate-700"><div class="flex items-center gap-2"><img src="${mImg}" class="w-6 h-6 object-contain rounded"><span class="text-slate-300 text-xs md:text-sm font-bold truncate max-w-[150px]"><span class="text-[0.65rem] text-slate-500 font-mono mr-1">LV${mLv}</span>${v.name}</span><input type="hidden" id="craft-mat-${mIdx}" value="${v.id}"></div><div class="text-xs font-mono bg-black/60 px-2 py-1 rounded shadow-inner"><span class="text-green-400">${v.qty}</span> / <span class="text-slate-400">${mat.count}</span></div></div>`;
+                        }
+                    }
                 }
             });
 
@@ -8729,7 +8804,7 @@ for (const slot of slots) {
             const btnState = canCraft ? "" : "disabled";
             const btnLabel = canCraft ? "🔥 開始鍊成" : "材料不足";
 
-            // [修改] 目標產物也加上 LV 標示
+            // 目標產物顯示
             app.el('crafting-detail-area').innerHTML = `<div class="w-full max-w-sm mx-auto flex flex-col h-full"><div class="flex flex-col items-center mb-6 relative"><div class="absolute inset-0 bg-red-900/20 blur-xl rounded-full"></div><img src="${targetImg}" class="w-20 h-20 md:w-24 md:h-24 object-contain filter drop-shadow-[0_0_15px_rgba(251,191,36,0.6)] z-10"><h4 class="text-xl font-black text-amber-300 mt-2 z-10 drop-shadow-md text-center"><span class="text-sm text-slate-400 font-mono mr-1">LV${targetLv}</span>${targetItem.name}</h4><div class="text-xs text-amber-500/80 mt-1 font-bold z-10 bg-black/50 px-2 py-0.5 rounded-full border border-amber-900/50">合成目標產物</div></div><div class="flex-1 overflow-y-auto custom-scrollbar pr-1 mb-4 space-y-2"><div class="text-xs text-slate-400 mb-1 border-b border-slate-700 pb-1 flex justify-between"><span>必備材料 (未裝備)</span><span>持有/需求</span></div>${matsHtml}</div><button onclick="app.executeCrafting(${recipeIdx})" ${btnState} class="w-full py-3 md:py-4 rounded-xl font-black text-lg md:text-xl tracking-widest transition-all ${btnClass}">${btnLabel}</button></div>`;
         },
 
@@ -8743,10 +8818,13 @@ for (const slot of slots) {
 
             if (!confirm('🔥 確定要啟動「烈焰熔爐」進行合成嗎？\n\n這將消耗熔爐與清單上的所有材料！')) return;
 
-            // 1. 扣除材料
-            recipe.materials.forEach(mat => {
-                data.inventory[mat.itemId] -= mat.count;
-                if (data.inventory[mat.itemId] <= 0) delete data.inventory[mat.itemId];
+            // 1. 扣除材料 (支援玩家下拉挑選的變體材料)
+            recipe.materials.forEach((mat, mIdx) => {
+                const chosenMatInput = document.getElementById(`craft-mat-${mIdx}`);
+                const actualItemId = chosenMatInput ? chosenMatInput.value : mat.itemId;
+                
+                data.inventory[actualItemId] -= mat.count;
+                if (data.inventory[actualItemId] <= 0) delete data.inventory[actualItemId];
             });
 
             // 2. 扣除烈焰熔爐
@@ -8769,8 +8847,7 @@ for (const slot of slots) {
             app.saveBackpackData();
             app.renderCharacterBackpackUI();
             app.closeBackpackPanel();
-        },
-        // [新增] 丟棄物品邏輯
+        },// [新增] 丟棄物品邏輯
         handleDiscardItem: (itemId) => {
             const data = app.state.currentBackpackData;
             const currentQty = data.inventory[itemId] || 0;
