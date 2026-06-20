@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.4.3 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.4.6 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -493,7 +493,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.4.3 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.4.6 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -1372,8 +1372,8 @@
                 <!-- 右側：羊皮紙風格資料與背包 -->
                 <div class="w-full md:w-6/12 flex flex-col bg-[#f5e6c8] relative" style="background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');">
                     
-                    <!-- 關閉按鈕 (改為方形，移至右上角，修復返回大廳邏輯) -->
-                    <button onclick="app.el('character-backpack-modal').classList.add('hidden'); app.el('page-lobby').classList.remove('hidden');" class="absolute top-3 right-3 z-50 bg-red-800 text-white w-8 h-8 rounded-lg font-black shadow-lg hover:bg-red-700 hover:scale-105 active:scale-95 transition-all border-2 border-red-900 flex items-center justify-center" title="返回大廳">✕</button>
+                   <!-- 關閉按鈕 (改為方形，移至右上角，修復返回大廳邏輯) -->
+                    <button onclick="app.el('character-backpack-modal').classList.add('hidden'); app.el('page-lobby').classList.remove('hidden'); app.closeBackpackPanel();" class="absolute top-3 right-3 z-50 bg-red-800 text-white w-8 h-8 rounded-lg font-black shadow-lg hover:bg-red-700 hover:scale-105 active:scale-95 transition-all border-2 border-red-900 flex items-center justify-center" title="返回大廳">✕</button>
 
                     <!-- 上方：人物資料 (羊皮紙風格) -->
                     <div class="p-6 border-b-4 border-amber-900/20 relative">
@@ -2057,10 +2057,7 @@
                                 </div>
                         </div>
 
-                        <div id="student-inventory" class="hidden flex items-center justify-between bg-amber-100/50 p-2 rounded-lg border border-amber-200 mx-2">
-                            <span class="text-1xl font-black text-amber-900 mr-4 flex items-center shadow-sm bg-amber-200 px-2 rounded-lg">🎒 背包</span>
-                            <div id="inventory-list" class="flex gap-3 flex-1 justify-end"></div>
-                        </div>
+                        <div id="student-inventory" class="hidden flex items-center justify-between bg-amber-100/50 p-2 rounded-lg border border-amber-200 mx-2"><div class="flex items-center gap-2 mr-4 flex-shrink-0"><span class="text-1xl font-black text-amber-900 flex items-center shadow-sm bg-amber-200 px-2 rounded-lg">🎒 背包</span><div id="abyss-bonus-badge" class="hidden items-center gap-1 bg-red-100/90 text-red-900 px-2 py-0.5 rounded shadow-[0_0_12px_rgba(239,68,68,0.8)] text-xs font-black border-2 border-red-400 animate-pulse" title="深淵之印：本局固化攻擊力加成"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%94%BB%E6%93%8A%E5%8A%9B%E5%9B%BA%E5%8C%96.png" class="w-4 h-4 object-contain filter drop-shadow-sm"><span id="abyss-bonus-value" class="drop-shadow-sm">+0</span></div></div><div id="inventory-list" class="flex gap-3 flex-1 justify-end"></div></div>
 
                         <div class="bg-white rounded-xl p-4 shadow border-2 border-amber-300">
                              <div class="flex justify-center gap-3 mb-3">
@@ -6073,7 +6070,41 @@ for (const slot of slots) {
                         // 加成傷害: 冒險者之劍、森之律動(+)、爆炎刻印(×)、冰蝕咒紋(-)、深淵之印(÷)
                         const myPlayerData = app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName];
                         const atkBonus = app.getAttackBonus(myPlayerData?.equipped, formula);
-                        const damage = (points * 10) + atkBonus;
+                        
+                        // --- [新增] 深淵之印(÷) 固化攻擊力邏輯 ---
+                        let currentAbyssBonus = myPlayerData?.abyssBonus || 0;
+                        let newAbyssBonus = currentAbyssBonus;
+                        let abyssTriggered = false;
+                        
+                        if (myPlayerData?.equipped) {
+                            const globalList = app.state.globalSettings?.blackMarketList || [];
+                            const countDiv = (formula.match(/÷/g) || []).length;
+                            
+                            Object.values(myPlayerData.equipped).forEach(itemId => {
+                                const item = globalList[itemId];
+                                if (item && item.name.includes('深淵之印') && countDiv >= 2) {
+                                    const abyssLv = item.currentEditLv || 1;
+                                    if (abyssLv === 2) {
+                                        if (newAbyssBonus === 0) newAbyssBonus = 1;
+                                        else newAbyssBonus += 1;
+                                        newAbyssBonus = Math.min(newAbyssBonus, 6); // 上限+6
+                                    } else if (abyssLv >= 3) {
+                                        if (newAbyssBonus === 0) newAbyssBonus = 3;
+                                        else newAbyssBonus += 1;
+                                        newAbyssBonus = Math.min(newAbyssBonus, 10); // 上限+10
+                                    }
+                                    if (newAbyssBonus > currentAbyssBonus) abyssTriggered = true;
+                                }
+                            });
+                        }
+                        
+                        if (abyssTriggered) {
+                            updates[`players/${app.state.myTeam}/${app.state.myName}/abyssBonus`] = newAbyssBonus;
+                            setTimeout(() => app.toast(`✨ 深淵共鳴！攻擊力提升至 +${newAbyssBonus}`, 1), 1000);
+                        }
+                        
+                        const damage = (points * 10) + atkBonus + newAbyssBonus;
+                        // ----------------------------------------
 
                         // [新增] 檢查並觸發裝備專屬攻擊特效 (森之律動等)
                         app.checkAndTriggerEquipmentEffects(myPlayerData?.equipped, formula);
@@ -6962,9 +6993,24 @@ for (const slot of slots) {
             const invEl = app.el('student-inventory');
             const listEl = app.el('inventory-list');
             
-            // v3.7.0 修正：加入 mummy 檢查
+            const abyssBonus = myData?.abyssBonus || 0;
+            const badgeEl = app.el('abyss-bonus-badge');
+            if (badgeEl) {
+                if (abyssBonus > 0) {
+                    badgeEl.classList.remove('hidden');
+                    badgeEl.classList.add('flex');
+                    app.el('abyss-bonus-value').textContent = `+${abyssBonus}`;
+                } else {
+                    badgeEl.classList.add('hidden');
+                    badgeEl.classList.remove('flex');
+                }
+            }
+
+            // v3.7.0 修正：加入 mummy 檢查 (v4.8.0 加上 abyssBonus 顯示判斷)
             const hasItems = (items.hint > 0) || (items.double > 0) || (items.horus > 0) || (items.nile > 0) || (items.time > 0) || (items.seal > 0) || (items.shard > 0) || (items.anubis > 0) || (items.mummy > 0) || (items.herb > 0) || (items.potion > 0) || (items.elixir > 0);
-            if (!hasItems) {
+            
+            // 如果沒道具，但也沒觸發深淵印記，才把整個背包列隱藏
+            if (!hasItems && abyssBonus <= 0) {
                 invEl.classList.add('hidden');
                 return;
             }
@@ -8339,7 +8385,7 @@ for (const slot of slots) {
                                 else if (lv >= 3) bonus += 8;
                             } else if (countDiv === 1) {
                                 if (lv === 1) bonus += 1;
-                                else if (lv === 2) bonus += 1;
+                                else if (lv === 2) bonus += 2;
                                 else if (lv >= 3) bonus += 3;
                             }
                         }
@@ -8373,6 +8419,7 @@ for (const slot of slots) {
         openCharacterBackpack: () => {
             app.el('page-lobby').classList.add('hidden');
             app.el('character-backpack-modal').classList.remove('hidden');
+            app.closeBackpackPanel(); // [新增防護] 確保開啟背包時，下方道具面板是關閉的狀態
             
             // 預設資料
             let userData = {
@@ -8757,10 +8804,10 @@ for (const slot of slots) {
         },
 
         // 3. 裝備物品 (自動尋找符合等級的空位) [v4.7.8.3 修正：參照全域設定]
-    handleEquipItem: (itemId) => {
+   handleEquipItem: (itemId) => {
         const data = app.state.currentBackpackData;
         
-        // [v4.7.8.5 新增] 同名物品限制檢查
+        // [v4.7.8.5 新增] 同名物品限制檢查 + [新增] 冒險者之劍系列限制
         const globalList = app.state.globalSettings?.blackMarketList || [];
         const targetItem = globalList[itemId];
         
@@ -8768,13 +8815,18 @@ for (const slot of slots) {
             const currentEquippedIds = Object.values(data.equipped);
             for (const eqId of currentEquippedIds) {
                 const equippedItem = globalList[eqId];
-                // 如果找到同名物品 (即使是不同等級，名稱若相同也會被阻擋)
-                if (equippedItem && equippedItem.name === targetItem.name) {
-                     return app.toast(`❌ 無法裝備：身上已有同名物品「${targetItem.name}」`, 1);
+                if (equippedItem) {
+                    // 1. 同名物品阻擋
+                    if (equippedItem.name === targetItem.name) {
+                         return app.toast(`❌ 無法裝備：身上已有同名物品「${targetItem.name}」`, 1);
+                    }
+                    // 2. 「冒險者之劍」系列阻擋：只要名稱都包含此關鍵字，不可重複裝備
+                    if (targetItem.name.includes('冒險者之劍') && equippedItem.name.includes('冒險者之劍')) {
+                         return app.toast(`❌ 無法裝備：身上已裝備其他「冒險者之劍」系列武器！`, 1);
+                    }
                 }
             }
         }
-
         const accLv = app.getAccountLevel(data.exp);
         const unlockLevels = [5, 15, 25, 35, 45, 55];
         
