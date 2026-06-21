@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.4.7 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.5.2 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -493,7 +493,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.4.7 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.5.2 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -6055,6 +6055,48 @@ for (const slot of slots) {
                             }
                         }
 
+                        // --- [新增] 森之/翠綠 冒險者之劍：連續加法吸血效果 ---
+                        let swordHealAmt = 0;
+                        const countAddInFormula = (formula.match(/\+/g) || []).length;
+                        
+                        if (myEquipped && countAddInFormula >= 2) {
+                            Object.values(myEquipped).forEach(itemId => {
+                                const item = globalList[itemId];
+                                if (item) {
+                                    if (item.name.includes('森之冒險者之劍')) {
+                                        swordHealAmt += Math.floor(Math.random() * 3) + 1; // 隨機回復 1~3
+                                    }
+                                    if (item.name.includes('翠綠冒險者之劍')) {
+                                        swordHealAmt += Math.floor(Math.random() * 4) + 1; // 隨機回復 1~4
+                                    }
+                                }
+                            });
+                        }
+
+                        if (swordHealAmt > 0) {
+                            const hpPath = `players/${app.state.myTeam}/${app.state.myName}/hp`;
+                            const maxHpPath = `players/${app.state.myTeam}/${app.state.myName}/maxHp`;
+                            
+                            // 獲取最新血量狀態 (考慮到前面可能有升級或史萊姆回血)
+                            const currentHpForHeal = updates[hpPath] !== undefined ? updates[hpPath] : ((app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName]?.hp !== undefined) ? app.state.gameData.players[app.state.myTeam][app.state.myName].hp : 100);
+                            const maxHpForHeal = updates[maxHpPath] !== undefined ? updates[maxHpPath] : ((app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName]?.maxHp !== undefined) ? app.state.gameData.players[app.state.myTeam][app.state.myName].maxHp : 100);
+
+                            if (currentHpForHeal < maxHpForHeal) {
+                                let finalHp = currentHpForHeal + swordHealAmt;
+                                if (finalHp > maxHpForHeal) finalHp = maxHpForHeal; // 不超過上限
+                                updates[hpPath] = finalHp;
+
+                                // 顯示吸血數字特效 (綠色)，延遲 600ms 避免與攻擊數字或史萊姆王冠重疊
+                                setTimeout(() => {
+                                    app.showDamageText(swordHealAmt, '#22c55e', app.state.isHost ? 'teacher-personal-board' : 'student-squad-section');
+                                }, 600);
+                            }
+                            
+                            // [新增] 呼叫綠蛇啃咬特效 (只要發動吸血就顯示特效)
+                            app.triggerSnakeBiteEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a3.png');
+                        }
+                        // ----------------------------------------------------
+
                     } // 🟢 這裡補上了原本遺失的右大括號，結束 if (points > 0)
 
                     updates['lastWinner'] = {
@@ -6103,7 +6145,54 @@ for (const slot of slots) {
                             setTimeout(() => app.toast(`✨ 深淵共鳴！攻擊力提升至 +${newAbyssBonus}`, 1), 1000);
                         }
                         
-                        const damage = (points * 10) + atkBonus + newAbyssBonus;
+                        // --- [修改] 炎之/烈焰冒險者之劍：連續乘號機率暴擊(總裝備攻擊力) ---
+                        let flameMultiplier = 1;
+                        let flameTriggered = false;
+                        let flameSwordName = "";
+
+                        if (myPlayerData?.equipped) {
+                            const globalList = app.state.globalSettings?.blackMarketList || [];
+                            const countMul = (formula.match(/×/g) || []).length;
+                            // 必須連續使用乘號(>=2)才觸發機率判定
+                            if (countMul >= 2) {
+                                Object.values(myPlayerData.equipped).forEach(itemId => {
+                                    const item = globalList[itemId];
+                                    if (item) {
+                                        // [修改點] 烈焰冒險者之劍：70%機率 2.5倍
+                                        if (item.name.includes('烈焰冒險者之劍')) {
+                                            if (Math.random() < 0.70) {
+                                                flameMultiplier = 2.5;
+                                                flameTriggered = true;
+                                                flameSwordName = "烈焰冒險者之劍";
+                                            }
+                                        } 
+                                        // [修改點] 炎之冒險者之劍：50%機率 2倍 (若烈焰已觸發則不覆蓋)
+                                        else if (item.name.includes('炎之冒險者之劍') && !flameTriggered) {
+                                            if (Math.random() < 0.50) {
+                                                flameMultiplier = 2;
+                                                flameTriggered = true;
+                                                flameSwordName = "炎之冒險者之劍";
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        }
+
+                        // 結算裝備總攻擊力 (基礎加成 + 深淵永久加成) * 翻倍倍率
+                        const totalEquipAtk = (atkBonus + newAbyssBonus);
+                        const finalEquipAtk = Math.floor(totalEquipAtk * flameMultiplier); // 加上無條件捨去確保不出現小數點
+
+                        if (flameTriggered) {
+                            // 延遲 150ms 配合攻擊節奏，呼叫專屬暴擊炸裂特效與文字提示
+                            setTimeout(() => {
+                                app.toast(`🔥 烈焰風暴！【${flameSwordName}】發動，裝備攻擊力(${totalEquipAtk}) 提升為 ${finalEquipAtk}！`, 1);
+                                app.triggerFlameCritEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%83%88%E7%84%B0%E9%A2%A8%E6%9A%B42.png');
+                            }, 150);
+                        }
+
+                        // 最終傷害 = 卡牌基礎傷害 + 最終裝備攻擊力
+                        const damage = (points * 10) + finalEquipAtk;
                         // ----------------------------------------
 
                         // [新增] 檢查並觸發裝備專屬攻擊特效 (森之律動等)
@@ -6841,6 +6930,209 @@ for (const slot of slots) {
                 setTimeout(() => effect.remove(), 300);
             }, 400); // 等待飛行結束後爆開
         },
+// [新增] 炎系專屬暴擊特效：烈焰風暴 (聚攏 -> 抖動 -> 炸裂)
+        triggerFlameCritEffect: (imgUrl) => {
+            // ==========================================
+            // 🛠️ [可微調] 特效參數設定區 (請依照需求修改數字)
+            // ==========================================
+            const gatherTime = 1000;     // 1. 聚攏(出現)動畫的時間 (單位:毫秒) -> 越小越快
+            const shakeTime = 500;      // 2. 停留在怪物身上激烈抖動的時間 (單位:毫秒) -> 越大停留越久
+            const explodeTime = 400;    // 3. 向上炸裂並淡出消失的時間 (單位:毫秒)
+            
+            const initialScale = 0.3;   // 剛出現時的縮放比例 (0.3 = 30%大小)
+            const gatherScale = 1.5;    // 聚攏完成(開始抖動時)的縮放比例 (1.5 = 150%大小)
+            const explodeScale = 3.0;   // 最終炸裂時的放大倍率 (3.0 = 300%大小)
+            
+            const explodeUpOffset = 100; // 炸裂時向上飄移的距離 (像素)
+            const imgSize = 350;         // 特效圖片的基礎尺寸寬高 (像素)
+            // ==========================================
+
+            // 動態產生專屬抖動動畫 (依據你設定的 gatherScale 即時變化)
+            let style = document.getElementById('flame-crit-style');
+            if (!style) {
+                style = document.createElement('style');
+                style.id = 'flame-crit-style';
+                document.head.appendChild(style);
+            }
+            style.innerHTML = `
+                @keyframes flame-violent-shake {
+                    0% { transform: translate(-50%, -50%) scale(${gatherScale}) rotate(0deg) skew(0deg); }
+                    20% { transform: translate(-52%, -48%) scale(${gatherScale}) rotate(-5deg) skew(-2deg); }
+                    40% { transform: translate(-47%, -52%) scale(${gatherScale}) rotate(5deg) skew(2deg); }
+                    60% { transform: translate(-53%, -51%) scale(${gatherScale}) rotate(-3deg) skew(-1deg); }
+                    80% { transform: translate(-48%, -49%) scale(${gatherScale}) rotate(3deg) skew(1deg); }
+                    100% { transform: translate(-50%, -50%) scale(${gatherScale}) rotate(0deg) skew(0deg); }
+                }
+            `;
+
+            // 找尋怪物目標位置
+            const targetEl = document.getElementById('active-monster-card');
+            let targetX = window.innerWidth / 2;
+            let targetY = window.innerHeight / 2;
+
+            if (targetEl) {
+                const rect = targetEl.getBoundingClientRect();
+                targetX = rect.left + rect.width / 2;
+                targetY = rect.top + rect.height / 2;
+            }
+
+            // 建立特效元素
+            const effect = document.createElement('div');
+            
+            // 【階段一：初始狀態】(縮小、透明)
+            effect.style.cssText = `
+                position: fixed;
+                left: ${targetX}px;
+                top: ${targetY}px;
+                width: ${imgSize}px;
+                height: ${imgSize}px;
+                transform: translate(-50%, -50%) scale(${initialScale});
+                background-image: url('${imgUrl}');
+                background-size: contain;
+                background-position: center;
+                background-repeat: no-repeat;
+                pointer-events: none;
+                z-index: 9999;
+                opacity: 0;
+                transition: transform ${gatherTime}ms ease-out, opacity ${gatherTime}ms ease-in;
+                filter: drop-shadow(0 0 10px rgba(255, 50, 0, 0.5));
+            `;
+            document.body.appendChild(effect);
+
+            // 剛出現時的小震動
+            if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+
+            // 強制重繪以啟動 CSS Transition
+            void effect.offsetWidth;
+
+            // 【階段一：執行聚攏】(放大並顯現)
+            effect.style.opacity = '1';
+            effect.style.transform = `translate(-50%, -50%) scale(${gatherScale})`;
+            effect.style.filter = 'drop-shadow(0 0 30px rgba(255, 50, 0, 1)) brightness(1.2)';
+
+            // 【階段二：停留並激烈抖動】
+            setTimeout(() => {
+                // 關閉過渡效果，掛上無限抖動動畫
+                effect.style.transition = 'none';
+                effect.style.animation = 'flame-violent-shake 0.08s infinite'; 
+                
+                // 抖動期間伴隨強烈震動
+                if (navigator.vibrate) navigator.vibrate(shakeTime);
+
+                // 【階段三：上升炸裂】
+                setTimeout(() => {
+                    // 移除抖動，恢復過渡效果以進行炸裂
+                    effect.style.animation = 'none';
+                    effect.style.transition = `all ${explodeTime}ms cubic-bezier(0.175, 0.885, 0.32, 1.275)`;
+                    
+                    // 炸裂位移與過度放大、最後淡出
+                    effect.style.opacity = '0';
+                    effect.style.transform = `translate(-50%, calc(-50% - ${explodeUpOffset}px)) scale(${explodeScale})`;
+                    effect.style.filter = 'drop-shadow(0 0 50px rgba(255, 100, 0, 0.5)) brightness(2)';
+                    
+                // 動畫結束後移除元素
+                    setTimeout(() => effect.remove(), explodeTime);
+                    
+                }, shakeTime);
+
+            }, gatherTime);
+        },
+
+        // [新增] 森之/翠綠 冒險者之劍專屬吸血特效：藤蔓之蛇啃咬 (由下而上 -> 停留 -> 右上退 -> 左下咬 -> 淡出)
+        triggerSnakeBiteEffect: (imgUrl) => {
+            // ==========================================
+            // 🛠️ [可微調] 特效參數設定區 (請依照需求修改數字)
+            // ==========================================
+            const riseTime = 800;       // 1. 竄出(由下而上)的時間 (單位:毫秒)
+            const holdTime = 400;       // 2. 竄出後停留觀察的時間 (單位:毫秒)
+            const drawBackTime = 200;   // 3. 準備啃咬(往右上後退)的時間 (單位:毫秒)
+            const biteTime = 150;       // 4. 啃咬(往左下衝刺)的時間 (單位:毫秒)
+            const fadeOutTime = 400;    // 5. 咬完後淡出消失的時間 (單位:毫秒)
+            
+            const initialScale = 0.8;   // 出現時的初始縮放大小 (0.8 = 80%)
+            const finalScale = 1.2;     // 啃咬時的縮放大小 (1.2 = 120%)
+            const imgSize = 250;        // 特效圖片的基礎大小 (像素)
+            
+            const startYOffset = 200;   // 從怪物中心往下多少距離開始竄出 (正數代表往下)
+            const drawbackX = 40;       // 啃咬前退後的 X 距離 (往右)
+            const drawbackY = -40;      // 啃咬前退後的 Y 距離 (往上，負數)
+            const biteX = -30;          // 啃咬下去的 X 距離 (往左)
+            const biteY = 30;           // 啃咬下去的 Y 距離 (往下)
+            // ==========================================
+
+            // 找尋怪物目標位置
+            const targetEl = document.getElementById('active-monster-card');
+            let targetX = window.innerWidth / 2;
+            let targetY = window.innerHeight / 2;
+
+            if (targetEl) {
+                const rect = targetEl.getBoundingClientRect();
+                targetX = rect.left + rect.width / 2;
+                targetY = rect.top + rect.height / 2;
+            }
+
+            // 建立特效元素
+            const effect = document.createElement('div');
+            
+            // 【階段一：初始狀態】從下方開始，透明隱藏
+            effect.style.cssText = `
+                position: fixed;
+                left: ${targetX}px;
+                top: ${targetY + startYOffset}px;
+                width: ${imgSize}px;
+                height: ${imgSize}px;
+                transform: translate(-50%, -50%) scale(${initialScale});
+                background-image: url('${imgUrl}');
+                background-size: contain;
+                background-position: center;
+                background-repeat: no-repeat;
+                pointer-events: none;
+                z-index: 9999;
+                opacity: 0;
+                filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.6));
+            `;
+            document.body.appendChild(effect);
+
+            // 強制重繪以啟動 CSS Transition
+            void effect.offsetWidth;
+
+            // 【階段一：由地底竄出】
+            effect.style.transition = `top ${riseTime}ms ease-out, opacity ${riseTime}ms ease-out`;
+            effect.style.top = `${targetY}px`;
+            effect.style.opacity = '1';
+
+            setTimeout(() => {
+                // 【階段二：短暫停留】(這裡不需要改變 CSS，單純等待)
+
+                setTimeout(() => {
+                    // 【階段三：準備啃咬 (往右上蓄力)】
+                    effect.style.transition = `transform ${drawBackTime}ms ease-in, left ${drawBackTime}ms ease-in, top ${drawBackTime}ms ease-in`;
+                    effect.style.transform = `translate(-50%, -50%) scale(${finalScale}) rotate(10deg)`;
+                    effect.style.left = `${targetX + drawbackX}px`;
+                    effect.style.top = `${targetY + drawbackY}px`;
+
+                    setTimeout(() => {
+                        // 【階段四：啃咬 (往左下衝擊)】
+                        effect.style.transition = `transform ${biteTime}ms ease-out, left ${biteTime}ms ease-out, top ${biteTime}ms ease-out, filter ${biteTime}ms ease-out`;
+                        effect.style.transform = `translate(-50%, -50%) scale(${finalScale}) rotate(-15deg)`;
+                        effect.style.left = `${targetX + biteX}px`;
+                        effect.style.top = `${targetY + biteY}px`;
+                        effect.style.filter = `drop-shadow(0 0 30px rgba(34, 197, 94, 1)) brightness(1.3)`;
+
+                        if (navigator.vibrate) navigator.vibrate([80, 50, 80]); // 震動回饋
+
+                        setTimeout(() => {
+                            // 【階段五：淡出消失】
+                            effect.style.transition = `opacity ${fadeOutTime}ms ease-out, transform ${fadeOutTime}ms ease-out`;
+                            effect.style.opacity = '0';
+                            effect.style.transform = `translate(-50%, -50%) scale(${initialScale}) rotate(0deg)`;
+
+                            setTimeout(() => effect.remove(), fadeOutTime);
+                        }, biteTime);
+                    }, drawBackTime);
+                }, holdTime);
+            }, riseTime);
+        },
 
        // [新增] 檢查玩家裝備與算式，並觸發對應特效
         checkAndTriggerEquipmentEffects: (equippedMap, formula) => {
@@ -6860,11 +7152,11 @@ for (const slot of slots) {
                     // 為了避免多重特效同時觸發時重疊，依據裝備排序給予微小延遲 (連擊感)
                     const comboDelay = index * 200; 
 
-                    // 特效：森之律動 (+)
-                    if (item.name.includes('森之律動') && countAdd > 0) {
+                    // 特效：森之律動 (+) 或 森之/翠綠冒險者之劍
+                    if ((item.name.includes('森之律動') || item.name.includes('森之冒險者之劍') || item.name.includes('翠綠冒險者之劍')) && countAdd > 0) {
                         setTimeout(() => {
-                            // 條件：LV2以上 且 連續使用2個以上的加號 -> 觸發進階特效
-                            if (countAdd >= 2 && lv >= 2) {
+                            // 條件：LV2以上(或裝備新加法劍) 且 連續使用2個以上的加號 -> 觸發進階特效
+                            if (countAdd >= 2 && (lv >= 2 || item.name.includes('冒險者之劍'))) {
                                 app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a2.png', 'rgba(34, 197, 94, 0.9)');
                             } else {
                                 // 否則觸發基礎特效
@@ -6873,16 +7165,16 @@ for (const slot of slots) {
                         }, comboDelay);
                     }
                     
-                    // 特效：爆炎刻印 (×)
-                    if (item.name.includes('爆炎刻印') && countMul > 0) {
+                    // 特效：爆炎刻印 (×) 或 炎之/烈焰冒險者之劍
+                    if ((item.name.includes('爆炎刻印') || item.name.includes('炎之冒險者之劍') || item.name.includes('烈焰冒險者之劍')) && countMul > 0) {
                         setTimeout(() => {
-                            // 條件：LV2以上 且 連續使用2個以上的乘號 -> 觸發進階特效
-                            if (countMul >= 2 && lv >= 2) {
+                            // 條件：LV2以上(或裝備火系劍) 且 連續使用2個以上的乘號 -> 觸發進階特效
+                            if (countMul >= 2 && (lv >= 2 || item.name.includes('冒險者之劍'))) {
                                 // 烈焰紅色陰影
-                                app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0a2.png', 'rgba(239, 68, 68, 0.9)'); 
+                                app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%83%88%E7%84%B0%E9%A2%A8%E6%9A%B4.png', 'rgba(239, 68, 68, 0.9)'); 
                             } else {
                                 // 橘紅色基礎陰影
-                                app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0a1.png', 'rgba(249, 115, 22, 0.8)');
+                                app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0a2.png', 'rgba(249, 115, 22, 0.8)');
                             }
                         }, comboDelay);
                     }
@@ -8339,6 +8631,26 @@ for (const slot of slots) {
                         // 效果: 冒險者之劍 (Lv1:+2, Lv2:+3... 公式: Lv+1)
                         if (item.name.includes('冒險者之劍')) {
                             bonus += (lv + 1);
+                        }
+                        // 效果: 森之冒險者之劍 (加號額外加成)
+                        if (item.name.includes('森之冒險者之劍')) {
+                            if (countAdd >= 2) bonus += 2;
+                            else if (countAdd === 1) bonus += 1;
+                        }
+                        // 效果: 翠綠冒險者之劍 (加號額外加成)
+                        if (item.name.includes('翠綠冒險者之劍')) {
+                            if (countAdd >= 2) bonus += 3;
+                            else if (countAdd === 1) bonus += 2;
+                        }
+                        // 效果: 炎之冒險者之劍 (乘號額外加成)
+                        if (item.name.includes('炎之冒險者之劍')) {
+                            if (countMul >= 2) bonus += 2; // 連續乘法+2
+                            else if (countMul === 1) bonus += 1; // 單一乘法+1
+                        }
+                        // 效果: 烈焰冒險者之劍 (乘號額外加成)
+                        if (item.name.includes('烈焰冒險者之劍')) {
+                            if (countMul >= 2) bonus += 3; // 連續乘法+3
+                            else if (countMul === 1) bonus += 2; // 單一乘法+2
                         }
                         
                         // 效果: 森之律動 (+)
