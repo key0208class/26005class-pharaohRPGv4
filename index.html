@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.5.6 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.5.8 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -516,7 +516,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.5.6 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.5.8 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -632,8 +632,13 @@
                 <div class="md:col-span-8">
                     <div class="lobby-card p-6 min-h-[500px] flex flex-col">
                         <div class="flex flex-wrap justify-between items-center mb-6 border-b border-amber-200 pb-4 gap-2">
-                            <div class="flex items-center gap-3">
+                          <div class="flex items-center gap-3">
                                 <h2 class="text-2xl font-black text-amber-900">🗺️ 冒險大廳</h2>
+                                <!-- [新增] 傳奇殿堂排行榜按鈕 -->
+                                <button id="btn-lobby-leaderboard" onclick="app.openLeaderboard()" class="flex items-center gap-1.5 bg-yellow-50 text-amber-700 px-3 py-1 rounded-lg font-bold shadow-md hover:bg-yellow-100 hover:text-amber-800 transition-all border border-amber-300 active:scale-95 group relative">
+                                    <span class="text-lg filter drop-shadow group-hover:scale-110 transition-transform">🏆</span> 
+                                    <span class="text-sm">殿堂</span>
+                                </button>
                                <!-- [移至此處] 黑市按鈕 (風格調整為精緻標籤) -->
                                 <button id="btn-lobby-blackmarket" onclick="app.openBlackMarket()" class="flex items-center gap-1.5 bg-slate-800 text-amber-500 px-3 py-1 rounded-lg font-bold shadow-md hover:bg-black hover:text-amber-400 transition-all border border-slate-600 active:scale-95 group relative">
                                     <span class="text-lg filter drop-shadow group-hover:animate-bounce">🧛</span> 
@@ -658,6 +663,24 @@
                 </div>
             </div>
         </div>
+		<!-- [新增] 傳奇殿堂排行榜視窗開始 -->
+        <div id="leaderboard-modal" class="fixed inset-0 z-[80] hidden flex items-center justify-center modal-backdrop backdrop-blur-sm">
+            <div class="bg-white rounded-3xl w-full max-w-lg mx-4 shadow-2xl border-4 border-amber-500 flex flex-col overflow-hidden relative animate-[popIn_0.3s_ease-out] max-h-[85vh]">
+                <div class="bg-gradient-to-r from-amber-600 to-yellow-600 p-4 flex justify-between items-center border-b-2 border-amber-700 shadow-md z-10 shrink-0">
+                    <h3 class="text-2xl font-black text-white flex items-center gap-2 drop-shadow-md">🏆 傳奇殿堂 <span class="text-sm bg-black/30 px-2 py-0.5 rounded-full font-bold">LV.10+</span></h3>
+                    <button onclick="app.closeLeaderboard()" class="text-white hover:text-amber-200 font-black text-2xl px-2 transition-colors active:scale-90">✕</button>
+                </div>
+                <div class="flex-1 flex flex-col bg-slate-50 relative overflow-hidden">
+                    <div class="bg-amber-100/50 p-2 text-center text-xs font-bold text-amber-800 border-b border-amber-200 shrink-0">
+                        僅展示等級超越凡人的傳說級冒險者
+                    </div>
+                    <div id="leaderboard-list-container" class="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                        <!-- JS動態生成內容 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [新增] 傳奇殿堂排行榜視窗結束 -->
 <!-- 建立房間設定視窗開始 -->
         <div id="create-room-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
             <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border-4 border-amber-600 animate-[fadeIn_0.3s_ease-out]">
@@ -784,6 +807,18 @@
                                 <span class="text-xs text-cyan-700">顯示大廳按鈕</span>
                                 <label class="switch scale-90">
                                     <input type="checkbox" id="admin-show-campaign" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 7. 排行榜入口 (新增) -->
+                        <div class="bg-fuchsia-50 p-4 rounded-xl border border-fuchsia-200 flex flex-col justify-between h-full">
+                            <h4 class="font-bold text-fuchsia-900 mb-2 flex items-center gap-2">🏆 傳奇殿堂入口</h4>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-fuchsia-700">顯示大廳排行榜按鈕</span>
+                                <label class="switch scale-90">
+                                    <input type="checkbox" id="admin-show-leaderboard" checked>
                                     <span class="slider"></span>
                                 </label>
                             </div>
@@ -2650,6 +2685,14 @@
                     if(campBtn.nextElementSibling) campBtn.nextElementSibling.classList.add('hidden-logic');
                 }
             }
+
+            // 5. 控制排行榜按鈕顯示
+            const lbBtn = document.getElementById('btn-lobby-leaderboard');
+            if (lbBtn) {
+                const showLb = settings.showLeaderboardBtn !== false; // 預設顯示
+                if (showLb) lbBtn.classList.remove('hidden-logic');
+                else lbBtn.classList.add('hidden-logic');
+            }
         });
 
         // 讀取並顯示大廳房間
@@ -3765,8 +3808,11 @@
                 app.el('admin-show-blackmarket').checked = settings.showBlackMarket !== false;
                 // [v4.7.8.2] 讀取裝備欄位限制設定 (預設為 true: 開啟限制)
                 app.el('admin-equip-limit').checked = settings.equipSlotLimitEnabled !== false;
-                 // [v4.8.0.6] 讀取冒險戰役按鈕顯示 (預設 true)
+                // [v4.8.0.6] 讀取冒險戰役按鈕顯示 (預設 true)
             app.el('admin-show-campaign').checked = settings.showCampaignBtn !== false;
+                 // [新增] 讀取排行榜按鈕顯示 (預設 true)
+            app.el('admin-show-leaderboard').checked = settings.showLeaderboardBtn !== false;
+               
                 // v4.5.0 時間設定讀取 (預設 120 與 45)
                 app.el('admin-timer-base').value = settings.baseTimer || 120;
                 app.el('admin-timer-reset').value = settings.resetTimer || 45;
@@ -3861,8 +3907,10 @@
                 showBlackMarket: app.el('admin-show-blackmarket').checked,
                 // [v4.7.8.2] 儲存裝備限制設定
                 equipSlotLimitEnabled: app.el('admin-equip-limit').checked,
-                 // [v4.8.0.6] 儲存冒險戰役按鈕顯示
+                // [v4.8.0.6] 儲存冒險戰役按鈕顯示
             showCampaignBtn: app.el('admin-show-campaign').checked,
+                 // [新增] 儲存排行榜按鈕顯示
+            showLeaderboardBtn: app.el('admin-show-leaderboard').checked,
                 // v4.5.0 儲存時間設定
                 baseTimer: parseInt(app.el('admin-timer-base').value) || 120,
                 resetTimer: parseInt(app.el('admin-timer-reset').value) || 45,
@@ -8418,7 +8466,124 @@ for (const slot of slots) {
             }, 1500);
         },
 		// --- v4.7.6.4 黑市系統邏輯 ---
-        
+        // --- [新增 v4.8.6] 傳奇殿堂排行榜系統 ---
+        openLeaderboard: () => {
+            app.el('leaderboard-modal').classList.remove('hidden');
+            app.el('leaderboard-list-container').innerHTML = '<div class="text-center text-gray-400 py-10 font-bold">資料讀取中，請稍候...</div>';
+            
+            // 從 Firebase 讀取所有玩家資料
+            db.ref('users').once('value', snapshot => {
+                const users = snapshot.val() || {};
+                app.renderLeaderboard(users);
+            });
+        },
+
+        closeLeaderboard: () => {
+            app.el('leaderboard-modal').classList.add('hidden');
+        },
+
+        renderLeaderboard: (usersData) => {
+            const container = app.el('leaderboard-list-container');
+            const globalList = app.state.globalSettings?.blackMarketList || [];
+            
+            // 判斷是否為管理員
+            const isAdmin = localStorage.getItem('pharaoh_admin_token') === 'valid' || localStorage.getItem('campaign_admin_token') === 'valid';
+
+            let players = [];
+            Object.keys(usersData).forEach(uid => {
+                const data = usersData[uid];
+                
+                // 一般玩家看不到被隱藏的人
+                if (data.isHidden && !isAdmin) return;
+
+                const exp = data.totalExp || 0;
+                const lv = app.getAccountLevel(exp);
+                
+                // 條件：>= 10 級才顯示
+                if (lv >= 10) {
+                    players.push({
+                        uid: uid,
+                        name: data.displayName || '冒險者',
+                        photo: data.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+                        exp: exp,
+                        lv: lv,
+                        equipped: data.equipped || {},
+                        isHidden: data.isHidden || false
+                    });
+                }
+            });
+
+            // 依據經驗值(等級)由高到低排序
+            players.sort((a, b) => b.exp - a.exp);
+
+            if (players.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-10"><span class="text-4xl mb-2 inline-block">🍃</span><br>目前尚無達到 Lv.10 的傳奇冒險者...</div>';
+                return;
+            }
+
+            let html = '';
+            players.forEach((p, idx) => {
+                // 名次標籤配色 (1, 2, 3名套用專屬色)
+                const rankClass = idx === 0 ? 'bg-yellow-400 text-yellow-900 border-yellow-500' : (idx === 1 ? 'bg-slate-300 text-slate-800 border-slate-400' : (idx === 2 ? 'bg-orange-300 text-orange-900 border-orange-400' : 'bg-slate-100 text-slate-600 border-slate-300'));
+                
+                // 產生裝備圖示 (壓縮 HTML 避免空白節點)
+                let equipHtml = '';
+                if (p.equipped) {
+                    Object.values(p.equipped).forEach(itemId => {
+                        const item = globalList[itemId];
+                        if (item) {
+                            const targetLv = item.currentEditLv || 1;
+                            const img = item[`img${targetLv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+                            equipHtml += `<div class="w-6 h-6 bg-slate-800 rounded border border-amber-500/50 overflow-hidden shadow-sm flex items-center justify-center" title="${item.name}"><img src="${img}" class="w-full h-full object-contain p-0.5"></div>`;
+                        }
+                    });
+                }
+                if (equipHtml !== '') equipHtml = `<div class="flex gap-1 ml-2 mt-1">${equipHtml}</div>`;
+
+                // 管理員專屬功能按鈕
+                let adminBtns = '';
+                if (isAdmin) {
+                    const hideLabel = p.isHidden ? '👁️ 顯示' : '👻 隱藏';
+                    const hideBg = p.isHidden ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200';
+                    adminBtns = `<div class="flex flex-col md:flex-row gap-1 ml-auto"><button onclick="app.adminEditPlayer('${p.uid}', '${p.name}')" class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-[0.6rem] font-bold hover:bg-blue-200 transition-colors shadow-sm">改名</button><button onclick="app.adminToggleHidePlayer('${p.uid}', ${p.isHidden})" class="px-2 py-1 ${hideBg} rounded text-[0.6rem] font-bold transition-colors shadow-sm">${hideLabel}</button></div>`;
+                }
+
+                // 被隱藏玩家的半透明特效
+                const hiddenClass = p.isHidden ? 'opacity-50 grayscale' : '';
+
+                // 卡片本體 HTML (高強度壓縮，無空白節點)
+                html += `<div class="flex items-center gap-3 p-3 mb-2 rounded-xl border ${hiddenClass} ${idx < 3 ? 'bg-amber-50 border-amber-200 shadow-md' : 'bg-white border-slate-200 shadow-sm'} transition-transform hover:scale-[1.01]"><div class="flex items-center justify-center w-8 h-8 rounded-full border-2 shadow-sm font-black text-sm shrink-0 ${rankClass}">${idx + 1}</div><img src="${p.photo}" class="w-10 h-10 rounded-full border-2 border-amber-400 shadow-sm object-cover shrink-0"><div class="flex flex-col min-w-0 flex-1"><div class="flex items-center gap-2"><span class="font-black text-amber-900 truncate max-w-[100px] md:max-w-[200px]">${p.name}</span><span class="text-[0.6rem] font-black text-white bg-slate-800 px-1.5 py-0.5 rounded shadow-sm shrink-0">LV.${p.lv}</span></div>${equipHtml}</div>${adminBtns}</div>`;
+            });
+
+            container.innerHTML = html;
+        },
+
+        // 管理員改名功能
+        adminEditPlayer: (uid, currentName) => {
+            const newName = prompt('管理員權限 - 請輸入新的玩家暱稱：', currentName);
+            if (newName && newName.trim() !== '') {
+                db.ref(`users/${uid}`).update({
+                    displayName: newName.trim()
+                }).then(() => {
+                    app.toast('✅ 玩家名稱已由管理員強制修改', 1);
+                    app.openLeaderboard(); // 重新整理列表
+                });
+            }
+        },
+
+        // 管理員隱藏功能
+        adminToggleHidePlayer: (uid, isHidden) => {
+            const newState = !isHidden;
+            const msg = newState ? '⚠️ 確定要隱藏此玩家嗎？\n(一般玩家的排行榜上將不再顯示他)' : '確定要解除隱藏此玩家嗎？';
+            if (confirm(msg)) {
+                db.ref(`users/${uid}`).update({
+                    isHidden: newState
+                }).then(() => {
+                    app.toast(newState ? '👻 玩家已設定為隱藏' : '👁️ 玩家已恢復顯示', 1);
+                    app.openLeaderboard(); // 重新整理列表
+                });
+            }
+        },
       // 開啟黑市
         openBlackMarket: () => {
             app.el('page-lobby').classList.add('hidden');
