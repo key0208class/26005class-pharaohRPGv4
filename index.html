@@ -8954,7 +8954,9 @@ for (const slot of slots) {
                         if (item.name.includes('草木精華')) {
                             if (lv === 1) items.herb += 2;        // Lv1: 草藥
                             else if (lv === 2) items.potion += 2; // Lv2: 治療劑
-                            else if (lv >= 3) items.elixir += 2;  // Lv3+: 補血瓶
+                            else if (lv == 3) items.elixir += 2;  // Lv3+: 補血瓶*2
+							else if (lv == 4) items.elixir += 4;  // LV4+: 補血瓶*4
+							else if (lv >= 5) items.elixir += 5;  // Lv5+: 補血瓶*5
                         }
 						// 效果4: 聖光恩典 (獲得3個法老王提示，3個聖甲蟲徽章，2個補血瓶)
                         if (item.name.includes('聖光恩典')) {
