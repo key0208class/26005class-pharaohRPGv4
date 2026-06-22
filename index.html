@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.5.5 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.5.6 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -516,7 +516,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.5.5 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.5.6 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -4092,7 +4092,15 @@
                         app.toast('🔔 新回合開始，道具效果已重置', 1);
                     }
                 }
- // [v4.7.3.3] 監聽全體獎勵觸發訊號 (由房主開啟寶箱後觸發)
+ // [新增] 監聽全體 BOSS 警告觸發訊號 (當倒數第二隻怪死亡時觸發)
+                if (data.bossWarningTrigger && data.bossWarningTrigger > (app.state.lastBossWarningTrigger || 0)) {
+                    // 延遲 1.5 秒觸發，營造突發感 (所有人同步播放)
+                    setTimeout(() => {
+                        app.triggerBossWarningEffect();
+                    }, 1500);
+                    app.state.lastBossWarningTrigger = data.bossWarningTrigger;
+                }
+
                 // [v4.7.3.3] 監聽全體獎勵觸發訊號 (由房主開啟寶箱後觸發)
                 if (data.rewardTrigger && data.rewardTrigger > (app.state.lastRewardTrigger || 0)) {
                     // [Bug修正] 讀取本地紀錄，檢查是否已經領取過這個時間戳記的獎勵
@@ -6418,21 +6426,19 @@ for (const slot of slots) {
                         const isNextBoss = remainingDeck.length === 1;
 
                         if (isNextBoss) {
+                            // [修改] 將警告訊號寫入 updates，讓全體玩家都能接收到，不再只於本地端播放
+                            updates['bossWarningTrigger'] = firebase.database.ServerValue.TIMESTAMP;
+                            
+                            // 警告結束後再生成寶箱 (總計延遲 1500 + 3500 = 5000 毫秒)
                             setTimeout(() => {
-                                // 1. 觸發 BOSS 警告特效
-                                app.triggerBossWarningEffect();
-                                
-                                // 2. 警告結束後再生成寶箱 (延遲 3.5 秒等待動畫播完)
-                                setTimeout(() => {
-                                    db.ref(`classes/${app.state.classId}/activeMonster`).set({
-                                        type: 'chest',
-                                        name: '戰利品寶箱',
-                                        state: 'battle', 
-                                        timestamp: firebase.database.ServerValue.TIMESTAMP
-                                    });
-                                    app.toast("🎁 寶箱出現了！請隊長開啟", 1);
-                                }, 3500);
-                            }, 1500); // 稍微提早一點觸發警告，營造突發感
+                                db.ref(`classes/${app.state.classId}/activeMonster`).set({
+                                    type: 'chest',
+                                    name: '戰利品寶箱',
+                                    state: 'battle', 
+                                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                                });
+                                app.toast("🎁 寶箱出現了！請隊長開啟", 1);
+                            }, 5000); 
                         } else {
                             // [v4.7.3.1 修改] 一般怪物死亡：延遲 2 秒後生成寶箱
                             setTimeout(() => {
