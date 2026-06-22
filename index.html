@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.5.4 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.5.5 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -485,6 +485,29 @@
         }
         .sprite-list-item:hover { border-color: #d97706; background-color: #fffbeb; }
         .sprite-list-item.selected { border-color: #b45309; background-color: #ffedd5; ring: 2px solid #fbbf24; }
+/* [新增] BOSS 警告特效 */
+        .boss-warning-overlay {
+            position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+            background-color: rgba(220, 38, 38, 0.8);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            animation: boss-warning-flash 0.5s ease-in-out infinite alternate;
+        }
+        .boss-warning-img {
+            width: 80%; max-width: 600px; object-fit: contain;
+            filter: drop-shadow(0 0 30px rgba(255,0,0,0.8));
+            animation: boss-warning-scale 3.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes boss-warning-flash {
+            0% { background-color: rgba(220, 38, 38, 0.3); }
+            100% { background-color: rgba(220, 38, 38, 0.8); }
+        }
+        @keyframes boss-warning-scale {
+            0% { transform: scale(0.1); opacity: 0; }
+            10% { transform: scale(1.2); opacity: 1; }
+            15% { transform: scale(1); opacity: 1; }
+            85% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 50px red); }
+            100% { transform: scale(3); opacity: 0; }
+        }
 </style>  
 	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -493,7 +516,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.5.4 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.5.5 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -6381,7 +6404,7 @@ for (const slot of slots) {
                         updates['activeMonster/actionTime'] = firebase.database.ServerValue.TIMESTAMP;
                     }
 
-                  if (monsterDied) {
+                 if (monsterDied) {
                         // [v4.5.8 修改] 怪物死亡時，不結束遊戲，而是自動換局並重置抽卡區
                         updates['timerActive'] = false; 
                         
@@ -6390,19 +6413,40 @@ for (const slot of slots) {
                         // 先播放語音，讓玩家知道贏了
                         app.speak(successMsg);
                         
-                       // [v4.7.3.1 修改] 延遲 2 秒後，生成寶箱，等待隊長開啟
-                        setTimeout(() => {
-                            // 設定為寶箱狀態 (無血量，特殊type，保留 state: battle 以便渲染)
-                            db.ref(`classes/${app.state.classId}/activeMonster`).set({
-                                type: 'chest',
-                                name: '戰利品寶箱',
-                                state: 'battle', 
-                                timestamp: firebase.database.ServerValue.TIMESTAMP
-                            });
-                            
-                            app.toast("🎁 寶箱出現了！請隊長開啟", 1);
-                         
-                        }, 2000);
+                        // [新增] 判斷是否為倒數第二隻怪 (牌庫剩餘 1 張即代表下一隻是最後的 BOSS)
+                        const remainingDeck = app.state.gameData.monsterDeck || [];
+                        const isNextBoss = remainingDeck.length === 1;
+
+                        if (isNextBoss) {
+                            setTimeout(() => {
+                                // 1. 觸發 BOSS 警告特效
+                                app.triggerBossWarningEffect();
+                                
+                                // 2. 警告結束後再生成寶箱 (延遲 3.5 秒等待動畫播完)
+                                setTimeout(() => {
+                                    db.ref(`classes/${app.state.classId}/activeMonster`).set({
+                                        type: 'chest',
+                                        name: '戰利品寶箱',
+                                        state: 'battle', 
+                                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                                    });
+                                    app.toast("🎁 寶箱出現了！請隊長開啟", 1);
+                                }, 3500);
+                            }, 1500); // 稍微提早一點觸發警告，營造突發感
+                        } else {
+                            // [v4.7.3.1 修改] 一般怪物死亡：延遲 2 秒後生成寶箱
+                            setTimeout(() => {
+                                db.ref(`classes/${app.state.classId}/activeMonster`).set({
+                                    type: 'chest',
+                                    name: '戰利品寶箱',
+                                    state: 'battle', 
+                                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                                });
+                                
+                                app.toast("🎁 寶箱出現了！請隊長開啟", 1);
+                             
+                            }, 2000);
+                        }
 
                     } else {
                         // 怪物未死，繼續遊戲流程
@@ -7334,6 +7378,31 @@ for (const slot of slots) {
                     setTimeout(() => effect.remove(), shatterTime);
                 }, freezeTime);
             }, riseTime);
+        },
+		// [新增] BOSS 來襲警告特效
+        triggerBossWarningEffect: () => {
+            const overlay = document.createElement('div');
+            overlay.className = 'boss-warning-overlay';
+            overlay.innerHTML = `
+                <img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%AD%A6%E5%91%8A!_BOSS.png" class="boss-warning-img">
+                <div class="mt-4 text-white text-2xl md:text-4xl font-black tracking-widest drop-shadow-[0_0_15px_rgba(255,0,0,1)] animate-pulse">最終魔物即將來襲！請做好準備！</div>
+            `;
+            document.body.appendChild(overlay);
+
+            // 播放警告警報音效
+            const audio = new Audio("https://taira-komori.net/sound_os2/system01/warning1.mp3");
+            audio.volume = 0.5;
+            audio.play().catch(()=>{});
+
+            // 強烈震動回饋 (SOS 節奏)
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200, 300, 500, 100, 500]);
+
+            app.speak("警告！偵測到強大魔物反應，最終首領即將出現！");
+
+            // 動畫結束後自動移除遮罩
+            setTimeout(() => {
+                if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            }, 3500); 
         },
 		// [新增] 深淵系列鬼手攻擊特效
         triggerAbyssGhostHandEffect: (img1Url, img2Url) => {
