@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.5.8 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.5.9 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -516,7 +516,7 @@
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
         <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.5.8 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.5.9 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -2347,8 +2347,15 @@
         handleAuthUser: (user) => {
             app.state.user = user;
             // 預設先用 Google 名稱，稍後資料庫監聽器會覆蓋
+           
             app.state.myName = user.displayName; 
             
+            // [新增] 確保每次登入都將最新的 Google 頭像網址更新到資料庫，讓排行榜可以讀取
+            db.ref(`users/${user.uid}`).update({
+                photoURL: user.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+                lastActive: firebase.database.ServerValue.TIMESTAMP
+            });
+
             // UI 切換
             app.el('auth-panel-guest').classList.add('hidden');
             app.el('auth-panel-logged-in').classList.remove('hidden');
@@ -4364,7 +4371,10 @@
                                 if ((myData.score || 0) > (userData.highScore || 0)) {
                                     userData.highScore = myData.score;
                                 }
-                                userData.lastActive = firebase.database.ServerValue.TIMESTAMP;
+                               userData.lastActive = firebase.database.ServerValue.TIMESTAMP;
+                                userData.photoURL = app.state.user.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'; // [新增] 確保結算時更新頭像
+                                // [新增] 同步戰役掉落物到帳號背包
+								
                                 // [新增] 同步戰役掉落物到帳號背包
                                 if (data.isCampaign && data.campaignDroppedItems && data.campaignDroppedItems.length > 0) {
                                     if (!userData.inventory) userData.inventory = {};
@@ -4486,7 +4496,8 @@
                         db.ref(`users/${app.state.user.uid}`).update({
                             highScore: myScore,
                             lastActive: firebase.database.ServerValue.TIMESTAMP,
-                            displayName: app.state.user.displayName
+                            displayName: app.state.myName, // [修正] 使用遊戲內的自訂名稱，避免強制覆蓋回 Google 原名
+                            photoURL: app.state.user.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png' // [新增] 同步更新排行榜所需的頭像
                         });
                         // 即時更新大廳顯示
                         const lobbyAuthScore = app.el('lobby-high-score-auth');
@@ -8523,22 +8534,38 @@ for (const slot of slots) {
 
             let html = '';
             players.forEach((p, idx) => {
-                // 名次標籤配色 (1, 2, 3名套用專屬色)
-                const rankClass = idx === 0 ? 'bg-yellow-400 text-yellow-900 border-yellow-500' : (idx === 1 ? 'bg-slate-300 text-slate-800 border-slate-400' : (idx === 2 ? 'bg-orange-300 text-orange-900 border-orange-400' : 'bg-slate-100 text-slate-600 border-slate-300'));
+                // 名次標籤配色與卡片高光設計 (前3名尊榮特效)
+                let rankIcon = idx + 1;
+                let rankClass = 'bg-slate-100 text-slate-600 border-slate-300';
+                let cardBg = 'bg-white border-slate-200 shadow-sm';
                 
-                // 產生裝備圖示 (壓縮 HTML 避免空白節點)
+                if (idx === 0) {
+                    rankIcon = '👑';
+                    rankClass = 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-900 border-yellow-200 shadow-[0_0_10px_rgba(250,204,21,0.5)]';
+                    cardBg = 'bg-gradient-to-r from-yellow-50 to-amber-100 border-yellow-300 shadow-md ring-1 ring-yellow-400/50';
+                } else if (idx === 1) {
+                    rankClass = 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-800 border-slate-300 shadow-sm';
+                    cardBg = 'bg-slate-50 border-slate-300 shadow-md';
+                } else if (idx === 2) {
+                    rankClass = 'bg-gradient-to-br from-orange-300 to-orange-500 text-orange-900 border-orange-300 shadow-sm';
+                    cardBg = 'bg-orange-50 border-orange-200 shadow-md';
+                }
+
+                // 產生裝備圖示 (無空白節點壓縮)
                 let equipHtml = '';
-                if (p.equipped) {
+                if (p.equipped && Object.keys(p.equipped).length > 0) {
                     Object.values(p.equipped).forEach(itemId => {
                         const item = globalList[itemId];
                         if (item) {
                             const targetLv = item.currentEditLv || 1;
                             const img = item[`img${targetLv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-                            equipHtml += `<div class="w-6 h-6 bg-slate-800 rounded border border-amber-500/50 overflow-hidden shadow-sm flex items-center justify-center" title="${item.name}"><img src="${img}" class="w-full h-full object-contain p-0.5"></div>`;
+                            equipHtml += `<div class="w-6 h-6 bg-slate-800 rounded border border-amber-500/50 overflow-hidden shadow-sm flex items-center justify-center hover:scale-110 transition-transform cursor-help" title="${item.name}"><img src="${img}" class="w-full h-full object-contain p-0.5"></div>`;
                         }
                     });
+                    equipHtml = `<div class="flex gap-1 ml-1 mt-1">${equipHtml}</div>`;
+                } else {
+                    equipHtml = `<div class="mt-1 ml-1 text-[0.55rem] text-slate-400 border border-dashed border-slate-300 px-1.5 py-0.5 rounded inline-block bg-white/50">尚未裝備神物</div>`;
                 }
-                if (equipHtml !== '') equipHtml = `<div class="flex gap-1 ml-2 mt-1">${equipHtml}</div>`;
 
                 // 管理員專屬功能按鈕
                 let adminBtns = '';
@@ -8552,7 +8579,7 @@ for (const slot of slots) {
                 const hiddenClass = p.isHidden ? 'opacity-50 grayscale' : '';
 
                 // 卡片本體 HTML (高強度壓縮，無空白節點)
-                html += `<div class="flex items-center gap-3 p-3 mb-2 rounded-xl border ${hiddenClass} ${idx < 3 ? 'bg-amber-50 border-amber-200 shadow-md' : 'bg-white border-slate-200 shadow-sm'} transition-transform hover:scale-[1.01]"><div class="flex items-center justify-center w-8 h-8 rounded-full border-2 shadow-sm font-black text-sm shrink-0 ${rankClass}">${idx + 1}</div><img src="${p.photo}" class="w-10 h-10 rounded-full border-2 border-amber-400 shadow-sm object-cover shrink-0"><div class="flex flex-col min-w-0 flex-1"><div class="flex items-center gap-2"><span class="font-black text-amber-900 truncate max-w-[100px] md:max-w-[200px]">${p.name}</span><span class="text-[0.6rem] font-black text-white bg-slate-800 px-1.5 py-0.5 rounded shadow-sm shrink-0">LV.${p.lv}</span></div>${equipHtml}</div>${adminBtns}</div>`;
+                html += `<div class="flex items-center gap-3 p-3 mb-2 rounded-xl border ${hiddenClass} ${cardBg} transition-transform hover:scale-[1.01]"><div class="flex items-center justify-center w-8 h-8 rounded-full border-2 font-black text-sm shrink-0 ${rankClass}">${rankIcon}</div><img src="${p.photo}" class="w-10 h-10 rounded-full border-2 border-amber-400 shadow-sm object-cover shrink-0"><div class="flex flex-col min-w-0 flex-1"><div class="flex items-center gap-2"><span class="font-black text-amber-900 truncate max-w-[100px] md:max-w-[200px]">${p.name}</span><span class="text-[0.6rem] font-black text-white bg-slate-800 px-1.5 py-0.5 rounded shadow-sm shrink-0">LV.${p.lv}</span></div>${equipHtml}</div>${adminBtns}</div>`;
             });
 
             container.innerHTML = html;
