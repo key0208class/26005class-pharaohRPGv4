@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.6.5 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.6.6 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -573,7 +573,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.6.5 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.6.6 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -887,6 +887,18 @@
                                 <span class="text-xs text-fuchsia-700">顯示大廳排行榜按鈕</span>
                                 <label class="switch scale-90">
                                     <input type="checkbox" id="admin-show-leaderboard" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 8. 聊天與日誌開關 (新增) -->
+                        <div class="bg-teal-50 p-4 rounded-xl border border-teal-200 flex flex-col justify-between h-full">
+                            <h4 class="font-bold text-teal-900 mb-2 flex items-center gap-2">💬 聊天與日誌</h4>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-teal-700">顯示遊戲中通訊浮標</span>
+                                <label class="switch scale-90">
+                                    <input type="checkbox" id="admin-show-chat" checked>
                                     <span class="slider"></span>
                                 </label>
                             </div>
@@ -3038,12 +3050,28 @@
                 }
             }
 
-            // 5. 控制排行榜按鈕顯示
+           // 5. 控制排行榜按鈕顯示
             const lbBtn = document.getElementById('btn-lobby-leaderboard');
             if (lbBtn) {
                 const showLb = settings.showLeaderboardBtn !== false; // 預設顯示
                 if (showLb) lbBtn.classList.remove('hidden-logic');
                 else lbBtn.classList.add('hidden-logic');
+            }
+
+            // 6. 控制聊天室浮標顯示 (新增)
+            const chatBtn = document.getElementById('btn-toggle-chat');
+            if (chatBtn) {
+                const showChat = settings.showChatModule !== false; // 預設顯示
+                if (showChat) {
+                    chatBtn.classList.remove('hidden-logic');
+                } else {
+                    chatBtn.classList.add('hidden-logic');
+                    // 如果聊天室是打開的狀態，順便強制關閉它
+                    const chatWin = document.getElementById('chat-module-window');
+                    if (chatWin && !chatWin.classList.contains('hidden') && typeof app.toggleChatModule === 'function') {
+                        app.toggleChatModule();
+                    }
+                }
             }
         });
 
@@ -4204,6 +4232,8 @@
             app.el('admin-show-campaign').checked = settings.showCampaignBtn !== false;
                  // [新增] 讀取排行榜按鈕顯示 (預設 true)
             app.el('admin-show-leaderboard').checked = settings.showLeaderboardBtn !== false;
+                 // [新增] 讀取聊天室按鈕顯示 (預設 true)
+            app.el('admin-show-chat').checked = settings.showChatModule !== false;
                
                 // v4.5.0 時間設定讀取 (預設 120 與 45)
                 app.el('admin-timer-base').value = settings.baseTimer || 120;
@@ -4316,6 +4346,8 @@
             showCampaignBtn: app.el('admin-show-campaign').checked,
                  // [新增] 儲存排行榜按鈕顯示
             showLeaderboardBtn: app.el('admin-show-leaderboard').checked,
+                 // [新增] 儲存聊天室按鈕顯示
+            showChatModule: app.el('admin-show-chat').checked,
                 // v4.5.0 儲存時間設定
                 baseTimer: parseInt(app.el('admin-timer-base').value) || 120,
                 resetTimer: parseInt(app.el('admin-timer-reset').value) || 45,
