@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.6.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.6.5 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -508,6 +508,62 @@
             85% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 50px red); }
             100% { transform: scale(3); opacity: 0; }
         }
+		
+		/* --- [新增] 通訊模組專用樣式 --- */
+        .chat-module-container {
+            /* 【可修改】改為 vertical，只允許玩家上下拖拉調整高度，左右會自動填滿版面 */
+            resize: vertical; 
+            overflow: hidden; 
+            
+            /* 【可修改】視窗的「最小高度」。設定 150px 避免縮太扁看不到內容 */
+            min-height: 150px; 
+            
+            /* 【可修改】視窗的「最大高度」。設定 50vh (螢幕高度的50%) 避免拉太長蓋住戰鬥區 */
+            max-height: 50vh; 
+            
+            /* 調整陰影讓它看起來有嵌入感 */
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); 
+        }
+        /* [新增] 浮標被拖曳時的視覺特效 */
+        .chat-btn-dragging { opacity: 0.7; transform: scale(1.1); filter: brightness(1.2); }
+
+        /* ====== 以下為客製化滾動條 (美化原本醜醜的瀏覽器預設滾動條) ====== */
+        
+        .chat-scroll-area::-webkit-scrollbar { 
+            /* 【可修改】滾動條的寬度。
+               目前 4px 很細緻，若覺得太細不好點擊拖曳，可改為 6px 或 8px。*/
+            width: 4px; 
+        }
+        
+        .chat-scroll-area::-webkit-scrollbar-track { 
+            /* 【可修改】滾動條「軌道」的底色。
+               目前為透明黑 (0.1)，若要明顯一點可把數值調高，改為 rgba(0,0,0,0.3) 之類的。*/
+            background: rgba(0,0,0,0.1); 
+        }
+        
+        .chat-scroll-area::-webkit-scrollbar-thumb { 
+            /* 【可修改】滾動條「拉桿本體」的顏色。
+               目前為半透明的琥珀色 (對應法老王遊戲風格)，可直接改為 #ff0000 這種色碼。*/
+            background: rgba(217,119,6,0.5); 
+            
+            /* 【可修改】拉桿的圓角程度。
+               4px 會讓拉桿上下看起來圓潤不刺眼，改為 0 則變成方形。*/
+            border-radius: 4px; 
+        }
+        
+        .chat-scroll-area::-webkit-scrollbar-thumb:hover { 
+            /* 【可修改】滑鼠游標「停留在拉桿上」時的顏色變化。
+               目前設定為加深不透明度到 0.8，讓玩家有點擊的互動回饋感。*/
+            background: rgba(217,119,6,0.8); 
+        }
+
+        /* ====== 單筆聊天/戰鬥訊息出現時的特效 ====== */
+        
+        .log-entry { 
+            /* 【可修改】新訊息出現時的動畫速度。
+               0.3s 代表淡入時間，改為 1s 會變很慢浮現；若整行刪除則訊息會瞬間生硬地跳出來。*/
+            animation: fadeIn 0.3s ease-out; 
+        }
 </style>  
 	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -515,8 +571,9 @@
 </head>
 <body class="min-h-screen pb-12 text-slate-800">
     <div class="w-full px-4 py-8">
-        <div class="text-center mb-6 relative">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.6.2 - 冒險模式版</h1>
+        <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
+        <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.6.5 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -2036,8 +2093,54 @@
                 </div>
             </div>
         </div>
-        <div id="game-board" class="hidden fade-in">
-            <div class="flex flex-wrap justify-between items-center mb-4 bg-white/80 backdrop-blur rounded-xl p-3 shadow border border-amber-200">
+        <div id="game-board" class="hidden fade-in relative">
+            
+            <!-- 戰鬥通訊模組開始 -->
+            <!-- [修改] 懸浮開啟按鈕 (移除 onclick，加入滑鼠與觸控的拖曳事件) -->
+            <button id="btn-toggle-chat" onmousedown="app.dragChatBtn(event)" ontouchstart="app.dragChatBtn(event)" class="fixed top-4 right-4 z-[85] bg-slate-800 text-amber-400 w-12 h-12 rounded-full shadow-lg border-2 border-amber-600 hover:bg-slate-700 transition-colors flex items-center justify-center cursor-move touch-none">
+                <span class="text-xl pointer-events-none">💬</span>
+                <span id="chat-unread-badge" class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-[0.6rem] font-black w-5 h-5 flex items-center justify-center rounded-full border border-white animate-bounce pointer-events-none">N</span>
+            </button>
+
+            <!-- [修改] 聊天與日誌視窗 (改為 w-full 佔滿寬度，並放在頁面排版中) -->
+            <div id="chat-module-window" class="hidden w-full bg-slate-900/95 border-2 border-amber-600 rounded-xl chat-module-container flex-col animate-[fadeIn_0.2s_ease-out] backdrop-blur-md mb-4" style="height: 250px;">
+                <!-- 標頭 -->
+                <div class="flex justify-between items-center bg-gradient-to-r from-slate-800 to-slate-900 border-b border-amber-600/50 p-2 shrink-0">
+                    <span class="text-amber-400 font-black text-xs md:text-sm tracking-widest flex items-center gap-2">📜 戰鬥日誌 & 通訊 <span class="text-gray-500 font-normal hidden md:inline">(可上下拖拉調整高度)</span></span>
+                    <div class="flex gap-2">
+                        <button onclick="app.exportChatLogs()" class="text-xs bg-slate-700 text-slate-300 hover:bg-amber-600 hover:text-white px-2 py-0.5 rounded transition-colors border border-slate-500" title="匯出紀錄">📥 匯出</button>
+                        <button onclick="app.toggleChatModule()" class="text-slate-200 bg-red-800 hover:bg-red-600 font-bold px-3 py-0.5 rounded transition-colors">✕ 關閉</button>
+                    </div>
+                </div>
+                
+                <!-- 雙欄內容區 -->
+                <div class="flex flex-1 overflow-hidden">
+                    <!-- 左欄：戰鬥日誌 -->
+                    <div class="w-1/2 border-r border-slate-700 flex flex-col bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')]">
+                        <div class="text-center text-[0.6rem] text-slate-400 bg-black/40 py-1 font-bold shrink-0">⚔️ 戰鬥日誌</div>
+                        <div id="combat-log-container" class="flex-1 overflow-y-auto p-2 space-y-1 chat-scroll-area">
+                            <!-- JS 動態生成 -->
+                            <div class="text-center text-xs text-slate-600 mt-2">日誌載入中...</div>
+                        </div>
+                    </div>
+                    <!-- 右欄：聊天室 -->
+                    <div class="w-1/2 flex flex-col bg-slate-800/50">
+                        <div class="text-center text-[0.6rem] text-slate-400 bg-black/40 py-1 font-bold shrink-0">💬 冒險者頻道</div>
+                        <div id="chat-msg-container" class="flex-1 overflow-y-auto p-2 space-y-2 chat-scroll-area">
+                            <!-- JS 動態生成 -->
+                        </div>
+                        <!-- 輸入框 -->
+                        <div class="p-1.5 bg-slate-900 border-t border-slate-700 shrink-0 flex gap-1">
+                            <input type="text" id="chat-input-box" onkeypress="if(event.key==='Enter') app.sendChatMessage()" class="flex-1 bg-slate-800 text-amber-100 text-xs px-2 py-1.5 rounded border border-slate-600 focus:outline-none focus:border-amber-500 placeholder-slate-500" placeholder="輸入訊息...">
+                            <button onclick="app.sendChatMessage()" class="bg-amber-700 text-white text-xs px-2 rounded font-bold hover:bg-amber-600 transition-colors shrink-0">送出</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 戰鬥通訊模組結束 -->
+            
+            <!-- [修改] 原本的工具列 (加上 id="game-top-toolbar") -->
+            <div id="game-top-toolbar" class="flex flex-wrap justify-between items-center mb-4 bg-white/80 backdrop-blur rounded-xl p-3 shadow border border-amber-200 transition-all duration-300">
           
                 <div class="flex items-center gap-3">
                     <span class="bg-amber-200 text-amber-900 px-3 py-1 rounded-full font-bold">房號: <span id="display-class-id">--</span></span>
@@ -2671,6 +2774,201 @@
             }
         },
 
+     // --- [修改] 戰鬥通訊模組邏輯 (拖曳與空間切換) ---
+        dragChatBtn: (e) => {
+            // 防止觸控時畫面跟著捲動
+            if(e.cancelable) e.preventDefault(); 
+            
+            const btn = app.el('btn-toggle-chat');
+            btn.classList.add('chat-btn-dragging'); // 加上拖曳發光特效
+
+            // 判斷是手機觸控還是電腦滑鼠
+            const isTouch = e.type === 'touchstart';
+            const startX = isTouch ? e.touches[0].clientX : e.clientX;
+            const startY = isTouch ? e.touches[0].clientY : e.clientY;
+            
+            // 取得按鈕當前的座標
+            const startLeft = btn.offsetLeft;
+            const startTop = btn.offsetTop;
+
+            let hasMoved = false; // 用來判定玩家是「點擊」還是「拖曳」
+
+            const moveHandler = (moveEvent) => {
+                hasMoved = true;
+                const curX = isTouch ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                const curY = isTouch ? moveEvent.touches[0].clientY : moveEvent.clientY;
+                
+                // 計算移動後的新位置
+                let newLeft = startLeft + (curX - startX);
+                let newTop = startTop + (curY - startY);
+
+                // 限制邊界，不讓按鈕被拖到畫面外
+                newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - btn.offsetWidth));
+                newTop = Math.max(0, Math.min(newTop, window.innerHeight - btn.offsetHeight));
+
+                btn.style.left = newLeft + 'px';
+                btn.style.top = newTop + 'px';
+                btn.style.right = 'auto'; // 取消 css 預設的 right: 1rem 避免衝突
+            };
+
+            const upHandler = () => {
+                btn.classList.remove('chat-btn-dragging'); // 移除拖曳特效
+                
+                // 移除監聽器
+                document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler);
+                document.removeEventListener(isTouch ? 'touchend' : 'mouseup', upHandler);
+                
+                // 如果沒有移動過，就當作是單純的「點擊」，負責打開/關閉聊天室
+                if (!hasMoved) {
+                    app.toggleChatModule();
+                }
+            };
+
+            // 綁定全螢幕移動與放開事件
+            document.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler, { passive: false });
+            document.addEventListener(isTouch ? 'touchend' : 'mouseup', upHandler);
+        },
+
+        toggleChatModule: () => {
+            const win = app.el('chat-module-window');
+            const badge = app.el('chat-unread-badge');
+            const mainTitle = app.el('main-title-area');
+            const topToolbar = app.el('game-top-toolbar');
+
+            if (!win) return;
+
+            if (win.classList.contains('hidden')) {
+                // [開啟聊天室]
+                win.classList.remove('hidden');
+                win.classList.add('flex');
+                badge.classList.add('hidden'); // 清除未讀紅點
+                
+                // 隱藏標題與房號工具列，騰出原本的空間給聊天室
+                if(mainTitle) mainTitle.classList.add('hidden');
+                if(topToolbar) topToolbar.classList.add('hidden');
+
+                // 畫面滾動到底部
+                const chatCon = app.el('chat-msg-container');
+                const logCon = app.el('combat-log-container');
+                if(chatCon) chatCon.scrollTop = chatCon.scrollHeight;
+                if(logCon) logCon.scrollTop = logCon.scrollHeight;
+            } else {
+                // [關閉聊天室]
+                win.classList.add('hidden');
+                win.classList.remove('flex');
+                
+                // 恢復顯示標題與房號工具列
+                if(mainTitle) mainTitle.classList.remove('hidden');
+                if(topToolbar) topToolbar.classList.remove('hidden');
+            }
+        },
+
+        initCommunicationListeners: () => {
+            if (!app.state.classId) return;
+            const logRef = db.ref(`classes/${app.state.classId}/combatLogs`);
+            const chatRef = db.ref(`classes/${app.state.classId}/chatMsgs`);
+
+            // 監聽日誌
+            logRef.limitToLast(50).on('child_added', snap => {
+                const data = snap.val();
+                const container = app.el('combat-log-container');
+                if (!container) return;
+                // 移除"載入中"
+                if (container.innerHTML.includes('日誌載入中')) container.innerHTML = '';
+                
+                const timeStr = new Date(data.timestamp).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                // 無空白壓縮 HTML
+                const icon = data.type === 'attack' ? '⚔️' : '🎒';
+                const color = data.type === 'attack' ? 'text-red-400' : 'text-green-400';
+                container.insertAdjacentHTML('beforeend', `<div class="log-entry text-[0.65rem] leading-tight border-b border-slate-700/50 pb-1"><span class="text-slate-500 mr-1">[${timeStr}]</span><span class="${color} font-bold mr-1">${icon}</span><span class="text-slate-300">${data.msg}</span></div>`);
+                container.scrollTop = container.scrollHeight;
+            });
+
+            // 監聽聊天
+            chatRef.limitToLast(50).on('child_added', snap => {
+                const data = snap.val();
+                const container = app.el('chat-msg-container');
+                if (!container) return;
+                
+                const isMe = data.name === app.state.myName;
+                const timeStr = new Date(data.timestamp).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' });
+                const alignCls = isMe ? 'items-end' : 'items-start';
+                const bgCls = isMe ? 'bg-amber-700 text-amber-50' : 'bg-slate-700 text-slate-200';
+                
+                // 無空白壓縮 HTML
+                container.insertAdjacentHTML('beforeend', `<div class="flex flex-col ${alignCls} w-full mb-2"><div class="flex items-baseline gap-1 mb-0.5"><span class="text-[0.6rem] font-bold text-slate-400">${data.name}</span><span class="text-[0.5rem] text-slate-500">${timeStr}</span></div><div class="px-2 py-1 rounded-lg text-xs shadow-sm max-w-[90%] break-words ${bgCls}">${data.msg}</div></div>`);
+                container.scrollTop = container.scrollHeight;
+
+                // 若視窗未開，顯示紅點
+                const win = app.el('chat-module-window');
+                if (win && win.classList.contains('hidden')) {
+                    app.el('chat-unread-badge').classList.remove('hidden');
+                }
+            });
+        },
+
+        addCombatLog: (type, msg) => {
+            if (!app.state.classId) return;
+            db.ref(`classes/${app.state.classId}/combatLogs`).push({
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                name: app.state.myName || '系統',
+                type: type, // 'attack' 或 'item'
+                msg: msg
+            });
+        },
+
+        sendChatMessage: () => {
+            const input = app.el('chat-input-box');
+            const msg = input.value.trim();
+            if (!msg || !app.state.classId) return;
+            
+            db.ref(`classes/${app.state.classId}/chatMsgs`).push({
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                name: app.state.myName || '冒險者',
+                msg: msg
+            }).then(() => {
+                input.value = '';
+            });
+        },
+
+        exportChatLogs: async () => {
+            if (!app.state.classId) return;
+            app.toast("📦 準備匯出資料...", 1);
+            try {
+                const logsSnap = await db.ref(`classes/${app.state.classId}/combatLogs`).once('value');
+                const chatsSnap = await db.ref(`classes/${app.state.classId}/chatMsgs`).once('value');
+                
+                let output = `===== 🏺 神殿試煉 戰鬥紀錄與通訊 =====\n房間代號：${app.state.classId}\n匯出時間：${new Date().toLocaleString()}\n\n`;
+                
+                output += `--- [戰鬥日誌] ---\n`;
+                if(logsSnap.exists()) {
+                    Object.values(logsSnap.val()).forEach(l => {
+                        output += `[${new Date(l.timestamp).toLocaleTimeString()}] ${l.type==='attack'?'[攻擊]':'[道具]'} ${l.msg}\n`;
+                    });
+                } else {
+                    output += `(無紀錄)\n`;
+                }
+
+                output += `\n--- [冒險者通訊] ---\n`;
+                if(chatsSnap.exists()) {
+                    Object.values(chatsSnap.val()).forEach(c => {
+                        output += `[${new Date(c.timestamp).toLocaleTimeString()}] ${c.name}: ${c.msg}\n`;
+                    });
+                } else {
+                    output += `(無紀錄)\n`;
+                }
+
+                const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `神殿試煉_日誌_${app.state.classId}.txt`;
+                a.click();
+                app.toast("✅ 匯出完成！", 1);
+            } catch (err) {
+                app.toast("❌ 匯出失敗", 1);
+            }
+        },
+
         // --- 1. 初始化與自動登入 [v4.3.0 更新] ---
                init: () => {
             app.createPredefinedCards();
@@ -3104,6 +3402,7 @@
             }
             
             app.listenToGameData();
+            app.initCommunicationListeners(); // 啟動戰鬥日誌與聊天室監聽
 
             // v4.1.0: 核心修正 - 啟動主控者的倒數計時器迴圈
             if (app.state.isHost) {
@@ -6527,6 +6826,10 @@ for (const slot of slots) {
                         
                         updates['activeMonster/currentHp'] = newMonsterHp;
                         
+                        // [新增] 記錄戰鬥日誌
+                        const monsterName = app.state.gameData.activeMonster?.name || '魔物';
+                        app.addCombatLog('attack', `【${app.state.myName}】對 ${monsterName} 造成了 ${damage} 點傷害！`);
+                        
                         if (newMonsterHp <= 0) {
                             monsterDied = true;
                             updates['activeMonster/action'] = 'die';
@@ -7984,6 +8287,9 @@ for (const slot of slots) {
                              app.toast(`💖 恢復生命！目前 HP: ${p.hp}/${p.maxHp}`, 1);
                              app.speak('生命值恢復');
                              
+                             const itemNames = { herb: '草藥', potion: '治療劑', elixir: '補血瓶' };
+                             app.addCombatLog('item', `【${app.state.myName}】使用了 ${itemNames[type]}，恢復了 ${healVal} 點生命。`);
+
                              // [修正 v4.7.2] 依據身分決定補血特效顯示位置 (主控者: teacher-personal-board, 學生: student-squad-section)
                              const targetContainerId = app.state.isHost ? 'teacher-personal-board' : 'student-squad-section';
                              app.showDamageText(healVal, '#22c55e', targetContainerId); 
@@ -8065,6 +8371,7 @@ for (const slot of slots) {
                         
                         app.speak('使用時間碎片');
                         app.toast('🕒 成功！戰鬥時間已延長 60 秒！', 1);
+                        app.addCombatLog('item', `【${app.state.myName}】捏碎了 時之碎片，替大家爭取了 60 秒！`);
                         return count - 1;
                     }
                     return count;
