@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.6.6 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.6.8 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -573,7 +573,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.6.6 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.6.8 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -2288,7 +2288,7 @@
                                 </div>
                         </div>
 
-                        <div id="student-inventory" class="hidden flex items-center justify-between bg-amber-100/50 p-2 rounded-lg border border-amber-200 mx-2"><div class="flex items-center gap-2 mr-4 flex-shrink-0"><span class="text-1xl font-black text-amber-900 flex items-center shadow-sm bg-amber-200 px-2 rounded-lg">🎒 背包</span><div id="abyss-bonus-badge" class="hidden items-center gap-1 bg-red-100/90 text-red-900 px-2 py-0.5 rounded shadow-[0_0_12px_rgba(239,68,68,0.8)] text-xs font-black border-2 border-red-400 animate-pulse" title="深淵之印：本局固化攻擊力加成"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%94%BB%E6%93%8A%E5%8A%9B%E5%9B%BA%E5%8C%96.png" class="w-4 h-4 object-contain filter drop-shadow-sm"><span id="abyss-bonus-value" class="drop-shadow-sm">+0</span></div></div><div id="inventory-list" class="flex gap-3 flex-1 justify-end"></div></div>
+                        <div id="student-inventory" class="hidden flex items-center justify-between bg-amber-100/50 p-2 rounded-lg border border-amber-200 mx-2"><div class="flex items-center gap-2 mr-4 flex-shrink-0"><span class="text-1xl font-black text-amber-900 flex items-center shadow-sm bg-amber-200 px-2 rounded-lg">🎒 背包</span><div id="abyss-bonus-badge" class="hidden items-center gap-1 bg-red-100/90 text-red-900 px-2 py-0.5 rounded shadow-[0_0_12px_rgba(239,68,68,0.8)] text-xs font-black border-2 border-red-400 animate-pulse" title="深淵之印：本局固化攻擊力加成"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%94%BB%E6%93%8A%E5%8A%9B%E5%9B%BA%E5%8C%96.png" class="w-4 h-4 object-contain filter drop-shadow-sm"><span id="abyss-bonus-value" class="drop-shadow-sm">+0</span></div><div id="flame-bonus-badge" class="hidden items-center gap-1 bg-orange-100/90 text-orange-900 px-2 py-0.5 rounded shadow-[0_0_12px_rgba(249,115,22,0.8)] text-xs font-black border-2 border-orange-400 animate-pulse" title="爆炎刻印持續加成"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%81%AB%E5%8A%9B%E6%8F%90%E5%8D%87.png" class="w-4 h-4 object-contain filter drop-shadow-sm"><span id="flame-bonus-value" class="drop-shadow-sm">+0</span><span id="flame-bonus-rounds" class="text-[0.6rem] bg-orange-800 text-orange-100 px-1 rounded-full">3</span></div></div><div id="inventory-list" class="flex gap-3 flex-1 justify-end"></div></div>
 
                         <div class="bg-white rounded-xl p-4 shadow border-2 border-amber-300">
                              <div class="flex justify-center gap-3 mb-3">
@@ -6099,7 +6099,7 @@ for (const slot of slots) {
 
                 const nextRound = (gameData.round || 1) + 1;
                 
-                // 準備更新物件
+               // 準備更新物件
                 const updates = {
                     status: 'waiting',
                     dice: { d8: '-', d10: '-', d12: '-' },
@@ -6112,6 +6112,24 @@ for (const slot of slots) {
                     // [v4.4.1 修正] 每次換局都更新活躍時間，防止房間在大廳消失
                     lastActive: firebase.database.ServerValue.TIMESTAMP
                 };
+
+                // [修改] 在換局時，處理所有玩家的 buff 回合數遞減
+                const playersData = gameData.players || {};
+                Object.keys(playersData).forEach(teamKey => {
+                    const members = playersData[teamKey];
+                    if (members) {
+                        Object.keys(members).forEach(pName => {
+                            const p = members[pName];
+                            if (p.flameRounds && p.flameRounds > 0) {
+                                const newRounds = p.flameRounds - 1;
+                                updates[`players/${teamKey}/${pName}/flameRounds`] = newRounds;
+                                if (newRounds <= 0) {
+                                    updates[`players/${teamKey}/${pName}/flameBonus`] = 0;
+                                }
+                            }
+                        });
+                    }
+                });
 
                 // [修復] 只有當怪物真實存在時，才更新其封印與詛咒狀態，避免產生幽靈怪物資料卡死通關判定
                 if (gameData.activeMonster) {
@@ -6732,6 +6750,45 @@ for (const slot of slots) {
                             );
                         }
                         
+                        // --- [新增] 爆炎刻印(×) 持續回合攻擊力邏輯 ---
+                        let currentFlameBonus = myPlayerData?.flameBonus || 0;
+                        let currentFlameRounds = myPlayerData?.flameRounds || 0;
+                        let newFlameBonus = currentFlameBonus;
+                        let newFlameRounds = currentFlameRounds;
+                        let flameBuffTriggered = false;
+
+                        if (myPlayerData?.equipped) {
+                            const globalList = app.state.globalSettings?.blackMarketList || [];
+                            const countMul = (formula.match(/×/g) || []).length;
+                            
+                            if (countMul >= 2) {
+                                Object.values(myPlayerData.equipped).forEach(itemId => {
+                                    const item = globalList[itemId];
+                                    if (item && item.name.includes('爆炎刻印')) {
+                                        const flameLv = item.currentEditLv || 1;
+                                        if (flameLv === 2 && newFlameBonus <= 6) {
+                                            newFlameBonus = 6;
+                                            newFlameRounds = 3;
+                                            flameBuffTriggered = true;
+                                        } else if (flameLv >= 3 && newFlameBonus <= 10) {
+                                            newFlameBonus = 10;
+                                            newFlameRounds = 3;
+                                            flameBuffTriggered = true;
+                                        }
+                                    }
+                                });
+                            }
+                        }
+
+                        if (flameBuffTriggered) {
+                            updates[`players/${app.state.myTeam}/${app.state.myName}/flameBonus`] = newFlameBonus;
+                            updates[`players/${app.state.myTeam}/${app.state.myName}/flameRounds`] = newFlameRounds;
+                            setTimeout(() => app.toast(`🔥 爆炎覺醒！攻擊力持續提升 +${newFlameBonus} (持續3回合)`, 1), 1000);
+                        }
+                        
+                        // 取得當回合實際可用的 flameBonus
+                        const activeFlameBonus = flameBuffTriggered ? newFlameBonus : (currentFlameRounds > 0 ? currentFlameBonus : 0);
+                        
                         // --- [修改] 炎之/烈焰冒險者之劍：連續乘號機率暴擊(總裝備攻擊力) ---
                         let flameMultiplier = 1;
                         let flameTriggered = false;
@@ -6745,17 +6802,17 @@ for (const slot of slots) {
                                 Object.values(myPlayerData.equipped).forEach(itemId => {
                                     const item = globalList[itemId];
                                     if (item) {
-                                        // [修改點] 烈焰冒險者之劍：70%機率 2.5倍
+                                        // [修改點] 烈焰冒險者之劍：100%機率 3倍
                                         if (item.name.includes('烈焰冒險者之劍')) {
-                                            if (Math.random() < 0.70) {
-                                                flameMultiplier = 2.5;
+                                            if (Math.random() < 1.0) {
+                                                flameMultiplier = 3;
                                                 flameTriggered = true;
                                                 flameSwordName = "烈焰冒險者之劍";
                                             }
                                         } 
-                                        // [修改點] 炎之冒險者之劍：50%機率 2倍 (若烈焰已觸發則不覆蓋)
+                                        // [修改點] 炎之冒險者之劍：100%機率 2倍 (若烈焰已觸發則不覆蓋)
                                         else if (item.name.includes('炎之冒險者之劍') && !flameTriggered) {
-                                            if (Math.random() < 0.50) {
+                                            if (Math.random() < 1.0) {
                                                 flameMultiplier = 2;
                                                 flameTriggered = true;
                                                 flameSwordName = "炎之冒險者之劍";
@@ -6766,8 +6823,8 @@ for (const slot of slots) {
                             }
                         }
 
-                        // 結算裝備總攻擊力 (基礎加成 + 深淵永久加成) * 翻倍倍率
-                        const totalEquipAtk = (atkBonus + newAbyssBonus);
+                        // 結算裝備總攻擊力 (基礎加成 + 深淵永久加成 + 爆炎持續加成) * 翻倍倍率
+                        const totalEquipAtk = (atkBonus + newAbyssBonus + activeFlameBonus);
                         const finalEquipAtk = Math.floor(totalEquipAtk * flameMultiplier); // 加上無條件捨去確保不出現小數點
 
                         if (flameTriggered) {
@@ -8200,11 +8257,27 @@ for (const slot of slots) {
                 }
             }
 
-            // v3.7.0 修正：加入 mummy 檢查 (v4.8.0 加上 abyssBonus 顯示判斷)
+            // --- [新增] 爆炎刻印 UI 更新 ---
+            const flameBonus = myData?.flameBonus || 0;
+            const flameRounds = myData?.flameRounds || 0;
+            const flameBadgeEl = app.el('flame-bonus-badge');
+            if (flameBadgeEl) {
+                if (flameRounds > 0 && flameBonus > 0) {
+                    flameBadgeEl.classList.remove('hidden');
+                    flameBadgeEl.classList.add('flex');
+                    app.el('flame-bonus-value').textContent = `+${flameBonus}`;
+                    app.el('flame-bonus-rounds').textContent = `${flameRounds}回`;
+                } else {
+                    flameBadgeEl.classList.add('hidden');
+                    flameBadgeEl.classList.remove('flex');
+                }
+            }
+
+            // v3.7.0 修正：加入 mummy 檢查 (v4.8.0 加上 abyssBonus 與 flameBonus 顯示判斷)
             const hasItems = (items.hint > 0) || (items.double > 0) || (items.horus > 0) || (items.nile > 0) || (items.time > 0) || (items.seal > 0) || (items.shard > 0) || (items.anubis > 0) || (items.mummy > 0) || (items.herb > 0) || (items.potion > 0) || (items.elixir > 0);
             
-            // 如果沒道具，但也沒觸發深淵印記，才把整個背包列隱藏
-            if (!hasItems && abyssBonus <= 0) {
+            // 如果沒道具，但也沒觸發深淵印記與爆炎，才把整個背包列隱藏
+            if (!hasItems && abyssBonus <= 0 && flameBonus <= 0) {
                 invEl.classList.add('hidden');
                 return;
             }
