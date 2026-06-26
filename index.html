@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.7.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.7.4 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -573,7 +573,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.4 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -1064,8 +1064,8 @@
                            <div class="flex justify-between items-center mb-4">
                                 <h4 class="font-bold text-stone-800 flex items-center gap-2 text-xl">👹 怪物圖鑑總表</h4>
                                 <div class="flex gap-2">
-                                    <button onclick="app.switchMonsterView('skills')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-indigo-700 active:scale-95 transition-transform flex items-center gap-2">
-                                        <span>🌟</span> 怪物技能
+                                    <button onclick="app.switchMonsterView('skills')" class="bg-orange-500 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-orange-700 active:scale-95 transition-transform flex items-center gap-2">
+                                        <span>☣️</span> 怪物技能
                                     </button>
                                     <button onclick="app.addNewMonster()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-green-700 active:scale-95 transition-transform flex items-center gap-2">
                                         <span>➕</span> 新增怪物
@@ -1206,14 +1206,19 @@
 
                         <!-- [新增] 怪物技能管理視圖 -->
                         <div id="monster-skills-view" class="hidden animate-[fadeIn_0.3s_ease-out] flex-col h-full">
-                            <div class="flex justify-between items-center mb-4 bg-stone-100 p-3 rounded-xl border border-stone-200 shrink-0">
+                            <div class="flex justify-between items-center mb-4 bg-orange-100 p-3 rounded-xl border border-orange-200 shrink-0">
                                 <button onclick="app.switchMonsterView('list')" class="bg-gray-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-600 active:scale-95 transition-transform flex items-center gap-2">
                                     <span>🔙</span> 返回列表
                                 </button>
-                                <h4 class="font-bold text-indigo-800 text-lg">🌟 怪物專屬技能庫</h4>
-                                <button onclick="app.addNewMonsterSkill()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-indigo-700 active:scale-95 transition-transform flex items-center gap-2">
-                                    <span>➕</span> 新增技能
-                                </button>
+                                <h4 class="font-bold text-orange-800 text-lg">🌟 怪物技能庫</h4>
+                                <div class="flex gap-2">
+                                    <button onclick="app.toast('✅ 技能已暫存 (請記得點擊最下方儲存全域設定)')" class="bg-amber-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-amber-700 active:scale-95 transition-transform flex items-center gap-2">
+                                        <span>💾</span> 暫存設定
+                                    </button>
+                                    <button onclick="app.addNewMonsterSkill()" class="bg-orange-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-orange-700 active:scale-95 transition-transform flex items-center gap-2">
+                                        <span>➕</span> 新增技能
+                                    </button>
+                                </div>
                             </div>
                             <div id="monster-skills-container" class="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-10">
                                 <!-- JS 動態生成技能列表 -->
@@ -3819,15 +3824,48 @@
         },
 
         addNewCraftingRecipe: () => {
+            if (!app.state.tempCraftingRecipes) app.state.tempCraftingRecipes = [];
             app.state.tempCraftingRecipes.push({
                 targetId: "",
                 materials: []
             });
+            const newIdx = app.state.tempCraftingRecipes.length - 1;
+            if(!app.state.adminCraftingOpen) app.state.adminCraftingOpen = {};
+            app.state.adminCraftingOpen[newIdx] = true; // 新增配方時預設展開
             app.renderCraftingRecipesUI();
             setTimeout(() => {
                 const c = app.el('crafting-recipe-container');
                 if(c) c.scrollTop = c.scrollHeight;
             }, 100);
+        },
+
+        toggleAdminCraftingRecipe: (rIdx) => {
+            if(!app.state.adminCraftingOpen) app.state.adminCraftingOpen = {};
+            app.state.adminCraftingOpen[rIdx] = !app.state.adminCraftingOpen[rIdx];
+            const body = document.getElementById(`admin-craft-recipe-body-${rIdx}`);
+            const icon = document.getElementById(`admin-craft-fold-icon-${rIdx}`);
+            if(body) {
+                if(app.state.adminCraftingOpen[rIdx]) {
+                    body.classList.remove('hidden');
+                    body.classList.add('flex');
+                    if(icon) icon.textContent = '▲';
+                } else {
+                    body.classList.add('hidden');
+                    body.classList.remove('flex');
+                    if(icon) icon.textContent = '▼';
+                }
+            }
+        },
+
+        togglePlayerCraftingCategory: (catId) => {
+            const target = document.getElementById(`craft-cat-${catId}`);
+            const icon = document.getElementById(`craft-icon-${catId}`);
+            if (target) {
+                target.classList.toggle('hidden');
+                const isHidden = target.classList.contains('hidden');
+                localStorage.setItem(`pharaoh_crafting_fold_${catId}`, isHidden ? 'true' : 'false');
+                if (icon) icon.textContent = isHidden ? '▶' : '▼';
+            }
         },
 
         deleteCraftingRecipe: (idx) => {
@@ -3857,6 +3895,8 @@
             const recipe = app.state.tempCraftingRecipes[recipeIdx];
             if (field === 'targetId') {
                 recipe.targetId = val;
+            } else if (field === 'category') {
+                recipe.category = val;
             } else if (field === 'matId') {
                 recipe.materials[matIdx].itemId = val;
             } else if (field === 'matCount') {
@@ -3869,6 +3909,8 @@
             const list = app.state.tempCraftingRecipes || [];
             const bmList = app.state.tempBlackMarketList || [];
             
+            if(!app.state.adminCraftingOpen) app.state.adminCraftingOpen = {};
+
             let optsHtml = '<option value="">--選擇道具--</option>';
             bmList.forEach((bm, i) => {
                 if (bm) {
@@ -3881,23 +3923,44 @@
             if (list.length === 0) {
                 html = '<div class="text-center text-gray-400 py-10 font-bold border-2 border-dashed border-slate-300 rounded-xl">尚未設定任何合成配方</div>';
             } else {
+                const grouped = {};
                 list.forEach((recipe, rIdx) => {
-                    let targetOpts = optsHtml.replace(`value="${recipe.targetId}"`, `value="${recipe.targetId}" selected`);
-                    
-                    let matsHtml = '';
-                    // [修復核心] 確保 materials 是陣列，防止舊資料造成的 .length 報錯
-                    const materials = recipe.materials || [];
-                    
-                    if (materials.length === 0) {
-                        matsHtml = '<div class="text-[0.65rem] text-red-500 font-bold mb-1">⚠️ 請至少新增一項材料</div>';
-                    } else {
-                        materials.forEach((mat, mIdx) => {
-                            let matOpts = optsHtml.replace(`value="${mat.itemId}"`, `value="${mat.itemId}" selected`);
-                            matsHtml += `<div class="flex items-center gap-2 mb-1"><span class="text-xs text-slate-500">➕ 材料:</span><select onchange="app.updateCraftingData(${rIdx}, 'matId', ${mIdx}, this.value)" class="flex-1 border rounded text-xs py-1 px-1 bg-white font-bold">${matOpts}</select><span class="text-xs text-slate-500">數量:</span><input type="number" min="1" value="${mat.count}" onchange="app.updateCraftingData(${rIdx}, 'matCount', ${mIdx}, this.value)" class="w-12 border rounded text-center text-xs font-bold py-1 bg-white"><button onclick="app.removeCraftingMaterial(${rIdx}, ${mIdx})" class="text-red-400 hover:text-red-600 font-bold px-1">✕</button></div>`;
-                        });
-                    }
+                    const cat = recipe.category || '未分類配方';
+                    if (!grouped[cat]) grouped[cat] = [];
+                    grouped[cat].push({ recipe, rIdx });
+                });
 
-                    html += `<div class="bg-white p-3 rounded-xl border-2 border-red-200 shadow-sm relative"><button onclick="app.deleteCraftingRecipe(${rIdx})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 bg-red-50 px-2 py-0.5 rounded text-xs font-bold">刪除配方</button><div class="mb-3 border-b border-slate-200 pb-2 w-5/6"><label class="block text-xs font-bold text-red-700 mb-1">🎁 合成目標產物</label><select onchange="app.updateCraftingData(${rIdx}, 'targetId', null, this.value)" class="w-full border-2 border-red-300 rounded p-1 text-sm font-black bg-red-50 text-red-900">${targetOpts}</select></div><div><div class="flex justify-between items-center mb-2"><label class="block text-xs font-bold text-slate-600">🛠️ 所需消耗材料 (自動包含烈焰熔爐)</label><button onclick="app.addCraftingMaterial(${rIdx})" class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[0.6rem] font-bold border border-green-300 hover:bg-green-200">+ 新增材料</button></div>${matsHtml}</div></div>`;
+                Object.keys(grouped).forEach(catName => {
+                    html += `<div class="mb-4 bg-slate-50 border-2 border-slate-300 rounded-xl overflow-hidden shadow-sm"><div class="bg-slate-200 px-4 py-2 font-black text-slate-800 border-b border-slate-300 flex items-center gap-2">📂 ${catName}</div><div class="p-3 space-y-3">`;
+                    
+                    grouped[catName].forEach(item => {
+                        const { recipe, rIdx } = item;
+                        let targetOpts = optsHtml.replace(`value="${recipe.targetId}"`, `value="${recipe.targetId}" selected`);
+                        
+                        const targetItem = bmList[recipe.targetId];
+                        const targetImg = targetItem ? (targetItem[`img${targetItem.currentEditLv||1}`] || targetItem.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png') : 'https://placehold.co/40x40?text=?';
+                        const targetName = targetItem ? targetItem.name : '未設定目標產物';
+                        
+                        let matsHtml = '';
+                        const materials = recipe.materials || [];
+                        if (materials.length === 0) {
+                            matsHtml = '<div class="text-[0.65rem] text-red-500 font-bold mb-1">⚠️ 請至少新增一項材料</div>';
+                        } else {
+                            materials.forEach((mat, mIdx) => {
+                                let matOpts = optsHtml.replace(`value="${mat.itemId}"`, `value="${mat.itemId}" selected`);
+                                const mItem = bmList[mat.itemId];
+                                const mImg = mItem ? (mItem[`img${mItem.currentEditLv||1}`] || mItem.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png') : 'https://placehold.co/30x30?text=?';
+                                matsHtml += `<div class="flex items-center gap-2 mb-1 bg-white p-1 rounded border shadow-sm"><img src="${mImg}" class="w-6 h-6 object-contain rounded border border-slate-200 shrink-0"><span class="text-xs text-slate-500 font-bold shrink-0">➕</span><select onchange="app.updateCraftingData(${rIdx}, 'matId', ${mIdx}, this.value); app.renderCraftingRecipesUI();" class="flex-1 border rounded text-xs py-1 px-1 bg-white font-bold w-full max-w-[120px] md:max-w-auto truncate">${matOpts}</select><span class="text-xs text-slate-500 font-bold ml-1 shrink-0">數量:</span><input type="number" min="1" value="${mat.count}" onchange="app.updateCraftingData(${rIdx}, 'matCount', ${mIdx}, this.value)" class="w-10 border rounded text-center text-xs font-bold py-1 bg-white shrink-0"><button onclick="app.removeCraftingMaterial(${rIdx}, ${mIdx})" class="text-red-400 hover:text-red-600 font-bold px-1 ml-auto shrink-0 transition-transform hover:scale-110">✕</button></div>`;
+                            });
+                        }
+
+                        const isOpen = app.state.adminCraftingOpen[rIdx];
+                        const bodyClass = isOpen ? 'flex' : 'hidden';
+                        const foldIcon = isOpen ? '▲' : '▼';
+
+                        html += `<div class="bg-white rounded-lg border border-red-200 shadow-sm relative flex flex-col mb-2"><div class="flex items-center justify-between p-2 bg-red-50 border-b border-red-100 cursor-pointer rounded-t-lg hover:bg-red-100 transition-colors" onclick="app.toggleAdminCraftingRecipe(${rIdx})"><div class="flex items-center gap-2"><span id="admin-craft-fold-icon-${rIdx}" class="text-red-500 font-bold text-xs w-4 text-center">${foldIcon}</span><div class="w-8 h-8 bg-white rounded border border-slate-300 overflow-hidden flex-shrink-0"><img src="${targetImg}" class="w-full h-full object-contain"></div><span class="font-bold text-slate-800 text-sm">${targetName}</span></div><button onclick="event.stopPropagation(); app.deleteCraftingRecipe(${rIdx})" class="text-red-500 hover:text-white hover:bg-red-500 bg-white border border-red-200 px-2 py-0.5 rounded text-xs font-bold transition-colors shadow-sm z-10">刪除配方</button></div><div id="admin-craft-recipe-body-${rIdx}" class="p-3 flex-col md:flex-row gap-4 ${bodyClass}"><div class="w-full md:w-5/12 flex flex-col gap-2 border-b md:border-b-0 md:border-r border-slate-200 pb-3 md:pb-0 pr-0 md:pr-4"><div><label class="block text-xs font-bold text-red-700 mb-1">🎁 合成目標產物</label><div class="flex items-center gap-2"><img src="${targetImg}" class="w-6 h-6 object-contain rounded bg-slate-100 border border-slate-300 shrink-0"><select onchange="app.updateCraftingData(${rIdx}, 'targetId', null, this.value); app.renderCraftingRecipesUI();" class="flex-1 border-2 border-red-300 rounded p-1 text-sm font-black bg-red-50 text-red-900">${targetOpts}</select></div></div><div><label class="block text-xs font-bold text-slate-600 mb-1 mt-1">🏷️ 分類群組名稱</label><input type="text" value="${recipe.category || ''}" onchange="app.updateCraftingData(${rIdx}, 'category', null, this.value); app.renderCraftingRecipesUI();" class="w-full border border-slate-300 rounded p-1 text-xs font-bold bg-white focus:bg-amber-50" placeholder="例如：聖光恩典系列"></div></div><div class="w-full md:w-7/12 flex flex-col"><div class="flex items-center justify-start gap-2 mb-2"><label class="block text-xs font-bold text-slate-600">🛠️ 所需消耗材料</label><button onclick="app.addCraftingMaterial(${rIdx})" class="bg-green-100 text-green-700 px-2 py-1 rounded text-[0.6rem] font-bold border border-green-300 hover:bg-green-200 transition-colors shadow-sm">+ 新增材料</button></div><div class="flex-1 overflow-y-auto max-h-[160px] custom-scrollbar pr-1">${matsHtml}</div></div></div></div>`;
+                    });
+                    html += `</div></div>`;
                 });
             }
             container.innerHTML = html;
@@ -4261,7 +4324,8 @@
         // --- [新增] 怪物技能管理邏輯 ---
         addNewMonsterSkill: () => {
             if (!app.state.tempMonsterSkills) app.state.tempMonsterSkills = [];
-            app.state.tempMonsterSkills.push({ name: '新技能', desc: '' });
+            // 預設給予 LV1 以及開啟「隨機挑選」
+            app.state.tempMonsterSkills.push({ name: '新技能', desc: '', lv: 1, isRandom: true });
             app.renderMonsterSkillsUI();
             setTimeout(() => {
                 const c = app.el('monster-skills-container');
@@ -4278,7 +4342,21 @@
 
         updateMonsterSkill: (idx, field, val) => {
             if (app.state.tempMonsterSkills && app.state.tempMonsterSkills[idx]) {
+                if (field === 'lv') val = parseInt(val) || 1;
                 app.state.tempMonsterSkills[idx][field] = val;
+                if (field === 'lv') app.renderMonsterSkillsUI(); // 切換 LV 時重新渲染分組
+            }
+        },
+        
+        toggleMonsterSkillCategory: (lv) => {
+            const target = document.getElementById(`monster-skill-cat-${lv}`);
+            const icon = document.getElementById(`monster-skill-icon-${lv}`);
+            if (target) {
+                target.classList.toggle('hidden');
+                const isHidden = target.classList.contains('hidden');
+                // 將狀態存入 localStorage，下次打開依舊保持
+                localStorage.setItem(`pharaoh_monster_skill_fold_${lv}`, isHidden ? 'true' : 'false');
+                if (icon) icon.textContent = isHidden ? '▶' : '▼';
             }
         },
 
@@ -4288,11 +4366,34 @@
             let html = '';
             
             if(list.length === 0){
-                html = '<div class="text-center text-gray-400 py-10 font-bold border-2 border-dashed border-stone-300 rounded-xl">尚未設定任何怪物技能</div>';
+                html = '<div class="text-center text-gray-400 py-10 font-bold border-2 border-dashed border-orange-300 rounded-xl">尚未設定任何怪物技能</div>';
             } else {
+                // 將技能依照 LV (1~5) 分組
+                const grouped = { 1: [], 2: [], 3: [], 4: [], 5: [] };
                 list.forEach((s, idx) => {
-                    // 左側名稱、右側說明的響應式排版 (使用無空白壓縮避免渲染異常)
-                    html += `<div class="flex flex-col md:flex-row gap-4 bg-white p-3 rounded-xl border-2 border-indigo-100 shadow-sm relative mb-3 hover:border-indigo-300 transition-colors"><button onclick="app.deleteMonsterSkill(${idx})" class="absolute -top-2 -right-2 bg-red-100 text-red-600 hover:bg-red-500 hover:text-white rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-md transition-colors z-10">✕</button><div class="w-full md:w-1/3"><label class="block text-xs font-bold text-indigo-500 mb-1">💡 技能名稱 (UI顯示用)</label><input type="text" onchange="app.updateMonsterSkill(${idx}, 'name', this.value)" value="${s.name}" class="w-full border-2 border-stone-200 rounded-lg p-2 font-bold text-stone-900 focus:border-indigo-400 outline-none" placeholder="例: 堅韌"></div><div class="w-full md:w-2/3"><label class="block text-xs font-bold text-indigo-500 mb-1">📝 技能說明 (GM備註/效果)</label><textarea onchange="app.updateMonsterSkill(${idx}, 'desc', this.value)" class="w-full border-2 border-stone-200 rounded-lg p-2 font-bold text-gray-700 text-sm resize-none h-16 focus:border-indigo-400 outline-none" placeholder="例: 怪物血量自動+30">${s.desc}</textarea></div></div>`;
+                    const lv = s.lv || 1;
+                    if (!grouped[lv]) grouped[lv] = [];
+                    grouped[lv].push({ skill: s, idx: idx });
+                });
+
+                Object.keys(grouped).forEach(lv => {
+                    const items = grouped[lv];
+                    if (items.length > 0) {
+                        const isHidden = localStorage.getItem(`pharaoh_monster_skill_fold_${lv}`) === 'true';
+                        const hiddenClass = isHidden ? 'hidden' : '';
+                        const foldIcon = isHidden ? '▶' : '▼';
+
+                        html += `<div class="mb-4 bg-orange-50 border-2 border-orange-200 rounded-xl overflow-hidden shadow-sm"><div onclick="app.toggleMonsterSkillCategory('${lv}')" class="bg-orange-200 px-4 py-2 font-black text-orange-900 border-b border-orange-300 flex justify-between items-center cursor-pointer hover:bg-orange-300 transition-colors"><span>🌟 LV.${lv} 技能區 (${items.length})</span><span id="monster-skill-icon-${lv}" class="text-orange-700 text-[0.6rem] transition-transform">${foldIcon}</span></div><div id="monster-skill-cat-${lv}" class="p-3 space-y-3 ${hiddenClass}">`;
+                        
+                        items.forEach(itemObj => {
+                            const { skill, idx } = itemObj;
+                            const isRandomChecked = skill.isRandom !== false ? 'checked' : ''; // 預設打開
+                            
+                            html += `<div class="flex flex-col md:flex-row gap-2 md:gap-4 bg-orange-100/50 p-3 rounded-xl border border-orange-200 shadow-sm relative hover:border-orange-400 transition-colors"><button onclick="app.deleteMonsterSkill(${idx})" class="absolute -top-2 -right-2 bg-red-100 text-red-600 hover:bg-red-500 hover:text-white rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-md transition-colors z-10">✕</button><div class="w-full md:w-1/3 flex flex-col gap-2"><div class="flex justify-between items-center bg-white px-2 py-1 rounded border border-orange-200"><span class="text-xs font-bold text-orange-800">🎲 隨機挑選</span><label class="switch scale-75 m-0"><input type="checkbox" onchange="app.updateMonsterSkill(${idx}, 'isRandom', this.checked)" ${isRandomChecked}><span class="slider"></span></label></div><div><label class="block text-[0.65rem] font-bold text-orange-800 mb-1">🌟 技能強度 (LV1~LV5)</label><select onchange="app.updateMonsterSkill(${idx}, 'lv', this.value)" class="w-full border-2 border-orange-200 rounded-lg p-1.5 font-bold text-stone-900 focus:border-orange-400 bg-white outline-none"><option value="1" ${skill.lv===1?'selected':''}>LV.1</option><option value="2" ${skill.lv===2?'selected':''}>LV.2</option><option value="3" ${skill.lv===3?'selected':''}>LV.3</option><option value="4" ${skill.lv===4?'selected':''}>LV.4</option><option value="5" ${skill.lv===5?'selected':''}>LV.5</option></select></div><div><label class="block text-[0.65rem] font-bold text-orange-800 mb-1">💡 技能名稱</label><input type="text" onchange="app.updateMonsterSkill(${idx}, 'name', this.value)" value="${skill.name}" class="w-full border-2 border-orange-200 rounded-lg p-1.5 font-bold text-stone-900 focus:border-orange-400 bg-white outline-none" placeholder="例: 堅韌"></div></div><div class="w-full md:w-2/3"><label class="block text-[0.65rem] font-bold text-orange-800 mb-1">📝 技能說明 (GM備註/效果)</label><textarea onchange="app.updateMonsterSkill(${idx}, 'desc', this.value)" class="w-full border-2 border-orange-200 rounded-lg p-2 font-bold text-gray-700 text-sm resize-none h-full min-h-[60px] focus:border-orange-400 bg-white outline-none" placeholder="例: 怪物血量自動+30">${skill.desc}</textarea></div></div>`;
+                        });
+
+                        html += `</div></div>`;
+                    }
                 });
             }
             container.innerHTML = html;
@@ -7320,9 +7421,10 @@ for (const slot of slots) {
                 
                 // 依據當前等級套用難度倍率
                 let multiplier = 1.0;
-                if (i >= 86) multiplier = 3.0;      // 86~99級：3倍
-                else if (i >= 76) multiplier = 2.5; // 76~85級：2.5倍
-                else if (i >= 66) multiplier = 2.0; // 66~75級：2倍
+                if (i >= 95) multiplier = 4.0;      // 86~99級：4.0倍
+				else if (i >= 86) multiplier = 3.0; // 86~94級：3.0倍
+                else if (i >= 76) multiplier = 2.5; // 76~93級：2.5倍
+                else if (i >= 66) multiplier = 2.0; // 66~75級：2.0倍
                 else if (i >= 56) multiplier = 1.5; // 56~65級：1.5倍
                 
                 total += gap * multiplier;
@@ -10219,15 +10321,35 @@ for (const slot of slots) {
                 return;
             }
 
-            let html = '';
+            const grouped = {};
             recipes.forEach((r, idx) => {
-                const targetItem = globalList[r.targetId];
-                if (targetItem) {
-                    const lv = targetItem.currentEditLv || 1;
-                    const img = targetItem[`img${lv}`] || targetItem.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-                    // [修改] 加上 LV 標示
-                    html += `<div onclick="app.selectCraftingRecipe(${idx})" class="flex items-center gap-2 p-2 rounded-lg bg-black/50 border border-slate-700 hover:border-amber-500 cursor-pointer transition-colors group"><img src="${img}" class="w-8 h-8 object-contain rounded bg-slate-800 p-0.5"><div class="font-bold text-amber-200 text-sm truncate group-hover:text-amber-400"><span class="text-xs text-slate-400 font-mono mr-1">LV${lv}</span>${targetItem.name}</div></div>`;
-                }
+                const cat = r.category || '未分類配方';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push({ recipe: r, idx });
+            });
+
+            let html = '';
+            Object.keys(grouped).forEach((catName, catIdx) => {
+                const catId = `cat_${catIdx}`;
+                // 從 localStorage 讀取玩家的折疊習慣
+                const isHidden = localStorage.getItem(`pharaoh_crafting_fold_${catId}`) === 'true';
+                const hiddenClass = isHidden ? 'hidden' : '';
+                const foldIcon = isHidden ? '▶' : '▼';
+
+                html += `<div onclick="app.togglePlayerCraftingCategory('${catId}')" class="mt-2 mb-1 px-2 py-1 bg-red-900/60 border-l-4 border-red-500 text-amber-100 text-xs font-black drop-shadow-md sticky top-0 z-10 cursor-pointer flex justify-between items-center hover:bg-red-800/80 transition-colors"><span>${catName}</span><span id="craft-icon-${catId}" class="text-red-300 text-[0.6rem] transition-transform">${foldIcon}</span></div><div id="craft-cat-${catId}" class="space-y-1 mb-3 ${hiddenClass}">`;
+                
+                grouped[catName].forEach(item => {
+                    const r = item.recipe;
+                    const idx = item.idx;
+                    const targetItem = globalList[r.targetId];
+                    if (targetItem) {
+                        const lv = targetItem.currentEditLv || 1;
+                        const img = targetItem[`img${lv}`] || targetItem.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+                        html += `<div onclick="app.selectCraftingRecipe(${idx})" class="flex items-center gap-2 p-1.5 mx-1 rounded-lg bg-black/40 border border-slate-700 hover:border-red-500 hover:bg-black/60 cursor-pointer transition-colors group shadow-sm"><img src="${img}" class="w-8 h-8 object-contain rounded bg-slate-800 p-0.5 border border-slate-600 group-hover:border-red-400 transition-colors"><div class="font-bold text-amber-200 text-[0.8rem] truncate group-hover:text-white transition-colors flex-1 flex flex-col leading-tight"><span class="truncate">${targetItem.name}</span><span class="text-[0.6rem] text-slate-400 font-mono">LV.${lv}</span></div><div class="text-slate-500 group-hover:text-red-400 text-xs mr-1">▶</div></div>`;
+                    }
+                });
+                
+                html += `</div>`;
             });
             listEl.innerHTML = html;
         },
