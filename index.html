@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.6.8 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.7.2 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -573,7 +573,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.6.8 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.2 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -1061,11 +1061,16 @@
 <div id="tab-content-monsters" class="admin-tab-content space-y-4">
                         
                         <div id="monster-list-view" class="block animate-[fadeIn_0.3s_ease-out]">
-                            <div class="flex justify-between items-center mb-4">
+                           <div class="flex justify-between items-center mb-4">
                                 <h4 class="font-bold text-stone-800 flex items-center gap-2 text-xl">👹 怪物圖鑑總表</h4>
-                                <button onclick="app.addNewMonster()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-green-700 active:scale-95 transition-transform flex items-center gap-2">
-                                    <span>➕</span> 新增怪物
-                                </button>
+                                <div class="flex gap-2">
+                                    <button onclick="app.switchMonsterView('skills')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-indigo-700 active:scale-95 transition-transform flex items-center gap-2">
+                                        <span>🌟</span> 怪物技能
+                                    </button>
+                                    <button onclick="app.addNewMonster()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-green-700 active:scale-95 transition-transform flex items-center gap-2">
+                                        <span>➕</span> 新增怪物
+                                    </button>
+                                </div>
                             </div>
                             
                             <div class="bg-stone-100 rounded-xl border border-stone-300 overflow-hidden">
@@ -1193,9 +1198,25 @@
                                         <button onclick="app.saveCurrentMonsterEdit()" class="w-full bg-amber-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg hover:bg-amber-700 active:scale-95 transition-all flex justify-center gap-2">
                                             <span>💾</span> 暫存此怪物設定
                                         </button>
-                                        <p class="text-xs text-center text-gray-400">點擊暫存後，記得在主畫面按下「儲存全域設定」</p>
+                                    <p class="text-xs text-center text-gray-400">點擊暫存後，記得在主畫面按下「儲存全域設定」</p>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- [新增] 怪物技能管理視圖 -->
+                        <div id="monster-skills-view" class="hidden animate-[fadeIn_0.3s_ease-out] flex-col h-full">
+                            <div class="flex justify-between items-center mb-4 bg-stone-100 p-3 rounded-xl border border-stone-200 shrink-0">
+                                <button onclick="app.switchMonsterView('list')" class="bg-gray-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-600 active:scale-95 transition-transform flex items-center gap-2">
+                                    <span>🔙</span> 返回列表
+                                </button>
+                                <h4 class="font-bold text-indigo-800 text-lg">🌟 怪物專屬技能庫</h4>
+                                <button onclick="app.addNewMonsterSkill()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-indigo-700 active:scale-95 transition-transform flex items-center gap-2">
+                                    <span>➕</span> 新增技能
+                                </button>
+                            </div>
+                            <div id="monster-skills-container" class="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-10">
+                                <!-- JS 動態生成技能列表 -->
                             </div>
                         </div>
 
@@ -2743,9 +2764,16 @@
                              // 同步更新本地儲存，避免下次又不一致
                              localStorage.setItem('pharaoh_player_name', roomData.hostName);
                         } else {
-                             // 一般學生則使用紀錄的名字
-                             app.state.myName = savedMyName;
-                             app.state.isHost = false;
+                             // [修復] 即使本地紀錄被洗掉，只要名字與房主相同，仍強制還原隊長身分
+                             if (roomData.hostName === savedMyName) {
+                                 app.state.myName = roomData.hostName;
+                                 app.state.isHost = true;
+                                 localStorage.setItem('pharaoh_is_host', 'true');
+                             } else {
+                                 // 一般學生則使用紀錄的名字
+                                 app.state.myName = savedMyName;
+                                 app.state.isHost = false;
+                             }
                         }
 
                         app.state.classId = savedRoomId;
@@ -3194,17 +3222,20 @@
                     }
                 }
 
+                // [新增] 判斷是否為房主回歸 (根據名字比對)
+                const isHostStatus = (roomData.hostName === name);
+
                 // 驗證通過，寫入本地記憶
                 localStorage.setItem('pharaoh_player_name', name);
                 localStorage.setItem('pharaoh_current_room_id', roomId);
-                localStorage.setItem('pharaoh_is_host', 'false');
+                localStorage.setItem('pharaoh_is_host', isHostStatus ? 'true' : 'false');
                 localStorage.setItem('pharaoh_role', 'student');
 
                 app.state.myName = name;
                 app.state.classId = roomId;
                 app.state.role = 'student';
-                app.state.isHost = false; 
-                app.state.myTeam = 'team1'; 
+                app.state.isHost = isHostStatus; 
+                app.state.myTeam = 'team1';
 
                 const playerRef = db.ref(`classes/${roomId}/players/team1/${name}`);
                 playerRef.once('value', sn => {
@@ -4084,13 +4115,21 @@
 	   // --- v4.2.2 怪物列表管理系統 ---
         // 切換列表/編輯視圖
         switchMonsterView: (view) => {
+            // 先隱藏所有視圖
+            app.el('monster-list-view').classList.add('hidden');
+            app.el('monster-editor-view').classList.add('hidden');
+            if(app.el('monster-skills-view')) app.el('monster-skills-view').classList.add('hidden');
+            if(app.el('monster-skills-view')) app.el('monster-skills-view').classList.remove('flex');
+
             if (view === 'list') {
                 app.el('monster-list-view').classList.remove('hidden');
-                app.el('monster-editor-view').classList.add('hidden');
-                app.renderMonsterListUI(); // 重新渲染列表以更新數據
-            } else {
-                app.el('monster-list-view').classList.add('hidden');
+                app.renderMonsterListUI(); 
+            } else if (view === 'editor') {
                 app.el('monster-editor-view').classList.remove('hidden');
+            } else if (view === 'skills') {
+                app.el('monster-skills-view').classList.remove('hidden');
+                app.el('monster-skills-view').classList.add('flex');
+                app.renderMonsterSkillsUI(); // 渲染技能列表
             }
         },
 
@@ -4210,7 +4249,7 @@
             app.switchMonsterView('list');
         },
 
-        // 刪除當前編輯的怪物
+       // 刪除當前編輯的怪物
         deleteCurrentMonster: () => {
             const idx = parseInt(app.el('edit-monster-index').value);
             if (confirm('🗑️ 確定要刪除這隻怪物嗎？')) {
@@ -4218,6 +4257,48 @@
                 app.switchMonsterView('list');
             }
         },
+
+        // --- [新增] 怪物技能管理邏輯 ---
+        addNewMonsterSkill: () => {
+            if (!app.state.tempMonsterSkills) app.state.tempMonsterSkills = [];
+            app.state.tempMonsterSkills.push({ name: '新技能', desc: '' });
+            app.renderMonsterSkillsUI();
+            setTimeout(() => {
+                const c = app.el('monster-skills-container');
+                if(c) c.scrollTop = c.scrollHeight;
+            }, 100);
+        },
+
+        deleteMonsterSkill: (idx) => {
+            if (confirm('🗑️ 確定要刪除此技能嗎？刪除後請記得點擊最下方的儲存。')) {
+                app.state.tempMonsterSkills.splice(idx, 1);
+                app.renderMonsterSkillsUI();
+            }
+        },
+
+        updateMonsterSkill: (idx, field, val) => {
+            if (app.state.tempMonsterSkills && app.state.tempMonsterSkills[idx]) {
+                app.state.tempMonsterSkills[idx][field] = val;
+            }
+        },
+
+        renderMonsterSkillsUI: () => {
+            const container = app.el('monster-skills-container');
+            const list = app.state.tempMonsterSkills || [];
+            let html = '';
+            
+            if(list.length === 0){
+                html = '<div class="text-center text-gray-400 py-10 font-bold border-2 border-dashed border-stone-300 rounded-xl">尚未設定任何怪物技能</div>';
+            } else {
+                list.forEach((s, idx) => {
+                    // 左側名稱、右側說明的響應式排版 (使用無空白壓縮避免渲染異常)
+                    html += `<div class="flex flex-col md:flex-row gap-4 bg-white p-3 rounded-xl border-2 border-indigo-100 shadow-sm relative mb-3 hover:border-indigo-300 transition-colors"><button onclick="app.deleteMonsterSkill(${idx})" class="absolute -top-2 -right-2 bg-red-100 text-red-600 hover:bg-red-500 hover:text-white rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-md transition-colors z-10">✕</button><div class="w-full md:w-1/3"><label class="block text-xs font-bold text-indigo-500 mb-1">💡 技能名稱 (UI顯示用)</label><input type="text" onchange="app.updateMonsterSkill(${idx}, 'name', this.value)" value="${s.name}" class="w-full border-2 border-stone-200 rounded-lg p-2 font-bold text-stone-900 focus:border-indigo-400 outline-none" placeholder="例: 堅韌"></div><div class="w-full md:w-2/3"><label class="block text-xs font-bold text-indigo-500 mb-1">📝 技能說明 (GM備註/效果)</label><textarea onchange="app.updateMonsterSkill(${idx}, 'desc', this.value)" class="w-full border-2 border-stone-200 rounded-lg p-2 font-bold text-gray-700 text-sm resize-none h-16 focus:border-indigo-400 outline-none" placeholder="例: 怪物血量自動+30">${s.desc}</textarea></div></div>`;
+                });
+            }
+            container.innerHTML = html;
+        },
+        // --- 怪物技能管理邏輯結束 ---
+
         fetchGlobalSettingsToUI: () => {
             db.ref('global_settings').once('value', snapshot => {
                 const settings = snapshot.val() || {};
@@ -4278,7 +4359,8 @@
                 } else {
                     app.state.tempMonsterList = [];
                 }
-                
+                   // [新增] 讀取怪物技能設定
+                app.state.tempMonsterSkills = settings.monsterSkills || [];
 			// [v4.7.6.0] 讀取黑市設定
             app.state.tempBlackMarketList = settings.blackMarketList || [];
             // [新增] 讀取合成配方
@@ -4381,8 +4463,10 @@
                         gold: parseInt(app.el('cfg-adv-gold').value)||0, exp: parseInt(app.el('cfg-adv-exp').value)||0
                     }
                 },
-                // v4.2.2 儲存怪物列表
+               // v4.2.2 儲存怪物列表
                 monsterList: app.state.tempMonsterList || [],
+                // [新增] 儲存怪物技能
+                monsterSkills: app.state.tempMonsterSkills || [],
                 // [v4.6.8] 儲存商店設定
                 shopConfig: shopConfig,
                 // [v4.7.6.0] 儲存黑市商品列表
@@ -9103,11 +9187,18 @@ for (const slot of slots) {
                         const item = globalList[itemId];
                         if (item) {
                             const targetLv = item.currentEditLv || 1;
+                            const maxLv = item.maxLv || 1;
                             const img = item[`img${targetLv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-                            equipHtml += `<div class="w-6 h-6 bg-slate-800 rounded border border-amber-500/50 overflow-hidden shadow-sm flex items-center justify-center hover:scale-110 transition-transform cursor-help" title="${item.name}"><img src="${img}" class="w-full h-full object-contain p-0.5"></div>`;
+                            
+                            // [新增設計] 判斷若該裝備有升級空間(maxLv > 1)，則顯示 LV 標籤
+                            const lvTag = maxLv > 1 ? `<span class="absolute -bottom-1 -right-1 bg-black/90 text-amber-300 text-[0.45rem] px-0.5 rounded border border-amber-500/80 shadow-md font-bold leading-none z-10">LV${targetLv}</span>` : '';
+                            
+                            // [UI優化] 移除 overflow-hidden 改用 relative，加大為 w-7 h-7，增加 hover:z-20 防止放大被遮擋，嚴格遵守無空白字串
+                            equipHtml += `<div class="relative w-7 h-7 bg-slate-800 rounded border border-amber-500/50 shadow-sm flex items-center justify-center hover:scale-125 hover:z-20 transition-all cursor-help" title="${item.name} (LV${targetLv})"><img src="${img}" class="w-full h-full object-contain p-0.5 rounded">${lvTag}</div>`;
                         }
                     });
-                    equipHtml = `<div class="flex gap-1 ml-1 mt-1">${equipHtml}</div>`;
+                    // [防破版優化] 加上 flex-wrap 並微調 gap，避免神裝太多時版面撐破
+                    equipHtml = `<div class="flex flex-wrap gap-1.5 ml-1 mt-1">${equipHtml}</div>`;
                 } else {
                     equipHtml = `<div class="mt-1 ml-1 text-[0.55rem] text-slate-400 border border-dashed border-slate-300 px-1.5 py-0.5 rounded inline-block bg-white/50">尚未裝備神物</div>`;
                 }
@@ -9666,7 +9757,7 @@ for (const slot of slots) {
             }, speed);
         },
 // --- [新增 v4.7.8.6] 裝備效果計算輔助函數 ---
-        // 1. 計算進入遊戲時的初始道具 (法老王的護符、聖甲蟲徽章、草木精華)
+       // 1. 計算進入遊戲時的初始道具 (法老王的護符、聖甲蟲徽章、草木精華、聖光恩典)
         calculateEquippedStartItems: (equippedMap) => {
             // [v4.7.8.7] 擴充補血道具欄位
             const items = { hint: 0, double: 0, herb: 0, potion: 0, elixir: 0 }; 
@@ -9687,19 +9778,31 @@ for (const slot of slots) {
                         if (item.name.includes('聖甲蟲徽章')) {
                             items.double += lv;
                         }
-                        // 效果3: [v4.7.8.7] 草木精華 (依等級給予不同補血道具)
+                        // 效果3: 草木精華 (依等級給予不同補血道具)
                         if (item.name.includes('草木精華')) {
                             if (lv === 1) items.herb += 2;        // Lv1: 草藥
                             else if (lv === 2) items.potion += 2; // Lv2: 治療劑
-                            else if (lv == 3) items.elixir += 2;  // Lv3+: 補血瓶*2
-							else if (lv == 4) items.elixir += 4;  // LV4+: 補血瓶*4
-							else if (lv >= 5) items.elixir += 5;  // Lv5+: 補血瓶*5
+                            else if (lv === 3) items.elixir += 2; // Lv3+: 補血瓶*2
+                            else if (lv === 4) items.elixir += 4; // LV4+: 補血瓶*4
+                            else if (lv >= 5) items.elixir += 5;  // Lv5+: 補血瓶*5
                         }
-						// 效果4: 聖光恩典 (獲得3個法老王提示，3個聖甲蟲徽章，2個補血瓶)
+                        // 效果4: 聖光恩典系列 (依等級給予不同數量的提示、聖甲蟲、補血瓶)
                         if (item.name.includes('聖光恩典')) {
-                            items.hint += 3;
-                            items.double += 3;
-                            items.elixir += 2;
+                            if (lv === 1) {
+                                items.hint += 3;
+                                items.double += 3;
+                                items.elixir += 2;
+                            } else if (lv === 2) {
+                                // LV2: 獲得4個法老王提示，4個聖甲蟲徽章，3個補血瓶
+                                items.hint += 4;
+                                items.double += 4;
+                                items.elixir += 3;
+                            } else if (lv >= 3) {
+                                // LV3+: 獲得5個法老王提示，5個聖甲蟲徽章，4個補血瓶
+                                items.hint += 5;
+                                items.double += 5;
+                                items.elixir += 4;
+                            }
                         }
                     }
                 });
