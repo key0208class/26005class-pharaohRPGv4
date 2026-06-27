@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.7.5.3 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.7.7 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -560,11 +560,60 @@
         /* ====== 單筆聊天/戰鬥訊息出現時的特效 ====== */
         
         .log-entry { 
-            /* 【可修改】新訊息出現時的動畫速度。
-               0.3s 代表淡入時間，改為 1s 會變很慢浮現；若整行刪除則訊息會瞬間生硬地跳出來。*/
             animation: fadeIn 0.3s ease-out; 
         }
-</style>  
+
+        /* ====== [新增] 怪物技能專屬疊加特效 ====== */
+        /* LV1: 底部火焰地環 (上下浮動呼吸) */
+        @keyframes skill-fire-ring {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.85; filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5)); }
+            50% { transform: translateY(-4px) scale(1.05); opacity: 1; filter: drop-shadow(0 0 15px rgba(239, 68, 68, 1)); }
+        }
+        .skill-vfx-lv1 { animation: skill-fire-ring 2.5s ease-in-out infinite; mix-blend-mode: screen; }
+
+        /* LV2: 藍光背景特效 (背景粒子放大閃爍) */
+        @keyframes skill-blue-aura {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.5; filter: hue-rotate(0deg); }
+            50% { transform: scale(1.15) rotate(3deg); opacity: 0.9; filter: hue-rotate(15deg); }
+        }
+        .skill-vfx-lv2 { animation: skill-blue-aura 3s ease-in-out infinite; mix-blend-mode: screen; }
+
+        /* LV3: 全身火焰圈 (前方環繞) */
+        @keyframes skill-fire-circle {
+            0%, 100% { transform: scale(1.05); opacity: 0.85; filter: brightness(1); }
+            50% { transform: scale(1.15); opacity: 1; filter: brightness(1.4); }
+        }
+        .skill-vfx-lv3-circle { animation: skill-fire-circle 1.5s ease-in-out infinite; mix-blend-mode: screen; }
+
+        /* LV3: 淡淡黃光閃現特效 (隱約背景發光) */
+        @keyframes skill-yellow-burst {
+            0%, 100% { transform: scale(1); opacity: 0.1; filter: drop-shadow(0 0 5px rgba(255, 255, 0, 0.2)) brightness(1); }
+            50% { transform: scale(1.05); opacity: 0.4; filter: drop-shadow(0 0 15px rgba(255, 255, 0, 0.4)) brightness(1.1); }
+        }
+        .skill-vfx-lv3-burst { animation: skill-yellow-burst 4s ease-in-out infinite; mix-blend-mode: screen; }
+
+        /* ====== [新增] 怪物技能狀態標籤呼吸特效 ====== */
+        /* LV1: 淡紅色 呼吸發亮 */
+        @keyframes skill-tag-glow-lv1 {
+            0%, 100% { box-shadow: 0 0 5px rgba(252, 165, 165, 0.4); transform: scale(1); }
+            50% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.8); transform: scale(1.05); }
+        }
+        .skill-tag-lv1 { animation: skill-tag-glow-lv1 2s ease-in-out infinite; background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+        /* LV2: 淡藍色 呼吸發亮 */
+        @keyframes skill-tag-glow-lv2 {
+            0%, 100% { box-shadow: 0 0 5px rgba(186, 230, 253, 0.4); transform: scale(1); }
+            50% { box-shadow: 0 0 12px rgba(56, 189, 248, 0.8); transform: scale(1.05); }
+        }
+        .skill-tag-lv2 { animation: skill-tag-glow-lv2 2s ease-in-out infinite; background-color: #e0f2fe; color: #075985; border: 1px solid #7dd3fc; }
+
+        /* LV3: 橘黃邊框/黃底亮紅字 呼吸發亮 */
+        @keyframes skill-tag-glow-lv3 {
+            0%, 100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.5), inset 0 0 5px rgba(245, 158, 11, 0.4); transform: scale(1); filter: brightness(1); }
+            50% { box-shadow: 0 0 15px rgba(239, 68, 68, 1), inset 0 0 12px rgba(245, 158, 11, 0.8); transform: scale(1.08); filter: brightness(1.1); }
+        }
+        .skill-tag-lv3 { animation: skill-tag-glow-lv3 1.5s ease-in-out infinite; background-color: #fef08a; color: #dc2626; border: 2px solid #f59e0b; text-shadow: 0 0 5px rgba(220, 38, 38, 0.8); font-weight: 900; }
+</style>
 	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -573,7 +622,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.5.3 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.7 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -4285,13 +4334,12 @@
             }
         },
 
-// 渲染怪物列表 (生成無空白 HTML)
+// 渲染怪物列表 (生成無空白 HTML，並自動依據卡背等級分組排序)
         renderMonsterListUI: () => {
             const list = app.state.tempMonsterList || [];
             const container = app.el('monster-list-container');
             let html = '';
 
-            // 定義卡背圖片對照表
             const cardBacks = {
                 1: 'https://class.kh.edu.tw/sites/30033/upload_file/6/BK8K9kH.jpg',
                 2: 'https://class.kh.edu.tw/sites/30033/upload_file/6/jZAPi9w.jpg',
@@ -4305,34 +4353,131 @@
             if (list.length === 0) {
                 html = '<div class="p-8 text-center text-gray-400 font-bold">尚無怪物資料，請點擊右上方「新增怪物」</div>';
             } else {
-                list.forEach((m, idx) => {
-                    const img = m.img1 || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png'; // 預設圖
-                    const cbUrl = cardBacks[m.cardBack || 1] || cardBacks[1]; // 取得卡背圖，預設1
+                // 1. 附加真實索引並確認 sortOrder 存在
+                let activeItems = list.map((item, idx) => ({ item, idx }));
+                activeItems.forEach((x, i) => { if (x.item.sortOrder === undefined) x.item.sortOrder = i * 10; });
+                
+                // 2. 雙重排序：優先依據卡背(cardBack)分組，群組內再依據 sortOrder 排序
+                activeItems.sort((a, b) => {
+                    const cbA = parseInt(a.item.cardBack) || 1;
+                    const cbB = parseInt(b.item.cardBack) || 1;
+                    if (cbA !== cbB) return cbA - cbB;
+                    return a.item.sortOrder - b.item.sortOrder;
+                });
+
+                let currentLevel = -1;
+                let levelCount = 0;
+
+                activeItems.forEach((wrapped) => {
+                    const item = wrapped.item;
+                    const idx = wrapped.idx; // 原始真實陣列的 index
                     
-                    // [v4.6.3] 表格列 HTML (使用壓縮寫法避免空白節點)
-                    // 調整欄位: Name(3), Card(1), HP(1), ATK(1), EXP(1), Gold(1), Action(2)
-                    html += `<div class="grid grid-cols-12 gap-2 p-2 border-b border-stone-200 items-center text-center hover:bg-stone-50 transition-colors group"><div class="col-span-1 flex justify-center"><img src="${img}" class="w-8 h-8 object-cover rounded bg-gray-200 border border-gray-300"></div><div class="col-span-1 font-mono text-xs text-gray-400">#${idx + 1}</div><div onclick="app.editMonsterDetail(${idx})" class="col-span-3 text-left pl-2 font-bold text-stone-800 cursor-pointer hover:text-amber-600 hover:underline flex items-center gap-1 truncate" title="${m.name}"><span>${m.name}</span><span class="text-[0.6rem] text-gray-400 group-hover:inline hidden">✏️</span></div><div class="col-span-1 flex justify-center"><img src="${cbUrl}" class="w-6 h-9 object-cover rounded border border-gray-300 shadow-sm" title="強度: ${m.cardBack||1}"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'hp', this.value)" value="${m.hp}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-red-700 bg-white focus:bg-amber-50"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'atk', this.value)" value="${m.atk}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-orange-700 bg-white focus:bg-amber-50"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'exp', this.value)" value="${m.exp||0}" class="w-full border border-purple-300 rounded px-1 text-center text-sm font-bold text-purple-700 bg-white focus:bg-amber-50"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'gold', this.value)" value="${m.gold}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-yellow-700 bg-white focus:bg-amber-50"></div><div class="col-span-2 flex justify-center gap-2"><button onclick="app.editMonsterDetail(${idx})" class="bg-slate-100 text-slate-600 px-3 py-1 rounded text-xs font-bold hover:bg-amber-100 hover:text-amber-700 transition-colors border border-slate-200">詳細設定</button></div></div>`;
+                    const cb = parseInt(item.cardBack) || 1;
+                    
+                    // 偵測到新的卡背等級，插入分類標題
+                    if (cb !== currentLevel) {
+                        currentLevel = cb;
+                        levelCount = 1;
+                        // 群組標題橫幅
+                        html += `<div class="col-span-12 bg-stone-300 text-stone-800 font-black text-sm py-1.5 border-y-2 border-stone-400 shadow-sm flex items-center justify-center gap-2 mt-2"><span class="text-lg leading-none filter drop-shadow-sm">🌟</span> <span class="tracking-widest">強度 LV.${cb} 專區</span> <span class="text-[0.6rem] font-bold bg-stone-100/80 px-2 py-0.5 rounded border border-stone-400 ml-2">同級內可上下排序</span></div>`;
+                    } else {
+                        levelCount++;
+                    }
+
+                    const displayPos = levelCount; // 在該等級區塊內的排名
+
+                    const img = item.img1 || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
+                    const cbUrl = cardBacks[cb] || cardBacks[1];
+                    
+                    // HTML 結構，加入 P.X 按鈕與上下移
+                    html += `<div class="grid grid-cols-12 gap-2 p-2 border-b border-stone-200 items-center text-center hover:bg-stone-50 transition-colors group"><div class="col-span-1 flex justify-center"><img src="${img}" class="w-8 h-8 object-cover rounded bg-gray-200 border border-gray-300"></div><div class="col-span-1 flex flex-col items-center justify-center gap-0.5"><button onclick="app.moveMonsterItem(${idx}, -1)" class="text-stone-300 hover:text-amber-600 text-[0.65rem] font-black leading-none" title="往上移">▲</button><button onclick="app.jumpMonsterItem(${idx})" class="font-mono text-[0.55rem] text-stone-600 font-black leading-none border border-stone-300 bg-stone-100 px-1 py-0.5 rounded shadow-sm hover:bg-stone-200 transition-colors" title="快速移動">P.${displayPos}</button><button onclick="app.moveMonsterItem(${idx}, 1)" class="text-stone-300 hover:text-amber-600 text-[0.65rem] font-black leading-none" title="往下移">▼</button></div><div onclick="app.editMonsterDetail(${idx})" class="col-span-3 text-left pl-2 font-bold text-stone-800 cursor-pointer hover:text-amber-600 hover:underline flex items-center gap-1 truncate" title="${item.name}"><span>${item.name}</span><span class="text-[0.6rem] text-gray-400 group-hover:inline hidden">✏️</span></div><div class="col-span-1 flex justify-center"><img src="${cbUrl}" class="w-6 h-9 object-cover rounded border border-gray-300 shadow-sm" title="強度: ${cb}"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'hp', this.value)" value="${item.hp}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-red-700 bg-white focus:bg-amber-50"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'atk', this.value)" value="${item.atk}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-orange-700 bg-white focus:bg-amber-50"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'exp', this.value)" value="${item.exp||0}" class="w-full border border-purple-300 rounded px-1 text-center text-sm font-bold text-purple-700 bg-white focus:bg-amber-50"></div><div class="col-span-1"><input type="number" onchange="app.updateMonsterDirect(${idx}, 'gold', this.value)" value="${item.gold}" class="w-full border border-stone-300 rounded px-1 text-center text-sm font-bold text-yellow-700 bg-white focus:bg-amber-50"></div><div class="col-span-2 flex justify-center gap-2"><button onclick="app.editMonsterDetail(${idx})" class="bg-slate-100 text-slate-600 px-3 py-1 rounded text-xs font-bold hover:bg-amber-100 hover:text-amber-700 transition-colors border border-slate-200">詳細設定</button></div></div>`;
                 });
             }
             container.innerHTML = html;
         },
 
+        moveMonsterItem: (originalIndex, direction) => {
+            const list = app.state.tempMonsterList;
+            if (!list || !list[originalIndex]) return;
+            
+            const targetCardBack = parseInt(list[originalIndex].cardBack) || 1;
+            
+            // 找出同一強度群組的怪物
+            let tierItems = list.map((item, idx) => ({ item, idx }))
+                                .filter(x => (parseInt(x.item.cardBack) || 1) === targetCardBack);
+                                
+            tierItems.forEach((x, i) => { if (x.item.sortOrder === undefined) x.item.sortOrder = i * 10; });
+            tierItems.sort((a, b) => a.item.sortOrder - b.item.sortOrder);
+
+            const currentIndex = tierItems.findIndex(x => x.idx === originalIndex);
+            if (currentIndex === -1) return;
+
+            const targetIndex = currentIndex + direction;
+            if (targetIndex < 0 || targetIndex >= tierItems.length) return; 
+
+            // 交換同群組內的 sortOrder
+            const tempOrder = tierItems[currentIndex].item.sortOrder;
+            tierItems[currentIndex].item.sortOrder = tierItems[targetIndex].item.sortOrder;
+            tierItems[targetIndex].item.sortOrder = tempOrder;
+
+            app.renderMonsterListUI();
+            app.toast('↕️ 怪物排序已調整 (請記得儲存全域設定)', 1);
+        },
+
+        jumpMonsterItem: (originalIndex) => {
+            const list = app.state.tempMonsterList;
+            if (!list || !list[originalIndex]) return;
+            
+            const targetCardBack = parseInt(list[originalIndex].cardBack) || 1;
+            
+            // 找出同一強度群組的怪物
+            let tierItems = list.map((item, idx) => ({ item, idx }))
+                                .filter(x => (parseInt(x.item.cardBack) || 1) === targetCardBack);
+                                
+            tierItems.forEach((x, i) => { if (x.item.sortOrder === undefined) x.item.sortOrder = i * 10; });
+            tierItems.sort((a, b) => a.item.sortOrder - b.item.sortOrder);
+
+            const currentPos = tierItems.findIndex(x => x.idx === originalIndex) + 1;
+            const maxPos = tierItems.length;
+
+            const input = prompt(`📍 快速跳躍排序 (強度 LV.${targetCardBack} 區塊)：\n請輸入目標位置 (1 ~ ${maxPos})\n目前位置：${currentPos}`, currentPos);
+            if (input === null) return; 
+
+            const targetPos = parseInt(input);
+            if (isNaN(targetPos) || targetPos < 1 || targetPos > maxPos) {
+                return app.toast('❌ 請輸入有效的數字範圍！', 1);
+            }
+
+            if (targetPos === currentPos) return; 
+
+            // 在群組內抽出並插入新位置
+            const targetItem = tierItems.splice(currentPos - 1, 1)[0];
+            tierItems.splice(targetPos - 1, 0, targetItem);
+
+            // 重新分配該層級的 sortOrder，確保數字乾淨
+            tierItems.forEach((x, i) => {
+                x.item.sortOrder = (i + 1) * 10;
+            });
+
+            app.renderMonsterListUI();
+            app.toast(`✈️ 怪物已移動至該區塊第 ${targetPos} 位 (請記得儲存全域設定)`, 1);
+        },
+
         // 新增一隻預設怪物
         addNewMonster: () => {
             if (!app.state.tempMonsterList) app.state.tempMonsterList = [];
-            // [v4.6.3] 新增 exp 預設值
             app.state.tempMonsterList.push({
                 name: '新怪物',
                 hp: 100, maxHp: 100, atk: 1, exp: 10, gold: 50,
-                cardBack: 1, // 預設黃土卡
+                cardBack: 1, 
+                sortOrder: Date.now(), // 給予預設權重排到最後
                 mode1: false, mode2: false, mode3: false, mode4: 0, mode5: '',
                 img1: '', img2: '', img3: ''
             });
             app.renderMonsterListUI();
-            // 自動捲動到底部
             setTimeout(() => {
                 const c = app.el('monster-list-container');
-                c.scrollTop = c.scrollHeight;
+                if(c) c.scrollTop = c.scrollHeight;
             }, 100);
         },
 
@@ -4354,7 +4499,7 @@
             app.el('edit-monster-cardback').value = m.cardBack || 1; // 載入卡背設定
             app.el('edit-monster-hp').value = m.hp;
             app.el('edit-monster-atk').value = m.atk;
-            app.el('edit-monster-exp').value = m.exp || 0; // [v4.6.3] 載入經驗值
+            app.el('edit-monster-exp').value = m.exp || 0; 
             app.el('edit-monster-gold').value = m.gold;
             
             app.el('edit-monster-mode-1').checked = m.mode1 || false;
@@ -4367,7 +4512,6 @@
             app.el('edit-monster-img-2').value = m.img2 || '';
             app.el('edit-monster-img-3').value = m.img3 || '';
             
-            // 更新預覽圖
             app.el('edit-monster-preview-img').src = m.img1 || '';
 
             app.switchMonsterView('editor');
@@ -4384,7 +4528,7 @@
             m.hp = parseInt(app.el('edit-monster-hp').value) || 100;
             m.maxHp = m.hp;
             m.atk = parseInt(app.el('edit-monster-atk').value) || 10;
-            m.exp = parseInt(app.el('edit-monster-exp').value) || 0; // [v4.6.3] 儲存經驗值
+            m.exp = parseInt(app.el('edit-monster-exp').value) || 0; 
             m.gold = parseInt(app.el('edit-monster-gold').value) || 10;
             
             m.mode1 = app.el('edit-monster-mode-1').checked;
@@ -4510,10 +4654,11 @@
 
                         const getOpts = (selectedVal) => {
                             let opts = '<option value="">-- 無 --</option>';
-                            list.forEach((s, i) => {
-                                if (i === idx) return; // 不可選自己
-                                const selected = String(i) === String(selectedVal) ? 'selected' : '';
-                                opts += `<option value="${i}" ${selected}>[LV.${s.lv||1}] ${s.name||`技能${i+1}`}</option>`;
+                            let sortedList = list.map((s, i) => ({ s, i })).sort((a, b) => (a.s.lv || 1) - (b.s.lv || 1));
+                            sortedList.forEach(item => {
+                                if (item.i === idx) return; // 不可選自己
+                                const selected = String(item.i) === String(selectedVal) ? 'selected' : '';
+                                opts += `<option value="${item.i}" ${selected}>[LV.${item.s.lv||1}] ${item.s.name||`技能${item.i+1}`}</option>`;
                             });
                             return opts;
                         };
@@ -7688,7 +7833,22 @@ for (const slot of slots) {
             if (remoteMonster.mode4 && remoteMonster.mode4 > 0) statusHtml += `<span onclick="app.toast('🔥 [暴走]：每隔 ${remoteMonster.mode4} 回合，怪物會無條件發動攻擊。', 1)" class="cursor-pointer bg-purple-700 text-white px-1 rounded hover:bg-purple-600">[暴走]</span>`;
             // Mode 5: 禁用
             if (remoteMonster.mode5) statusHtml += `<span onclick="app.toast('🚫 [法則封印]：本場戰鬥禁止使用「${remoteMonster.mode5}」符號。', 1)" class="cursor-pointer bg-black text-yellow-400 px-1 rounded hover:bg-gray-800 border border-yellow-500">[禁${remoteMonster.mode5}]</span>`;
+// 戰役附加技能 (安全過濾：將引號轉為全形、換行轉為空白，防止 onclick 語法錯誤)
+            if (remoteMonster.campaignSkills && remoteMonster.campaignSkills.length > 0) {
+                remoteMonster.campaignSkills.forEach(sk => {
+                    const safeName = (sk.name || '').replace(/'/g, '’').replace(/"/g, '”').replace(/[\r\n]+/g, ' ');
+                    const safeDesc = (sk.desc || '').replace(/'/g, '’').replace(/"/g, '”').replace(/[\r\n]+/g, ' ');
+                    
+                    // 根據技能等級套用專屬樣式
+                    let skillClass = "bg-fuchsia-700 text-white border-fuchsia-400"; // 預設樣式
+                    if (sk.lv === 1) skillClass = "skill-tag-lv1";
+                    else if (sk.lv === 2) skillClass = "skill-tag-lv2";
+                    else if (sk.lv >= 3) skillClass = "skill-tag-lv3 z-20"; // LV3 額外提高層級，放大時不會被蓋住
 
+                    // HTML 嚴格無空白壓縮，並在吐司提示加入 LV 顯示
+                    statusHtml += `<span onclick="app.toast('✨ [${safeName} (LV${sk.lv || 1})]：${safeDesc}', 1)" class="cursor-pointer px-1.5 rounded transition-all shadow-sm ${skillClass}">[${safeName}]</span>`;
+                });
+            }
             // 1. 如果卡片已存在且是同一隻 -> 執行更新與特效檢查 (效能優化區)
             if (existingCard && isSameMonster) {
                 // 更新血條與攻擊力
@@ -7788,19 +7948,33 @@ for (const slot of slots) {
                 </div>`;
             }
 
-          // [新增] 怪物攻擊力與降攻標籤 (微調縮小版)
+          // [新增] 怪物攻擊力與降攻標籤 (微調縮小版，並提升 z-index 確保不被特效擋住)
             const rawAtk = remoteMonster.atk || 10;
             const atkReduction = remoteMonster.atkReduction || 0;
             const finalAtk = Math.max(5, rawAtk - atkReduction);
-            const atkBadgeHtml = `<div class="absolute bottom-1 right-1 bg-red-900/90 text-red-100 text-[0.65rem] md:text-xs font-black px-1 py-0 rounded border border-red-500 shadow-md z-10 flex items-center gap-0.5 leading-none" title="怪物攻擊力"><span class="text-xs md:text-sm">⚔️</span><span id="monster-atk-text">${finalAtk}</span></div>`;
+            const atkBadgeHtml = `<div class="absolute bottom-1 right-1 bg-red-900/90 text-red-100 text-[0.65rem] md:text-xs font-black px-1 py-0 rounded border border-red-500 shadow-md z-30 flex items-center gap-0.5 leading-none" title="怪物攻擊力"><span class="text-xs md:text-sm">⚔️</span><span id="monster-atk-text">${finalAtk}</span></div>`;
 
             let atkReduceBadgeHtml = '';
             if (atkReduction > 0) {
                 atkReduceBadgeHtml = `<div class="atk-reduce-badge-container absolute top-8 -left-3 z-50 flex flex-col items-center justify-center bg-blue-100 border-2 border-blue-400 rounded-full w-10 h-10 shadow-lg animate-pulse" title="攻擊力下降中"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%94%BB%E6%93%8A%E5%8A%9B%E9%99%8D%E4%BD%8E.png" class="w-6 h-6 object-contain"><span class="atk-reduce-count-text absolute -bottom-1 -right-1 bg-blue-700 text-white text-[0.6rem] font-black px-1.5 py-0.5 rounded-full border border-white leading-none shadow-sm">-${atkReduction}</span></div>`;
             }
 
-            // 注意：將 sealHtml、curseBadgeHtml、atkReduceBadgeHtml 放入 wrapper 內部最上層 (包含 atkBadgeHtml，並整體放大血量與名稱文字)
-           container.innerHTML = `<div id="active-monster-card" data-monster-name="${remoteMonster.name}" class="monster-card-wrapper w-20 h-28 md:w-28 md:h-48 ${initialClass}" style="top:0.2rem;left:0.2rem;" onclick="app.activateMonsterCard()">${sealHtml}${curseBadgeHtml}${atkReduceBadgeHtml}<div class="monster-card-inner"><div class="monster-face monster-face-front flex flex-col bg-slate-900 border-2 border-amber-500 overflow-hidden shadow-lg"><div class="h-[72%] w-full relative bg-gray-800"><img id="monster-img-face" src="${faceImg}" class="w-full h-full object-contain" alt="Monster">${atkBadgeHtml}</div><div class="h-[28%] w-full bg-slate-900 flex flex-col justify-center items-center px-1 py-0.5"><div class="text-[0.65rem] md:text-sm font-black text-amber-400 truncate w-full text-center leading-tight">${remoteMonster.name}</div><div class="w-[90%] bg-gray-700 h-1 md:h-1.5 rounded-full overflow-hidden relative my-0.5 border border-black/40"><div id="monster-hp-bar-fill" class="bg-gradient-to-r from-red-600 to-red-400 h-full absolute top-0 left-0 transition-all duration-300" style="width:${hpPercent}%"></div></div><div id="monster-hp-text" class="text-[0.65rem] md:text-base text-white font-mono font-bold leading-none drop-shadow-sm">HP ${currentHp}/${maxHp}</div></div></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div><div class="absolute w-24 md:w-32 flex flex-wrap justify-center gap-1 pointer-events-auto z-40 top-[7.5rem] md:top-[13.5rem] right-[0.2rem] md:right-[0.5rem]"><div class="flex flex-wrap justify-end gap-1 text-[0.6rem] md:text-xs font-bold shadow-sm">${statusHtml}</div></div>`;
+           // --- [新增] 判斷怪物技能等級，並動態組裝 Z軸分層特效 HTML ---
+            let vfxLv1 = '', vfxLv2 = '', vfxLv3Circle = '', vfxLv3Burst = '';
+            if (remoteMonster.campaignSkills && remoteMonster.campaignSkills.length > 0) {
+                remoteMonster.campaignSkills.forEach(sk => {
+                    if (sk.lv === 1) vfxLv1 = `<img src="https://class.kh.edu.tw/sites/30033/upload_file/6/4%E7%81%AB%E7%84%B0%E5%9C%B0%E7%92%B0%E7%89%B9%E6%95%88.png" class="absolute bottom-0 left-0 w-full h-1/2 object-contain z-20 skill-vfx-lv1 pointer-events-none">`;
+                    if (sk.lv === 2) vfxLv2 = `<img src="https://class.kh.edu.tw/sites/30033/upload_file/6/2%E8%97%8D%E5%85%89%E8%83%8C%E6%99%AF%E7%89%B9%E6%95%88.png" class="absolute inset-0 w-full h-full object-cover z-0 skill-vfx-lv2 pointer-events-none">`;
+                    if (sk.lv >= 3) {
+                        vfxLv3Circle = `<img src="https://class.kh.edu.tw/sites/30033/upload_file/6/1%E6%B0%B4%E6%B3%A2%E7%B4%8B%E7%89%B9%E6%95%88.png" class="absolute inset-0 w-full h-full object-contain z-0 skill-vfx-lv3-circle pointer-events-none">`;
+                        vfxLv3Burst = `<img src="https://class.kh.edu.tw/sites/30033/upload_file/6/3%E8%97%8D%E5%85%89%E5%9C%B0%E7%92%B0%E7%89%B9%E6%95%88.png" class="absolute inset-0 w-full h-full object-cover z-0 skill-vfx-lv3-burst pointer-events-none">`;
+                    }
+                });
+            }
+
+            // 注意：已將怪物圖區域加上 overflow-hidden，並把背景特效(vfxLv2, Burst)插在 img 前面(z-0)，前景特效(vfxLv1, Circle)插在 img 後面(z-20)
+            // HTML 依然保持高度壓縮不換行，杜絕空白節點
+            container.innerHTML = `<div id="active-monster-card" data-monster-name="${remoteMonster.name}" class="monster-card-wrapper w-20 h-28 md:w-28 md:h-48 ${initialClass}" style="top:0.2rem;left:0.2rem;" onclick="app.activateMonsterCard()">${sealHtml}${curseBadgeHtml}${atkReduceBadgeHtml}<div class="monster-card-inner"><div class="monster-face monster-face-front flex flex-col bg-slate-900 border-2 border-amber-500 overflow-hidden shadow-lg"><div class="h-[72%] w-full relative bg-gray-800 flex items-center justify-center overflow-hidden">${vfxLv2}${vfxLv3Burst}<img id="monster-img-face" src="${faceImg}" class="w-full h-full object-contain relative z-10" alt="Monster">${vfxLv3Circle}${vfxLv1}${atkBadgeHtml}</div><div class="h-[28%] w-full bg-slate-900 flex flex-col justify-center items-center px-1 py-0.5"><div class="text-[0.65rem] md:text-sm font-black text-amber-400 truncate w-full text-center leading-tight">${remoteMonster.name}</div><div class="w-[90%] bg-gray-700 h-1 md:h-1.5 rounded-full overflow-hidden relative my-0.5 border border-black/40"><div id="monster-hp-bar-fill" class="bg-gradient-to-r from-red-600 to-red-400 h-full absolute top-0 left-0 transition-all duration-300" style="width:${hpPercent}%"></div></div><div id="monster-hp-text" class="text-[0.65rem] md:text-base text-white font-mono font-bold leading-none drop-shadow-sm">HP ${currentHp}/${maxHp}</div></div></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div><div class="absolute w-24 md:w-32 flex flex-wrap justify-center gap-1 pointer-events-auto z-40 top-[7.5rem] md:top-[13.5rem] right-[0.2rem] md:right-[0.5rem]"><div class="flex flex-wrap justify-end gap-1 text-[0.6rem] md:text-xs font-bold shadow-sm">${statusHtml}</div></div>`;
 			if (isFreshSummon) {
                 setTimeout(() => {
                     const el = document.getElementById('active-monster-card');
@@ -7834,22 +8008,54 @@ for (const slot of slots) {
                 template = newDeck.shift(); // 取出第一張
                 app.toast(`🎴 遭遇魔物！(牌庫剩餘 ${newDeck.length})`, 1);
                 
-                // 只有還有怪才建立新怪物資料，避免 template 為 null 報錯
-                const newMonsterData = {
+            // 只有還有怪才建立新怪物資料，並給予基礎預設值
+                let newMonsterData = {
                     ...template,
-                    currentHp: template.maxHp, // 確保滿血
-                    maxHp: template.maxHp,
+                    currentHp: template.maxHp || template.hp || 100, // 確保基礎血量
+                    maxHp: template.maxHp || template.hp || 100,
+                    atk: template.atk || 10,                         // 確保基礎攻擊力
                     state: 'battle',
                     timestamp: firebase.database.ServerValue.TIMESTAMP,
                     action: 'summon',
                     actionTime: firebase.database.ServerValue.TIMESTAMP
                 };
 
+                // --- [實作] 結算怪物技能加成 (進入戰鬥時觸發) ---
+                let activatedSkillsMsg = [];
+                if (newMonsterData.campaignSkills && newMonsterData.campaignSkills.length > 0) {
+                    newMonsterData.campaignSkills.forEach(sk => {
+                        const skillName = sk.name || '';
+                        
+                        // 1. 堅韌 (增加血量) - LV1=+30, LV2=+60...
+                        if (skillName.includes('堅韌')) {
+                            const bonusHp = 30 * (sk.lv || 1); 
+                            newMonsterData.maxHp += bonusHp;
+                            newMonsterData.currentHp += bonusHp;
+                            activatedSkillsMsg.push(`${skillName}(HP+${bonusHp})`);
+                        }
+                        
+                        // 2. 蠻力 (增加攻擊力) - LV1=+5, LV2=+10...
+                        if (skillName.includes('蠻力')) {
+                            const bonusAtk = 5 * (sk.lv || 1); 
+                            newMonsterData.atk += bonusAtk;
+                            activatedSkillsMsg.push(`${skillName}(攻擊力+${bonusAtk})`);
+                        }
+                    });
+                }
+
                 // 同時更新：設定新怪物 + 更新剩餘牌庫
                 db.ref(`classes/${app.state.classId}`).update({
                     activeMonster: newMonsterData,
                     monsterDeck: newDeck
+                }).then(() => {
+                    // 如果有觸發技能加成，發送全頻警告與寫入戰鬥日誌
+                    if (activatedSkillsMsg.length > 0) {
+                        const msg = `⚠️ 【${template.name}】發動了技能：${activatedSkillsMsg.join('、')}！`;
+                        app.toast(msg, 1);
+                        app.addCombatLog('attack', msg);
+                    }
                 });
+                
                 app.speak('遭遇魔物' + template.name);
 
             } else {
@@ -11296,6 +11502,19 @@ addRewardItem: () => {
 
             let html = '';
             
+            // 建立技能選項產生器 (安全取代法)
+            const globalSkills = app.state.globalSettings?.monsterSkills || [];
+            let sortedSkills = globalSkills.map((s, idx) => ({ s, idx })).sort((a, b) => (a.s.lv || 1) - (b.s.lv || 1));
+            
+            const buildSkillOpts = (selectedVal) => {
+                let opts = `<option value="">-- 無附加技能 --</option><option value="rnd_all" ${selectedVal === 'rnd_all' ? 'selected' : ''}>🎲 全等級隨機</option><option value="rnd_lv1" ${selectedVal === 'rnd_lv1' ? 'selected' : ''}>🎲 隨機 LV1</option><option value="rnd_lv2" ${selectedVal === 'rnd_lv2' ? 'selected' : ''}>🎲 隨機 LV2</option><option value="rnd_lv3" ${selectedVal === 'rnd_lv3' ? 'selected' : ''}>🎲 隨機 LV3</option><option value="rnd_lv4" ${selectedVal === 'rnd_lv4' ? 'selected' : ''}>🎲 隨機 LV4</option><option value="rnd_lv5" ${selectedVal === 'rnd_lv5' ? 'selected' : ''}>🎲 隨機 LV5</option><optgroup label="--- 指定技能 ---">`;
+                sortedSkills.forEach(item => {
+                    opts += `<option value="${item.idx}" ${String(item.idx) === String(selectedVal) ? 'selected' : ''}>[LV.${item.s.lv || 1}] ${item.s.name}</option>`;
+                });
+                opts += `</optgroup>`;
+                return opts;
+            };
+
             // 卡背選項
             const cardBackOptions = [
                 {v:'', t:'篩選'}, 
@@ -11304,19 +11523,14 @@ addRewardItem: () => {
             ];
 
             nodesArray.forEach((node, i) => {
-                // 1. 取得當前怪物資訊
                 const currentMonster = (node.monsterIdx !== null && globalMonsters[node.monsterIdx]) ? globalMonsters[node.monsterIdx] : null;
-                
-                // 2. 決定篩選等級
                 const filterLv = node.filterLv || (currentMonster ? currentMonster.cardBack : 1);
 
-                // 3. 生成篩選選單
                 let lvOpts = '';
                 cardBackOptions.forEach(opt => {
                     lvOpts += `<option value="${opt.v}" ${String(filterLv) === String(opt.v) ? 'selected' : ''}>${opt.t}</option>`;
                 });
 
-                // 4. 生成怪物選單
                 let monsterOpts = '<option value="">--選擇怪物--</option>';
                 globalMonsters.forEach((m, mIdx) => {
                     if (String(m.cardBack) === String(filterLv)) {
@@ -11324,56 +11538,18 @@ addRewardItem: () => {
                     }
                 });
 
-                // 5. 圖片預覽
                 const previewImg = currentMonster ? (currentMonster.img1 || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png') : 'https://placehold.co/40x40?text=?';
 
-                // 6. 數值輸入框 (優先使用 node 內儲存的自訂值，若無則計算預設值)
-                let hp, atk, exp, gold;
+                let hp = 0, atk = 0, exp = 0, gold = 0;
                 if (currentMonster) {
                     hp = (node.customHp !== undefined) ? node.customHp : Math.floor(currentMonster.hp * multiplier);
                     atk = (node.customAtk !== undefined) ? node.customAtk : Math.floor(currentMonster.atk * multiplier);
                     exp = (node.customExp !== undefined) ? node.customExp : Math.floor((currentMonster.exp || 0) * multiplier);
                     gold = (node.customGold !== undefined) ? node.customGold : Math.floor(currentMonster.gold * multiplier);
-                } else {
-                    hp = 0; atk = 0; exp = 0; gold = 0;
                 }
 
-                // [HTML] 緊湊佈局
-                html += `
-                <div class="bg-white p-2 rounded border border-slate-300 shadow-sm relative group">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="bg-blue-100 text-blue-800 text-xs font-black px-2 py-1 rounded whitespace-nowrap">第${i+1}波</span>
-                        <div class="flex-1 flex flex-col gap-1">
-                            <div class="flex gap-1">
-                                <select onchange="app.updateNodeFilter(${i}, this.value)" class="w-16 border rounded text-xs py-1 bg-slate-50 font-bold text-slate-700">${lvOpts}</select>
-                                <select onchange="app.updateStageNode(${i}, this.value)" class="flex-1 border rounded text-xs py-1 font-bold text-slate-800 text-ellipsis overflow-hidden">${monsterOpts}</select>
-                            </div>
-                        </div>
-                        <div class="w-10 h-10 bg-gray-200 rounded border border-gray-300 overflow-hidden flex-shrink-0">
-                            <img src="${previewImg}" class="w-full h-full object-cover">
-                        </div>
-                        <button onclick="app.removeStageNode(${i})" class="text-red-400 hover:text-red-600 font-bold px-1 ml-1 text-lg">×</button>
-                    </div>
-                    
-                    <div class="grid grid-cols-4 gap-1 bg-slate-50 p-1 rounded border border-slate-200">
-                        <div class="flex flex-col">
-                            <label class="text-[0.55rem] text-red-600 font-bold text-center">HP</label>
-                            <input type="number" value="${hp}" onchange="app.updateStageNodeStat(${i}, 'customHp', this.value)" class="w-full border border-red-200 rounded text-center text-xs font-bold text-red-800 bg-white">
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-[0.55rem] text-orange-600 font-bold text-center">ATK</label>
-                            <input type="number" value="${atk}" onchange="app.updateStageNodeStat(${i}, 'customAtk', this.value)" class="w-full border border-orange-200 rounded text-center text-xs font-bold text-orange-800 bg-white">
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-[0.55rem] text-purple-600 font-bold text-center">EXP</label>
-                            <input type="number" value="${exp}" onchange="app.updateStageNodeStat(${i}, 'customExp', this.value)" class="w-full border border-purple-200 rounded text-center text-xs font-bold text-purple-800 bg-white">
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-[0.55rem] text-yellow-600 font-bold text-center">GOLD</label>
-                            <input type="number" value="${gold}" onchange="app.updateStageNodeStat(${i}, 'customGold', this.value)" class="w-full border border-yellow-200 rounded text-center text-xs font-bold text-yellow-800 bg-white">
-                        </div>
-                    </div>
-                </div>`;
+                // [HTML] 清除任何隱藏空白符號，重寫為乾淨結構
+                html += `<div class="bg-white p-2 rounded border border-slate-300 shadow-sm relative group"><div class="flex items-center gap-2 mb-2"><span class="bg-blue-100 text-blue-800 text-xs font-black px-2 py-1 rounded whitespace-nowrap">第${i+1}波</span><div class="flex-1 flex flex-col gap-1"><div class="flex gap-1"><select onchange="app.updateNodeFilter(${i}, this.value)" class="w-16 border rounded text-xs py-1 bg-slate-50 font-bold text-slate-700">${lvOpts}</select><select onchange="app.updateStageNode(${i}, this.value)" class="flex-1 border rounded text-xs py-1 font-bold text-slate-800 text-ellipsis overflow-hidden">${monsterOpts}</select></div></div><div class="w-10 h-10 bg-gray-200 rounded border border-gray-300 overflow-hidden flex-shrink-0"><img src="${previewImg}" class="w-full h-full object-cover"></div><button onclick="app.removeStageNode(${i})" class="text-red-400 hover:text-red-600 font-bold px-1 ml-1 text-lg">×</button></div><div class="grid grid-cols-4 gap-1 bg-slate-50 p-1 rounded border border-slate-200"><div class="flex flex-col"><label class="text-[0.55rem] text-red-600 font-bold text-center">HP</label><input type="number" value="${hp}" onchange="app.updateStageNodeStat(${i}, 'customHp', this.value)" class="w-full border border-red-200 rounded text-center text-xs font-bold text-red-800 bg-white"></div><div class="flex flex-col"><label class="text-[0.55rem] text-orange-600 font-bold text-center">ATK</label><input type="number" value="${atk}" onchange="app.updateStageNodeStat(${i}, 'customAtk', this.value)" class="w-full border border-orange-200 rounded text-center text-xs font-bold text-orange-800 bg-white"></div><div class="flex flex-col"><label class="text-[0.55rem] text-purple-600 font-bold text-center">EXP</label><input type="number" value="${exp}" onchange="app.updateStageNodeStat(${i}, 'customExp', this.value)" class="w-full border border-purple-200 rounded text-center text-xs font-bold text-purple-800 bg-white"></div><div class="flex flex-col"><label class="text-[0.55rem] text-yellow-600 font-bold text-center">GOLD</label><input type="number" value="${gold}" onchange="app.updateStageNodeStat(${i}, 'customGold', this.value)" class="w-full border border-yellow-200 rounded text-center text-xs font-bold text-yellow-800 bg-white"></div></div><div class="mt-1 bg-fuchsia-50 p-1 rounded border border-fuchsia-200"><div class="text-[0.55rem] text-fuchsia-800 font-bold mb-0.5">✨ 戰役專屬怪物技能 (最多附加 3 個)</div><div class="grid grid-cols-3 gap-1"><select onchange="app.updateStageNodeSkill(${i}, 'skill1', this.value)" class="w-full border border-fuchsia-300 rounded text-[0.6rem] py-0.5 bg-white font-bold text-fuchsia-900">${buildSkillOpts(node.skill1)}</select><select onchange="app.updateStageNodeSkill(${i}, 'skill2', this.value)" class="w-full border border-fuchsia-300 rounded text-[0.6rem] py-0.5 bg-white font-bold text-fuchsia-900">${buildSkillOpts(node.skill2)}</select><select onchange="app.updateStageNodeSkill(${i}, 'skill3', this.value)" class="w-full border border-fuchsia-300 rounded text-[0.6rem] py-0.5 bg-white font-bold text-fuchsia-900">${buildSkillOpts(node.skill3)}</select></div></div></div>`;
             });
             
             listEl.innerHTML = html;
@@ -11438,7 +11614,14 @@ addRewardItem: () => {
             // 不需重新 render，避免輸入焦點跑掉 (因為是 onchange 事件，已經離開焦點了，但為了保險起見不重繪也可以，不過為了數據一致性建議不重繪 DOM)
             // 這裡我們選擇不呼叫 renderEditStageNodes，因為 input value 已經變了
         },
-
+// [New] 修改節點附加技能
+        updateStageNodeSkill: (nodeIdx, field, val) => {
+            const { currentSubIdx, data } = app.state.editingStage;
+            const nodes = data.subStages[currentSubIdx].nodes;
+            if (nodes && nodes[nodeIdx]) {
+                nodes[nodeIdx][field] = val;
+            }
+        },
         removeStageNode: (nodeIdx) => {
             const { currentSubIdx, data } = app.state.editingStage;
             data.subStages[currentSubIdx].nodes.splice(nodeIdx, 1);
@@ -11813,6 +11996,29 @@ addRewardItem: () => {
                 
                 // 給予唯一ID，避免渲染出錯
                 baseMonster.uniqueId = `camp_${chapIdx}_${sIdx}_${subIdx}_${i}`;
+
+                // --- 附加戰役專屬技能 ---
+                const resolveSkill = (val) => {
+                    if (!val) return null;
+                    const skills = app.state.globalSettings?.monsterSkills || [];
+                    if (val === 'rnd_all') {
+                        const candidates = skills.filter(s => s.isRandom);
+                        return candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : null;
+                    } else if (val.startsWith('rnd_lv')) {
+                        const targetLv = parseInt(val.replace('rnd_lv', ''));
+                        const candidates = skills.filter(s => s.isRandom && (s.lv || 1) === targetLv);
+                        return candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : null;
+                    } else {
+                        const idx = parseInt(val);
+                        return (!isNaN(idx) && skills[idx]) ? skills[idx] : null;
+                    }
+                };
+
+                baseMonster.campaignSkills = [];
+                const s1 = resolveSkill(node.skill1); if(s1) baseMonster.campaignSkills.push(s1);
+                const s2 = resolveSkill(node.skill2); if(s2) baseMonster.campaignSkills.push(s2);
+                const s3 = resolveSkill(node.skill3); if(s3) baseMonster.campaignSkills.push(s3);
+                // -------------------------
 
                 customDeck.push(baseMonster);
             });
