@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.7.7 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.7.71 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -622,7 +622,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.7 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.71 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -4557,16 +4557,43 @@
       // --- [新增] 怪物技能管理邏輯 ---
         addNewMonsterSkill: () => {
             if (!app.state.tempMonsterSkills) app.state.tempMonsterSkills = [];
-            // 預設給予 LV1 以及開啟「隨機挑選」，並初始化複合技能欄位
-            app.state.tempMonsterSkills.push({ name: '新技能', desc: '', lv: 1, isRandom: true, comp1: '', comp2: '', comp3: '' });
+            // 預設給予 LV1 以及開啟「隨機挑選」，並初始化複合技能欄位，加入 sortOrder 以利排序
+            app.state.tempMonsterSkills.push({ name: '新技能', desc: '', lv: 1, isRandom: true, comp1: '', comp2: '', comp3: '', sortOrder: Date.now() });
             app.renderMonsterSkillsUI();
             setTimeout(() => {
                 const c = app.el('monster-skills-container');
-                // 因為可能包含內部捲軸，所以捲動內部的 wrapper
                 const w = c.querySelector('.custom-scrollbar');
                 if(w) w.scrollTop = w.scrollHeight;
                 else if(c) c.scrollTop = c.scrollHeight;
             }, 100);
+        },
+
+        moveMonsterSkill: (originalIndex, direction) => {
+            const list = app.state.tempMonsterSkills;
+            if (!list || !list[originalIndex]) return;
+            
+            const targetLv = parseInt(list[originalIndex].lv) || 1;
+            
+            // 找出同一等級群組的技能
+            let tierItems = list.map((item, idx) => ({ item, idx }))
+                                .filter(x => (parseInt(x.item.lv) || 1) === targetLv);
+                                
+            tierItems.forEach((x, i) => { if (x.item.sortOrder === undefined) x.item.sortOrder = i * 10; });
+            tierItems.sort((a, b) => a.item.sortOrder - b.item.sortOrder);
+
+            const currentIndex = tierItems.findIndex(x => x.idx === originalIndex);
+            if (currentIndex === -1) return;
+
+            const targetIndex = currentIndex + direction;
+            if (targetIndex < 0 || targetIndex >= tierItems.length) return; 
+
+            // 交換同群組內的 sortOrder
+            const tempOrder = tierItems[currentIndex].item.sortOrder;
+            tierItems[currentIndex].item.sortOrder = tierItems[targetIndex].item.sortOrder;
+            tierItems[targetIndex].item.sortOrder = tempOrder;
+
+            app.renderMonsterSkillsUI();
+            app.toast('↕️ 技能排序已調整 (請記得點擊最下方儲存)', 1);
         },
 
         deleteMonsterSkill: (idx) => {
@@ -4623,8 +4650,8 @@
                 return;
             }
 
-            // 外框與表頭結構
-            let html = `<div class="bg-orange-50 rounded-xl border border-orange-300 overflow-hidden flex flex-col h-full"><div class="grid grid-cols-12 gap-1 md:gap-2 bg-orange-200 p-2 font-bold text-orange-900 text-[0.65rem] md:text-xs text-center border-b border-orange-300 items-center shrink-0"><div class="col-span-1">隨機</div><div class="col-span-2 text-left pl-1">技能名稱</div><div class="col-span-1">等級</div><div class="col-span-3 text-left pl-1">技能說明</div><div class="col-span-4 text-left">複合技能 (最多附加3個)</div><div class="col-span-1">操作</div></div><div class="flex-1 overflow-y-auto custom-scrollbar bg-white">`;
+            // 外框與表頭結構 (微調操作欄位寬度 col-span-4 -> 3, 操作 col-span-1 -> 2)
+            let html = `<div class="bg-orange-50 rounded-xl border border-orange-300 overflow-hidden flex flex-col h-full"><div class="grid grid-cols-12 gap-1 md:gap-2 bg-orange-200 p-2 font-bold text-orange-900 text-[0.65rem] md:text-xs text-center border-b border-orange-300 items-center shrink-0"><div class="col-span-1">隨機</div><div class="col-span-2 text-left pl-1">技能名稱</div><div class="col-span-1">等級</div><div class="col-span-3 text-left pl-1">技能說明</div><div class="col-span-3 text-left">複合技能 (最多3個)</div><div class="col-span-2">操作</div></div><div class="flex-1 overflow-y-auto custom-scrollbar bg-white">`;
 
             // 將所有技能依據等級 (LV) 進行分類
             const grouped = { 1: [], 2: [], 3: [], 4: [], 5: [] };
@@ -4641,7 +4668,11 @@
                     const hiddenClass = isHidden ? 'hidden' : '';
                     const foldIcon = isHidden ? '▶' : '▼';
 
-                    // 該等級群組的折疊按鈕標題 (加入 sticky top-0 以達到吸頂效果，方便捲動查看)
+                    // 執行同等級內的排序 (利用 sortOrder)
+                    grouped[lv].forEach(item => { if (item.skill.sortOrder === undefined) item.skill.sortOrder = item.idx * 10; });
+                    grouped[lv].sort((a, b) => a.skill.sortOrder - b.skill.sortOrder);
+
+                    // 該等級群組的折疊按鈕標題 (加入 sticky top-0 以達到吸頂效果)
                     html += `<div onclick="app.toggleMonsterSkillCategory(${lv})" class="px-2 py-1.5 bg-orange-100 border-b border-orange-200 text-orange-900 text-xs font-black drop-shadow-sm sticky top-0 z-10 cursor-pointer flex justify-between items-center hover:bg-orange-200/80 transition-colors"><span>🌟 等級 LV.${lv} 技能區</span><span id="skill-icon-lv${lv}" class="text-orange-700 text-[0.6rem] transition-transform">${foldIcon}</span></div><div id="skill-cat-lv${lv}" class="${hiddenClass}">`;
                     
                     // 渲染該群組內的所有技能 (無空白壓縮字串以防破版)
@@ -4655,15 +4686,15 @@
                         const getOpts = (selectedVal) => {
                             let opts = '<option value="">-- 無 --</option>';
                             let sortedList = list.map((s, i) => ({ s, i })).sort((a, b) => (a.s.lv || 1) - (b.s.lv || 1));
-                            sortedList.forEach(item => {
-                                if (item.i === idx) return; // 不可選自己
-                                const selected = String(item.i) === String(selectedVal) ? 'selected' : '';
-                                opts += `<option value="${item.i}" ${selected}>[LV.${item.s.lv||1}] ${item.s.name||`技能${item.i+1}`}</option>`;
+                            sortedList.forEach(cItem => {
+                                if (cItem.i === idx) return; // 不可選自己
+                                const selected = String(cItem.i) === String(selectedVal) ? 'selected' : '';
+                                opts += `<option value="${cItem.i}" ${selected}>[LV.${cItem.s.lv||1}] ${cItem.s.name||`技能${cItem.i+1}`}</option>`;
                             });
                             return opts;
                         };
 
-                        html += `<div class="grid grid-cols-12 gap-1 md:gap-2 p-1 md:p-2 border-b border-orange-100 items-center text-center hover:bg-orange-50 transition-colors"><div class="col-span-1 flex justify-center"><label class="switch scale-[0.6] md:scale-75 m-0"><input type="checkbox" onchange="app.updateMonsterSkill(${idx}, 'isRandom', this.checked)" ${isRandomChecked}><span class="slider"></span></label></div><div class="col-span-2"><input type="text" onchange="app.updateMonsterSkill(${idx}, 'name', this.value)" value="${skill.name}" class="w-full border border-orange-300 rounded px-1 py-1 text-[0.65rem] md:text-xs font-bold text-stone-900 bg-white focus:bg-orange-50 outline-none" placeholder="技能名稱"></div><div class="col-span-1"><select onchange="app.updateMonsterSkill(${idx}, 'lv', this.value)" class="w-full border border-orange-300 rounded px-0.5 py-1 text-[0.65rem] md:text-xs font-bold text-stone-900 bg-white focus:bg-orange-50 outline-none"><option value="1" ${skill.lv===1?'selected':''}>LV.1</option><option value="2" ${skill.lv===2?'selected':''}>LV.2</option><option value="3" ${skill.lv===3?'selected':''}>LV.3</option><option value="4" ${skill.lv===4?'selected':''}>LV.4</option><option value="5" ${skill.lv===5?'selected':''}>LV.5</option></select></div><div class="col-span-3"><textarea onchange="app.updateMonsterSkill(${idx}, 'desc', this.value)" class="w-full border border-orange-300 rounded px-1 py-1 text-[0.65rem] md:text-xs font-bold text-gray-700 bg-white focus:bg-orange-50 outline-none resize-none h-14 custom-scrollbar" placeholder="效果說明...">${skill.desc}</textarea></div><div class="col-span-4 flex flex-col gap-0.5 md:gap-1 justify-center"><select onchange="app.updateMonsterSkill(${idx}, 'comp1', this.value)" class="w-full border border-amber-300 rounded px-1 py-0.5 text-[0.6rem] md:text-[0.65rem] font-bold text-amber-900 bg-amber-50 outline-none cursor-pointer">${getOpts(comp1)}</select><select onchange="app.updateMonsterSkill(${idx}, 'comp2', this.value)" class="w-full border border-amber-300 rounded px-1 py-0.5 text-[0.6rem] md:text-[0.65rem] font-bold text-amber-900 bg-amber-50 outline-none cursor-pointer">${getOpts(comp2)}</select><select onchange="app.updateMonsterSkill(${idx}, 'comp3', this.value)" class="w-full border border-amber-300 rounded px-1 py-0.5 text-[0.6rem] md:text-[0.65rem] font-bold text-amber-900 bg-amber-50 outline-none cursor-pointer">${getOpts(comp3)}</select></div><div class="col-span-1 flex justify-center"><button onclick="app.deleteMonsterSkill(${idx})" class="bg-red-100 text-red-600 hover:bg-red-500 hover:text-white rounded w-6 h-6 md:w-7 md:h-7 flex items-center justify-center font-bold shadow-sm transition-colors text-xs md:text-sm">✕</button></div></div>`;
+                        html += `<div class="grid grid-cols-12 gap-1 md:gap-2 p-1 md:p-2 border-b border-orange-100 items-center text-center hover:bg-orange-50 transition-colors"><div class="col-span-1 flex justify-center"><label class="switch scale-[0.6] md:scale-75 m-0"><input type="checkbox" onchange="app.updateMonsterSkill(${idx}, 'isRandom', this.checked)" ${isRandomChecked}><span class="slider"></span></label></div><div class="col-span-2"><input type="text" onchange="app.updateMonsterSkill(${idx}, 'name', this.value)" value="${skill.name}" class="w-full border border-orange-300 rounded px-1 py-1 text-[0.65rem] md:text-xs font-bold text-stone-900 bg-white focus:bg-orange-50 outline-none" placeholder="技能名稱"></div><div class="col-span-1"><select onchange="app.updateMonsterSkill(${idx}, 'lv', this.value)" class="w-full border border-orange-300 rounded px-0.5 py-1 text-[0.65rem] md:text-xs font-bold text-stone-900 bg-white focus:bg-orange-50 outline-none"><option value="1" ${skill.lv===1?'selected':''}>LV.1</option><option value="2" ${skill.lv===2?'selected':''}>LV.2</option><option value="3" ${skill.lv===3?'selected':''}>LV.3</option><option value="4" ${skill.lv===4?'selected':''}>LV.4</option><option value="5" ${skill.lv===5?'selected':''}>LV.5</option></select></div><div class="col-span-3"><textarea onchange="app.updateMonsterSkill(${idx}, 'desc', this.value)" class="w-full border border-orange-300 rounded px-1 py-1 text-[0.65rem] md:text-xs font-bold text-gray-700 bg-white focus:bg-orange-50 outline-none resize-none h-14 custom-scrollbar" placeholder="效果說明...">${skill.desc}</textarea></div><div class="col-span-3 flex flex-col gap-0.5 md:gap-1 justify-center"><select onchange="app.updateMonsterSkill(${idx}, 'comp1', this.value)" class="w-full border border-amber-300 rounded px-1 py-0.5 text-[0.6rem] md:text-[0.65rem] font-bold text-amber-900 bg-amber-50 outline-none cursor-pointer">${getOpts(comp1)}</select><select onchange="app.updateMonsterSkill(${idx}, 'comp2', this.value)" class="w-full border border-amber-300 rounded px-1 py-0.5 text-[0.6rem] md:text-[0.65rem] font-bold text-amber-900 bg-amber-50 outline-none cursor-pointer">${getOpts(comp2)}</select><select onchange="app.updateMonsterSkill(${idx}, 'comp3', this.value)" class="w-full border border-amber-300 rounded px-1 py-0.5 text-[0.6rem] md:text-[0.65rem] font-bold text-amber-900 bg-amber-50 outline-none cursor-pointer">${getOpts(comp3)}</select></div><div class="col-span-2 flex items-center justify-center gap-1 md:gap-2"><button onclick="app.moveMonsterSkill(${idx}, -1)" class="text-orange-300 hover:text-orange-700 font-black text-sm md:text-base transition-colors" title="往上移">▲</button><button onclick="app.deleteMonsterSkill(${idx})" class="bg-red-100 text-red-600 hover:bg-red-500 hover:text-white rounded w-6 h-6 md:w-7 md:h-7 flex items-center justify-center font-bold shadow-sm transition-colors text-xs md:text-sm" title="刪除">✕</button><button onclick="app.moveMonsterSkill(${idx}, 1)" class="text-orange-300 hover:text-orange-700 font-black text-sm md:text-base transition-colors" title="往下移">▼</button></div></div>`;
                     });
                     
                     html += `</div>`;
@@ -7295,7 +7326,26 @@ for (const slot of slots) {
                         }
 
                        // 最終傷害 = 卡牌基礎傷害 + 最終裝備攻擊力
-                        const damage = (points * 10) + finalEquipAtk;
+                        let damage = (points * 10) + finalEquipAtk;
+                        
+                        // --- [實作] 怪物被動技能：鐵壁 (減傷) ---
+                        const monsterSkillList = app.state.gameData.activeMonster?.campaignSkills || [];
+                        let blockedDamage = 0;
+                        
+                        monsterSkillList.forEach(sk => {
+                            if (sk.name && sk.name.includes('鐵壁')) {
+                                // 減傷公式：基礎10% + 每多一級增加5%
+                                const reducePct = 10 + ((sk.lv || 1) - 1) * 5;
+                                // 算出抵擋的傷害值 (無條件捨去)
+                                blockedDamage += Math.floor(damage * (reducePct / 100));
+                            }
+                        });
+
+                        if (blockedDamage > 0) {
+                            // 扣除格擋傷害，但確保玩家最低能造成 1 點傷害
+                            damage = Math.max(1, damage - blockedDamage);
+                            successMsg += ` (鐵壁抵擋了 ${blockedDamage} 傷!)`;
+                        }
                         // ----------------------------------------
 
                         // --- [新增] 冰系專屬降攻特效：冰之/冰蝕冒險者之劍 ---
@@ -8039,6 +8089,11 @@ for (const slot of slots) {
                             const bonusAtk = 5 * (sk.lv || 1); 
                             newMonsterData.atk += bonusAtk;
                             activatedSkillsMsg.push(`${skillName}(攻擊力+${bonusAtk})`);
+                        }
+						// 3. 鐵壁 (傷害減免) - LV1=10%, LV2=15%...
+                        if (skillName.includes('鐵壁')) {
+                            const reducePct = 10 + ((sk.lv || 1) - 1) * 5;
+                            activatedSkillsMsg.push(`${skillName}(減傷${reducePct}%)`);
                         }
                     });
                 }
