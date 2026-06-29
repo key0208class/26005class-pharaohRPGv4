@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.7.72 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.7.73 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -622,7 +622,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.72 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.73 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -7342,8 +7342,9 @@ for (const slot of slots) {
                             }, 150);
                         }
 
-                       // 最終傷害 = 卡牌基礎傷害 + 最終裝備攻擊力
-                        let damage = (points * 10) + finalEquipAtk;
+                       // [修正] 最終傷害 = (卡牌基礎傷害(已含道具倍數) + 最終裝備攻擊力) * 虛弱倍率
+                        let rawCardDamage = basePoints * 10 * itemMult;
+                        let damage = Math.floor((rawCardDamage + finalEquipAtk) * weakMult);
                         
                         // --- [實作] 怪物被動技能：鐵壁 (減傷) ---
                         const monsterSkillList = app.state.gameData.activeMonster?.campaignSkills || [];
@@ -7371,7 +7372,7 @@ for (const slot of slots) {
                         let iceSwordName = "";
 
                         if (myPlayerData?.equipped) {
-                            const globalList = app.state.globalSettings?.blackMarketList || []; // [修復] 補上這行宣告
+                            const globalList = app.state.globalSettings?.blackMarketList || []; 
                             const countSub = (formula.match(/\-/g) || []).length;
                             // 連續使用減法(>=2)才觸發機率判定
                             if (countSub >= 2) {
@@ -7444,53 +7445,52 @@ for (const slot of slots) {
                         // [新增] 記錄戰鬥日誌
                         const monsterName = app.state.gameData.activeMonster?.name || '魔物';
                         
-                        // 組合戰鬥日誌字串
+                        // --- [重新設計] 完美對齊數學公式的戰鬥明細日誌 ---
                         let logMsg = `【${app.state.myName}】`;
                         if (usedItemName) {
-                            logMsg += `使用【${usedItemName}】`;
+                            // 根據名稱補上 Emoji 增加視覺直覺度
+                            let itemEmoji = usedItemName.includes('聖甲蟲') ? '🦂' : (usedItemName.includes('阿努') ? '⚖️' : (usedItemName.includes('荷魯斯') ? '👁️' : '🌊'));
+                            logMsg += `使用【${itemEmoji}${usedItemName}】`;
                         }
                         logMsg += `對 ${monsterName} 造成了 `;
 
-                        // 基礎傷害字串
+                        // 1. 卡片基礎傷害 (包含道具倍率)
                         let baseDmgStr = `${basePoints * 10}`;
                         if (itemMult > 1) baseDmgStr += `×${itemMult}`;
-                        if (weakMult > 1) baseDmgStr += `×1.5`;
-
-                        let dmgFormulaParts = [];
-                        if (baseDmgStr !== `${basePoints * 10}`) {
-                            dmgFormulaParts.push(`(${baseDmgStr})`);
-                        } else {
-                            dmgFormulaParts.push(`${basePoints * 10}`);
-                        }
-
-                        // 裝備與加成字串
+                        
+                        // 2. 裝備加成區塊
                         let equipParts = [];
-                        if (atkBonusLogs && atkBonusLogs.length > 0) {
-                            equipParts = equipParts.concat(atkBonusLogs);
-                        }
-                        if (typeof newAbyssBonus !== 'undefined' && newAbyssBonus > 0) {
-                            equipParts.push(`[深淵加成]+${newAbyssBonus}`);
-                        }
-                        if (typeof activeFlameBonus !== 'undefined' && activeFlameBonus > 0) {
-                            equipParts.push(`[爆炎加成]+${activeFlameBonus}`);
-                        }
+                        if (atkBonusLogs && atkBonusLogs.length > 0) equipParts = equipParts.concat(atkBonusLogs);
+                        if (typeof newAbyssBonus !== 'undefined' && newAbyssBonus > 0) equipParts.push(`[深淵]+${newAbyssBonus}`);
+                        if (typeof activeFlameBonus !== 'undefined' && activeFlameBonus > 0) equipParts.push(`[爆炎]+${activeFlameBonus}`);
 
+                        let equipDmgStr = "";
                         if (equipParts.length > 0) {
-                            let equipDmgStr = equipParts.join('+');
+                            let rawEquipStr = equipParts.join('+');
+                            // 若有觸發烈焰/炎之劍暴擊
                             if (typeof flameMultiplier !== 'undefined' && flameMultiplier > 1) {
-                                dmgFormulaParts.push(`(${equipDmgStr})×${flameMultiplier}`);
+                                equipDmgStr = ` + (${rawEquipStr})×${flameMultiplier}(暴擊)`;
                             } else {
-                                dmgFormulaParts.push(equipDmgStr);
+                                equipDmgStr = ` + ${rawEquipStr}`;
                             }
                         }
 
-                        if (dmgFormulaParts.length > 1 || baseDmgStr !== `${basePoints * 10}`) {
-                            logMsg += `${dmgFormulaParts.join('+')}=${damage} 點傷害！`;
+                        // 3. 組合主結構
+                        let fullFormula = `${baseDmgStr}${equipDmgStr}`;
+                        
+                        // 4. 判斷是否有虛弱加成
+                        if (weakMult > 1) {
+                            logMsg += `(${fullFormula}) × 1.5(虛弱) = ${damage} 點傷害！`;
                         } else {
-                            logMsg += `${damage} 點傷害！`;
+                            // 若無虛弱，但有裝備加成或倍數，才顯示等式
+                            if (equipDmgStr !== "" || itemMult > 1) {
+                                logMsg += `${fullFormula} = ${damage} 點傷害！`;
+                            } else {
+                                logMsg += `${damage} 點傷害！`;
+                            }
                         }
 
-                        // 如果有被鐵壁抵擋
+                        // 5. 鐵壁減傷
                         if (typeof blockedDamage !== 'undefined' && blockedDamage > 0) {
                             logMsg += ` (鐵壁抵擋了 ${blockedDamage} 傷)`;
                         }
