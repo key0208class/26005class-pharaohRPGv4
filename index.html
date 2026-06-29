@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.7.73 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.7.74 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -622,7 +622,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.73 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.74 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -7346,23 +7346,35 @@ for (const slot of slots) {
                         let rawCardDamage = basePoints * 10 * itemMult;
                         let damage = Math.floor((rawCardDamage + finalEquipAtk) * weakMult);
                         
-                        // --- [實作] 怪物被動技能：鐵壁 (減傷) ---
+                        // --- [實作] 怪物被動技能：鐵壁與重甲 (減傷) ---
                         const monsterSkillList = app.state.gameData.activeMonster?.campaignSkills || [];
                         let blockedDamage = 0;
+                        let blockSkillNames = []; // 紀錄發動的減傷技能
                         
                         monsterSkillList.forEach(sk => {
                             if (sk.name && sk.name.includes('鐵壁')) {
                                 // 減傷公式：基礎10% + 每多一級增加5%
                                 const reducePct = 10 + ((sk.lv || 1) - 1) * 5;
-                                // 算出抵擋的傷害值 (無條件捨去)
-                                blockedDamage += Math.floor(damage * (reducePct / 100));
+                                const bDmg = Math.floor(damage * (reducePct / 100));
+                                blockedDamage += bDmg;
+                                if(bDmg > 0) blockSkillNames.push('鐵壁');
+                            }
+                            if (sk.name && sk.name.includes('重甲')) {
+                                // 減傷公式：LV1=10%, LV2=15%, LV3=20%
+                                let reducePct = 10;
+                                if (sk.lv === 2) reducePct = 15;
+                                else if (sk.lv >= 3) reducePct = 20;
+                                const bDmg = Math.floor(damage * (reducePct / 100));
+                                blockedDamage += bDmg;
+                                if(bDmg > 0) blockSkillNames.push('重甲');
                             }
                         });
 
                         if (blockedDamage > 0) {
                             // 扣除格擋傷害，但確保玩家最低能造成 1 點傷害
                             damage = Math.max(1, damage - blockedDamage);
-                            successMsg += ` (鐵壁抵擋了 ${blockedDamage} 傷!)`;
+                            const skillNamesStr = [...new Set(blockSkillNames)].join('與');
+                            successMsg += ` (${skillNamesStr}抵擋了 ${blockedDamage} 傷!)`;
                         }
                         // ----------------------------------------
 
@@ -7490,12 +7502,13 @@ for (const slot of slots) {
                             }
                         }
 
-                        // 5. 鐵壁減傷
+                      // 5. 被動技能減傷紀錄
                         if (typeof blockedDamage !== 'undefined' && blockedDamage > 0) {
-                            logMsg += ` (鐵壁抵擋了 ${blockedDamage} 傷)`;
+                            const skillNamesStr = (typeof blockSkillNames !== 'undefined' && blockSkillNames.length > 0) 
+                                ? [...new Set(blockSkillNames)].join('與') 
+                                : '技能';
+                            logMsg += ` (${skillNamesStr}抵擋了 ${blockedDamage} 傷)`;
                         }
-
-                        app.addCombatLog('attack', logMsg);
                         
                         if (newMonsterHp <= 0) {
                             monsterDied = true;
@@ -8163,6 +8176,18 @@ for (const slot of slots) {
                         if (skillName.includes('鐵壁')) {
                             const reducePct = 10 + ((sk.lv || 1) - 1) * 5;
                             activatedSkillsMsg.push(`${skillName}(減傷${reducePct}%)`);
+                        }
+						 // 4. 重甲 (複合加成) - 增加血量並減傷
+                        if (skillName.includes('重甲')) {
+                            let bonusHp = 0;
+                            let reducePct = 10;
+                            if (sk.lv === 1) { bonusHp = 20; reducePct = 10; }
+                            else if (sk.lv === 2) { bonusHp = 40; reducePct = 15; }
+                            else if (sk.lv >= 3) { bonusHp = 80; reducePct = 20; }
+                            
+                            newMonsterData.maxHp += bonusHp;
+                            newMonsterData.currentHp += bonusHp;
+                            activatedSkillsMsg.push(`${skillName}(HP+${bonusHp}, 減傷${reducePct}%)`);
                         }
                     });
                 }
