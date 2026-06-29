@@ -7509,6 +7509,9 @@ for (const slot of slots) {
                                 : '技能';
                             logMsg += ` (${skillNamesStr}抵擋了 ${blockedDamage} 傷)`;
                         }
+
+                        // [修正] 將組合好的戰鬥訊息寫入日誌系統中
+                        app.addCombatLog('attack', logMsg);
                         
                         if (newMonsterHp <= 0) {
                             monsterDied = true;
