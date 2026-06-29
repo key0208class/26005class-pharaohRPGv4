@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.7.71 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.7.72 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -622,7 +622,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.71 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.72 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -5767,13 +5767,16 @@
 
                          let dropHtml = starHtml + '<div class="w-full text-[0.6rem] text-amber-400 font-bold text-center mb-1 mt-1">🎁 戰利品結算！</div>';
                          
-                         // 產生掉落物 UI
+                        // 產生掉落物 UI
                          if (gameData.campaignDroppedItems && gameData.campaignDroppedItems.length > 0) {
                              gameData.campaignDroppedItems.forEach(itemId => {
                                  const bmItem = globalBm[itemId];
                                  if (bmItem) {
-                                     const img = bmItem[`img${bmItem.currentEditLv||1}`] || bmItem.img1 || '';
-                                     dropHtml += `<div class="bg-black/50 p-1 rounded border border-amber-600 animate-[popIn_0.5s_ease-out] mx-1"><img src="${img}" class="w-8 h-8 object-contain" title="${bmItem.name}"></div>`;
+                                     const lv = bmItem.currentEditLv || 1;
+                                     const maxLv = bmItem.maxLv || 1;
+                                     const img = bmItem[`img${lv}`] || bmItem.img1 || '';
+                                     const lvBadge = maxLv > 1 ? `<div class="absolute -top-1 -right-1 bg-red-600 text-white text-[0.55rem] font-black px-1 py-0.5 rounded border border-white/50 shadow-md z-10 leading-none">LV${lv}</div>` : '';
+                                     dropHtml += `<div class="relative bg-black/50 p-1 rounded border border-amber-600 animate-[popIn_0.5s_ease-out] mx-1"><img src="${img}" class="w-8 h-8 object-contain" title="${bmItem.name}">${lvBadge}</div>`;
                                  }
                              });
                          } else {
@@ -6970,15 +6973,20 @@ for (const slot of slots) {
                     }
                     // -------------------------------------------------------
 
-                    // --- 驗證成功：計算分數與傷害 ---
+                   // --- 驗證成功：計算分數與傷害 ---
                     // [v4.7.5.2 修正] 提早初始化 updates 物件，解決 Cannot access 'updates' 錯誤
                     const updates = {};
 
                     let points = card.points;
+                    let basePoints = card.points; // [新增] 用於紀錄基礎分數
                     let playerName = app.state.myName;
                     let successMsg = `${playerName}進攻！`;
                     let itemToConsume = null;
                     let curseTriggered = false;
+                    
+                    let weakMult = 1; // [新增] 紀錄虛弱倍數
+                    let itemMult = 1; // [新增] 紀錄道具倍數
+                    let usedItemName = ''; // [新增] 紀錄使用的道具名稱
 
                     // [v4.7.5.1 新增] 封印觸發判定
                     // 檢查這張牌是否被「我們隊伍」鎖定 (lockedBy === myTeam)
@@ -7008,17 +7016,22 @@ for (const slot of slots) {
                     const isWeak = (app.state.gameData.activeMonster?.curseRounds > 0) || card.curseData;
                     
                     if (isWeak) {
+                         weakMult = 1.5;
                          points = points * 1.5; // [v4.7.5.7] 移除 Math.floor，確保 1 分卡能造成 15 點傷害 (1.5分)
                          if (!card.curseData) successMsg += " (虛弱中! 傷害1.5倍!)"; // 若非剛觸發，提示加成
                     }
 
                     // 道具加成判定 (在虛弱加成基礎上再疊加)
                     if (activeItem === 'double') {
+                        itemMult = 2;
+                        usedItemName = '聖甲蟲的祝福';
                         points *= 2;
                         successMsg = `恭喜${playerName}！聖甲蟲發威，傷害爆發！`;
                         itemToConsume = 'double';
                         app.state.activeItem = null; 
                     } else if (activeItem === 'anubis') {
+                        itemMult = 3;
+                        usedItemName = '阿努比斯的審判';
                         points *= 3;
                         if (curseTriggered) successMsg += " (阿努比斯讓懲罰變三倍!)";
                         else successMsg = `⚖️ 審判通過！${playerName} 破解謎題，分數三倍！`;
@@ -7026,10 +7039,12 @@ for (const slot of slots) {
                         app.state.activeItem = null;
                         app.state.anubisBannedOp = null;
                     } else if (activeItem === 'horus') {
+                        usedItemName = '荷魯斯之眼';
                         if(!curseTriggered) successMsg = `恭喜${playerName}！破解成功！`;
                         itemToConsume = 'horus';
                         app.state.activeItem = null; 
                     } else if (activeItem === 'nile') {
+                        usedItemName = '尼羅河恩賜';
                         if(!curseTriggered) successMsg = `恭喜${playerName}！運算成功！`;
                         itemToConsume = 'nile';
                     }
@@ -7172,7 +7187,9 @@ for (const slot of slots) {
                         // 基礎傷害: 1分 = 10傷害
                         // 加成傷害: 冒險者之劍、森之律動(+)、爆炎刻印(×)、冰蝕咒紋(-)、深淵之印(÷)
                         const myPlayerData = app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName];
-                        const atkBonus = app.getAttackBonus(myPlayerData?.equipped, formula);
+                        const atkBonusResult = app.getAttackBonus(myPlayerData?.equipped, formula);
+                        const atkBonus = typeof atkBonusResult === 'object' ? atkBonusResult.total : atkBonusResult;
+                        const atkBonusLogs = typeof atkBonusResult === 'object' ? atkBonusResult.logs : [];
                         
                         // --- [新增] 深淵之印/劍(÷) 固化攻擊力邏輯 ---
                         let currentAbyssBonus = myPlayerData?.abyssBonus || 0;
@@ -7426,7 +7443,59 @@ for (const slot of slots) {
                         
                         // [新增] 記錄戰鬥日誌
                         const monsterName = app.state.gameData.activeMonster?.name || '魔物';
-                        app.addCombatLog('attack', `【${app.state.myName}】對 ${monsterName} 造成了 ${damage} 點傷害！`);
+                        
+                        // 組合戰鬥日誌字串
+                        let logMsg = `【${app.state.myName}】`;
+                        if (usedItemName) {
+                            logMsg += `使用【${usedItemName}】`;
+                        }
+                        logMsg += `對 ${monsterName} 造成了 `;
+
+                        // 基礎傷害字串
+                        let baseDmgStr = `${basePoints * 10}`;
+                        if (itemMult > 1) baseDmgStr += `×${itemMult}`;
+                        if (weakMult > 1) baseDmgStr += `×1.5`;
+
+                        let dmgFormulaParts = [];
+                        if (baseDmgStr !== `${basePoints * 10}`) {
+                            dmgFormulaParts.push(`(${baseDmgStr})`);
+                        } else {
+                            dmgFormulaParts.push(`${basePoints * 10}`);
+                        }
+
+                        // 裝備與加成字串
+                        let equipParts = [];
+                        if (atkBonusLogs && atkBonusLogs.length > 0) {
+                            equipParts = equipParts.concat(atkBonusLogs);
+                        }
+                        if (typeof newAbyssBonus !== 'undefined' && newAbyssBonus > 0) {
+                            equipParts.push(`[深淵加成]+${newAbyssBonus}`);
+                        }
+                        if (typeof activeFlameBonus !== 'undefined' && activeFlameBonus > 0) {
+                            equipParts.push(`[爆炎加成]+${activeFlameBonus}`);
+                        }
+
+                        if (equipParts.length > 0) {
+                            let equipDmgStr = equipParts.join('+');
+                            if (typeof flameMultiplier !== 'undefined' && flameMultiplier > 1) {
+                                dmgFormulaParts.push(`(${equipDmgStr})×${flameMultiplier}`);
+                            } else {
+                                dmgFormulaParts.push(equipDmgStr);
+                            }
+                        }
+
+                        if (dmgFormulaParts.length > 1 || baseDmgStr !== `${basePoints * 10}`) {
+                            logMsg += `${dmgFormulaParts.join('+')}=${damage} 點傷害！`;
+                        } else {
+                            logMsg += `${damage} 點傷害！`;
+                        }
+
+                        // 如果有被鐵壁抵擋
+                        if (typeof blockedDamage !== 'undefined' && blockedDamage > 0) {
+                            logMsg += ` (鐵壁抵擋了 ${blockedDamage} 傷)`;
+                        }
+
+                        app.addCombatLog('attack', logMsg);
                         
                         if (newMonsterHp <= 0) {
                             monsterDied = true;
@@ -10331,6 +10400,7 @@ for (const slot of slots) {
 // 3. 計算攻擊力加成 (冒險者之劍與元素符號飾品) [v4.7.9.1 修改]
         getAttackBonus: (equippedMap, formula = '') => {
             let bonus = 0;
+            let logs = []; // [新增] 用於紀錄傷害加成細節
             const globalList = app.state.globalSettings?.blackMarketList || [];
             
             // 計算公式中各符號出現的次數
@@ -10344,104 +10414,113 @@ for (const slot of slots) {
                     const item = globalList[itemId];
                     if (item) {
                         const lv = item.currentEditLv || 1;
+                        let itemBonus = 0;
                         
-                        // 效果: 冒險者之劍 (Lv1:+2, Lv2:+3... 公式: Lv+1)
+                        // 效果: 冒險者之劍基礎加成 (只要包含冒險者之劍就有，Lv1:+2, Lv2:+3... 公式: Lv+1)
                         if (item.name.includes('冒險者之劍')) {
-                            bonus += (lv + 1);
+                            itemBonus += (lv + 1);
                         }
+                        
                         // 效果: 森之冒險者之劍 (加號額外加成)
                         if (item.name.includes('森之冒險者之劍')) {
-                            if (countAdd >= 2) bonus += 2;
-                            else if (countAdd === 1) bonus += 1;
+                            if (countAdd >= 2) itemBonus += 2;
+                            else if (countAdd === 1) itemBonus += 1;
                         }
                         // 效果: 翠綠冒險者之劍 (加號額外加成)
                         if (item.name.includes('翠綠冒險者之劍')) {
-                            if (countAdd >= 2) bonus += 3;
-                            else if (countAdd === 1) bonus += 2;
+                            if (countAdd >= 2) itemBonus += 3;
+                            else if (countAdd === 1) itemBonus += 2;
                         }
                         // 效果: 炎之冒險者之劍 (乘號額外加成)
                         if (item.name.includes('炎之冒險者之劍')) {
-                            if (countMul >= 2) bonus += 2; // 連續乘法+2
-                            else if (countMul === 1) bonus += 1; // 單一乘法+1
+                            if (countMul >= 2) itemBonus += 2; // 連續乘法+2
+                            else if (countMul === 1) itemBonus += 1; // 單一乘法+1
                         }
                         // 效果: 烈焰冒險者之劍 (乘號額外加成)
                         if (item.name.includes('烈焰冒險者之劍')) {
-                            if (countMul >= 2) bonus += 3; // 連續乘法+3
-                            else if (countMul === 1) bonus += 2; // 單一乘法+2
+                            if (countMul >= 2) itemBonus += 3; // 連續乘法+3
+                            else if (countMul === 1) itemBonus += 2; // 單一乘法+2
                         }
                         
                         // 效果: 森之律動 (+)
                         if (item.name.includes('森之律動')) {
                             if (countAdd >= 2) {
-                                if (lv === 1) bonus += 1;
-                                else if (lv === 2) bonus += 2;
-                                else if (lv >= 3) bonus += 3;
+                                if (lv === 1) itemBonus += 1;
+                                else if (lv === 2) itemBonus += 2;
+                                else if (lv >= 3) itemBonus += 3;
                             } else if (countAdd === 1) {
-                                if (lv === 1) bonus += 1;
-                                else if (lv === 2) bonus += 1;
-                                else if (lv >= 3) bonus += 2;
+                                if (lv === 1) itemBonus += 1;
+                                else if (lv === 2) itemBonus += 1;
+                                else if (lv >= 3) itemBonus += 2;
                             }
                         }
                         // 效果: 爆炎刻印 (x)
                         if (item.name.includes('爆炎刻印')) {
                             if (countMul >= 2) {
-                                if (lv === 1) bonus += 1;
-                                else if (lv === 2) bonus += 2;
-                                else if (lv >= 3) bonus += 3;
+                                if (lv === 1) itemBonus += 1;
+                                else if (lv === 2) itemBonus += 2;
+                                else if (lv >= 3) itemBonus += 3;
                             } else if (countMul === 1) {
-                                if (lv === 1) bonus += 1;
-                                else if (lv === 2) bonus += 1;
-                                else if (lv >= 3) bonus += 2;
+                                if (lv === 1) itemBonus += 1;
+                                else if (lv === 2) itemBonus += 1;
+                                else if (lv >= 3) itemBonus += 2;
                             }
                         }
                         // 效果: 冰蝕咒紋 (-)
                         if (item.name.includes('冰蝕咒紋')) {
                             if (countSub >= 2) {
-                                if (lv === 1) bonus += 1;
-                                else if (lv === 2) bonus += 3;
-                                else if (lv >= 3) bonus += 4;
+                                if (lv === 1) itemBonus += 1;
+                                else if (lv === 2) itemBonus += 3;
+                                else if (lv >= 3) itemBonus += 4;
                             } else if (countSub === 1) {
-                                if (lv === 1) bonus += 1;
-                                else if (lv === 2) bonus += 1;
-                                else if (lv >= 3) bonus += 2;
+                                if (lv === 1) itemBonus += 1;
+                                else if (lv === 2) itemBonus += 1;
+                                else if (lv >= 3) itemBonus += 2;
                             }
                         }
                         // 效果: 冰蝕冒險者之劍 (-)
                         if (item.name.includes('冰蝕冒險者之劍')) {
-                            if (countSub >= 2) bonus += 4;
-                            else if (countSub === 1) bonus += 2;
+                            if (countSub >= 2) itemBonus += 4;
+                            else if (countSub === 1) itemBonus += 2;
                         }
                         // 效果: 冰之冒險者之劍 (-)
                         if (item.name.includes('冰之冒險者之劍')) {
-                            if (countSub >= 2) bonus += 3;
-                            else if (countSub === 1) bonus += 1;
+                            if (countSub >= 2) itemBonus += 3;
+                            else if (countSub === 1) itemBonus += 1;
                         }
                         // 效果: 深淵之印 (÷)
                         if (item.name.includes('深淵之印')) {
                             if (countDiv >= 2) {
-                                if (lv === 1) bonus += 1;
-                                else if (lv === 2) bonus += 4;
-                                else if (lv >= 3) bonus += 8;
+                                if (lv === 1) itemBonus += 1;
+                                else if (lv === 2) itemBonus += 4;
+                                else if (lv >= 3) itemBonus += 8;
                             } else if (countDiv === 1) {
-                                if (lv === 1) bonus += 1;
-                                else if (lv === 2) bonus += 2;
-                                else if (lv >= 3) bonus += 3;
+                                if (lv === 1) itemBonus += 1;
+                                else if (lv === 2) itemBonus += 2;
+                                else if (lv >= 3) itemBonus += 3;
                             }
                         }
                         // 效果: 暗之冒險者之劍 (÷)
                         if (item.name.includes('暗之冒險者之劍')) {
-                            if (countDiv >= 2) bonus += 4;
-                            else if (countDiv === 1) bonus += 2;
+                            if (countDiv >= 2) itemBonus += 4;
+                            else if (countDiv === 1) itemBonus += 2;
                         }
                         // 效果: 深淵冒險者之劍 (÷)
                         if (item.name.includes('深淵冒險者之劍')) {
-                            if (countDiv >= 2) bonus += 8;
-                            else if (countDiv === 1) bonus += 3;
+                            if (countDiv >= 2) itemBonus += 8;
+                            else if (countDiv === 1) itemBonus += 3;
+                        }
+
+                        if (itemBonus > 0) {
+                            bonus += itemBonus;
+                            const shortName = item.name.replace(/\[.*?\]|\(.*\)/g, '').trim();
+                            const lvTag = item.maxLv > 1 ? `(LV${lv})` : '';
+                            logs.push(`[${shortName}${lvTag}]+${itemBonus}`);
                         }
                     }
                 });
             }
-            return bonus;
+            return { total: bonus, logs: logs };
         },
 
        // 4. 計算最大血量加成 (狩獵證明 & 史萊姆的王冠) [新增]
