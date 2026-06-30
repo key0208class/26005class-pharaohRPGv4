@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.7.8 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.7.83 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -287,6 +287,12 @@
             10% { transform: scale(1.1) rotate(5deg); filter: grayscale(1) brightness(2) contrast(2); } /* 變亮僵直 */
             30% { transform: scale(1.1) rotate(-5deg); filter: sepia(1) hue-rotate(-50deg) saturate(5); opacity: 0.9; } /* 變紅/碎裂前兆 */
             100% { transform: scale(1.5) rotate(15deg); filter: blur(20px) brightness(0); opacity: 0; } /* 破碎淡出 */
+        }
+		/* [新增] 愛心療傷漂浮特效 */
+        @keyframes heal-float-up {
+            0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+            20% { transform: translate(-50%, -20px) scale(1.2); opacity: 1; filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.8)); }
+            100% { transform: translate(-50%, -100px) scale(1); opacity: 0; }
         }
 		/* [新增] 傷害數字跳出特效 */
         .damage-text {
@@ -622,7 +628,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.8 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.83 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -1610,7 +1616,7 @@
                              left-[50%]: 50%代表水平置中，搭配 -translate-x-1/2 確保完美置中
                              如果之後想調整位置，修改這兩個數值即可。
                         -->
-                        <div id="equip-slot-6" onclick="app.handleUnequipItem(6)" class="absolute top-[8%] left-[50%] -translate-x-1/2 w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg z-10">
+                        <div id="equip-slot-6" onclick="app.handleUnequipItem(6)" class="absolute top-[8%] left-[43%] -translate-x-1/2 w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg z-10">
                             <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">CLASS</span>
                         </div>
 
@@ -2376,10 +2382,14 @@
                         <div id="student-inventory" class="hidden flex items-center justify-between bg-amber-100/50 p-2 rounded-lg border border-amber-200 mx-2"><div class="flex items-center gap-2 mr-4 flex-shrink-0"><span class="text-1xl font-black text-amber-900 flex items-center shadow-sm bg-amber-200 px-2 rounded-lg">🎒 背包</span><div id="abyss-bonus-badge" class="hidden items-center gap-1 bg-red-100/90 text-red-900 px-2 py-0.5 rounded shadow-[0_0_12px_rgba(239,68,68,0.8)] text-xs font-black border-2 border-red-400 animate-pulse" title="深淵之印：本局固化攻擊力加成"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%94%BB%E6%93%8A%E5%8A%9B%E5%9B%BA%E5%8C%96.png" class="w-4 h-4 object-contain filter drop-shadow-sm"><span id="abyss-bonus-value" class="drop-shadow-sm">+0</span></div><div id="flame-bonus-badge" class="hidden items-center gap-1 bg-orange-100/90 text-orange-900 px-2 py-0.5 rounded shadow-[0_0_12px_rgba(249,115,22,0.8)] text-xs font-black border-2 border-orange-400 animate-pulse" title="爆炎刻印持續加成"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%81%AB%E5%8A%9B%E6%8F%90%E5%8D%87.png" class="w-4 h-4 object-contain filter drop-shadow-sm"><span id="flame-bonus-value" class="drop-shadow-sm">+0</span><span id="flame-bonus-rounds" class="text-[0.6rem] bg-orange-800 text-orange-100 px-1 rounded-full">3</span></div></div><div id="inventory-list" class="flex gap-3 flex-1 justify-end"></div></div>
 
                         <div class="bg-white rounded-xl p-4 shadow border-2 border-amber-300">
-                             <div class="flex justify-center gap-3 mb-3">
-                                <button onclick="app.inputChar(app.state.dice.d8)" id="s-dice-8" class="cursor-control-btn w-12 h-12 bg-amber-100 border-2 border-amber-400 rounded-lg font-black text-xl hover:bg-amber-200 active:bg-amber-300 transition-colors">-</button>
-                                <button onclick="app.inputChar(app.state.dice.d10)" id="s-dice-10" class="cursor-control-btn w-12 h-12 bg-amber-100 border-2 border-amber-400 rounded-lg font-black text-xl hover:bg-amber-200 active:bg-amber-300 transition-colors">-</button>
-                                <button onclick="app.inputChar(app.state.dice.d12)" id="s-dice-12" class="cursor-control-btn w-12 h-12 bg-amber-100 border-2 border-amber-400 rounded-lg font-black text-xl hover:bg-amber-200 active:bg-amber-300 transition-colors">-</button>
+                             <div class="flex items-center justify-center mb-3 relative w-full h-12">
+                                <div class="flex justify-center gap-3">
+                                    <button onclick="app.inputChar(app.state.dice.d8)" id="s-dice-8" class="cursor-control-btn w-12 h-12 bg-amber-100 border-2 border-amber-400 rounded-lg font-black text-xl hover:bg-amber-200 active:bg-amber-300 transition-colors">-</button>
+                                    <button onclick="app.inputChar(app.state.dice.d10)" id="s-dice-10" class="cursor-control-btn w-12 h-12 bg-amber-100 border-2 border-amber-400 rounded-lg font-black text-xl hover:bg-amber-200 active:bg-amber-300 transition-colors">-</button>
+                                    <button onclick="app.inputChar(app.state.dice.d12)" id="s-dice-12" class="cursor-control-btn w-12 h-12 bg-amber-100 border-2 border-amber-400 rounded-lg font-black text-xl hover:bg-amber-200 active:bg-amber-300 transition-colors">-</button>
+                                </div>
+                                <!-- [新增] 玩家技能專屬容器 (最右側) -->
+                                <div id="player-skill-container" class="absolute right-0 top-0 bottom-0 hidden items-center justify-center"></div>
                             </div>
                             
                             <div class="relative">
@@ -7179,9 +7189,31 @@ for (const slot of slots) {
                             }
                             
                             // [新增] 呼叫綠蛇啃咬特效 (只要發動吸血就顯示特效)
-                            app.triggerSnakeBiteEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a3.png');
+                           app.triggerSnakeBiteEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a3.png');
                         }
                         // ----------------------------------------------------
+                        
+                        // --- [新增] 職業書專屬：技能聚氣 ---
+                        let hasNoviceBook = false;
+                        if (myEquipped) {
+                            Object.values(myEquipped).forEach(itemId => {
+                                const item = globalList[itemId];
+                                if (item && item.name.includes('初心者職業書')) hasNoviceBook = true;
+                            });
+                        }
+                        
+                        if (hasNoviceBook) {
+                            const chargePath = `players/${app.state.myTeam}/${app.state.myName}/skillCharge`;
+                            const curCharge = (app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName]?.skillCharge !== undefined) ? app.state.gameData.players[app.state.myTeam][app.state.myName].skillCharge : 8;
+                            
+                            if (curCharge < 8) {
+                                updates[chargePath] = curCharge + 1;
+                                // 若本次加完剛好滿氣，延遲給予文字提示
+                                if (curCharge + 1 === 8) {
+                                    setTimeout(() => app.toast('✨ 聚氣完成！【療傷】已準備就緒！', 1), 500);
+                                }
+                            }
+                        }
 
                     } // 🟢 這裡補上了原本遺失的右大括號，結束 if (points > 0)
 
@@ -8651,6 +8683,49 @@ for (const slot of slots) {
                 }, freezeTime);
             }, riseTime);
         },
+		// [新增] 療傷專屬特效：愛心往上飄浮
+        triggerHealEffect: (imgUrl) => {
+            // 決定定位目標：優先找玩家在隊伍列表的區塊 (右側面板)
+            const targetContainerId = app.state.isHost ? 'teacher-personal-board' : 'student-squad-section';
+            const targetEl = document.getElementById(targetContainerId);
+            
+            let targetX = window.innerWidth / 2;
+            let targetY = window.innerHeight / 2;
+
+            if (targetEl) {
+                const rect = targetEl.getBoundingClientRect();
+                // 在該區塊內稍微隨機偏移，營造自然感
+                const randomX = (Math.random() - 0.5) * 60; 
+                targetX = rect.left + (rect.width / 2) + randomX;
+                targetY = rect.top + (rect.height / 2);
+            }
+
+            // 建立特效元素
+            const effect = document.createElement('div');
+            effect.style.cssText = `
+                position: fixed;
+                left: ${targetX}px;
+                top: ${targetY}px;
+                /* [可修改] 特效圖片寬度，數值越大圖片越寬 */
+                width: 140px; 
+                /* [可修改] 特效圖片高度，數值越大圖片越高 */
+                height: 140px; 
+                background-image: url('${imgUrl}');
+                background-size: contain;
+                background-position: center;
+                background-repeat: no-repeat;
+                pointer-events: none;
+                z-index: 9999;
+                /* 套用 CSS 的 heal-float-up 動畫 */
+                animation: heal-float-up 2s ease-out forwards;
+            `;
+            document.body.appendChild(effect);
+
+            // 觸發補血輕微震動
+            if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+
+            setTimeout(() => effect.remove(), 2000);
+        },
 		// [新增] BOSS 來襲警告特效
         triggerBossWarningEffect: () => {
             const overlay = document.createElement('div');
@@ -9005,8 +9080,43 @@ for (const slot of slots) {
             html += renderItem('elixir', '🏺', items.elixir, 'bg-red-100', '補血瓶(+30HP)');
 
             listEl.innerHTML = html;
+
+            // --- [新增] 渲染職業專屬技能 UI ---
+            const skillCon = app.el('player-skill-container');
+            if (skillCon) {
+                let hasNoviceBook = false;
+                const globalList = app.state.globalSettings?.blackMarketList || [];
+                if (myData.equipped) {
+                    Object.values(myData.equipped).forEach(itemId => {
+                        const item = globalList[itemId];
+                        if (item && item.name.includes('初心者職業書')) hasNoviceBook = true;
+                    });
+                }
+
+               if (hasNoviceBook) {
+                    const maxCharge = 8;
+                    const charge = myData.skillCharge !== undefined ? myData.skillCharge : maxCharge; // 預設滿氣
+                    const pct = Math.min(100, (charge / maxCharge) * 100);
+                    const isReady = charge >= maxCharge;
+                    
+                    // [修改] 移除綠色框線與圓形背景，改為沿著圖片邊緣發光的外陰影 (透明背景)
+                    const containerClass = isReady ? 'cursor-pointer hover:scale-110 drop-shadow-[0_0_12px_rgba(34,197,94,0.8)]' : 'cursor-not-allowed opacity-80 grayscale-[30%]';
+                    const filterClass = isReady ? 'filter-none drop-shadow-md animate-pulse' : 'filter-none opacity-90';
+                    const maskHeight = 100 - pct; // clip-path 遮罩高度 (0代表全滿，100代表空)
+
+                    // HTML 高度壓縮以防空白節點 (改用 bg-transparent、object-contain 且移除 border-2/rounded-full/overflow-hidden)
+                    skillCon.innerHTML = `<div onclick="${isReady ? 'app.useNoviceHeal()' : ''}" class="relative w-12 h-12 bg-transparent transition-all group ${containerClass}" title="療傷：回復10點生命 (需聚氣8次，目前${charge}/${maxCharge})"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/1%E7%99%82%E5%82%B7.png" class="absolute inset-0 w-full h-full object-contain grayscale opacity-40"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/1%E7%99%82%E5%82%B7.png" class="absolute inset-0 w-full h-full object-contain ${filterClass}" style="clip-path: inset(${maskHeight}% 0 0 0); transition: clip-path 0.4s ease-out;"></div>`;
+                    skillCon.classList.remove('hidden');
+                    skillCon.classList.add('flex');
+                } else {
+                    skillCon.innerHTML = '';
+                    skillCon.classList.add('hidden');
+                    skillCon.classList.remove('flex');
+                }
+            }
         },
 
+     
         // v3.4.0 更新：使用道具 (新增時之沙邏輯)
        // v4.7.2 更新：使用道具 (開放補血時機與視覺修正)
         useItem: (type) => {
@@ -9203,8 +9313,47 @@ for (const slot of slots) {
                 }
             }
             
-            // 重新渲染 (這會觸發 renderActiveItemStatus 更新介面)
+           // 重新渲染 (這會觸發 renderActiveItemStatus 更新介面)
             app.renderStudentInventory(app.state.gameData.players);
+        },
+
+        // --- [新增] 施展職業技能：療傷 ---
+        useNoviceHeal: () => {
+            const myData = app.state.gameData?.players?.[app.state.myTeam]?.[app.state.myName];
+            if (!myData) return;
+            
+            // 狀態與限制檢查
+            if (myData.hp <= 0) return app.toast('💀 重傷狀態無法施展技能！', 1);
+            const curCharge = myData.skillCharge !== undefined ? myData.skillCharge : 8; // 預設滿氣
+            if (curCharge < 8) return app.toast('⚠️ 能量聚氣尚未完成！請繼續破解圖騰。', 1);
+            if (myData.hp >= myData.maxHp) return app.toast('❤️ 生命值已滿，不需要療傷！', 1);
+
+            const playerRef = db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}`);
+            playerRef.transaction(p => {
+                if (p) {
+                    const c = p.skillCharge !== undefined ? p.skillCharge : 8;
+                    if (c >= 8) {
+                        p.skillCharge = 0; // 消耗所有聚氣
+                        p.hp = Math.min(p.maxHp, (p.hp || 0) + 10); // 回復10點血量，不超過上限
+                    }
+                }
+                return p;
+            }, (error, committed) => {
+                if (committed) {
+                    app.toast('✨ 施展【療傷】！恢復 10 點生命', 1);
+                    app.speak('施展療傷');
+                    
+                    // [新增] 呼叫愛心漂浮特效
+                    app.triggerHealEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/1.%E5%9B%9E%E5%BE%A9%E8%A1%80%E9%87%8F%E7%89%B9%E6%95%88_.png');
+                    // 原本的綠色數字特效
+                    app.showDamageText(10, '#22c55e', app.state.isHost ? 'teacher-personal-board' : 'student-squad-section'); 
+                    
+                    app.addCombatLog('item', `【${app.state.myName}】施展了職業技能【療傷】，恢復了 10 點生命。`);
+                    
+                    // 觸發重新渲染UI
+                    app.renderStudentInventory(app.state.gameData.players);
+                }
+            });
         },
 
        renderActiveItemStatus: () => {
@@ -10573,6 +10722,7 @@ for (const slot of slots) {
                         else if (item.name.includes('中級狩獵證明')) bonus += 15;
                         else if (item.name.includes('高級狩獵證明')) bonus += 20;
                         else if (item.name.includes('史萊姆的王冠')) bonus += 30; // 👑 史萊姆王冠血量加成
+                        else if (item.name.includes('初心者職業書')) bonus += 10; // 📘 初心者職業書血量加成
                     }
                 });
             }
