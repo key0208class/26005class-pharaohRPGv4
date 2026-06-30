@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.7.74 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.7.8 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -622,7 +622,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.74 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.8 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -1603,7 +1603,17 @@
                     <!-- 裝備背景與欄位容器 -->
                     <div class="relative w-full h-full bg-no-repeat bg-center bg-cover" style="background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%96%B0%E4%BA%BA%E7%89%A9%E8%A3%9D%E5%82%99%E5%9C%962.png');">
                         
-                        <!-- 6個裝備欄位 (3左 3右) -->
+                        <!-- 7個裝備欄位 (3左 3右 + 1中上職業格) -->
+                        <!-- [新增] 職業書裝備欄位 (置中偏上，位於 5級 和 15級 之間) -->
+                        <!-- 💡微調提示：
+                             top-[2%]: 控制垂直位置，數值越小越往上
+                             left-[50%]: 50%代表水平置中，搭配 -translate-x-1/2 確保完美置中
+                             如果之後想調整位置，修改這兩個數值即可。
+                        -->
+                        <div id="equip-slot-6" onclick="app.handleUnequipItem(6)" class="absolute top-[8%] left-[50%] -translate-x-1/2 w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg z-10">
+                            <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">CLASS</span>
+                        </div>
+
                         <div id="equip-slot-0" onclick="app.handleUnequipItem(0)" class="absolute top-[12%] left-[10%] w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg">
                             <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">HEAD</span>
                         </div>
@@ -10660,15 +10670,16 @@ for (const slot of slots) {
                 }
                 headerEquipContainer.innerHTML = tinyHtml;
             }
-            // --- B. 渲染裝備欄 (左側 6 格) [修改：加入等級鎖定] ---
-            // 定義每個格子的解鎖等級
-            const unlockLevels = [5, 15, 25, 35, 45, 55];
-            const slotLabels = ['LV.5','LV.15','LV.25','LV.35','LV.45','LV.55'];
+            // --- B. 渲染裝備欄 (左側 6 格 + 1 職業格) [修改：加入職業書專屬設定] ---
+            // 定義每個格子的解鎖等級 (第7格索引6為職業書，設為1等即解鎖)
+            const unlockLevels = [5, 15, 25, 35, 45, 55, 1];
+            const slotLabels = ['LV.5','LV.15','LV.25','LV.35','LV.45','LV.55','職業'];
             
             // [v4.7.8.2] 讀取是否啟用等級限制 (預設開啟)
             const limitEnabled = app.state.globalSettings?.equipSlotLimitEnabled !== false;
 
-            for (let i = 0; i < 6; i++) {
+            // 將迴圈次數改為 7，處理所有格子
+            for (let i = 0; i < 7; i++) {
                 const slotEl = app.el(`equip-slot-${i}`);
                 const equippedItemId = data.equipped[i];
                 // 若限制開啟且等級不足，則鎖定；若限制關閉，則全開
@@ -11080,34 +11091,41 @@ for (const slot of slots) {
             }
         }
         const accLv = app.getAccountLevel(data.exp);
-        const unlockLevels = [5, 15, 25, 35, 45, 55];
+        const unlockLevels = [5, 15, 25, 35, 45, 55]; // 一般裝備格解鎖等級
         
         // [v4.7.8.3] 讀取全域設定：裝備限制開關 (預設開啟)
         const limitEnabled = app.state.globalSettings?.equipSlotLimitEnabled !== false;
 
-        // 尋找第一個「已解鎖」且「為空」的格子
         let emptySlot = -1;
-        for (let i = 0; i < 6; i++) {
-            // 判斷條件：如果「限制被關閉」或者「玩家等級足夠」，則視為該格已解鎖
-            const isUnlocked = !limitEnabled || (accLv >= unlockLevels[i]);
-            
-            if (isUnlocked) {
-                if (!data.equipped[i]) {
-                    emptySlot = i;
-                    break;
+
+        // --- [新增] 嚴格判斷裝備類別 ---
+        if (targetItem && targetItem.name.includes('職業書')) {
+            // 1. 若裝備名稱包含「職業書」，只能放進專屬格子(索引 6)，且無視一般等級限制
+            if (!data.equipped[6]) {
+                emptySlot = 6;
+            } else {
+                return app.toast('❌ 職業格已滿！請先卸下目前的職業書。', 1);
+            }
+        } else {
+            // 2. 若為一般裝備，只能放在 0~5 格
+            for (let i = 0; i < 6; i++) {
+                const isUnlocked = !limitEnabled || (accLv >= unlockLevels[i]);
+                if (isUnlocked) {
+                    if (!data.equipped[i]) {
+                        emptySlot = i;
+                        break;
+                    }
                 }
             }
-        }
-
-        if (emptySlot === -1) {
-            // 錯誤訊息判斷
-            // 如果限制開啟，且有欄位是因為等級不足而沒被選中
-            const hasLockedSlot = limitEnabled && unlockLevels.some(lv => accLv < lv);
             
-            if (hasLockedSlot) {
-                return app.toast('❌ 無可用欄位！(部分欄位需更高等級解鎖)', 1);
-            } else {
-                return app.toast('❌ 裝備欄已滿！請先卸下舊裝備。', 1);
+            // 一般裝備錯誤訊息處理
+            if (emptySlot === -1) {
+                const hasLockedSlot = limitEnabled && unlockLevels.some(lv => accLv < lv);
+                if (hasLockedSlot) {
+                    return app.toast('❌ 無可用欄位！(一般裝備欄需升級解鎖)', 1);
+                } else {
+                    return app.toast('❌ 一般裝備欄已滿！請先卸下舊裝備。', 1);
+                }
             }
         }
 
