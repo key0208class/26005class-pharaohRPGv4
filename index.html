@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.7.83 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.7.84 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -628,7 +628,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.83 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.84 - 冒險模式版</h1>
             <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
@@ -9100,12 +9100,12 @@ for (const slot of slots) {
                     const isReady = charge >= maxCharge;
                     
                     // [修改] 移除綠色框線與圓形背景，改為沿著圖片邊緣發光的外陰影 (透明背景)
-                    const containerClass = isReady ? 'cursor-pointer hover:scale-110 drop-shadow-[0_0_12px_rgba(34,197,94,0.8)]' : 'cursor-not-allowed opacity-80 grayscale-[30%]';
-                    const filterClass = isReady ? 'filter-none drop-shadow-md animate-pulse' : 'filter-none opacity-90';
-                    const maskHeight = 100 - pct; // clip-path 遮罩高度 (0代表全滿，100代表空)
+                            const containerClass = isReady ? 'cursor-pointer hover:scale-110 drop-shadow-[0_0_12px_rgba(34,197,94,0.8)]' : 'cursor-not-allowed opacity-80 grayscale-[30%]';
+                            const filterClass = isReady ? 'filter-none drop-shadow-md' : 'filter-none opacity-90'; // [修改] 移除 animate-pulse，取消閃爍特效
+                            const maskHeight = 100 - pct; // clip-path 遮罩高度 (0代表全滿，100代表空)
 
                     // HTML 高度壓縮以防空白節點 (改用 bg-transparent、object-contain 且移除 border-2/rounded-full/overflow-hidden)
-                    skillCon.innerHTML = `<div onclick="${isReady ? 'app.useNoviceHeal()' : ''}" class="relative w-12 h-12 bg-transparent transition-all group ${containerClass}" title="療傷：回復10點生命 (需聚氣8次，目前${charge}/${maxCharge})"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/1%E7%99%82%E5%82%B7.png" class="absolute inset-0 w-full h-full object-contain grayscale opacity-40"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/1%E7%99%82%E5%82%B7.png" class="absolute inset-0 w-full h-full object-contain ${filterClass}" style="clip-path: inset(${maskHeight}% 0 0 0); transition: clip-path 0.4s ease-out;"></div>`;
+                    skillCon.innerHTML = `<div onclick="${isReady ? 'app.useNoviceHeal()' : ''}" class="relative w-12 h-12 bg-transparent transition-all group ${containerClass}" title="療傷：回復10點生命 (需聚氣8次，目前${charge}/${maxCharge})"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/1%E7%99%82%E5%82%B7a.png" class="absolute inset-0 w-full h-full object-contain grayscale opacity-40"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/1%E7%99%82%E5%82%B7a.png" class="absolute inset-0 w-full h-full object-contain ${filterClass}" style="clip-path: inset(${maskHeight}% 0 0 0); transition: clip-path 0.4s ease-out;"></div>`;
                     skillCon.classList.remove('hidden');
                     skillCon.classList.add('flex');
                 } else {
