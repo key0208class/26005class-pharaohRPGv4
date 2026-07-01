@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.8.1.3 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.8.2.1 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -636,7 +636,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.1.3 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.2.1 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -7854,8 +7854,32 @@ for (const slot of slots) {
                         // [新增] 檢查並觸發裝備專屬攻擊特效 (森之律動等)
                         app.checkAndTriggerEquipmentEffects(myPlayerData?.equipped, formula);
                         
-                        // [新增] 呼叫傷害數字顯示特效
-                        app.showDamageText(damage);
+                        // --- [新增] 怪物技能：護盾抵擋邏輯 ---
+                        let shieldAbsorbed = false;
+                        let currentShields = app.state.gameData.activeMonster?.shieldStacks || 0;
+                        
+                        if (currentShields > 0) {
+                            shieldAbsorbed = true;
+                            currentShields--;
+                            updates['activeMonster/shieldStacks'] = currentShields;
+                            
+                            damage = 0; // 護盾吸收全部傷害
+                            successMsg += ` (護盾破碎! 抵擋了攻擊!)`;
+                            
+                            // 護盾碎裂特效 (青色)
+                            setTimeout(() => {
+                                app.showDamageText("🛡️護盾破裂", "#06b6d4", app.state.isHost ? 'teacher-personal-board' : 'student-squad-section');
+                            }, 100);
+                            
+                            // 播放玻璃碎裂音效
+                            const audio = new Audio("https://taira-komori.net/sound_os2/game01/glass_break1.mp3");
+                            audio.volume = 0.5;
+                            audio.play().catch(()=>{});
+                        } else {
+                            // 若沒被護盾擋住，才顯示正常傷害數字
+                            app.showDamageText(damage);
+                        }
+                        // ----------------------------------------
 
                         const currentMonsterHp = app.state.gameData.activeMonster?.currentHp || 0;
                         const newMonsterHp = Math.max(0, currentMonsterHp - damage);
@@ -7898,8 +7922,10 @@ for (const slot of slots) {
                         // 3. 組合主結構
                         let fullFormula = `${baseDmgStr}${equipDmgStr}`;
                         
-                        // 4. 判斷是否有虛弱加成
-                        if (weakMult > 1) {
+                        // 4. 判斷是否觸發護盾或虛弱加成
+                        if (shieldAbsorbed) {
+                             logMsg += `致命一擊，但被【護盾】完全抵擋了！(護盾剩餘 ${currentShields} 層)`;
+                        } else if (weakMult > 1) {
                             logMsg += `(${fullFormula}) × 1.5(虛弱) = ${damage} 點傷害！`;
                         } else {
                             // 若無虛弱，但有裝備加成或倍數，才顯示等式
@@ -8443,8 +8469,22 @@ for (const slot of slots) {
                         const countEl = curseBadge.querySelector('.curse-count-text');
                         if (countEl) countEl.textContent = remoteMonster.curseRounds;
                     }
-                } else {
+               } else {
                     if (curseBadge) curseBadge.remove();
+                }
+
+                // [新增] 動態更新護盾狀態
+                let shieldBadge = existingCard.querySelector('.shield-badge-container');
+                if (remoteMonster.shieldStacks && remoteMonster.shieldStacks > 0) {
+                    if (!shieldBadge) {
+                        const badgeHtml = `<div class="shield-badge-container absolute top-4 -right-4 z-50 flex flex-col items-center justify-center bg-cyan-100 border-2 border-cyan-400 rounded-full w-10 h-10 shadow-[0_0_15px_rgba(34,211,238,0.8)] animate-pulse" title="護盾保護中(抵擋傷害)"><span class="text-lg leading-none filter drop-shadow">🛡️</span><span class="shield-count-text absolute -bottom-1 -left-1 bg-cyan-600 text-white text-[0.6rem] font-black px-1.5 py-0.5 rounded-full border border-white leading-none shadow-sm">${remoteMonster.shieldStacks}</span></div>`;
+                        existingCard.insertAdjacentHTML('afterbegin', badgeHtml);
+                    } else {
+                        const countEl = shieldBadge.querySelector('.shield-count-text');
+                        if (countEl) countEl.textContent = remoteMonster.shieldStacks;
+                    }
+                } else {
+                    if (shieldBadge) shieldBadge.remove();
                 }
 
                 // 檢查是否需要觸發特效 (根據 actionTime)
@@ -8491,6 +8531,16 @@ for (const slot of slots) {
                 </div>`;
             }
 
+          // [新增] 初始護盾圖示邏輯
+            let shieldBadgeHtml = '';
+            if (remoteMonster.shieldStacks && remoteMonster.shieldStacks > 0) {
+                shieldBadgeHtml = `
+                <div class="shield-badge-container absolute top-4 -right-4 z-50 flex flex-col items-center justify-center bg-cyan-100 border-2 border-cyan-400 rounded-full w-10 h-10 shadow-[0_0_15px_rgba(34,211,238,0.8)] animate-pulse" title="護盾保護中(抵擋傷害)">
+                    <span class="text-lg leading-none filter drop-shadow">🛡️</span>
+                    <span class="shield-count-text absolute -bottom-1 -left-1 bg-cyan-600 text-white text-[0.6rem] font-black px-1.5 py-0.5 rounded-full border border-white leading-none shadow-sm">${remoteMonster.shieldStacks}</span>
+                </div>`;
+            }
+
           // [新增] 怪物攻擊力與降攻標籤 (微調縮小版，並提升 z-index 確保不被特效擋住)
             const rawAtk = remoteMonster.atk || 10;
             const atkReduction = remoteMonster.atkReduction || 0;
@@ -8516,8 +8566,8 @@ for (const slot of slots) {
             }
 
             // 注意：已將怪物圖區域加上 overflow-hidden，並把背景特效(vfxLv2, Burst)插在 img 前面(z-0)，前景特效(vfxLv1, Circle)插在 img 後面(z-20)
-            // HTML 依然保持高度壓縮不換行，杜絕空白節點
-            container.innerHTML = `<div id="active-monster-card" data-monster-name="${remoteMonster.name}" class="monster-card-wrapper w-20 h-28 md:w-28 md:h-48 ${initialClass}" style="top:0.2rem;left:0.2rem;" onclick="app.activateMonsterCard()">${sealHtml}${curseBadgeHtml}${atkReduceBadgeHtml}<div class="monster-card-inner"><div class="monster-face monster-face-front flex flex-col bg-slate-900 border-2 border-amber-500 overflow-hidden shadow-lg"><div class="h-[72%] w-full relative bg-gray-800 flex items-center justify-center overflow-hidden">${vfxLv2}${vfxLv3Burst}<img id="monster-img-face" src="${faceImg}" class="w-full h-full object-contain relative z-10" alt="Monster">${vfxLv3Circle}${vfxLv1}${atkBadgeHtml}</div><div class="h-[28%] w-full bg-slate-900 flex flex-col justify-center items-center px-1 py-0.5"><div class="text-[0.65rem] md:text-sm font-black text-amber-400 truncate w-full text-center leading-tight">${remoteMonster.name}</div><div class="w-[90%] bg-gray-700 h-1 md:h-1.5 rounded-full overflow-hidden relative my-0.5 border border-black/40"><div id="monster-hp-bar-fill" class="bg-gradient-to-r from-red-600 to-red-400 h-full absolute top-0 left-0 transition-all duration-300" style="width:${hpPercent}%"></div></div><div id="monster-hp-text" class="text-[0.65rem] md:text-base text-white font-mono font-bold leading-none drop-shadow-sm">HP ${currentHp}/${maxHp}</div></div></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div><div class="absolute w-24 md:w-32 flex flex-wrap justify-center gap-1 pointer-events-auto z-40 top-[7.5rem] md:top-[13.5rem] right-[0.2rem] md:right-[0.5rem]"><div class="flex flex-wrap justify-end gap-1 text-[0.6rem] md:text-xs font-bold shadow-sm">${statusHtml}</div></div>`;
+            // HTML 依然保持高度壓縮不換行，杜絕空白節點 (此處加入了 shieldBadgeHtml)
+            container.innerHTML = `<div id="active-monster-card" data-monster-name="${remoteMonster.name}" class="monster-card-wrapper w-20 h-28 md:w-28 md:h-48 ${initialClass}" style="top:0.2rem;left:0.2rem;" onclick="app.activateMonsterCard()">${sealHtml}${curseBadgeHtml}${shieldBadgeHtml}${atkReduceBadgeHtml}<div class="monster-card-inner"><div class="monster-face monster-face-front flex flex-col bg-slate-900 border-2 border-amber-500 overflow-hidden shadow-lg"><div class="h-[72%] w-full relative bg-gray-800 flex items-center justify-center overflow-hidden">${vfxLv2}${vfxLv3Burst}<img id="monster-img-face" src="${faceImg}" class="w-full h-full object-contain relative z-10" alt="Monster">${vfxLv3Circle}${vfxLv1}${atkBadgeHtml}</div><div class="h-[28%] w-full bg-slate-900 flex flex-col justify-center items-center px-1 py-0.5"><div class="text-[0.65rem] md:text-sm font-black text-amber-400 truncate w-full text-center leading-tight">${remoteMonster.name}</div><div class="w-[90%] bg-gray-700 h-1 md:h-1.5 rounded-full overflow-hidden relative my-0.5 border border-black/40"><div id="monster-hp-bar-fill" class="bg-gradient-to-r from-red-600 to-red-400 h-full absolute top-0 left-0 transition-all duration-300" style="width:${hpPercent}%"></div></div><div id="monster-hp-text" class="text-[0.65rem] md:text-base text-white font-mono font-bold leading-none drop-shadow-sm">HP ${currentHp}/${maxHp}</div></div></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div><div class="absolute w-24 md:w-32 flex flex-wrap justify-center gap-1 pointer-events-auto z-40 top-[7.5rem] md:top-[13.5rem] right-[0.2rem] md:right-[0.5rem]"><div class="flex flex-wrap justify-end gap-1 text-[0.6rem] md:text-xs font-bold shadow-sm">${statusHtml}</div></div>`;
 			if (isFreshSummon) {
                 setTimeout(() => {
                     const el = document.getElementById('active-monster-card');
@@ -8565,6 +8615,8 @@ for (const slot of slots) {
 
                 // --- [實作] 結算怪物技能加成 (進入戰鬥時觸發) ---
                 let activatedSkillsMsg = [];
+                let hasSwiftStrike = false; // [新增] 紀錄是否有迅擊技能
+
                 if (newMonsterData.campaignSkills && newMonsterData.campaignSkills.length > 0) {
                     newMonsterData.campaignSkills.forEach(sk => {
                         const skillName = sk.name || '';
@@ -8583,12 +8635,12 @@ for (const slot of slots) {
                             newMonsterData.atk += bonusAtk;
                             activatedSkillsMsg.push(`${skillName}(攻擊力+${bonusAtk})`);
                         }
-						// 3. 鐵壁 (傷害減免) - LV1=10%, LV2=15%...
+                        // 3. 鐵壁 (傷害減免) - LV1=10%, LV2=15%...
                         if (skillName.includes('鐵壁')) {
                             const reducePct = 10 + ((sk.lv || 1) - 1) * 5;
                             activatedSkillsMsg.push(`${skillName}(減傷${reducePct}%)`);
                         }
-						 // 4. 重甲 (複合加成) - 增加血量並減傷
+                         // 4. 重甲 (複合加成) - 增加血量並減傷
                         if (skillName.includes('重甲')) {
                             let bonusHp = 0;
                             let reducePct = 10;
@@ -8599,6 +8651,17 @@ for (const slot of slots) {
                             newMonsterData.maxHp += bonusHp;
                             newMonsterData.currentHp += bonusHp;
                             activatedSkillsMsg.push(`${skillName}(HP+${bonusHp}, 減傷${reducePct}%)`);
+                        }
+                        // 5. 迅擊 (出場立即攻擊一次) - 限定 LV2
+                        if (skillName.includes('迅擊') && sk.lv === 2) {
+                            activatedSkillsMsg.push(`${skillName}(出場立即攻擊)`);
+                            hasSwiftStrike = true;
+                        }
+                        
+                        // 6. 護盾 (傷害抵擋) - 依據技能等級給予層數
+                        if (skillName.includes('護盾')) {
+                            newMonsterData.shieldStacks = sk.lv || 1;
+                            activatedSkillsMsg.push(`${skillName}(${newMonsterData.shieldStacks}層)`);
                         }
                     });
                 }
@@ -8613,6 +8676,53 @@ for (const slot of slots) {
                         const msg = `⚠️ 【${template.name}】發動了技能：${activatedSkillsMsg.join('、')}！`;
                         app.toast(msg, 1);
                         app.addCombatLog('attack', msg);
+                    }
+
+                    // --- [新增] 執行迅擊技能 (出場立即攻擊) ---
+                    if (hasSwiftStrike) {
+                        setTimeout(() => {
+                            const damage = newMonsterData.atk || 10;
+                            const playersData = app.state.gameData.players || {};
+                            const updates = {};
+                            let specificSpeech = "迅擊發動！";
+
+                            // 遍歷扣血
+                            Object.keys(playersData).forEach(teamKey => {
+                                const members = playersData[teamKey];
+                                if (members) {
+                                    Object.keys(members).forEach(pName => {
+                                        const p = members[pName];
+                                        // 已經死亡重傷的玩家保護，不再重複扣血
+                                        if (p.hp <= 0 && p.reviveAt && p.reviveAt > Date.now()) return;
+
+                                        const oldHp = (p.hp !== undefined) ? p.hp : 100;
+                                        let newHp = Math.max(0, oldHp - damage);
+                                        updates[`players/${teamKey}/${pName}/hp`] = newHp;
+
+                                        // 死亡判定
+                                        if (newHp <= 0 && oldHp > 0) {
+                                            const hostName = app.state.gameData.hostName; 
+                                            if (pName === hostName) {
+                                                specificSpeech = "隊長陣亡！冒險失敗！";
+                                                setTimeout(() => app.triggerEndGame(), 1000); 
+                                            } else {
+                                                const reviveTime = Date.now() + 120000; 
+                                                updates[`players/${teamKey}/${pName}/reviveAt`] = reviveTime;
+                                            }
+                                        }
+                                    });
+                                }
+                            });
+
+                            // 寫入怪物攻擊動作與時間 (為了觸發視覺特效)
+                            updates[`activeMonster/action`] = 'attack';
+                            updates[`activeMonster/actionTime`] = firebase.database.ServerValue.TIMESTAMP;
+
+                            db.ref(`classes/${app.state.classId}`).update(updates);
+                            app.speak(specificSpeech);
+                            app.toast(`⚡ 【迅擊】發動！全體受到 ${damage} 點傷害！`, 1);
+                            app.addCombatLog('attack', `⚠️ 【${template.name}】發動了 ⚡ 迅擊，對全體造成了 ${damage} 點傷害！`);
+                        }, 2000); // 延遲2秒，確保怪物出場翻牌動畫完成後再發動攻擊
                     }
                 });
                 
