@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.7.84 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.7.9 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -568,7 +568,15 @@
         .log-entry { 
             animation: fadeIn 0.3s ease-out; 
         }
+/* --- [新增] 資訊公告跑馬燈與公告欄樣式 --- */
+        .marquee-container { width: 100%; max-width: 600px; margin: 0 auto; overflow: hidden; white-space: nowrap; position: relative; background: rgba(251, 191, 36, 0.2); border-radius: 99px; padding: 4px 15px; border: 1px solid rgba(217, 119, 6, 0.4); box-shadow: inset 0 0 10px rgba(0,0,0,0.05); }
+        .marquee-content { display: inline-block; padding-left: 100%; animation: marquee-scroll 25s linear infinite; font-weight: bold; color: #b45309; font-size: 0.9rem; cursor: pointer;}
+        .marquee-content:hover { animation-play-state: paused; text-decoration: underline; }
+        @keyframes marquee-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .bulletin-item { transition: all 0.2s; border-left: 4px solid transparent; }
+        .bulletin-item:hover { border-left-color: #d97706; background-color: #fffbeb; transform: translateX(4px); }
 
+        /* ====== [新增] 怪物技能專屬疊加特效 ====== */
         /* ====== [新增] 怪物技能專屬疊加特效 ====== */
         /* LV1: 底部火焰地環 (上下浮動呼吸) */
         @keyframes skill-fire-ring {
@@ -628,8 +636,12 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.84 - 冒險模式版</h1>
-            <p class="text-lg text-amber-700 font-medium">連線版 - 古埃及數學試煉</p>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.9 - 冒險模式版</h1>
+            <!-- 公告跑馬燈開始 -->
+            <div class="marquee-container mt-1">
+                <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
+            </div>
+            <!-- 公告跑馬燈結束 -->
             <div id="connection-status" class="absolute top-0 right-0 text-xs font-mono text-gray-400">連線中...</div>
         </div>
         
@@ -765,7 +777,18 @@
                                 <span>🔄</span> <span class="hidden md:inline">重新整理</span>
                             </button>
                         </div>
-                        
+                        <!-- 冒險資訊公告欄開始 -->
+                        <div class="bg-amber-50 rounded-xl border border-amber-300 shadow-sm mb-4 overflow-hidden flex flex-col max-h-[220px]">
+                            <div class="bg-amber-200/50 px-4 py-2 border-b border-amber-300 flex justify-between items-center shrink-0">
+                                <span class="font-black text-amber-900 text-sm flex items-center gap-2">📢 冒險資訊公告</span>
+                                <span class="text-[0.65rem] text-amber-700 font-bold">點擊標題查看詳情</span>
+                            </div>
+                            <div id="lobby-bulletin-board" class="flex-1 overflow-y-auto p-2 custom-scrollbar space-y-1 bg-white">
+                                <!-- JS 動態生成公告 -->
+                                <div class="text-center text-xs text-gray-400 py-4">讀取中...</div>
+                            </div>
+                        </div>
+                        <!-- 冒險資訊公告欄結束 -->
                         <div id="lobby-room-list" class="space-y-3 flex-1 overflow-y-auto pr-2">
                             <div class="text-center text-gray-400 py-10">
                                 <div class="text-4xl mb-2">🍃</div>
@@ -855,6 +878,8 @@
                    <button onclick="app.switchAdminTab('blackmarket')" id="tab-btn-blackmarket" class="admin-tab-btn flex-1 whitespace-nowrap">🧛 黑市商品</button>
                     <!-- [新增 v4.8.0.8] 角色圖示分頁按鈕 -->
                     <button onclick="app.switchAdminTab('sprites')" id="tab-btn-sprites" class="admin-tab-btn flex-1 whitespace-nowrap">🧙 角色圖示</button>
+					<!-- [新增] 資訊公告分頁按鈕 -->
+                    <button onclick="app.switchAdminTab('announcements')" id="tab-btn-announcements" class="admin-tab-btn flex-1 whitespace-nowrap">📢 資訊公告</button>
                 </div>
                 
                 <div class="space-y-6 flex-1 overflow-y-auto pr-1 custom-scrollbar">
@@ -1510,6 +1535,48 @@
                                 <!-- JS 動態生成配方列表 -->
                             </div>
                         </div>
+						<!-- [新增] 公告管理分頁內容開始 -->
+                    <div id="tab-content-announcements" class="admin-tab-content space-y-4">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                            <!-- 左側：公告列表 -->
+                            <div class="bg-white rounded-xl border border-slate-300 flex flex-col h-[400px] lg:h-auto overflow-hidden shadow-sm">
+                                <div class="bg-slate-100 p-3 border-b border-slate-200 font-bold text-slate-700 text-sm flex justify-between items-center">
+                                    <span>📂 已發布公告</span>
+                                    <button onclick="app.addNewAnnouncement()" class="text-xs bg-green-600 text-white px-3 py-1 rounded font-bold hover:bg-green-700 shadow-sm">+ 新增</button>
+                                </div>
+                                <div id="admin-announcement-list" class="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+                                    <!-- JS 生成 -->
+                                </div>
+                            </div>
+                            
+                            <!-- 右側：編輯區 -->
+                            <div class="lg:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-300 flex flex-col gap-4 shadow-inner">
+                                <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+                                    <h4 class="font-bold text-slate-800 text-lg">📝 公告內容編輯器</h4>
+                                </div>
+                                <input type="hidden" id="edit-ann-idx">
+                                <div class="flex gap-4">
+                                    <div class="w-1/3">
+                                        <label class="block text-xs font-bold text-gray-500 mb-1">發布日期 (例如: 2026/05/21)</label>
+                                        <input type="text" id="edit-ann-date" class="w-full border-2 border-slate-300 rounded-lg p-2 font-bold text-slate-800 bg-white" placeholder="YYYY/MM/DD">
+                                    </div>
+                                    <div class="w-2/3">
+                                        <label class="block text-xs font-bold text-gray-500 mb-1">公告標題</label>
+                                        <input type="text" id="edit-ann-title" class="w-full border-2 border-slate-300 rounded-lg p-2 font-bold text-slate-800 bg-white" placeholder="輸入標題...">
+                                    </div>
+                                </div>
+                                <div class="flex-1 flex flex-col">
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">詳細內容 (支援換行)</label>
+                                    <textarea id="edit-ann-content" class="w-full flex-1 min-h-[200px] border-2 border-slate-300 rounded-lg p-3 text-sm font-medium text-slate-700 bg-white resize-none custom-scrollbar" placeholder="輸入公告內容..."></textarea>
+                                </div>
+                                <div class="pt-4 border-t border-slate-200 flex gap-2">
+                                    <button onclick="app.deleteCurrentAnnouncement()" class="flex-1 bg-red-100 text-red-600 py-2 rounded-lg font-bold hover:bg-red-200 transition-colors">🗑️ 刪除此篇</button>
+                                    <button onclick="app.saveCurrentAnnouncementEdit()" class="flex-[2] bg-blue-600 text-white py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition-transform active:scale-95">💾 暫存設定</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 公告管理分頁內容結束 -->
 					<!-- [新增 v4.8.0.8] 角色圖示設定分頁 -->
                     <div id="tab-content-sprites" class="admin-tab-content space-y-4">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -1596,6 +1663,27 @@
                 </div>
              </div>
         </div>
+		<!-- [新增] 玩家閱讀公告彈窗開始 -->
+        <div id="announcement-modal" class="fixed inset-0 z-[80] hidden flex items-center justify-center modal-backdrop backdrop-blur-sm">
+            <div class="bg-white rounded-2xl w-full max-w-lg mx-4 shadow-2xl border-4 border-amber-500 flex flex-col overflow-hidden relative animate-[popIn_0.3s_ease-out] max-h-[80vh]">
+                <div class="bg-gradient-to-r from-amber-100 to-amber-200 p-4 border-b-2 border-amber-300 flex justify-between items-start shrink-0">
+                    <div>
+                        <div id="read-ann-date" class="text-xs font-bold text-amber-700 mb-1 bg-amber-50 inline-block px-2 py-0.5 rounded border border-amber-200">2026/01/01</div>
+                        <h3 id="read-ann-title" class="text-xl font-black text-amber-900 leading-tight">公告標題</h3>
+                    </div>
+                    <button onclick="app.el('announcement-modal').classList.add('hidden')" class="text-amber-800 hover:text-red-600 font-black text-2xl px-2 transition-colors active:scale-90 bg-white/50 rounded-lg">✕</button>
+                </div>
+                <div class="flex-1 p-5 overflow-y-auto custom-scrollbar bg-slate-50/50">
+                    <div id="read-ann-content" class="text-sm md:text-base text-slate-700 font-medium leading-relaxed whitespace-pre-wrap word-break">
+                        公告內容...
+                    </div>
+                </div>
+                <div class="p-3 bg-amber-50 border-t border-amber-200 text-center shrink-0">
+                    <button onclick="app.el('announcement-modal').classList.add('hidden')" class="w-full bg-amber-600 text-white py-2 rounded-xl font-bold shadow-md hover:bg-amber-700 active:scale-95 transition-transform">確認</button>
+                </div>
+            </div>
+        </div>
+        <!-- 玩家閱讀公告彈窗結束 -->
 		<!-- [新增 v4.7.7.4] 角色背包與裝備系統 (RPG Style) -->
         <div id="character-backpack-modal" class="fixed inset-0 z-[80] hidden flex items-center justify-center modal-backdrop backdrop-blur-md">
             <!-- [v4.7.7.7 修改] 羊皮紙風格介面 -->
@@ -4795,6 +4883,8 @@
             app.state.campaigns = settings.campaigns || [];
             // [v4.8.0.8] 讀取角色圖示設定
             app.state.tempSpriteList = settings.spriteList || [];
+            // [新增] 讀取公告系統設定
+            app.state.tempAnnouncements = settings.announcements || [];
             // [v4.6.8] 讀取商店設定 (新增)
             const shopConfig = settings.shopConfig || {};
                 const shopItems = ['hint', 'double', 'horus', 'nile', 'time', 'shard', 'seal', 'anubis', 'mummy', 'herb', 'potion', 'elixir'];
@@ -4813,6 +4903,9 @@
 
                 // 初始顯示列表視圖
                 app.switchMonsterView('list');
+				  // [新增] 初始化渲染大廳與跑馬燈公告
+                app.renderLobbyAnnouncements();
+                app.renderMarquee();
             });
         },
 
@@ -4903,10 +4996,15 @@
             campaigns: app.state.campaigns || [],
             // [v4.8.0.8] 儲存角色圖示列表
             spriteList: app.state.tempSpriteList || [],
+            // [新增] 儲存公告列表
+            announcements: app.state.tempAnnouncements || [],
             timestamp: firebase.database.ServerValue.TIMESTAMP
         };
 
         db.ref('global_settings').set(settings).then(() => {
+            // [新增] 儲存後立即更新首頁大廳的公告顯示
+            app.renderLobbyAnnouncements();
+            app.renderMarquee();
                 app.state.globalSettings = settings; 
                 app.el('admin-settings-modal').classList.add('hidden');
                 
@@ -12435,8 +12533,172 @@ addRewardItem: () => {
                 app.toast(`🚀 戰役開始！`, 1);
                 app.speak('出擊！');
             });
+        },
+
+        // ==========================================
+        // --- [新增] 冒險資訊公告與跑馬燈系統邏輯 ---
+        // ==========================================
+        
+        // 切換到公告管理 Tab 時會自動呼叫此渲染
+        switchAdminTab: (tabName) => {
+            document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('admin-tab-active'));
+            app.el(`tab-content-${tabName}`).classList.add('active');
+            app.el(`tab-btn-${tabName}`).classList.add('admin-tab-active');
+
+            if(app.el('crafting-system-view')) app.el('crafting-system-view').classList.add('hidden');
+            if(app.el('blackmarket-editor-view')) app.el('blackmarket-editor-view').classList.add('hidden');
+            if(app.el('blackmarket-list-view')) app.el('blackmarket-list-view').classList.remove('hidden');
+
+            if (tabName === 'blackmarket') app.renderBlackMarketListUI();
+            else if (tabName === 'monsters') app.renderMonsterListUI();
+            else if (tabName === 'sprites') app.renderSpriteListUI();
+            else if (tabName === 'announcements') app.renderAdminAnnouncementList(); // [新增]
+        },
+
+        // 後台：渲染公告列表
+        renderAdminAnnouncementList: () => {
+            const list = app.state.tempAnnouncements || [];
+            const container = app.el('admin-announcement-list');
+            const currentIdx = parseInt(app.el('edit-ann-idx').value);
+            
+            // 依照日期新到舊排序 (建立時使用 timestamp 做輔助排序也可以，這裡簡易依陣列反轉顯示)
+            let html = '';
+            if (list.length === 0) {
+                html = '<div class="text-center text-gray-400 py-6 text-xs font-bold border-2 border-dashed rounded-lg">尚無任何公告</div>';
+            } else {
+                list.forEach((ann, idx) => {
+                    const isSelected = idx === currentIdx ? 'bg-blue-100 border-blue-400' : 'bg-white hover:bg-slate-50 border-slate-200';
+                    // 無空白節點寫法
+                    html += `<div onclick="app.editAnnouncement(${idx})" class="p-2 border rounded-lg cursor-pointer transition-colors shadow-sm mb-1 ${isSelected}"><div class="text-[0.65rem] text-slate-500 font-mono mb-0.5">${ann.date || '無日期'}</div><div class="font-bold text-slate-800 text-sm truncate">${ann.title || '無標題'}</div></div>`;
+                });
+            }
+            container.innerHTML = html;
+        },
+
+        // 後台：新增公告
+        addNewAnnouncement: () => {
+            if (!app.state.tempAnnouncements) app.state.tempAnnouncements = [];
+            
+            // 自動取得今日日期 YYYY/MM/DD
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
+
+            app.state.tempAnnouncements.unshift({
+                date: todayStr,
+                title: '新公告標題',
+                content: '在這裡輸入公告詳細內容...',
+                timestamp: Date.now()
+            });
+            
+            app.editAnnouncement(0); // 編輯最新的一篇
+            app.renderAdminAnnouncementList();
+        },
+
+        // 後台：編輯指定公告
+        editAnnouncement: (idx) => {
+            const ann = app.state.tempAnnouncements[idx];
+            if (!ann) return;
+
+            app.el('edit-ann-idx').value = idx;
+            app.el('edit-ann-date').value = ann.date || '';
+            app.el('edit-ann-title').value = ann.title || '';
+            app.el('edit-ann-content').value = ann.content || '';
+            
+            app.renderAdminAnnouncementList(); // 更新高亮狀態
+        },
+
+        // 後台：暫存當前公告
+        saveCurrentAnnouncementEdit: () => {
+            const idx = parseInt(app.el('edit-ann-idx').value);
+            if (isNaN(idx)) return app.toast('請先選擇或新增一篇公告', 1);
+
+            const title = app.el('edit-ann-title').value.trim();
+            if (!title) return app.toast('標題不可為空！', 1);
+
+            app.state.tempAnnouncements[idx] = {
+                date: app.el('edit-ann-date').value.trim(),
+                title: title,
+                content: app.el('edit-ann-content').value.trim(),
+                timestamp: app.state.tempAnnouncements[idx].timestamp || Date.now()
+            };
+
+            app.renderAdminAnnouncementList();
+            app.toast('✅ 公告已暫存 (請記得點擊下方「儲存全域設定」)', 1);
+        },
+
+        // 後台：刪除當前公告
+        deleteCurrentAnnouncement: () => {
+            const idx = parseInt(app.el('edit-ann-idx').value);
+            if (isNaN(idx)) return;
+
+            if (confirm('🗑️ 確定要刪除這篇公告嗎？')) {
+                app.state.tempAnnouncements.splice(idx, 1);
+                app.el('edit-ann-idx').value = '';
+                app.el('edit-ann-date').value = '';
+                app.el('edit-ann-title').value = '';
+                app.el('edit-ann-content').value = '';
+                app.renderAdminAnnouncementList();
+            }
+        },
+
+        // 前台大廳：渲染右側公告欄
+        renderLobbyAnnouncements: () => {
+            const container = app.el('lobby-bulletin-board');
+            if (!container) return;
+            const list = app.state.globalSettings?.announcements || [];
+            
+            let html = '';
+            if (list.length === 0) {
+                html = '<div class="text-center text-xs text-gray-400 py-6">目前沒有最新資訊</div>';
+            } else {
+                // 最多顯示最新 10 條
+                const displayList = list.slice(0, 10);
+                displayList.forEach((ann, idx) => {
+                    // 無空白節點寫法，加入 NEW 標籤 (若是前 2 條)
+                    const newTag = idx < 2 ? `<span class="bg-red-500 text-white text-[0.55rem] px-1 rounded-sm shadow-sm ml-1 animate-pulse">NEW</span>` : '';
+                    html += `<div onclick="app.showAnnouncementDetail(${idx})" class="bulletin-item p-2 rounded cursor-pointer flex flex-col md:flex-row md:items-center gap-1 md:gap-3 border-b border-gray-100 last:border-0"><span class="text-[0.65rem] font-mono text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 shrink-0 text-center w-fit">${ann.date}</span><span class="text-sm font-bold text-slate-700 truncate flex-1 flex items-center">${ann.title}${newTag}</span></div>`;
+                });
+            }
+            container.innerHTML = html;
+        },
+
+        // 前台大廳：渲染跑馬燈
+        renderMarquee: () => {
+            const marqueeEl = app.el('lobby-marquee-content');
+            if (!marqueeEl) return;
+            const list = app.state.globalSettings?.announcements || [];
+            
+            if (list.length === 0) {
+                marqueeEl.innerHTML = '🏺 歡迎來到神殿試煉 - 連線版古埃及數學試煉！';
+            } else {
+                // 取最新 3 條組合為跑馬燈文字
+                const top3 = list.slice(0, 3);
+                let marqueeText = '';
+                top3.forEach(ann => {
+                    marqueeText += `【${ann.date}】${ann.title} ✦ `;
+                });
+                marqueeText += '歡迎各位冒險者來到神殿試煉！';
+                
+                marqueeEl.innerHTML = marqueeText;
+                // 點擊跑馬燈直接打開第一則公告
+                marqueeEl.onclick = () => app.showAnnouncementDetail(0);
+            }
+        },
+
+        // 玩家：點擊開啟公告閱讀視窗
+        showAnnouncementDetail: (idx) => {
+            const list = app.state.globalSettings?.announcements || [];
+            const ann = list[idx];
+            if (!ann) return;
+
+            app.el('read-ann-date').textContent = ann.date || '';
+            app.el('read-ann-title').textContent = ann.title || '無標題';
+            app.el('read-ann-content').textContent = ann.content || '無內容'; // 使用 textContent 防止 XSS，CSS word-break 會自動換行
+
+            app.el('announcement-modal').classList.remove('hidden');
         }
-    };
+    }; // app 結尾
 
     // 啟動
     window.addEventListener('DOMContentLoaded', app.init);
