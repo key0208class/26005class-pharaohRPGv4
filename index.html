@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.7.9.1 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.8.0 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -636,7 +636,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.7.9.1 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.0 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -647,9 +647,11 @@
         
         <div id="admin-gear-btn" class="admin-gear shadow-lg" onclick="app.openAdminAuth()" title="管理員設定">⚙️</div>
 
-        <div id="page-lobby" class="max-w-6xl mx-auto fade-in">
-            <div class="grid md:grid-cols-12 gap-6">
-                <div class="md:col-span-4 space-y-6">
+        <!-- 首頁大廳區塊開始 -->
+        <div id="page-lobby" class="max-w-[90rem] mx-auto fade-in px-2 w-full">
+            <div class="grid lg:grid-cols-12 md:grid-cols-12 gap-4 lg:gap-6">
+                <!-- 左側：冒險者資料區 -->
+                <div class="lg:col-span-3 md:col-span-5 space-y-6 flex flex-col">
                     <div class="lobby-card p-6 text-center relative overflow-hidden">
                        <div id="auth-panel-logged-in" class="hidden flex-col items-center animate-[fadeIn_0.5s_ease-out]">
                              <img id="user-avatar" src="" class="w-24 h-24 rounded-full border-4 border-amber-400 shadow-lg mb-4 object-cover" alt="Avatar">
@@ -755,8 +757,9 @@
                     </div>
                 </div>
 
-                <div class="md:col-span-8">
-                    <div class="lobby-card p-6 min-h-[500px] flex flex-col">
+                <!-- 中間：冒險大廳與房間列表 -->
+                <div class="lg:col-span-6 md:col-span-7 flex flex-col">
+                    <div class="lobby-card p-6 min-h-[500px] flex flex-col flex-1">
                         <div class="flex flex-wrap justify-between items-center mb-6 border-b border-amber-200 pb-4 gap-2">
                           <div class="flex items-center gap-3">
                                 <h2 class="text-2xl font-black text-amber-900">🗺️ 冒險大廳</h2>
@@ -798,6 +801,37 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 右側：世界頻道聊天室開始 -->
+                <div class="lg:col-span-3 md:col-span-12 flex flex-col h-[600px] lg:h-auto mt-4 lg:mt-0">
+                    <div class="lobby-card p-4 flex flex-col flex-1 bg-white/95 backdrop-blur-sm border-2 border-amber-400">
+                        <div class="flex justify-between items-center border-b-2 border-amber-200 pb-2 mb-3 shrink-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl drop-shadow filter animate-pulse">🌍</span>
+                                <div>
+                                    <h2 class="text-xl font-black text-amber-900 leading-tight">世界頻道</h2>
+                                    <p class="text-[0.65rem] text-amber-700 font-bold tracking-widest">冒險者的交流集散地</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold text-white bg-green-500 px-2 py-0.5 rounded-full animate-pulse shadow-sm">在線</span>
+                        </div>
+                        
+                        <!-- tlk.io 聊天室容器 -->
+                        <!-- [可修改] 若要更改聊天室主題，可修改 data-theme 為 theme--night(黑) 或 theme--day(白) -->
+                        <div class="flex-1 w-full bg-slate-50 rounded-xl overflow-hidden border border-amber-300 shadow-inner relative">
+                            <div id="tlkio" data-channel="26005" data-theme="theme--day" class="absolute inset-0 w-full h-full"></div>
+                        </div>
+                        <p class="text-[0.6rem] text-gray-500 mt-2 text-center font-bold">💡 提示：可以在下方輸入框左側設定專屬暱稱！</p>
+                        
+                        <!-- 載入 tlk.io 腳本 (使用 HTTPS 確保連線安全不被擋) -->
+                        <script async src="https://tlk.io/embed.js" type="text/javascript"></script>
+                    </div>
+                </div>
+                <!-- 右側：世界頻道聊天室結束 -->
+
+            </div>
+        </div>
+        <!-- 首頁大廳區塊結束 -->
             </div>
         </div>
 		<!-- [新增] 傳奇殿堂排行榜視窗開始 -->
