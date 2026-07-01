@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.8.1.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.8.1.2 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -636,7 +636,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.1.0 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.1.2 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -751,7 +751,7 @@
                         <button id="btn-campaign-mode" onclick="app.enterCampaignMode()" class="w-full bg-gradient-to-r from-slate-700 to-slate-900 text-amber-400 font-black py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-xl mb-1 flex items-center justify-center gap-2 border-2 border-amber-500/50 relative overflow-hidden group">
                             <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30"></div>
                             <span class="text-2xl filter drop-shadow group-hover:animate-pulse">⚔️</span> 
-                            <span class="tracking-widest">冒險戰役(開放STAGE3)</span>
+                            <span class="tracking-widest">冒險戰役(開放3-5)</span>
                         </button>
                         <p class="text-xs text-gray-500 font-bold">透過困難的戰役，取得更豐富的獎勵</p>
                     </div>
@@ -3262,15 +3262,57 @@
             }
         },
 
+        // --- [新增] 統一控管世界頻道輸入框狀態 ---
+        updateLobbyChatInputState: () => {
+            const input = document.getElementById('lobby-chat-input');
+            const sendBtn = document.querySelector('button[onclick="app.sendLobbyChatMessage()"]');
+            if (!input || !sendBtn) return;
+
+            const isWorldEnabled = app.state.globalSettings?.worldChannelEnabled !== false;
+            const isLoggedIn = !!app.state.user;
+
+            if (!isWorldEnabled) {
+                input.disabled = true;
+                input.placeholder = "🛑 管理員已暫時關閉世界頻道發言功能";
+                input.classList.add('bg-gray-200', 'cursor-not-allowed');
+                sendBtn.disabled = true;
+                sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else if (!isLoggedIn) {
+                input.disabled = true;
+                input.placeholder = "🔒 請先登入 Google 帳號以參與發言";
+                input.classList.add('bg-gray-200', 'cursor-not-allowed');
+                sendBtn.disabled = true;
+                sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                input.disabled = false;
+                input.placeholder = "在此輸入訊息...";
+                input.classList.remove('bg-gray-200', 'cursor-not-allowed');
+                sendBtn.disabled = false;
+                sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        },
+
+        // --- [新增] 管理員直接刪除單筆世界頻道訊息 ---
+        adminDeleteWorldChatMessage: (msgKey) => {
+            if (confirm('🗑️ 管理員權限：確定要強制刪除這則發言嗎？')) {
+                db.ref(`global_chat/messages/${msgKey}`).remove().then(() => {
+                    app.toast("✅ 訊息已刪除", 1);
+                });
+            }
+        },
+
         // --- [新增] 大廳世界頻道邏輯 ---
         initLobbyChatListeners: () => {
             const chatRef = db.ref(`global_chat/messages`);
             const container = app.el('lobby-chat-container');
             if (!container) return;
 
-            // 監聽大廳頻道訊息
+            const isAdmin = localStorage.getItem('pharaoh_admin_token') === 'valid' || localStorage.getItem('campaign_admin_token') === 'valid';
+
+            // 監聽大廳頻道訊息新增
             chatRef.limitToLast(50).on('child_added', snap => {
                 const data = snap.val();
+                const msgKey = snap.key;
                 if (!data) return;
                 
                 // 移除"連線中"文字
@@ -3285,11 +3327,25 @@
                 const bgCls = isMe ? 'bg-amber-600 text-amber-50' : 'bg-white border border-slate-200 text-slate-700 shadow-sm';
                 const nameColor = isMe ? 'text-amber-700' : 'text-slate-500';
                 
-                // 嚴格無空白節點的 HTML 組合
-                const msgHtml = `<div class="flex flex-col ${alignCls} w-full animate-[fadeIn_0.2s_ease-out]"><div class="flex items-baseline gap-1 mb-0.5"><span class="text-[0.65rem] font-bold ${nameColor}">${data.name}</span><span class="text-[0.55rem] text-slate-400">${timeStr}</span></div><div class="px-3 py-1.5 rounded-xl text-sm font-bold max-w-[90%] break-words ${bgCls}">${data.msg}</div></div>`;
+                // [新增] 如果是管理員，加入刪除按鈕
+                const deleteBtn = isAdmin ? `<button onclick="app.adminDeleteWorldChatMessage('${msgKey}')" class="ml-2 text-red-400 hover:text-red-600 text-[0.6rem] font-bold px-1 rounded hover:bg-red-50 transition-colors" title="刪除此訊息 (UID: ${data.uid || '未知'})">🗑️刪除</button>` : '';
+                
+                // 嚴格無空白節點的 HTML 組合，加入 id 以便後續刪除操作
+                const msgHtml = `<div id="world-msg-${msgKey}" class="flex flex-col ${alignCls} w-full animate-[fadeIn_0.2s_ease-out]"><div class="flex items-baseline gap-1 mb-0.5"><span class="text-[0.65rem] font-bold ${nameColor}">${data.name}</span><span class="text-[0.55rem] text-slate-400">${timeStr}</span>${deleteBtn}</div><div class="px-3 py-1.5 rounded-xl text-sm font-bold max-w-[90%] break-words ${bgCls}">${data.msg}</div></div>`;
                 
                 container.insertAdjacentHTML('beforeend', msgHtml);
                 container.scrollTop = container.scrollHeight;
+            });
+
+            // [新增] 監聽大廳頻道訊息被刪除 (管理員刪除時，所有人的畫面即時消失)
+            chatRef.limitToLast(50).on('child_removed', snap => {
+                const el = document.getElementById(`world-msg-${snap.key}`);
+                if (el) {
+                    el.style.opacity = '0';
+                    el.style.transform = 'scale(0.9)';
+                    el.style.transition = 'all 0.3s ease-out';
+                    setTimeout(() => el.remove(), 300);
+                }
             });
         },
 
@@ -3297,23 +3353,25 @@
             const input = app.el('lobby-chat-input');
             const msg = input.value.trim();
             if (!msg) return;
-// 檢查全域設定是否已關閉世界頻道
+
+            // 檢查全域設定是否已關閉世界頻道
             if (app.state.globalSettings && app.state.globalSettings.worldChannelEnabled === false) {
                 return app.toast('🛑 管理員已關閉世界頻道，目前禁止發言。', 1);
             }
-            const myName = app.state.myName || app.el('lobby-player-name')?.value.trim() || localStorage.getItem('pharaoh_player_name');
-            if (!myName) {
-                return app.toast('⚠️ 請先在左側輸入你的冒險者暱稱！', 1);
-            }
             
-            // 將名稱存入以防萬一
-            app.state.myName = myName;
-            localStorage.setItem('pharaoh_player_name', myName);
+            // [新增] 強制檢查是否已登入 Google
+            if (!app.state.user) {
+                return app.toast('🔒 抱歉，必須登入 Google 帳號才能在世界頻道發言。', 1);
+            }
 
-            // 推送訊息到 Firebase
+            const myName = app.state.myName || app.state.user.displayName;
+            app.state.myName = myName;
+
+            // 推送訊息到 Firebase (加入 uid 作為後台紀錄)
             db.ref(`global_chat/messages`).push({
                 timestamp: firebase.database.ServerValue.TIMESTAMP,
                 name: myName,
+                uid: app.state.user.uid, // 後台溯源用，不會顯示在畫面上
                 msg: msg
             }).then(() => {
                 input.value = '';
@@ -3360,6 +3418,8 @@
                     app.el('lobby-high-score').textContent = localStorage.getItem('pharaoh_high_score') || '0';
                 }
                 
+                // [修改] 登入狀態改變時，即時更新大廳聊天室的輸入框權限
+                app.updateLobbyChatInputState();
                                
                 // [關鍵] 登入狀態確認後，執行斷線重連檢查
                 app.checkPreviousSession();
@@ -3430,6 +3490,9 @@
                     centerPanel.classList.add('lg:col-span-9');
                 }
             }
+            
+            // [修改] 呼叫統一的輸入框狀態管理
+            app.updateLobbyChatInputState();
             // 6. 控制聊天室浮標顯示 (新增)
             const chatBtn = document.getElementById('btn-toggle-chat');
             if (chatBtn) {
@@ -12904,17 +12967,11 @@ addRewardItem: () => {
             }
         },
 
-        // --- [新增] 世界頻道：強制清空所有紀錄 ---
+        // --- [修改] 世界頻道：強制清空所有紀錄 (取消系統廣播) ---
         forceClearWorldChat: () => {
             if (confirm('⚠️ 警告：這將會【永久刪除】世界頻道的「所有」聊天紀錄，不可復原！\n\n確定要清空嗎？')) {
                 db.ref(`global_chat/messages`).remove().then(() => {
                     app.toast("🗑️ 世界頻道已強制清空！", 1);
-                    // 發送系統提示到頻道
-                    db.ref(`global_chat/messages`).push({
-                        timestamp: firebase.database.ServerValue.TIMESTAMP,
-                        name: '🛡️ 系統管理員',
-                        msg: '管理員已清空頻道紀錄。'
-                    });
                 });
             }
         },
