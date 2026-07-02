@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.8.2.1 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.8.2.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -621,12 +621,12 @@
         }
         .skill-tag-lv2 { animation: skill-tag-glow-lv2 2s ease-in-out infinite; background-color: #e0f2fe; color: #075985; border: 1px solid #7dd3fc; }
 
-        /* LV3: 橘黃邊框/黃底亮紅字 呼吸發亮 */
+        /* LV3: 金黃邊框/黃底深橘字 呼吸發亮 (已優化可讀性) */
         @keyframes skill-tag-glow-lv3 {
-            0%, 100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.5), inset 0 0 5px rgba(245, 158, 11, 0.4); transform: scale(1); filter: brightness(1); }
-            50% { box-shadow: 0 0 15px rgba(239, 68, 68, 1), inset 0 0 12px rgba(245, 158, 11, 0.8); transform: scale(1.08); filter: brightness(1.1); }
+            0%, 100% { box-shadow: 0 0 5px rgba(245, 158, 11, 0.4); transform: scale(1); }
+            50% { box-shadow: 0 0 12px rgba(217, 119, 6, 0.8); transform: scale(1.05); }
         }
-        .skill-tag-lv3 { animation: skill-tag-glow-lv3 1.5s ease-in-out infinite; background-color: #fef08a; color: #dc2626; border: 2px solid #f59e0b; text-shadow: 0 0 5px rgba(220, 38, 38, 0.8); font-weight: 900; }
+        .skill-tag-lv3 { animation: skill-tag-glow-lv3 2s ease-in-out infinite; background-color: #fef08a; color: #9a3412; border: 1px solid #f59e0b; }
 </style>
 	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -636,7 +636,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.2.1 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.2.3 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -8390,19 +8390,23 @@ for (const slot of slots) {
             const existingCard = document.getElementById('active-monster-card');
             const isSameMonster = existingCard && existingCard.dataset.monsterName === remoteMonster.name;
 
-            // [v4.5.2] 生成狀態燈號 HTML 字串 (無空白壓縮)
+            // [v4.5.2] 生成狀態燈號 HTML 字串 (優化版：支援多標籤自動換行與置中排版)
             let statusHtml = '';
+            // 統一的標籤基礎樣式：縮小 padding，讓文字更緊湊，並確保文字不斷行
+            const tagBase = "cursor-pointer px-1.5 py-0.5 rounded border shadow-sm leading-none whitespace-nowrap transition-transform hover:scale-105 inline-flex items-center justify-center font-bold text-[0.55rem] md:text-[0.65rem]";
+            
             // Mode 1: 被動
-            if (remoteMonster.mode1) statusHtml += `<span onclick="app.toast('🛡️ [被動反擊]：若回合結束(或倒數結束)時，場上卡牌未全消，怪物將進行反擊。', 1)" class="cursor-pointer bg-slate-700 text-white px-1 rounded hover:bg-slate-600">[被動]</span>`;
+            if (remoteMonster.mode1) statusHtml += `<span onclick="app.toast('🛡️ [被動反擊]：若回合結束(或倒數結束)時，場上卡牌未全消，怪物將進行反擊。', 1)" class="${tagBase} bg-slate-700 text-white border-slate-500">[被動]</span>`;
             // Mode 2: 主動
-            if (remoteMonster.mode2) statusHtml += `<span onclick="app.toast('⚔️ [主動攻擊]：若回合時間倒數結束，怪物將發動全體攻擊。', 1)" class="cursor-pointer bg-red-700 text-white px-1 rounded hover:bg-red-600">[主動]</span>`;
+            if (remoteMonster.mode2) statusHtml += `<span onclick="app.toast('⚔️ [主動攻擊]：若回合時間倒數結束，怪物將發動全體攻擊。', 1)" class="${tagBase} bg-red-700 text-white border-red-500">[主動]</span>`;
             // Mode 3: 易怒
-            if (remoteMonster.mode3) statusHtml += `<span onclick="app.toast('💢 [易怒體質]：若答錯題目，怪物會立即對該小隊進行懲罰攻擊。', 1)" class="cursor-pointer bg-orange-600 text-white px-1 rounded hover:bg-orange-500">[易怒]</span>`;
+            if (remoteMonster.mode3) statusHtml += `<span onclick="app.toast('💢 [易怒體質]：若答錯題目，怪物會立即對該小隊進行懲罰攻擊。', 1)" class="${tagBase} bg-orange-600 text-white border-orange-400">[易怒]</span>`;
             // Mode 4: 暴走
-            if (remoteMonster.mode4 && remoteMonster.mode4 > 0) statusHtml += `<span onclick="app.toast('🔥 [暴走]：每隔 ${remoteMonster.mode4} 回合，怪物會無條件發動攻擊。', 1)" class="cursor-pointer bg-purple-700 text-white px-1 rounded hover:bg-purple-600">[暴走]</span>`;
+            if (remoteMonster.mode4 && remoteMonster.mode4 > 0) statusHtml += `<span onclick="app.toast('🔥 [暴走]：每隔 ${remoteMonster.mode4} 回合，怪物會無條件發動攻擊。', 1)" class="${tagBase} bg-purple-700 text-white border-purple-400">[暴走]</span>`;
             // Mode 5: 禁用
-            if (remoteMonster.mode5) statusHtml += `<span onclick="app.toast('🚫 [法則封印]：本場戰鬥禁止使用「${remoteMonster.mode5}」符號。', 1)" class="cursor-pointer bg-black text-yellow-400 px-1 rounded hover:bg-gray-800 border border-yellow-500">[禁${remoteMonster.mode5}]</span>`;
-// 戰役附加技能 (安全過濾：將引號轉為全形、換行轉為空白，防止 onclick 語法錯誤)
+            if (remoteMonster.mode5) statusHtml += `<span onclick="app.toast('🚫 [法則封印]：本場戰鬥禁止使用「${remoteMonster.mode5}」符號。', 1)" class="${tagBase} bg-black text-yellow-400 border-yellow-500">[禁${remoteMonster.mode5}]</span>`;
+            
+            // 戰役附加技能 (安全過濾：將引號轉為全形、換行轉為空白，防止 onclick 語法錯誤)
             if (remoteMonster.campaignSkills && remoteMonster.campaignSkills.length > 0) {
                 remoteMonster.campaignSkills.forEach(sk => {
                     const safeName = (sk.name || '').replace(/'/g, '’').replace(/"/g, '”').replace(/[\r\n]+/g, ' ');
@@ -8415,11 +8419,16 @@ for (const slot of slots) {
                     else if (sk.lv >= 3) skillClass = "skill-tag-lv3 z-20"; // LV3 額外提高層級，放大時不會被蓋住
 
                     // HTML 嚴格無空白壓縮，並在吐司提示加入 LV 顯示
-                    statusHtml += `<span onclick="app.toast('✨ [${safeName} (LV${sk.lv || 1})]：${safeDesc}', 1)" class="cursor-pointer px-1.5 rounded transition-all shadow-sm ${skillClass}">[${safeName}]</span>`;
+                    statusHtml += `<span onclick="app.toast('✨ [${safeName} (LV${sk.lv || 1})]：${safeDesc}', 1)" class="${tagBase} ${skillClass}">[${safeName}]</span>`;
                 });
             }
+
             // 1. 如果卡片已存在且是同一隻 -> 執行更新與特效檢查 (效能優化區)
             if (existingCard && isSameMonster) {
+                // [新增] 同步動態更新怪物狀態列 (確保戰鬥中獲得的新狀態能即時顯示)
+                const statusContainer = document.getElementById('monster-dynamic-status-container');
+                if (statusContainer) statusContainer.innerHTML = statusHtml;
+
                 // 更新血條與攻擊力
                 const hpBar = document.getElementById('monster-hp-bar-fill');
                 const hpText = document.getElementById('monster-hp-text');
@@ -8566,8 +8575,8 @@ for (const slot of slots) {
             }
 
             // 注意：已將怪物圖區域加上 overflow-hidden，並把背景特效(vfxLv2, Burst)插在 img 前面(z-0)，前景特效(vfxLv1, Circle)插在 img 後面(z-20)
-            // HTML 依然保持高度壓縮不換行，杜絕空白節點 (此處加入了 shieldBadgeHtml)
-            container.innerHTML = `<div id="active-monster-card" data-monster-name="${remoteMonster.name}" class="monster-card-wrapper w-20 h-28 md:w-28 md:h-48 ${initialClass}" style="top:0.2rem;left:0.2rem;" onclick="app.activateMonsterCard()">${sealHtml}${curseBadgeHtml}${shieldBadgeHtml}${atkReduceBadgeHtml}<div class="monster-card-inner"><div class="monster-face monster-face-front flex flex-col bg-slate-900 border-2 border-amber-500 overflow-hidden shadow-lg"><div class="h-[72%] w-full relative bg-gray-800 flex items-center justify-center overflow-hidden">${vfxLv2}${vfxLv3Burst}<img id="monster-img-face" src="${faceImg}" class="w-full h-full object-contain relative z-10" alt="Monster">${vfxLv3Circle}${vfxLv1}${atkBadgeHtml}</div><div class="h-[28%] w-full bg-slate-900 flex flex-col justify-center items-center px-1 py-0.5"><div class="text-[0.65rem] md:text-sm font-black text-amber-400 truncate w-full text-center leading-tight">${remoteMonster.name}</div><div class="w-[90%] bg-gray-700 h-1 md:h-1.5 rounded-full overflow-hidden relative my-0.5 border border-black/40"><div id="monster-hp-bar-fill" class="bg-gradient-to-r from-red-600 to-red-400 h-full absolute top-0 left-0 transition-all duration-300" style="width:${hpPercent}%"></div></div><div id="monster-hp-text" class="text-[0.65rem] md:text-base text-white font-mono font-bold leading-none drop-shadow-sm">HP ${currentHp}/${maxHp}</div></div></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div><div class="absolute w-24 md:w-32 flex flex-wrap justify-center gap-1 pointer-events-auto z-40 top-[7.5rem] md:top-[13.5rem] right-[0.2rem] md:right-[0.5rem]"><div class="flex flex-wrap justify-end gap-1 text-[0.6rem] md:text-xs font-bold shadow-sm">${statusHtml}</div></div>`;
+            // HTML 依然保持高度壓縮不換行，杜絕空白節點 (此處加入了 shieldBadgeHtml，並加寬了底部狀態列的容器)
+            container.innerHTML = `<div id="active-monster-card" data-monster-name="${remoteMonster.name}" class="monster-card-wrapper w-20 h-28 md:w-28 md:h-48 ${initialClass}" style="top:0.2rem;left:0.2rem;" onclick="app.activateMonsterCard()">${sealHtml}${curseBadgeHtml}${shieldBadgeHtml}${atkReduceBadgeHtml}<div class="monster-card-inner"><div class="monster-face monster-face-front flex flex-col bg-slate-900 border-2 border-amber-500 overflow-hidden shadow-lg"><div class="h-[72%] w-full relative bg-gray-800 flex items-center justify-center overflow-hidden">${vfxLv2}${vfxLv3Burst}<img id="monster-img-face" src="${faceImg}" class="w-full h-full object-contain relative z-10" alt="Monster">${vfxLv3Circle}${vfxLv1}${atkBadgeHtml}</div><div class="h-[28%] w-full bg-slate-900 flex flex-col justify-center items-center px-1 py-0.5"><div class="text-[0.65rem] md:text-sm font-black text-amber-400 truncate w-full text-center leading-tight">${remoteMonster.name}</div><div class="w-[90%] bg-gray-700 h-1 md:h-1.5 rounded-full overflow-hidden relative my-0.5 border border-black/40"><div id="monster-hp-bar-fill" class="bg-gradient-to-r from-red-600 to-red-400 h-full absolute top-0 left-0 transition-all duration-300" style="width:${hpPercent}%"></div></div><div id="monster-hp-text" class="text-[0.65rem] md:text-base text-white font-mono font-bold leading-none drop-shadow-sm">HP ${currentHp}/${maxHp}</div></div></div><div class="monster-face monster-face-back"><img src="${backImg}" class="w-full h-full object-cover" alt="Back"></div></div></div><div class="absolute w-[130px] md:w-[160px] flex flex-wrap justify-center gap-1 pointer-events-auto z-40 top-[7.5rem] md:top-[13.5rem] right-[-1.35rem] md:right-[-1rem]"><div id="monster-dynamic-status-container" class="flex flex-wrap justify-center gap-x-1 gap-y-1 w-full">${statusHtml}</div></div>`;
 			if (isFreshSummon) {
                 setTimeout(() => {
                     const el = document.getElementById('active-monster-card');
@@ -8658,10 +8667,12 @@ for (const slot of slots) {
                             hasSwiftStrike = true;
                         }
                         
-                        // 6. 護盾 (傷害抵擋) - 依據技能等級給予層數
+                        // 6. 護盾 (傷害抵擋) - 依據技能等級給予層數 (支援多技能疊加)
                         if (skillName.includes('護盾')) {
-                            newMonsterData.shieldStacks = sk.lv || 1;
-                            activatedSkillsMsg.push(`${skillName}(${newMonsterData.shieldStacks}層)`);
+                            const addedStacks = sk.lv || 1;
+                            // 使用 (原數值 || 0) + 新增值 的方式，確保即使有多個護盾技能也能正確累加
+                            newMonsterData.shieldStacks = (newMonsterData.shieldStacks || 0) + addedStacks;
+                            activatedSkillsMsg.push(`${skillName}(+${addedStacks}層)`);
                         }
                     });
                 }
