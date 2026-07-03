@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.8.3.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.8.5.0 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -636,7 +636,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.3.0 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.5.0 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -6814,8 +6814,51 @@
                     
                     // 準備資料庫更新物件
                     const updates = {};
-                    const damage = monster.atk || 10; // 讀取怪物攻擊力
+                    
+                    // --- [新增] 怪物技能：血祭 (攻擊前扣當前血量%，提升攻擊力%) ---
+                    const monsterSkillList = monster.campaignSkills || [];
+                    let bloodSacrificeHpCostPct = 0;
+                    let bloodSacrificeAtkBoostPct = 0;
+
+                    monsterSkillList.forEach(sk => {
+                        if (sk.name && sk.name.includes('血祭')) {
+                            bloodSacrificeHpCostPct += 10; // 每有一級血祭扣 10% 血
+                            if (sk.lv === 1) bloodSacrificeAtkBoostPct += 30;
+                            else if (sk.lv === 2) bloodSacrificeAtkBoostPct += 35;
+                            else if (sk.lv >= 3) bloodSacrificeAtkBoostPct += 40;
+                        }
+                    });
+
+                    let currentMonsterHp = monster.currentHp !== undefined ? monster.currentHp : (monster.maxHp || 100);
+                    let currentMonsterAtk = monster.atk || 10;
+
+                    if (bloodSacrificeHpCostPct > 0) {
+                        const hpCost = Math.floor(currentMonsterHp * (bloodSacrificeHpCostPct / 100));
+                        currentMonsterHp -= hpCost;
+                        if (currentMonsterHp <= 0) currentMonsterHp = 1; // 至少保留 1 滴血
+                        
+                        const atkBoost = Math.floor(currentMonsterAtk * (bloodSacrificeAtkBoostPct / 100));
+                        currentMonsterAtk += atkBoost;
+
+                        // 更新狀態，供本回合後續(如吸血)及資料庫寫入使用
+                        monster.currentHp = currentMonsterHp;
+                        monster.atk = currentMonsterAtk;
+                        updates['activeMonster/currentHp'] = currentMonsterHp;
+                        updates['activeMonster/atk'] = currentMonsterAtk;
+
+                        specificSpeech += `發動血祭，攻擊力提升至${currentMonsterAtk}！`;
+                        
+                        // 延遲 200ms 顯示血祭扣血數字，與玩家受傷錯開
+                        setTimeout(() => {
+                            app.toast(`🩸 【血祭】發動！犧牲了 ${hpCost} 點生命，攻擊力永久提升至 ${currentMonsterAtk}！`, 1);
+                            app.showDamageText(hpCost, '#991b1b'); // 深紅色代表自殘
+                        }, 200);
+                    }
+                    // ----------------------------------------
+
+                    const damage = currentMonsterAtk; // 讀取(可能被血祭提升後的)怪物攻擊力
                     const playersData = gameData.players || {};
+                    let totalDamageDealt = 0; // 用於紀錄實際造成的總傷害，供吸血技能使用
 
                     // [新增] 遍歷所有隊伍與玩家進行扣血 (含 v4.7.0 死亡邏輯)
                     Object.keys(playersData).forEach(teamKey => {
@@ -6828,6 +6871,8 @@
 
                                 const oldHp = (p.hp !== undefined) ? p.hp : 100;
                                 let newHp = Math.max(0, oldHp - damage);
+                                
+                                totalDamageDealt += (oldHp - newHp); // 累加實際造成的傷害
                                 
                                 updates[`players/${teamKey}/${pName}/hp`] = newHp;
 
@@ -6850,34 +6895,53 @@
                         }
                     });
 
-                    // --- [新增] 怪物技能：嗜血 (攻擊後按最大生命比例吸血) ---
-                    const monsterSkillList = monster.campaignSkills || [];
-                    let bloodthirstHeal = 0;
+                    // --- [新增/修改] 怪物技能：嗜血(最大生命%) 與 吸血(造成傷害%) ---
+                    // (因上方血祭已宣告過 monsterSkillList，此處移除重複宣告以修復 SyntaxError)
+                    let bloodthirstPct = 0;
+                    let lifestealPct = 0;
+
                     monsterSkillList.forEach(sk => {
                         if (sk.name && sk.name.includes('嗜血')) {
-                            let healPct = 2; // LV1 預設 2%
-                            if (sk.lv === 2) healPct = 3; // LV2: 3%
-                            else if (sk.lv >= 3) healPct = 5; // LV3: 5%
-
-                            const maxHp = monster.maxHp || 100;
-                            bloodthirstHeal += Math.floor(maxHp * (healPct / 100));
+                            if (sk.lv === 1) bloodthirstPct += 2;
+                            else if (sk.lv === 2) bloodthirstPct += 3;
+                            else if (sk.lv >= 3) bloodthirstPct += 5;
+                        }
+                        if (sk.name && sk.name.includes('吸血')) {
+                            if (sk.lv === 1) lifestealPct += 30;
+                            else if (sk.lv === 2) lifestealPct += 40;
+                            else if (sk.lv >= 3) lifestealPct += 50;
                         }
                     });
 
-                    if (bloodthirstHeal > 0) {
-                        // 計算吸血後的血量，確保不會超過怪物的最大生命值
+                    // 1. 計算嗜血 (根據總血量，最高上限 6%)
+                    if (bloodthirstPct > 6) bloodthirstPct = 6;
+                    const maxHp = monster.maxHp || 100;
+                    const bloodthirstHeal = Math.floor(maxHp * (bloodthirstPct / 100));
+
+                    // 2. 計算吸血 (無上限，根據實際造成總傷害計算)
+                    const lifestealHeal = Math.floor(totalDamageDealt * (lifestealPct / 100));
+
+                    // 3. 結算總回復量
+                    const totalHeal = bloodthirstHeal + lifestealHeal;
+
+                    if (totalHeal > 0) {
+                        // 計算補血後的血量，確保不超過怪物最大生命值
                         const currentHp = monster.currentHp !== undefined ? monster.currentHp : monster.maxHp;
-                        const newHp = Math.min(monster.maxHp, currentHp + bloodthirstHeal);
+                        const newHp = Math.min(monster.maxHp, currentHp + totalHeal);
                         updates['activeMonster/currentHp'] = newHp;
                         
-                        // 將吸血提示加入怪物的攻擊語音中
-                        specificSpeech += "，並發動嗜血恢復生命！";
+                        // 組合提示文字與語音
+                        let healSourceMsg = [];
+                        if (bloodthirstHeal > 0) healSourceMsg.push('嗜血');
+                        if (lifestealHeal > 0) healSourceMsg.push('吸血');
+                        const skillNames = healSourceMsg.join('與');
+
+                        specificSpeech += `，並發動${skillNames}恢復生命！`;
                         
                         // 延遲 800ms 顯示補血特效與提示，錯開玩家受傷的紅色特效，營造流暢打擊感
                         setTimeout(() => {
-                            app.toast(`🩸 魔物發動【嗜血】，吸收了 ${bloodthirstHeal} 點生命！`, 1);
-                            // 呼叫現成的浮動數字函式，在怪物身上顯示綠色補血數字
-                            app.showDamageText(bloodthirstHeal, '#22c55e'); 
+                            app.toast(`🩸 魔物發動【${skillNames}】，恢復了 ${totalHeal} 點生命！`, 1);
+                            app.showDamageText(totalHeal, '#22c55e'); 
                         }, 800);
                     }
                     // ----------------------------------------
