@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.8.5.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.8.6.4 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -636,7 +636,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.5.0 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.6.4 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -2562,7 +2562,9 @@
 
                         <div class="bg-white rounded-xl p-4 shadow border-2 border-amber-300">
                              <div class="flex items-center justify-center mb-3 relative w-full h-12">
-                                <div class="flex justify-center gap-3">
+                            <!-- [新增] 玩家負面狀態(流血)容器 (最左側) -->
+                            <div id="player-debuff-container" class="absolute left-0 top-0 bottom-0 hidden items-center justify-center"></div>
+                            <div class="flex justify-center gap-3">
                                     <button onclick="app.inputChar(app.state.dice.d8)" id="s-dice-8" class="cursor-control-btn w-12 h-12 bg-amber-100 border-2 border-amber-400 rounded-lg font-black text-xl hover:bg-amber-200 active:bg-amber-300 transition-colors">-</button>
                                     <button onclick="app.inputChar(app.state.dice.d10)" id="s-dice-10" class="cursor-control-btn w-12 h-12 bg-amber-100 border-2 border-amber-400 rounded-lg font-black text-xl hover:bg-amber-200 active:bg-amber-300 transition-colors">-</button>
                                     <button onclick="app.inputChar(app.state.dice.d12)" id="s-dice-12" class="cursor-control-btn w-12 h-12 bg-amber-100 border-2 border-amber-400 rounded-lg font-black text-xl hover:bg-amber-200 active:bg-amber-300 transition-colors">-</button>
@@ -6856,6 +6858,25 @@
                     }
                     // ----------------------------------------
 
+                  // --- [新增] 怪物技能：流血與毒藥 (攻擊後使玩家目標流血或中毒) ---
+                    let bleedApplyDamage = 0;
+                    let poisonApplyValue = 0;
+                    let hasPoisonSkill = false;
+                    monsterSkillList.forEach(sk => {
+                        if (sk.name && sk.name.includes('流血')) {
+                            if (sk.lv === 1) bleedApplyDamage += 3;
+                            else if (sk.lv === 2) bleedApplyDamage += 5;
+                            else if (sk.lv >= 3) bleedApplyDamage += 8;
+                        }
+                        if (sk.name && sk.name.includes('毒藥')) {
+                            hasPoisonSkill = true;
+                            if (sk.lv === 1) poisonApplyValue += 10;
+                            else if (sk.lv === 2) poisonApplyValue += 20;
+                            else if (sk.lv >= 3) poisonApplyValue += 30;
+                        }
+                    });
+                   // 只要有毒藥技能，就固定有50%發動機率，中毒值可疊加
+                    const isPoisonTriggered = hasPoisonSkill && Math.random() < 0.5;
                     const damage = currentMonsterAtk; // 讀取(可能被血祭提升後的)怪物攻擊力
                     const playersData = gameData.players || {};
                     let totalDamageDealt = 0; // 用於紀錄實際造成的總傷害，供吸血技能使用
@@ -6875,7 +6896,34 @@
                                 totalDamageDealt += (oldHp - newHp); // 累加實際造成的傷害
                                 
                                 updates[`players/${teamKey}/${pName}/hp`] = newHp;
+                                p.hp = newHp; // [新增] 同步記憶體，供後半段使用
 
+                                // --- [新增] 附加流血狀態 (若玩家尚未死亡) ---
+                                if (newHp > 0 && bleedApplyDamage > 0) {
+                                    const currentBleedDamage = p.bleedDamage || 0;
+                                    const currentBleedRounds = p.bleedRounds || 0;
+                                    
+                                    let newBleedDamage = currentBleedDamage + bleedApplyDamage;
+                                    if (newBleedDamage > 25) newBleedDamage = 25; // 疊加上限 25
+                                    
+                                    let newBleedRounds = currentBleedRounds;
+                                    if (newBleedRounds <= 0) newBleedRounds = 3; // 未流血則附加3回合
+                                    
+                                    updates[`players/${teamKey}/${pName}/bleedDamage`] = newBleedDamage;
+                                    updates[`players/${teamKey}/${pName}/bleedRounds`] = newBleedRounds;
+                                    
+                                    p.bleedDamage = newBleedDamage; // 同步記憶體
+                                    p.bleedRounds = newBleedRounds;
+                                }
+// --- [新增] 附加中毒狀態 (若玩家尚未死亡) ---
+                                if (newHp > 0 && isPoisonTriggered) {
+                                    const currentPoisonValue = p.poisonValue || 0;
+                                    // 只有身上沒有中毒時，才附加新的中毒狀態 (不疊加狀態)
+                                    if (currentPoisonValue <= 0) {
+                                        updates[`players/${teamKey}/${pName}/poisonValue`] = poisonApplyValue;
+                                        p.poisonValue = poisonApplyValue; // 同步記憶體
+                                    }
+                                }
                                 // [死亡判定邏輯]
                                 if (newHp <= 0 && oldHp > 0) {
                                     // 情況A: 隊長(Host) 死亡 -> 觸發遊戲結束
@@ -6945,7 +6993,16 @@
                         }, 800);
                     }
                     // ----------------------------------------
-
+if (bleedApplyDamage > 0) {
+                        setTimeout(() => {
+                            app.toast(`🩸 魔物發動【流血】攻擊！撕裂目標傷口！`, 1);
+                        }, 1200); // 延遲顯示，錯開吸血與受傷
+                    }
+                    if (isPoisonTriggered) {
+                        setTimeout(() => {
+                            app.toast(`🤢 魔物發動【毒藥】！目標陷入中毒狀態！`, 1);
+                        }, 1400); // 稍微延遲，錯開其他提示
+                    }
                     // 寫入攻擊訊號
                     updates[`activeMonster/action`] = 'attack';
                     updates[`activeMonster/actionTime`] = firebase.database.ServerValue.TIMESTAMP;
@@ -7088,18 +7145,57 @@ for (const slot of slots) {
                     lastActive: firebase.database.ServerValue.TIMESTAMP
                 };
 
-                // [修改] 在換局時，處理所有玩家的 buff 回合數遞減
+                // [修改] 在換局時，處理所有玩家的 buff 與 debuff 回合數遞減
                 const playersData = gameData.players || {};
                 Object.keys(playersData).forEach(teamKey => {
                     const members = playersData[teamKey];
                     if (members) {
                         Object.keys(members).forEach(pName => {
                             const p = members[pName];
+                            
+                            // 1. 爆炎刻印
                             if (p.flameRounds && p.flameRounds > 0) {
                                 const newRounds = p.flameRounds - 1;
                                 updates[`players/${teamKey}/${pName}/flameRounds`] = newRounds;
                                 if (newRounds <= 0) {
                                     updates[`players/${teamKey}/${pName}/flameBonus`] = 0;
+                                }
+                            }
+                            
+                            // 2. 流血結算 (每回合扣血)
+                            if (p.bleedRounds && p.bleedRounds > 0 && p.hp > 0) {
+                                const dmg = p.bleedDamage || 0;
+                                if (dmg > 0) {
+                                    const oldHp = p.hp;
+                                    const newHp = Math.max(0, oldHp - dmg);
+                                    updates[`players/${teamKey}/${pName}/hp`] = newHp;
+                                    p.hp = newHp; // 同步記憶體
+                                    
+                                    // 只有當前玩家或房主才顯示流血特效 (延遲顯示，避免跟換局訊息重疊)
+                                    setTimeout(() => {
+                                        if (pName === app.state.myName || app.state.isHost) {
+                                            app.showDamageText(`流血 -${dmg}`, '#dc2626', app.state.isHost ? 'teacher-personal-board' : 'student-squad-section');
+                                            if (pName === app.state.myName && navigator.vibrate) navigator.vibrate(50);
+                                        }
+                                    }, 500);
+
+                                    // 死亡判定
+                                    if (newHp <= 0 && oldHp > 0) {
+                                        const hostName = gameData.hostName; 
+                                        if (pName === hostName) {
+                                            setTimeout(() => app.triggerEndGame(), 1000); 
+                                        } else {
+                                            const reviveTime = Date.now() + 120000; 
+                                            updates[`players/${teamKey}/${pName}/reviveAt`] = reviveTime;
+                                        }
+                                    }
+                                }
+                                
+                                const newBleedRounds = p.bleedRounds - 1;
+                                updates[`players/${teamKey}/${pName}/bleedRounds`] = newBleedRounds;
+                                if (newBleedRounds <= 0) {
+                                    updates[`players/${teamKey}/${pName}/bleedDamage`] = 0;
+                                    p.bleedDamage = 0; // 同步記憶體
                                 }
                             }
                         });
@@ -7673,6 +7769,39 @@ for (const slot of slots) {
                                 // 若本次加完剛好滿氣，延遲給予文字提示
                                 if (curCharge + 1 === 8) {
                                     setTimeout(() => app.toast('✨ 聚氣完成！【療傷】已準備就緒！', 1), 500);
+                                }
+                            }
+                        }
+
+                        // --- [新增] 玩家攻擊時，結算中毒狀態 ---
+                        const pPoisonValue = app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName]?.poisonValue || 0;
+                        if (pPoisonValue > 0) {
+                            const hpPath = `players/${app.state.myTeam}/${app.state.myName}/hp`;
+                            // 取出最新的血量 (考慮前面升級、吸血的改動)
+                            let currentHpAfterBuff = updates[hpPath] !== undefined ? updates[hpPath] : ((app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName]?.hp !== undefined) ? app.state.gameData.players[app.state.myTeam][app.state.myName].hp : 100);
+                            
+                            // 每次攻擊固定扣 5 點血，直到中毒值扣完
+                            const poisonDmg = 5;
+                            const newPoisonValue = Math.max(0, pPoisonValue - poisonDmg);
+                            const newHpAfterPoison = Math.max(0, currentHpAfterBuff - poisonDmg);
+                            
+                            updates[hpPath] = newHpAfterPoison;
+                            updates[`players/${app.state.myTeam}/${app.state.myName}/poisonValue`] = newPoisonValue;
+                            
+                            // 特效與提示
+                            setTimeout(() => {
+                                app.toast(`🤢 毒發！因中毒損失了 ${poisonDmg} 點生命！(剩餘毒性 ${newPoisonValue})`, 1);
+                                app.showDamageText(`毒 -${poisonDmg}`, '#22c55e', app.state.isHost ? 'teacher-personal-board' : 'student-squad-section'); 
+                            }, 900); // 延遲顯示，錯開補血與攻擊特效
+                            
+                            // 檢查是否毒發身亡
+                            if (newHpAfterPoison <= 0 && currentHpAfterBuff > 0) {
+                                const hostName = app.state.gameData.hostName; 
+                                if (app.state.myName === hostName) {
+                                    setTimeout(() => app.triggerEndGame(), 1500); 
+                                } else {
+                                    const reviveTime = Date.now() + 120000; 
+                                    updates[`players/${app.state.myTeam}/${app.state.myName}/reviveAt`] = reviveTime;
                                 }
                             }
                         }
@@ -9695,6 +9824,32 @@ for (const slot of slots) {
                     skillCon.innerHTML = '';
                     skillCon.classList.add('hidden');
                     skillCon.classList.remove('flex');
+                }
+            }
+
+            // --- [新增] 渲染玩家負面狀態 (流血、中毒) UI ---
+            const debuffCon = app.el('player-debuff-container');
+            if (debuffCon && myData) {
+                let debuffHtml = '';
+                const bleedRounds = myData.bleedRounds || 0;
+                const bleedDamage = myData.bleedDamage || 0;
+                if (bleedRounds > 0 && bleedDamage > 0) {
+                    // [修改] 移除 animate-pulse，增強 drop-shadow 讓它保持高亮
+                    debuffHtml += `<div class="relative w-10 h-10 md:w-12 md:h-12 bg-transparent flex items-center justify-center group" title="流血狀態：剩餘 ${bleedRounds} 回合，每回合損失 ${bleedDamage} 點生命"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B5%81%E8%A1%80%E7%8B%80%E6%85%8B.png" class="absolute inset-0 w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(220,38,38,1)]"><div class="absolute -bottom-1 -right-1 bg-red-900 text-red-100 text-[0.55rem] md:text-[0.6rem] font-black px-1 rounded-full border border-red-500 shadow z-10 leading-none">-${bleedDamage}</div><div class="absolute -top-1 -left-1 bg-black/80 text-white text-[0.55rem] font-bold px-1 rounded border border-gray-500 shadow z-10 leading-none">${bleedRounds}回</div></div>`;
+                }
+                const poisonValue = myData.poisonValue || 0;
+                if (poisonValue > 0) {
+                    // [修改] 移除 animate-pulse，增強 drop-shadow 讓它保持高亮
+                    debuffHtml += `<div class="relative w-10 h-10 md:w-12 md:h-12 bg-transparent flex items-center justify-center group ml-1" title="中毒狀態：每次攻擊怪物時損失 5 點生命，剩餘毒性 ${poisonValue} 點"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%AF%92%E8%97%A5%E7%8B%80%E6%85%8B.png" class="absolute inset-0 w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(34,197,94,1)]"><div class="absolute -bottom-1 -right-1 bg-green-900 text-green-100 text-[0.55rem] md:text-[0.6rem] font-black px-1 rounded-full border border-green-500 shadow z-10 leading-none">-5</div><div class="absolute -top-1 -left-1 bg-black/80 text-white text-[0.55rem] font-bold px-1 rounded border border-gray-500 shadow z-10 leading-none">${poisonValue}毒</div></div>`;
+                }
+                if (debuffHtml !== '') {
+                    debuffCon.innerHTML = debuffHtml;
+                    debuffCon.classList.remove('hidden');
+                    debuffCon.classList.add('flex');
+                } else {
+                    debuffCon.innerHTML = '';
+                    debuffCon.classList.add('hidden');
+                    debuffCon.classList.remove('flex');
                 }
             }
         },
