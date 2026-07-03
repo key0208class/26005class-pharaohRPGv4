@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.8.6.5 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.8.6.7 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -636,7 +636,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.6.5 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.6.7 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -6834,7 +6834,7 @@
                     let currentMonsterHp = monster.currentHp !== undefined ? monster.currentHp : (monster.maxHp || 100);
                     let currentMonsterAtk = monster.atk || 10;
 
-                    if (bloodSacrificeHpCostPct > 0) {
+                   if (bloodSacrificeHpCostPct > 0) {
                         const hpCost = Math.floor(currentMonsterHp * (bloodSacrificeHpCostPct / 100));
                         currentMonsterHp -= hpCost;
                         if (currentMonsterHp <= 0) currentMonsterHp = 1; // 至少保留 1 滴血
@@ -6850,18 +6850,23 @@
 
                         specificSpeech += `發動血祭，攻擊力提升至${currentMonsterAtk}！`;
                         
-                        // 延遲 200ms 顯示血祭扣血數字，與玩家受傷錯開
+                        // [新增] 呼叫血祭專屬動畫 (血花由下往上浮出)
+                        app.triggerBloodSacrificeEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A1%80%E7%A5%AD%E7%89%B9%E6%95%88.png');
+
+                        // 延遲 300ms 顯示血祭扣血數字，等血花長大一點再扣血
                         setTimeout(() => {
                             app.toast(`🩸 【血祭】發動！犧牲了 ${hpCost} 點生命，攻擊力永久提升至 ${currentMonsterAtk}！`, 1);
                             app.showDamageText(hpCost, '#991b1b'); // 深紅色代表自殘
-                        }, 200);
+                        }, 300);
                     }
                     // ----------------------------------------
 
-                  // --- [新增] 怪物技能：流血與毒藥 (攻擊後使玩家目標流血或中毒) ---
+                  // --- [新增] 怪物技能：流血、毒藥與致命 (攻擊時觸發) ---
                     let bleedApplyDamage = 0;
                     let poisonApplyValue = 0;
                     let hasPoisonSkill = false;
+                    let fatalProb = 0; // [新增] 致命機率總和
+
                     monsterSkillList.forEach(sk => {
                         if (sk.name && sk.name.includes('流血')) {
                             if (sk.lv === 1) bleedApplyDamage += 3;
@@ -6874,10 +6879,23 @@
                             else if (sk.lv === 2) poisonApplyValue += 20;
                             else if (sk.lv >= 3) poisonApplyValue += 30;
                         }
+                        // [新增] 致命技能判定
+                        if (sk.name && sk.name.includes('致命')) {
+                            if (sk.lv === 1) fatalProb += 20;
+                            else if (sk.lv === 2) fatalProb += 25;
+                            else if (sk.lv >= 3) fatalProb += 30;
+                        }
                     });
-                   // 只要有毒藥技能，就固定有50%發動機率，中毒值可疊加
+
+                    // 只要有毒藥技能，就固定有50%發動機率，中毒值可疊加
                     const isPoisonTriggered = hasPoisonSkill && Math.random() < 0.5;
-                    const damage = currentMonsterAtk; // 讀取(可能被血祭提升後的)怪物攻擊力
+                    
+                    // [新增] 判定致命一擊是否發動
+                    const isFatalTriggered = fatalProb > 0 && (Math.random() * 100 < fatalProb);
+                    
+                    // 讀取(可能被血祭提升後的)怪物攻擊力，若觸發致命則傷害變為 2 倍
+                    const damage = isFatalTriggered ? currentMonsterAtk * 2 : currentMonsterAtk; 
+                    
                     const playersData = gameData.players || {};
                     let totalDamageDealt = 0; // 用於紀錄實際造成的總傷害，供吸血技能使用
 
@@ -6915,7 +6933,7 @@
                                     p.bleedDamage = newBleedDamage; // 同步記憶體
                                     p.bleedRounds = newBleedRounds;
                                 }
-// --- [新增] 附加中毒狀態 (若玩家尚未死亡) ---
+                                // --- [新增] 附加中毒狀態 (若玩家尚未死亡) ---
                                 if (newHp > 0 && isPoisonTriggered) {
                                     const currentPoisonValue = p.poisonValue || 0;
                                     // 只有身上沒有中毒時，才附加新的中毒狀態 (不疊加狀態)
@@ -6944,7 +6962,6 @@
                     });
 
                     // --- [新增/修改] 怪物技能：嗜血(最大生命%) 與 吸血(造成傷害%) ---
-                    // (因上方血祭已宣告過 monsterSkillList，此處移除重複宣告以修復 SyntaxError)
                     let bloodthirstPct = 0;
                     let lifestealPct = 0;
 
@@ -6993,7 +7010,8 @@
                         }, 800);
                     }
                     // ----------------------------------------
-if (bleedApplyDamage > 0) {
+                    
+                    if (bleedApplyDamage > 0) {
                         setTimeout(() => {
                             app.toast(`🩸 魔物發動【流血】攻擊！撕裂目標傷口！`, 1);
                         }, 1200); // 延遲顯示，錯開吸血與受傷
@@ -7003,6 +7021,19 @@ if (bleedApplyDamage > 0) {
                             app.toast(`🤢 魔物發動【毒藥】！目標陷入中毒狀態！`, 1);
                         }, 1400); // 稍微延遲，錯開其他提示
                     }
+                    
+                    // [新增] 致命提示、特效與語音串接
+                    if (isFatalTriggered) {
+                        specificSpeech += "發動致命一擊！";
+                        
+                        // 呼叫刀氣飛出動畫特效
+                        app.triggerFatalStrikeEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%87%B4%E5%91%BD.png');
+                        
+                        setTimeout(() => {
+                            app.toast(`⚠️ 魔物發動【致命】！造成雙倍爆擊傷害！`, 1);
+                        }, 500); // 稍微提早跳字，配合刀氣飛出去的時間
+                    }
+
                     // 寫入攻擊訊號
                     updates[`activeMonster/action`] = 'attack';
                     updates[`activeMonster/actionTime`] = firebase.database.ServerValue.TIMESTAMP;
@@ -9218,6 +9249,131 @@ for (const slot of slots) {
                 }, shakeTime);
 
             }, gatherTime);
+        },
+
+        // [新增] 血祭專屬特效：血花炸開由下往上浮出並放大
+        triggerBloodSacrificeEffect: (imgUrl) => {
+            // ==========================================
+            // 🛠️ [可微調] 血祭特效參數設定區
+            // ==========================================
+            const floatTime = 500;     // 1. 動畫總時間 (毫秒)，越大飄得越慢
+            const initialScale = 0.5;   // 2. 剛出現時的大小 (0.5 = 50%)
+            const finalScale = 1.8;     // 3. 飄到最高點時的大小 (1.8 = 180%)
+            const floatUpOffset = 120;  // 4. 向上飄移的距離 (像素)
+            const imgSize = 250;        // 5. 圖片的基礎尺寸 (像素)
+            // ==========================================
+
+            // 找尋怪物目標位置
+            const targetEl = document.getElementById('active-monster-card');
+            let targetX = window.innerWidth / 2;
+            let targetY = window.innerHeight / 2;
+
+            if (targetEl) {
+                const rect = targetEl.getBoundingClientRect();
+                targetX = rect.left + rect.width / 2;
+                targetY = rect.top + rect.height / 2;
+            }
+
+            // 建立特效元素
+            const effect = document.createElement('div');
+            
+            // 【階段一：初始狀態】在怪物腳下，縮小、透明
+            effect.style.cssText = `
+                position: fixed;
+                left: ${targetX}px;
+                top: ${targetY + 50}px;
+                width: ${imgSize}px;
+                height: ${imgSize}px;
+                transform: translate(-50%, -50%) scale(${initialScale});
+                background-image: url('${imgUrl}');
+                background-size: contain;
+                background-position: center;
+                background-repeat: no-repeat;
+                pointer-events: none;
+                z-index: 9999;
+                opacity: 0;
+                filter: drop-shadow(0 0 15px rgba(220, 38, 38, 0.8));
+            `;
+            document.body.appendChild(effect);
+
+            // 強制重繪以啟動 CSS Transition
+            void effect.offsetWidth;
+
+            // 【階段二：執行浮出與放大】
+            effect.style.transition = `top ${floatTime}ms ease-out, transform ${floatTime}ms ease-out, opacity ${floatTime * 0.3}ms ease-in`;
+            effect.style.top = `${targetY - floatUpOffset}px`;
+            effect.style.transform = `translate(-50%, -50%) scale(${finalScale})`;
+            effect.style.opacity = '1';
+
+            // 觸發震動回饋 (模擬血脈噴張感)
+            if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
+
+            // 【階段三：淡出消失】
+            setTimeout(() => {
+                effect.style.transition = `opacity ${floatTime * 0.3}ms ease-out`;
+                effect.style.opacity = '0';
+                setTimeout(() => effect.remove(), floatTime * 0.3);
+            }, floatTime * 0.7); // 在總時間的 70% 時開始淡出
+        },
+
+        // [新增] 致命專屬特效：刀氣往右飛出畫面
+        triggerFatalStrikeEffect: (imgUrl) => {
+            // ==========================================
+            // 🛠️ [可微調] 致命刀氣特效參數設定區
+            // ==========================================
+            const flightTime = 1200;    // 1. 飛行總時間 (毫秒)，時間越大飛得越慢 (1800ms 算中慢速)
+            const effectScale = 1.2;    // 2. 刀氣的大小 (1.2 = 120%)
+            const imgSize = 250;        // 3. 圖片的基礎尺寸 (像素)
+            // ==========================================
+
+            // 找尋怪物目標位置 (刀氣起點)
+            const targetEl = document.getElementById('active-monster-card');
+            let targetX = window.innerWidth / 3;
+            let targetY = window.innerHeight / 2;
+
+            if (targetEl) {
+                const rect = targetEl.getBoundingClientRect();
+                targetX = rect.left + rect.width / 2;
+                targetY = rect.top + rect.height / 2;
+            }
+
+            // 建立特效元素
+            const effect = document.createElement('div');
+            
+            // 【階段一：初始狀態】在怪物身上，準備往右飛
+            effect.style.cssText = `
+                position: fixed;
+                left: ${targetX}px;
+                top: ${targetY}px;
+                width: ${imgSize}px;
+                height: ${imgSize}px;
+                transform: translate(-50%, -50%) scale(${effectScale});
+                background-image: url('${imgUrl}');
+                background-size: contain;
+                background-position: center;
+                background-repeat: no-repeat;
+                pointer-events: none;
+                z-index: 10000;
+                opacity: 0;
+                filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.8));
+            `;
+            document.body.appendChild(effect);
+
+            // 強制重繪
+            void effect.offsetWidth;
+
+            // 【階段二：開始飛行】往畫面最右邊飛去 (120vw 確保飛出螢幕)
+            effect.style.transition = `left ${flightTime}ms linear, opacity 200ms ease-in`;
+            effect.style.left = `120vw`;
+            effect.style.opacity = '1';
+
+            // 強烈震動回饋 (模擬重擊)
+            if (navigator.vibrate) navigator.vibrate([150, 50, 150]);
+
+            // 飛出畫面後移除
+            setTimeout(() => {
+                effect.remove();
+            }, flightTime);
         },
 
         // [新增] 森之/翠綠 冒險者之劍專屬吸血特效：藤蔓之蛇啃咬 (由下而上 -> 停留 -> 右上退 -> 左下咬 -> 淡出)
