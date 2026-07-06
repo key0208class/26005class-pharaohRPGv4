@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.1.5 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.1.8 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -655,7 +655,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.1.5 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.1.8 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -2627,10 +2627,14 @@
                                 <button onclick="app.backspace()" class="absolute right-2 top-2 bottom-2 px-3 text-red-500 hover:bg-red-50 rounded cursor-control-btn font-bold">⌫</button>
                             </div>
                         </div>
-                            <div id="horus-input-area" class="hidden grid grid-cols-3 gap-2 mb-2 mt-2 animate-[fadeIn_0.3s_ease-out]"></div>
-                        
-
-                        <div id="active-item-status" class="hidden mb-2 p-3 rounded-lg border-2 border-amber-400 bg-amber-50 text-center animate-[popIn_0.3s_ease-out] cursor-pointer hover:bg-red-50 transition-colors" onclick="app.useItem(app.state.activeItem)" title="點擊可關閉道具"></div>
+                         <!-- 道具狀態與荷魯斯按鈕整合區塊開始 -->
+                            <div class="flex flex-col md:flex-row gap-2 mb-2 mt-2 items-stretch w-full animate-[fadeIn_0.3s_ease-out]">
+                                <!-- 提示訊息區塊 (手機: 下方 order-2, 電腦: 左方 md:order-1) -->
+                                <div id="active-item-status" class="order-2 md:order-1 hidden flex-1 px-3 py-2 rounded-lg border-2 border-amber-400 bg-amber-50 text-center cursor-pointer hover:bg-red-50 transition-colors shadow-sm" onclick="app.useItem(app.state.activeItem)" title="點擊可關閉道具"></div>
+                                <!-- 荷魯斯數字區塊 (手機: 上方 order-1, 電腦: 右方 md:order-2) -->
+                                <div id="horus-input-area" class="order-1 md:order-2 hidden grid-cols-3 gap-2 shrink-0 md:min-w-[160px]"></div>
+                            </div>
+                            <!-- 道具狀態與荷魯斯按鈕整合區塊結束 -->
 
                         <div class="grid grid-cols-4 gap-2 flex-grow">
                             <button id="btn-op-add" onclick="app.inputChar('+')" class="cursor-control-btn bg-indigo-100 text-indigo-900 rounded-lg font-bold text-2xl shadow border-b-4 border-indigo-200 transition-colors duration-300">+</button>
@@ -10941,36 +10945,44 @@ for (const slot of slots) {
                  }
              }
 
-             // --- [v4.8.9 修改] 道具狀態提示框：縮減高度與 RWD 左右排版 ---
-             // 💡【可手動微調參數區】
-             // 1. 框框高度：下方的 'py-1.5', 'md:py-1' 代表上下留白。數字越小框越扁 (若要更扁可改為 'py-0.5')。
-             // 2. 標題大小：md:text-xl 代表電腦版標題大小。若覺得太大可改為 'md:text-lg'。
-             // 3. 說明大小：md:text-sm 代表電腦版說明文字。若要放大可改為 'md:text-base'。
-             // 4. 左右間距：md:gap-4 代表電腦版「標題」與「說明」之間的距離，越大分越開。
-             
-             // 動態覆蓋原始 HTML 預設的 p-3，改為更緊湊的上下 padding 來節省高度
+       // --- [修改] 配合外層容器的響應式 RWD 整合排版 ---
              statusEl.classList.remove('p-3');
-             statusEl.classList.add('px-3', 'py-1.5', 'md:py-1');
+             statusEl.classList.add('px-3', 'py-2');
              
-             // 絕對無空白節點 innerHTML (手機維持上下 flex-col，平板/電腦改為左右 flex-row)
-             statusEl.innerHTML = `<div class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-4 w-full"><div class="font-black text-amber-900 text-lg md:text-xl flex items-center shrink-0 gap-1 drop-shadow-sm"><span>${cfg.icon}</span><span>${cfg.name}啟用中</span></div><div class="text-sm md:text-sm text-amber-800 font-bold leading-tight text-center md:text-left">${cfg.desc}</div></div>`;
+             // 💡【排版與文字微調教學】
+             // 1. 合併置中：使用 `flex flex-wrap items-center justify-center` 讓大字標題與小字說明靠在一起並完美置中。
+             // 2. 左右間距：`gap-x-2` 控制大字跟小字之間的距離，想分更開可以改成 `gap-x-3`。
+             // 3. 字體大小：`text-lg md:text-xl` 控制大字標題；`text-xs md:text-sm` 控制小字說明。
+             
+             // 絕對無空白節點 innerHTML
+             statusEl.innerHTML = `<div class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 w-full h-full text-center"><div class="font-black text-amber-900 text-lg md:text-xl drop-shadow-sm">${cfg.icon} ${cfg.name}</div><div class="text-xs md:text-sm text-amber-800 font-bold leading-tight">${cfg.desc}</div></div>`;
              
              statusEl.classList.remove('hidden');
+             statusEl.classList.add('flex');
         },
 
         // v3.3.1 新增：渲染荷魯斯之眼按鈕 (1, 2, 3)
         // [v4.1.7 修改] 渲染荷魯斯之眼按鈕 (緊湊版 1, 2, 3)
+     // [修改] 渲染荷魯斯之眼按鈕 (適配 RWD 佈局，按鈕改為自動適應的正方形)
         renderHorusButtons: () => {
             const area = app.el('horus-input-area');
             if (app.state.activeItem === 'horus') {
-                // 綠色底色，調整高度與字體大小以節省空間
-                const btnClass = "cursor-control-btn bg-green-400 hover:bg-green-500 text-black border-b-4 border-green-700 active:border-b-0 active:translate-y-1 rounded-lg font-black text-lg shadow h-10 flex items-center justify-center transition-all";
-                // 使用無空白節點寫法
+                // 💡【區塊間距與整體寬度微調教學】
+                // 1. gap-3 md:gap-4 : 這裡控制三個按鈕之間的「空隙間距」。想更分開可改為 gap-4 md:gap-5。
+                // 2. md:min-w-[180px] : 控制電腦版按鈕區塊的「總寬度」，加大可以讓按鈕整體變大 (例如改為 200px)。
+                area.className = "order-1 md:order-2 grid grid-cols-3 gap-3 md:gap-4 shrink-0 md:min-w-[180px] animate-[fadeIn_0.3s_ease-out]";
+                
+                // 💡【單一按鈕外觀微調教學】
+                // 1. text-2xl : 數字的大小，想更大可改 text-3xl 或 text-4xl。
+                // 2. rounded-lg : 按鈕的圓角程度，想更圓可改 rounded-xl 或 rounded-full。
+                const btnClass = "cursor-control-btn bg-green-400 hover:bg-green-500 text-black border-b-4 border-green-700 active:border-b-0 active:translate-y-1 rounded-lg font-black text-2xl shadow h-full w-full aspect-square flex items-center justify-center transition-all";
+                
+                // 絕對無空白節點寫法
                 area.innerHTML = `<button onclick="app.inputChar('1')" class="${btnClass}">1</button><button onclick="app.inputChar('2')" class="${btnClass}">2</button><button onclick="app.inputChar('3')" class="${btnClass}">3</button>`;
-                area.classList.remove('hidden');
             } else {
                 area.innerHTML = '';
-                area.classList.add('hidden');
+                // 隱藏時重置回預設狀態 (避免 class 殘留影響後續佈局)
+                area.className = "order-1 md:order-2 hidden grid-cols-3 gap-2 shrink-0 md:min-w-[160px]";
             }
         },
 		
