@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.1.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.1.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -639,10 +639,10 @@
         .mark-avatar { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #22c55e; box-shadow: 0 2px 4px rgba(0,0,0,0.3); object-fit: cover; background: #fff; }
         .mark-cancel-btn { position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; border-radius: 50%; width: 14px; height: 14px; font-size: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 35; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.2s; }
         .mark-cancel-btn:hover { transform: scale(1.2); background: #dc2626; }
-        /* 氣泡移至頭像上方偏右 */
-        .mark-intent-bubble { position: absolute; bottom: 110%; left: 0%; transform: translateX(-10%); background: rgba(255,255,255,0.95); border: 2px solid #22c55e; color: #064e3b; border-radius: 6px; padding: 2px 6px; font-size: 0.6rem; font-weight: 900; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 40; pointer-events: none; }
-        /* 氣泡箭頭 */
-        .mark-intent-bubble::after { content: ''; position: absolute; top: 100%; left: 20%; transform: translateX(-50%); border-width: 4px; border-style: solid; border-color: #22c55e transparent transparent transparent; }
+        /* 氣泡移至頭像右側，並垂直置中 */
+        .mark-intent-bubble { position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 8px; background: rgba(255,255,255,0.95); border: 2px solid #22c55e; color: #064e3b; border-radius: 6px; padding: 2px 6px; font-size: 0.65rem; font-weight: 900; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 40; pointer-events: none; }
+        /* 氣泡箭頭指向左邊的頭像 */
+        .mark-intent-bubble::after { content: ''; position: absolute; top: 50%; right: 100%; transform: translateY(-50%); border-width: 4px; border-style: solid; border-color: transparent #22c55e transparent transparent; }
         
         .marking-mode-active { box-shadow: 0 0 15px rgba(34, 197, 94, 0.8); border-color: #22c55e; animation: pulse-green 1.5s infinite; }
         @keyframes pulse-green { 0%, 100% { filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.6)); } 50% { filter: drop-shadow(0 0 15px rgba(34, 197, 94, 1)); } }
@@ -655,7 +655,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.1.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.1.3 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
