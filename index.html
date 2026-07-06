@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.8.8.1 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.8.9.1 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -636,7 +636,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.8.1 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.8.9.1 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -7635,16 +7635,53 @@ for (const slot of slots) {
                     let itemMult = 1; // [新增] 紀錄道具倍數
                     let usedItemName = ''; // [新增] 紀錄使用的道具名稱
 
-                    // [v4.7.5.1 新增] 封印觸發判定
+                    // [v4.7.5.1 新增] 封印觸發判定 (含「適應」技能邏輯)
                     // 檢查這張牌是否被「我們隊伍」鎖定 (lockedBy === myTeam)
                     if (card.lockedBy === app.state.myTeam) {
-                        // 觸發封印效果！
-                        successMsg += " 🔒 封印！";
-                        app.toast("🔒 封印術式發動！怪物攻擊被封印 3 回合！", 1);
-                        app.showDamageText("封印", "#94a3b8"); // 灰色封印字樣
+                        let sealRounds = 3;
+                        let sealedCount = app.state.gameData.activeMonster?.sealedCount || 0;
+                        let adaptLv = 0;
+                        let adaptCount = 0; // 記錄適應技能總數量
+                        const monsterSkillList = app.state.gameData.activeMonster?.campaignSkills || [];
                         
-                        // 寫入封印回合數 (當前 + 未來2回合 = 3)
-                        updates['activeMonster/sealRounds'] = 3;
+                        monsterSkillList.forEach(sk => {
+                            if (sk.name && sk.name.includes('適應')) {
+                                adaptLv = Math.max(adaptLv, sk.lv || 1); // 疊加取最高等級
+                                adaptCount++; // 統計適應技能數量
+                            }
+                        });
+
+                        if (adaptLv > 0) {
+                            // 計算觸發門檻：LV1(3次)、LV2(2次)、LV3(1次)
+                            const threshold = adaptLv === 1 ? 3 : (adaptLv === 2 ? 2 : 1);
+                            if (sealedCount >= threshold) {
+                                // 適應生效！
+                                sealRounds = 1;
+                                // 每個適應技能+5，計算總加成
+                                const atkBonus = adaptCount * 5;
+                                const currentAtk = updates['activeMonster/atk'] !== undefined ? updates['activeMonster/atk'] : (app.state.gameData.activeMonster?.atk || 10);
+                                const newAtk = currentAtk + atkBonus;
+                                updates['activeMonster/atk'] = newAtk;
+                                
+                                successMsg += ` (適應! 封印減弱)`;
+                                app.toast(`🛡️ 怪物【適應】封禁效果！封印減弱為1回合，攻擊力提升至 ${newAtk}！`, 1);
+                                app.addCombatLog('attack', `👹 怪物【適應】封禁效果，封印減弱為 1 回合，攻擊力+${atkBonus}，提升至 ${newAtk} 點！`);
+                                app.triggerAdaptEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/6%E9%BB%83%E5%85%89%E8%83%8C%E6%99%AF%E7%89%B9%E6%95%88.png');
+                            } else {
+                                successMsg += " 🔒 封印！";
+                                app.toast("🔒 封印術式發動！怪物攻擊被封印 3 回合！", 1);
+                                app.showDamageText("封印", "#94a3b8"); 
+                            }
+                            // 無論是否觸發特效，都增加被封印次數
+                            updates['activeMonster/sealedCount'] = sealedCount + 1;
+                        } else {
+                            successMsg += " 🔒 封印！";
+                            app.toast("🔒 封印術式發動！怪物攻擊被封印 3 回合！", 1);
+                            app.showDamageText("封印", "#94a3b8");
+                        }
+                        
+                        // 寫入最終封印回合數
+                        updates['activeMonster/sealRounds'] = sealRounds;
                     }
 
                     // [v4.7.5.5 修改] 詛咒觸發判定 (給予怪物虛弱 Debuff)
@@ -9843,6 +9880,104 @@ for (const slot of slots) {
 
             setTimeout(() => effect.remove(), 2000);
         },
+		
+		// [新增] 適應專屬特效：黃色護體光芒由小變大 -> 轉為盾牌
+        triggerAdaptEffect: (lightUrl) => {
+            // ==========================================
+            // 🛠️ [可微調] 適應特效參數設定區
+            // ==========================================
+            const expandTime = 1800;    // 1. 光圈由小放大的時間 (毫秒)，均速慢
+            const holdTime = 1600;       // 2. 盾牌定格顯示的時間 (毫秒)
+            const fadeOutTime = 1500;    // 3. 盾牌淡出消失的時間 (毫秒)
+            
+            const initialScale = 0.2;   // 剛出現時的大小 (20%)
+            const finalScale = 1.5;     // 放大後的最終比例 (150%)
+            const imgSize = 250;        // 特效圖片的基礎尺寸
+            // ==========================================
+
+            // 找尋怪物目標位置
+            const targetEl = document.getElementById('active-monster-card');
+            let targetX = window.innerWidth / 2;
+            let targetY = window.innerHeight / 2;
+
+            if (targetEl) {
+                const rect = targetEl.getBoundingClientRect();
+                targetX = rect.left + rect.width / 2;
+                targetY = rect.top + rect.height / 2;
+            }
+
+            // 建立特效元素 (光圈)
+            const effect = document.createElement('div');
+            
+            // 【階段一：光芒初始狀態】
+            effect.style.cssText = `
+                position: fixed;
+                left: ${targetX}px;
+                top: ${targetY}px;
+                width: ${imgSize}px;
+                height: ${imgSize}px;
+                transform: translate(-50%, -50%) scale(${initialScale});
+                background-image: url('${lightUrl}');
+                background-size: contain;
+                background-position: center;
+                background-repeat: no-repeat;
+                pointer-events: none;
+                z-index: 10000;
+                opacity: 0;
+                filter: drop-shadow(0 0 20px rgba(234, 179, 8, 1)) brightness(1.5) contrast(1.5);
+            `;
+            document.body.appendChild(effect);
+
+            // 建立盾牌元素 (隱藏在光圈後，這裡以Emoji圖示呈現，自帶發光感)
+            const shield = document.createElement('div');
+            shield.innerHTML = '🛡️';
+            shield.style.cssText = `
+                position: fixed;
+                left: ${targetX}px;
+                top: ${targetY}px;
+                transform: translate(-50%, -50%) scale(0.5);
+                font-size: 150px;
+                pointer-events: none;
+                z-index: 10001;
+                opacity: 0;
+                filter: drop-shadow(0 0 30px rgba(250, 204, 21, 1));
+            `;
+            document.body.appendChild(shield);
+
+            // 強制重繪
+            void effect.offsetWidth;
+
+            // 【階段二：光芒緩慢放大 (均速)】
+            effect.style.transition = `transform ${expandTime}ms linear, opacity 300ms ease-in`;
+            effect.style.transform = `translate(-50%, -50%) scale(${finalScale})`;
+            effect.style.opacity = '1';
+
+            if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+
+            setTimeout(() => {
+                // 【階段三：光芒轉變為盾牌定格】
+                effect.style.transition = `opacity 300ms ease-out`;
+                effect.style.opacity = '0'; // 光芒淡出
+
+                shield.style.transition = `transform 400ms ease-out, opacity 400ms ease-in`;
+                shield.style.transform = `translate(-50%, -50%) scale(1.0)`;
+                shield.style.opacity = '1'; // 盾牌出現
+
+                if (navigator.vibrate) navigator.vibrate([100, 100, 200]);
+
+                setTimeout(() => {
+                    // 【階段四：盾牌淡出消失】
+                    shield.style.transition = `opacity ${fadeOutTime}ms ease-out, transform ${fadeOutTime}ms ease-out`;
+                    shield.style.opacity = '0';
+                    shield.style.transform = `translate(-50%, -50%) scale(1.2)`;
+
+                    setTimeout(() => {
+                        effect.remove();
+                        shield.remove();
+                    }, fadeOutTime);
+                }, holdTime);
+            }, expandTime);
+        },
 		// [新增] BOSS 來襲警告特效
         triggerBossWarningEffect: () => {
             const overlay = document.createElement('div');
@@ -10363,7 +10498,7 @@ for (const slot of slots) {
                 return;
             }
             
-            // 2. 時之沙 (v4.7.5.4 修改: 永久凍結 + 提示 + 封印1回合)
+            // 2. 時之沙 (新增「適應」技能連動防禦判定)
             if (type === 'time') {
                 if (app.state.gameData.timeSandActive) {
                     return app.toast('⏳ 時之沙效運作中了！', 1);
@@ -10373,12 +10508,47 @@ for (const slot of slots) {
                 const refItem = db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}/items/time`);
                 refItem.transaction(count => {
                     if ((count || 0) > 0) {
+                        const monster = app.state.gameData.activeMonster;
+                        const updates = {
+                            timeSandActive: true,      
+                            timerActive: false,        
+                            'activeMonster/sealRounds': 1 
+                        };
+
+                        // 判斷適應技能機制
+                        if (monster && monster.state === 'battle') {
+                            let adaptLv = 0;
+                            let adaptCount = 0; // 記錄適應技能總數量
+                            const monsterSkillList = monster.campaignSkills || [];
+                            monsterSkillList.forEach(sk => {
+                                if (sk.name && sk.name.includes('適應')) {
+                                    adaptLv = Math.max(adaptLv, sk.lv || 1); // 疊加取最高等級
+                                    adaptCount++; // 統計適應技能數量
+                                }
+                            });
+
+                            if (adaptLv > 0) {
+                                let sealedCount = monster.sealedCount || 0;
+                                const threshold = adaptLv === 1 ? 3 : (adaptLv === 2 ? 2 : 1);
+                                
+                                if (sealedCount >= threshold) {
+                                    const atkBonus = adaptCount * 5;
+                                    // 時之沙本來就是封1回合，所以回合數不變，但依然觸發攻擊力提升與特效
+                                    const newAtk = (monster.atk || 10) + atkBonus;
+                                    updates['activeMonster/atk'] = newAtk;
+                                    
+                                    setTimeout(() => {
+                                        app.toast(`🛡️ 怪物【適應】時之沙封禁！攻擊力提升至 ${newAtk}！`, 1);
+                                        app.addCombatLog('item', `👹 怪物【適應】時之沙封禁效果，攻擊力+${atkBonus}，提升至 ${newAtk} 點！`);
+                                        app.triggerAdaptEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/6%E9%BB%83%E5%85%89%E8%83%8C%E6%99%AF%E7%89%B9%E6%95%88.png');
+                                    }, 500);
+                                }
+                                updates['activeMonster/sealedCount'] = sealedCount + 1;
+                            }
+                        }
+
                         // 更新全域狀態
-                        db.ref(`classes/${app.state.classId}`).update({
-                            timeSandActive: true,      // 標記時之沙啟用
-                            timerActive: false,        // 停止倒數計時
-                            'activeMonster/sealRounds': 1 // 賦予封印效果 (本回合不攻擊)
-                        });
+                        db.ref(`classes/${app.state.classId}`).update(updates);
                         
                         app.speak(`${app.state.myName}使用了時之沙！`);
                         return count - 1;
