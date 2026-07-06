@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.1.8 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.1.9 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -655,7 +655,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.1.8 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.1.9 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -5526,6 +5526,25 @@
                     }, 1500);
                     app.state.lastBossWarningTrigger = data.bossWarningTrigger;
                 }
+// --- [新增] 監聽標記協同攻擊/精準攻擊特效 ---
+                if (data.markVfxTrigger && data.markVfxTrigger.time > (app.state.lastMarkVfxTime || 0)) {
+                    app.state.lastMarkVfxTime = data.markVfxTrigger.time;
+                    const triggerData = data.markVfxTrigger;
+                    
+                    // 判斷我是不是解題者，或者是標記者之一
+                    const isSolver = triggerData.solver === app.state.myName;
+                    const isMarker = (triggerData.markers || []).includes(app.state.myName);
+                    
+                    if (isSolver || isMarker) {
+                        // 呼叫刀氣特效 (稍微延遲，讓畫面上的攻擊數字先跳出，層次感更好)
+                        setTimeout(() => {
+                            if (typeof app.triggerMarkAttackEffect === 'function') {
+                                app.triggerMarkAttackEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A8%99%E8%A8%98%E5%8D%94%E5%90%8C%E6%94%BB%E6%93%8A.png', triggerData.cardIdx);
+                            }
+                        }, 200);
+                    }
+                }
+                // ------------------------------------------
 
                 // [v4.7.3.3] 監聽全體獎勵觸發訊號 (由房主開啟寶箱後觸發)
                 if (data.rewardTrigger && data.rewardTrigger > (app.state.lastRewardTrigger || 0)) {
@@ -6536,10 +6555,8 @@
                         }
                         // ----------------------------------
 
-                        // [修改] 將 markGlowClass 與 markHtml 加入卡牌結構中
-                        html += `<div onclick="app.studentSelectCard(${idx})" class="${cardSizeClass} rounded-xl shadow-lg cursor-pointer transition-all duration-200 ${colorClass} ${ringClass} ${visibilityClass} ${markGlowClass} flex items-center justify-center font-black relative border-2 border-white/20">${lockHtml}${curseHtml}${markHtml}<div class="absolute top-1 right-2 text-sm opacity-60 font-bold">${card.points}</div><span class="pyramid-num-lg drop-shadow-md">${card.number}</span></div>`;
-						} else {
-                        html += `<div class="${cardSizeClass} rounded-xl border-4 border-dashed border-amber-300/50 bg-white/20"></div>`;
+                        // [修改] 將 markGlowClass 與 markHtml 加入卡牌結構中 (新增專屬 ID 供特效定位)
+                        html += `<div id="pyramid-card-${idx}" onclick="app.studentSelectCard(${idx})" class="${cardSizeClass} rounded-xl shadow-lg cursor-pointer transition-all duration-200 ${colorClass} ${ringClass} ${visibilityClass} ${markGlowClass} flex items-center justify-center font-black relative border-2 border-white/20">${lockHtml}${curseHtml}${markHtml}<div class="absolute top-1 right-2 text-sm opacity-60 font-bold">${card.points}</div><span class="pyramid-num-lg drop-shadow-md">${card.number}</span></div>`;
                     }
                 });
                 html += '</div>';
@@ -7882,10 +7899,30 @@ for (const slot of slots) {
                     // [v4.4.1 修正] 只要有人答對，就更新房間活躍時間
                     updates['lastActive'] = firebase.database.ServerValue.TIMESTAMP;
 
-                   // 更新玩家分數
+                 // 更新玩家分數
                     const scorePath = `players/${app.state.myTeam}/${app.state.myName}/score`;
                     const currentScore = (app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName]?.score || 0);
                     updates[scorePath] = currentScore + points;
+
+                    // --- [新增] 標記系統分數共享與特效觸發 ---
+                    if (typeof markersList !== 'undefined' && markersList.length > 0) {
+                        markersList.forEach(markerName => {
+                            if (markerName !== app.state.myName) { // 避免重複加分給解題者自己
+                                const markerScorePath = `players/${app.state.myTeam}/${markerName}/score`;
+                                const markerCurrentScore = (app.state.gameData.players?.[app.state.myTeam]?.[markerName]?.score || 0);
+                                updates[markerScorePath] = markerCurrentScore + points;
+                            }
+                        });
+                        
+                        // 設定 Firebase 廣播訊號，讓兩端都能看到藍色刀氣特效
+                        updates['markVfxTrigger'] = {
+                            time: firebase.database.ServerValue.TIMESTAMP,
+                            solver: app.state.myName,
+                            markers: markersList,
+                            cardIdx: idx
+                        };
+                    }
+                    // -----------------------------
 
                     // --- [新增] 1. 答對給予局內經驗值 (+2 EXP) ---
                     if (points > 0) {
@@ -8274,8 +8311,27 @@ for (const slot of slots) {
                             }
                         }
 
-                        // 結算裝備總攻擊力 (基礎加成 + 深淵永久加成 + 爆炎持續加成) * 翻倍倍率
-                        const totalEquipAtk = (atkBonus + newAbyssBonus + activeFlameBonus);
+                        // --- [新增] 標記系統傷害加成判定 ---
+                        let markBonusAtk = 0;
+                        let markLogText = "";
+                        let markersList = [];
+                        if (card.marks) {
+                            markersList = Object.keys(card.marks);
+                            if (markersList.length > 0) {
+                                if (markersList.includes(app.state.myName)) {
+                                    markBonusAtk = 1;
+                                    markLogText = "精準攻擊";
+                                }
+                                if (markersList.some(name => name !== app.state.myName)) {
+                                    markBonusAtk = 2;
+                                    markLogText = "協同攻擊";
+                                }
+                            }
+                        }
+                        // -----------------------------------
+
+                        // 結算裝備總攻擊力 (基礎加成 + 深淵永久加成 + 爆炎持續加成 + 標記加成) * 翻倍倍率
+                        const totalEquipAtk = (atkBonus + newAbyssBonus + activeFlameBonus + markBonusAtk);
                         const finalEquipAtk = Math.floor(totalEquipAtk * flameMultiplier); // 加上無條件捨去確保不出現小數點
 
                         if (flameTriggered) {
@@ -8484,6 +8540,7 @@ for (const slot of slots) {
                         if (atkBonusLogs && atkBonusLogs.length > 0) equipParts = equipParts.concat(atkBonusLogs);
                         if (typeof newAbyssBonus !== 'undefined' && newAbyssBonus > 0) equipParts.push(`[深淵]+${newAbyssBonus}`);
                         if (typeof activeFlameBonus !== 'undefined' && activeFlameBonus > 0) equipParts.push(`[爆炎]+${activeFlameBonus}`);
+                        if (typeof markBonusAtk !== 'undefined' && markBonusAtk > 0) equipParts.push(`[${markLogText}]+${markBonusAtk}`); // 新增標記傷害日誌
 
                         let equipDmgStr = "";
                         if (equipParts.length > 0) {
@@ -10137,6 +10194,86 @@ for (const slot of slots) {
                 if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
             }, 3500); 
         },
+		// --- [新增] 標記系統專屬特效：藍色刀氣 (從卡牌飛向怪物，穿透淡出) ---
+        triggerMarkAttackEffect: (imgUrl, cardIdx) => {
+            // 找尋起點：目標卡牌
+            const startEl = document.getElementById(`pyramid-card-${cardIdx}`);
+            let startX = window.innerWidth / 2;
+            let startY = window.innerHeight; // 若找不到，預設從畫面下方飛出
+            
+            if (startEl) {
+                const rect1 = startEl.getBoundingClientRect();
+                startX = rect1.left + rect1.width / 2;
+                startY = rect1.top + rect1.height / 2;
+            }
+
+            // 找尋終點：怪物目標位置
+            const targetEl = document.getElementById('active-monster-card');
+            let targetX = window.innerWidth / 2;
+            let targetY = window.innerHeight / 4; // 若找不到，預設往畫面上方飛去
+
+            if (targetEl) {
+                const rect2 = targetEl.getBoundingClientRect();
+                targetX = rect2.left + rect2.width / 2;
+                targetY = rect2.top + rect2.height / 2;
+            }
+
+            // 自動計算兩點之間旋轉的角度 (讓刀氣刀尖朝向怪物)
+            const dx = targetX - startX;
+            const dy = targetY - startY;
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+            // 建立特效元素
+            const effect = document.createElement('div');
+            
+            // 初始狀態：在卡牌位置出現
+            effect.style.cssText = `
+                position: fixed;
+                left: ${startX}px;
+                top: ${startY}px;
+                width: 250px;
+                height: 250px;
+                transform: translate(-50%, -50%) rotate(${angle}deg) scale(0.5);
+                background-image: url('${imgUrl}');
+                background-size: contain;
+                background-position: center;
+                background-repeat: no-repeat;
+                pointer-events: none;
+                z-index: 10000;
+                opacity: 0;
+                filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.9)) brightness(1.5);
+                transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), left 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), top 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.2s ease-in;
+            `;
+            document.body.appendChild(effect);
+
+            // 強制瀏覽器重繪
+            void effect.offsetWidth;
+
+            // 計算穿透點 (讓刀氣越過怪物一段距離，營造「斬過」的流暢感)
+            const penetrateRatio = 1.3; 
+            const finalX = startX + dx * penetrateRatio;
+            const finalY = startY + dy * penetrateRatio;
+
+            // 飛行與放大 (斬擊衝刺！)
+            effect.style.opacity = '1';
+            effect.style.left = `${finalX}px`;
+            effect.style.top = `${finalY}px`;
+            effect.style.transform = `translate(-50%, -50%) rotate(${angle}deg) scale(1.8)`;
+
+            // 模擬刀鋒銳利的輕震動回饋
+            if (navigator.vibrate) navigator.vibrate([80]);
+
+            // 到達末端後淡出消失
+            setTimeout(() => {
+                effect.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+                effect.style.opacity = '0';
+                effect.style.transform = `translate(-50%, -50%) rotate(${angle}deg) scale(2.2)`;
+                
+                setTimeout(() => effect.remove(), 300);
+            }, 600); // 飛行 0.6 秒後開始淡出
+        },
+        // -------------------------------------------------------------------
+		
 		// [新增] 深淵系列鬼手攻擊特效
         triggerAbyssGhostHandEffect: (img1Url, img2Url) => {
             // ==========================================
