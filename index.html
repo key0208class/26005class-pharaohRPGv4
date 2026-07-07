@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.3.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.4.0 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -655,7 +655,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.3.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.4.0 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -7621,7 +7621,7 @@ for (const slot of slots) {
             const myData = app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName];
             if (myData && myData.hp <= 0) {
                 app.speak("重傷無法戰鬥");
-                return app.toast('💀 你目前處於重傷復活狀態，無法進行攻擊！\n(請使用背包中的補血道具恢復)', 1);
+                return app.toast('💀 你目前處於重傷狀態，無法進行攻擊！\n(請等待復活倒數結束，或請牧師協助復活)', 1);
             }
 
             const frozen = app.state.gameData.frozenState;
@@ -10599,6 +10599,7 @@ for (const slot of slots) {
             if (!app.state.myTeam || !app.state.myName || !players) return;
             
             const myData = players[app.state.myTeam]?.[app.state.myName];
+            const isDead = (myData && myData.hp <= 0); // [新增] 判斷玩家是否死亡
             const items = myData?.items || {};
             const invEl = app.el('student-inventory');
             const listEl = app.el('inventory-list');
@@ -10662,9 +10663,15 @@ for (const slot of slots) {
             const renderItem = (type, icon, count, colorClass, title) => {
                 if (count > 0) {
                     const isActive = app.state.activeItem === type;
-                    // 若被激活則閃爍，否則顯示自定義底色
-                    const bgClass = isActive ? 'item-active' : (colorClass + ' opacity-90 hover:opacity-100 hover:scale-105');
-                    const onclick = `app.useItem('${type}')`;
+                    let bgClass = isActive ? 'item-active' : (colorClass + ' opacity-90 hover:opacity-100 hover:scale-105');
+                    let onclick = `app.useItem('${type}')`;
+                    
+                    // [新增] 死亡狀態反灰，並改寫點擊事件為警告提示
+                    if (isDead) {
+                        bgClass = 'bg-gray-400 grayscale opacity-50 cursor-not-allowed';
+                        onclick = `app.toast('💀 重傷倒地，無法使用道具！', 1)`;
+                    }
+
                     return `<div onclick="${onclick}" class="item-slot ${bgClass} rounded-lg p-1 border border-black/10 shadow-sm" title="${title}"><div class="item-icon">${icon}</div><div class="item-count">${count}</div></div>`;
                 }
                 return '';
@@ -10701,8 +10708,7 @@ for (const slot of slots) {
             if (skillCon) {
                 let html = '';
                 
-                // 1. 玩家標記系統 (全體皆有)
-                // 統計本回合已標記的數量
+                // 1. 玩家標記系統 (全體皆有) - [注意] 標記系統無視死亡狀態，讓死者也能標記
                 let usedMarks = 0;
                 const currentPyramid = app.state.gameData?.pyramid || [];
                 currentPyramid.forEach(c => {
@@ -10734,12 +10740,21 @@ for (const slot of slots) {
                     const pct = Math.min(100, (charge / maxCharge) * 100);
                     const isReady = charge >= maxCharge;
                     
-                    const containerClass = isReady ? 'cursor-pointer hover:scale-110 drop-shadow-[0_0_12px_rgba(34,197,94,0.8)]' : 'cursor-not-allowed opacity-80 grayscale-[30%]';
-                    const filterClass = isReady ? 'filter-none drop-shadow-md' : 'filter-none opacity-90';
+                    let containerClass = isReady ? 'cursor-pointer hover:scale-110 drop-shadow-[0_0_12px_rgba(34,197,94,0.8)]' : 'cursor-not-allowed opacity-80 grayscale-[30%]';
+                    let filterClass = isReady ? 'filter-none drop-shadow-md' : 'filter-none opacity-90';
+                    let clickAction = isReady ? 'app.useNoviceHeal()' : '';
+
+                    // [新增] 死亡狀態判定：反灰且鎖定，改寫點擊事件為警告提示
+                    if (isDead) {
+                        containerClass = 'cursor-not-allowed opacity-50 grayscale';
+                        filterClass = 'grayscale opacity-50';
+                        clickAction = `app.toast('💀 重傷倒地，無法施展技能！', 1)`;
+                    }
+                    
                     const maskHeight = 100 - pct;
 
                     // 療傷按鈕 HTML (無空白節點壓縮)
-                    html += `<div onclick="${isReady ? 'app.useNoviceHeal()' : ''}" class="relative w-12 h-12 bg-transparent transition-all group ${containerClass}" title="療傷：回復10點生命 (需聚氣8次，目前${charge}/${maxCharge})"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/1%E7%99%82%E5%82%B7a.png" class="absolute inset-0 w-full h-full object-contain grayscale opacity-40"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/1%E7%99%82%E5%82%B7a.png" class="absolute inset-0 w-full h-full object-contain ${filterClass}" style="clip-path: inset(${maskHeight}% 0 0 0); transition: clip-path 0.4s ease-out;"></div>`;
+                    html += `<div onclick="${clickAction}" class="relative w-12 h-12 bg-transparent transition-all group ${containerClass}" title="療傷：回復10點生命 (需聚氣8次，目前${charge}/${maxCharge})"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/1%E7%99%82%E5%82%B7a.png" class="absolute inset-0 w-full h-full object-contain grayscale opacity-40"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/1%E7%99%82%E5%82%B7a.png" class="absolute inset-0 w-full h-full object-contain ${filterClass}" style="clip-path: inset(${maskHeight}% 0 0 0); transition: clip-path 0.4s ease-out;"></div>`;
                 }
                 
                 skillCon.innerHTML = html;
@@ -10754,12 +10769,10 @@ for (const slot of slots) {
                 const bleedRounds = myData.bleedRounds || 0;
                 const bleedDamage = myData.bleedDamage || 0;
                 if (bleedRounds > 0 && bleedDamage > 0) {
-                    // [修改] 移除 animate-pulse，增強 drop-shadow 讓它保持高亮
                     debuffHtml += `<div class="relative w-10 h-10 md:w-12 md:h-12 bg-transparent flex items-center justify-center group" title="流血狀態：剩餘 ${bleedRounds} 回合，每回合損失 ${bleedDamage} 點生命"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B5%81%E8%A1%80%E7%8B%80%E6%85%8B.png" class="absolute inset-0 w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(220,38,38,1)]"><div class="absolute -bottom-1 -right-1 bg-red-900 text-red-100 text-[0.55rem] md:text-[0.6rem] font-black px-1 rounded-full border border-red-500 shadow z-10 leading-none">-${bleedDamage}</div><div class="absolute -top-1 -left-1 bg-black/80 text-white text-[0.55rem] font-bold px-1 rounded border border-gray-500 shadow z-10 leading-none">${bleedRounds}回</div></div>`;
                 }
                 const poisonValue = myData.poisonValue || 0;
                 if (poisonValue > 0) {
-                    // [修改] 移除 animate-pulse，增強 drop-shadow 讓它保持高亮
                     debuffHtml += `<div class="relative w-10 h-10 md:w-12 md:h-12 bg-transparent flex items-center justify-center group ml-1" title="中毒狀態：每次攻擊怪物時損失 5 點生命，剩餘毒性 ${poisonValue} 點"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%AF%92%E8%97%A5%E7%8B%80%E6%85%8B.png" class="absolute inset-0 w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(34,197,94,1)]"><div class="absolute -bottom-1 -right-1 bg-green-900 text-green-100 text-[0.55rem] md:text-[0.6rem] font-black px-1 rounded-full border border-green-500 shadow z-10 leading-none">-5</div><div class="absolute -top-1 -left-1 bg-black/80 text-white text-[0.55rem] font-bold px-1 rounded border border-gray-500 shadow z-10 leading-none">${poisonValue}毒</div></div>`;
                 }
                 if (debuffHtml !== '') {
@@ -10802,6 +10815,11 @@ for (const slot of slots) {
                     const currentHp = pData.hp !== undefined ? pData.hp : 100;
                     const maxHp = pData.maxHp || 100;
 
+                  // [新增] 嚴格防止自行喝藥復活
+                    if (currentHp <= 0) {
+                        return app.toast('💀 你已重傷倒地！無法自己喝藥！\n(只能等待復活時間結束，或等待牧師救援)', 1);
+                    }
+
                     if (currentHp >= maxHp) {
                         return app.toast('❤️ 生命值已滿，不需要補血！');
                     }
@@ -10812,10 +10830,7 @@ for (const slot of slots) {
                         return app.toast('❌ 道具數量不足！');
                     }
 
-                    // 即使死亡 (HP<=0) 也可以使用補血瓶復活
-                    const confirmMsg = (currentHp <= 0) 
-                        ? `👼 你正在復活倒數中，要使用「${type==='herb'?'草藥':(type==='potion'?'治療劑':'補血瓶')}」立即復活嗎？`
-                        : `❤️ 確定要使用「${type==='herb'?'草藥':(type==='potion'?'治療劑':'補血瓶')}」恢復 ${healVal} 點生命嗎？`;
+                    const confirmMsg = `❤️ 確定要使用「${type==='herb'?'草藥':(type==='potion'?'治療劑':'補血瓶')}」恢復 ${healVal} 點生命嗎？`;
 
                     if (!confirm(confirmMsg)) return;
 
