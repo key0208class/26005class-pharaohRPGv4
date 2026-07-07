@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.2.1 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.3.1 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -629,23 +629,23 @@
         .skill-tag-lv3 { animation: skill-tag-glow-lv3 2s ease-in-out infinite; background-color: #fef08a; color: #9a3412; border: 1px solid #f59e0b; }
         
         /* ====== [新增] 玩家標記系統專屬特效 ====== */
-        /* 改為綠色背景光呼吸燈，安靜顯示 */
-        .mark-glow { box-shadow: inset 0 0 20px 2px rgba(34, 197, 94, 0.3), 0 0 10px rgba(34, 197, 94, 0.5) !important; border-color: #4ade80 !important; animation: green-breathe 2.5s infinite alternate ease-in-out; }
-        @keyframes green-breathe { 0% { box-shadow: inset 0 0 10px rgba(34, 197, 94, 0.1), 0 0 5px rgba(34, 197, 94, 0.2); } 100% { box-shadow: inset 0 0 25px rgba(34, 197, 94, 0.5), 0 0 15px rgba(34, 197, 94, 0.7); } }
+        /* 改為亮藍色背景光呼吸燈，安靜顯示 */
+        .mark-glow { box-shadow: inset 0 0 20px 2px rgba(14, 165, 233, 0.3), 0 0 10px rgba(14, 165, 233, 0.5) !important; border-color: #38bdf8 !important; animation: blue-breathe 2.5s infinite alternate ease-in-out; }
+        @keyframes blue-breathe { 0% { box-shadow: inset 0 0 10px rgba(14, 165, 233, 0.1), 0 0 5px rgba(14, 165, 233, 0.2); } 100% { box-shadow: inset 0 0 25px rgba(14, 165, 233, 0.5), 0 0 15px rgba(14, 165, 233, 0.7); } }
         /* 改為靠左上角 */
         .mark-avatar-container { position: absolute; top: -10px; left: -10px; display: flex; flex-direction: row; gap: 4px; z-index: 30; }
         /* 移除頭像跳動動畫，保持安靜 */
         .mark-avatar-wrapper { position: relative; display: flex; align-items: center; justify-content: center; }
-        .mark-avatar { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #22c55e; box-shadow: 0 2px 4px rgba(0,0,0,0.3); object-fit: cover; background: #fff; }
+        .mark-avatar { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #38bdf8; box-shadow: 0 2px 4px rgba(0,0,0,0.3); object-fit: cover; background: #fff; }
         .mark-cancel-btn { position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; border-radius: 50%; width: 14px; height: 14px; font-size: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 35; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.2s; }
         .mark-cancel-btn:hover { transform: scale(1.2); background: #dc2626; }
         /* 氣泡移至頭像右側，並垂直置中 */
-        .mark-intent-bubble { position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 8px; background: rgba(255,255,255,0.95); border: 2px solid #22c55e; color: #064e3b; border-radius: 6px; padding: 2px 6px; font-size: 0.65rem; font-weight: 900; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 40; pointer-events: none; }
+        .mark-intent-bubble { position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 8px; background: rgba(255,255,255,0.95); border: 2px solid #38bdf8; color: #0c4a6e; border-radius: 6px; padding: 2px 6px; font-size: 0.65rem; font-weight: 900; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 40; pointer-events: none; }
         /* 氣泡箭頭指向左邊的頭像 */
-        .mark-intent-bubble::after { content: ''; position: absolute; top: 50%; right: 100%; transform: translateY(-50%); border-width: 4px; border-style: solid; border-color: transparent #22c55e transparent transparent; }
+        .mark-intent-bubble::after { content: ''; position: absolute; top: 50%; right: 100%; transform: translateY(-50%); border-width: 4px; border-style: solid; border-color: transparent #38bdf8 transparent transparent; }
         
-        .marking-mode-active { box-shadow: 0 0 15px rgba(34, 197, 94, 0.8); border-color: #22c55e; animation: pulse-green 1.5s infinite; }
-        @keyframes pulse-green { 0%, 100% { filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.6)); } 50% { filter: drop-shadow(0 0 15px rgba(34, 197, 94, 1)); } }
+        .marking-mode-active { box-shadow: 0 0 15px rgba(14, 165, 233, 0.8); border-color: #0ea5e9; animation: pulse-blue-mark 1.5s infinite; }
+        @keyframes pulse-blue-mark { 0%, 100% { filter: drop-shadow(0 0 5px rgba(14, 165, 233, 0.6)); } 50% { filter: drop-shadow(0 0 15px rgba(14, 165, 233, 1)); } }
 </style>
 	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -655,7 +655,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.2.1 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.3.1 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -759,7 +759,7 @@
                       <hr class="border-amber-200 my-4">
                         
                         <button onclick="app.openCrusadeDifficultyModal()" class="w-full bg-gradient-to-r from-amber-600 to-amber-800 text-white font-bold py-4 rounded-xl shadow-lg transition-transform hover:scale-[1.02] active:scale-95 text-xl mb-2 flex items-center justify-center gap-2">
-                            <span>🏰</span> <span id="lobby-create-room-text">隨機討伐 (選擇難度)</span>
+                            <span>🏰</span> <span id="lobby-create-room-text">隨機討伐</span>
                         </button>
                         <p class="text-xs text-gray-400 font-bold text-center">多種難度與豐厚通關獎勵，進入後自動成為隊長</p>
                         
@@ -770,7 +770,7 @@
                         <button id="btn-campaign-mode" onclick="app.enterCampaignMode()" class="w-full bg-gradient-to-r from-slate-700 to-slate-900 text-amber-400 font-black py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-xl mb-1 flex items-center justify-center gap-2 border-2 border-amber-500/50 relative overflow-hidden group">
                             <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30"></div>
                             <span class="text-2xl filter drop-shadow group-hover:animate-pulse">⚔️</span> 
-                            <span class="tracking-widest">冒險戰役(開放3-5)</span>
+                            <span class="tracking-widest">冒險戰役</span>
                         </button>
                         <p class="text-xs text-gray-500 font-bold">透過困難的戰役，取得更豐富的獎勵</p>
                     </div>
@@ -6543,7 +6543,7 @@
                         let markHtml = '';
                         let markGlowClass = '';
                         if (card.marks && !card.isTaken) {
-                            markGlowClass = 'mark-glow'; // 讓卡牌發光
+                            markGlowClass = isSelected ? '' : 'mark-glow'; // 被選中時不要亮藍光，維持綠色 ring 狀態
                             let avatarHtml = '';
                             
                             Object.keys(card.marks).forEach(pName => {
@@ -7645,57 +7645,68 @@ for (const slot of slots) {
             const myPlayerData = app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName];
             const hasNileBuff = myPlayerData?.nileRounds && myPlayerData.nileRounds > 0;
             
-            let isUsageValid = false;
+        
 
             // 驗證骰子使用規則 (含道具)
-            if (hasNileBuff) {
-                // 尼羅河增益：允許用 2 顆或 3 顆現有骰子
+            let isUsageValid = false;
+            let tempDice = [...diceNums];
+            let matchCount = 0;
+            let remainingFormulaNums = [];
+            
+            formulaNums.forEach(num => {
+                const foundIdx = tempDice.indexOf(num);
+                if (foundIdx !== -1) {
+                    tempDice.splice(foundIdx, 1);
+                    matchCount++;
+                } else {
+                    remainingFormulaNums.push(num);
+                }
+            });
+
+            // 根據道具與狀態檢查是否合法
+            const useHorus = (activeItem === 'horus');
+            const useNile = hasNileBuff;
+
+            if (useNile && useHorus) {
+                // 尼羅河 + 荷魯斯：總數量可以是 2 顆或 3 顆
                 if (formulaNums.length === 2 || formulaNums.length === 3) {
-                    const tempDice = [...diceNums];
-                    let matchCount = 0;
-                    let valid = true;
-                    formulaNums.forEach(num => {
-                        const foundIdx = tempDice.indexOf(num);
-                        if (foundIdx !== -1) {
-                            tempDice.splice(foundIdx, 1);
-                            matchCount++;
-                        } else {
-                            valid = false; // 出現了不是骰子的奇怪數字
-                        }
-                    });
-                    if (valid && (matchCount === 2 || matchCount === 3)) {
+                    // 若沒有用萬用數字 (全來自原始骰子)
+                    if (remainingFormulaNums.length === 0) {
                         isUsageValid = true;
+                    } 
+                    // 若用了 1 顆萬用數字，則原始骰子使用數必須是 1 或 2 顆
+                    else if (remainingFormulaNums.length === 1 && (matchCount === 1 || matchCount === 2)) {
+                        const wildcard = remainingFormulaNums[0];
+                        if (wildcard >= 1 && wildcard <= 3) isUsageValid = true;
                     }
+                }
+                if (!isUsageValid) return app.toast('❌ 尼羅河與荷魯斯共存：可使用 1~2 顆原骰子 + 1 顆變身數字(1~3)，總數 2~3 顆喔！', 1);
+
+            } else if (useNile && !useHorus) {
+                // 只有尼羅河：全部都要來自原始骰子，總數量 2 或 3 顆
+                if ((formulaNums.length === 2 || formulaNums.length === 3) && remainingFormulaNums.length === 0) {
+                    isUsageValid = true;
                 }
                 if (!isUsageValid) return app.toast('❌ 尼羅河恩賜：接下來的回合內，可以自由選擇使用「2顆」或「3顆」現有骰子數字來解題喔！', 1);
 
-            } else if (activeItem === 'horus') {
+            } else if (!useNile && useHorus) {
+                // 只有荷魯斯：總數量必須是 3 顆
                 if (formulaNums.length === 3) {
-                    const tempDice = [...diceNums];
-                    let matchCount = 0;
-                    let wildcardUsed = false;
-                    const remainingFormulaNums = [];
-                    formulaNums.forEach(num => {
-                        const foundIdx = tempDice.indexOf(num);
-                        if (foundIdx !== -1) {
-                            tempDice.splice(foundIdx, 1); 
-                            matchCount++;
-                        } else {
-                            remainingFormulaNums.push(num);
-                        }
-                    });
-                    if (matchCount === 2 && remainingFormulaNums.length === 1) {
+                    // 沒用萬用數字
+                    if (remainingFormulaNums.length === 0 && matchCount === 3) {
+                        isUsageValid = true;
+                    } 
+                    // 用了 1 顆萬用數字，配合 2 顆原始骰子
+                    else if (remainingFormulaNums.length === 1 && matchCount === 2) {
                         const wildcard = remainingFormulaNums[0];
-                        if (wildcard >= 1 && wildcard <= 3) {
-                            isUsageValid = true;
-                        }
+                        if (wildcard >= 1 && wildcard <= 3) isUsageValid = true;
                     }
-                    if (matchCount === 3) isUsageValid = true;
                 }
                 if (!isUsageValid) return app.toast('❌ 荷魯斯規則：需用 2 顆原骰子 + 1 顆變身數字(1~3)。', 1);
 
             } else {
-                if (JSON.stringify(diceNums) === JSON.stringify(formulaNums)) {
+                // 兩者皆無：全部來自原始骰子，且總數量必須是 3 顆
+                if (formulaNums.length === 3 && remainingFormulaNums.length === 0 && matchCount === 3) {
                     isUsageValid = true;
                 }
                 if (!isUsageValid) return app.toast('❌ 數字錯誤！請用完所有骰子。', 1);
