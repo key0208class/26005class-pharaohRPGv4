@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.4.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.5.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -170,6 +170,9 @@
         input:checked + .slider { background-color: #d97706; }
         input:focus + .slider { box-shadow: 0 0 1px #d97706; }
         input:checked + .slider:before { transform: translateX(24px); }
+        /* --- [新增] BGM專屬綠色開關樣式 --- */
+        .switch-bgm input:checked + .slider { background-color: #22c55e !important; }
+        .switch-bgm input:focus + .slider { box-shadow: 0 0 1px #22c55e !important; }
         /* --- v4.0.1 新增樣式: 冒險大廳與管理員 --- */
         .lobby-card { background: rgba(255, 255, 255, 0.95); border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(180, 83, 9, 0.2); border: 4px solid #d97706; transition: transform 0.3s; }
         .lobby-card:hover { transform: translateY(-5px); }
@@ -655,7 +658,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.4.0 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.5.3 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -795,9 +798,20 @@
                                     <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                                 </button>
                             </div>
-                            <button onclick="app.refreshLobby()" class="text-amber-600 font-bold hover:text-amber-800 text-sm flex items-center gap-1 bg-white px-3 py-1 rounded-lg border border-amber-200 hover:bg-amber-50 transition-colors shadow-sm">
-                                <span>🔄</span> <span class="hidden md:inline">重新整理</span>
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <!-- 音樂開關開始 -->
+                                <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-amber-200 hover:bg-slate-50 transition-colors shadow-sm">
+                                    <span class="text-xs font-bold text-slate-600 bgm-text">🎵 BGM</span>
+                                    <label class="switch switch-bgm scale-75 m-0" title="背景音樂開關" style="margin: 0;">
+                                        <input type="checkbox" id="lobby-bgm-toggle" onchange="app.toggleBgm()">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <!-- 音樂開關結束 -->
+                                <button onclick="app.refreshLobby()" class="text-amber-600 font-bold hover:text-amber-800 text-sm flex items-center gap-1 bg-white px-3 py-1 rounded-lg border border-amber-200 hover:bg-amber-50 transition-colors shadow-sm">
+                                    <span>🔄</span> <span class="hidden md:inline">整理</span>
+                                </button>
+                            </div>
                         </div>
                         <!-- 冒險資訊公告欄開始 -->
                         <div class="bg-amber-50 rounded-xl border border-amber-300 shadow-sm mb-4 overflow-hidden flex flex-col max-h-[220px]">
@@ -2466,6 +2480,15 @@
                 </div>
                <div class="flex items-center gap-3 mt-2 md:mt-0">
                     <div class="flex items-center gap-1">
+                     <!-- 音樂開關開始 -->
+                        <div class="flex items-center gap-1 bg-white/80 px-2 py-1 rounded-full border border-amber-200 hover:bg-white transition-colors shadow-sm">
+                            <span class="text-xs font-bold text-slate-700 bgm-text">🎵 BGM</span>
+                            <label class="switch switch-bgm scale-75 m-0" title="背景音樂開關" style="margin: 0;">
+                                <input type="checkbox" id="combat-bgm-toggle" onchange="app.toggleBgm()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <!-- 音樂開關結束 -->
                         <button id="voice-toggle-btn" class="hidden bg-gray-200 px-3 py-1 rounded-full text-sm font-bold hover:bg-gray-300 transition-colors" onclick="app.toggleVoice()">🔊 語音開</button>
                         <input id="voice-rate-input" type="number" min="0.5" max="3.0" step="0.1" value="1.5" class="hidden w-14 py-1 px-1 text-center text-sm font-bold border-2 border-amber-200 rounded-lg bg-white/80 focus:outline-none focus:border-amber-500" title="語音速度 (0.5慢 ~ 3.0快)">
                     </div>
@@ -2824,6 +2847,19 @@
                 targetCount: 1,
                 itemCount: 1,
                 allowedTypes: ['hint', 'double', 'nile']
+            },
+            // --- [新增] 背景音樂狀態 ---
+            bgmAudio: new Audio(),
+            currentBgm: null,
+           bgmEnabled: localStorage.getItem('pharaoh_bgm') === 'true',
+            bgmTargetVolume: 0.3, // 預設正常音量 30%
+            bgmFadeInterval: null,
+            firstTimeBgm: localStorage.getItem('pharaoh_bgm') === null, // 判斷是否為第一次造訪網站
+            hasInteracted: false, // 判斷玩家是否已點擊過螢幕
+            bgmTracks: {
+                lobby: 'https://class.kh.edu.tw/sites/30033/upload_file/11/1.%E5%86%92%E9%9A%AA%E5%A4%A7%E5%BB%B3%E9%9F%B3%E6%A8%82_.mp3',
+                combat: 'https://class.kh.edu.tw/sites/30033/upload_file/11/2.%E6%88%B0%E9%AC%A5%E8%83%8C%E6%99%AF%E9%9F%B3%E6%A8%82_.MP3',
+                victory: 'https://class.kh.edu.tw/sites/30033/upload_file/11/3.%E5%8B%9D%E5%88%A9%E9%9F%B3%E6%A8%82_.mp3'
             }
         },
 
@@ -3584,6 +3620,44 @@
             app.el('page-lobby').classList.remove('hidden');
             app.el('game-board').classList.add('hidden');
             app.el('admin-gear-btn').classList.remove('hidden');
+            
+          // --- [新增] 全域點擊解鎖背景音樂邏輯 ---
+            const unlockAudio = () => {
+                if (app.state.hasInteracted) return;
+                app.state.hasInteracted = true; // 標記已互動
+
+                // 邏輯1：若是第一次造訪，一開始是關的，點擊後幫他設為開啟並播放
+                if (app.state.firstTimeBgm) {
+                    app.state.bgmEnabled = true;
+                    localStorage.setItem('pharaoh_bgm', 'true');
+                    app.state.firstTimeBgm = false;
+                }
+
+                app.updateBgmUI(); // 更新拉條顯示為正確狀態
+
+                // 邏輯2：如果狀態是開啟的，就開始播放音效
+                if (app.state.bgmEnabled) {
+                    if (app.state.bgmAudio.src) {
+                        app.state.bgmAudio.play().then(() => {
+                            app.fadeInBgm();
+                        }).catch(() => {});
+                    } else {
+                        app.playBgm(app.state.currentBgm || 'lobby', true);
+                    }
+                }
+                
+                // 解鎖完成後移除監聽器，避免浪費資源
+                document.removeEventListener('click', unlockAudio);
+                document.removeEventListener('touchstart', unlockAudio);
+            };
+
+            // 綁定全螢幕的第一次點擊/觸控事件
+            document.addEventListener('click', unlockAudio, { once: true });
+            document.addEventListener('touchstart', unlockAudio, { once: true });
+
+            // 初始化 BGM UI (這時先顯示初始狀態，音樂暫不播放等待點擊)
+            app.updateBgmUI();
+            app.playBgm('lobby'); // 這邊只會載入音軌，會被 startNewBgmTrack 的互動檢查攔住不播
         },
 
         // v4.0.2: 刷新大廳房間列表 (即時監聽 Firebase)
@@ -3934,6 +4008,9 @@
                 app.el('panel-teacher').classList.add('hidden');
             }
             
+            // [修正] 不管是房主還是隊員，進入戰鬥場景皆切換並播放激昂的戰鬥音樂
+            app.playBgm('combat');
+
             app.listenToGameData();
             app.initCommunicationListeners(); // 啟動戰鬥日誌與聊天室監聽
 
@@ -6141,6 +6218,9 @@
         // v4.7.7.1: 產生遊戲結束的詳細戰績儀表板 (含金幣、經驗、時間、BOSS)
    renderGameOverStats: (players) => {
          if (!players) return;
+         
+         // [新增] 最終戰績結算，播放勝利音樂
+         app.playBgm('victory');
          
          const gameData = app.state.gameData || {};
          
@@ -8864,37 +8944,162 @@ for (const slot of slots) {
             }
         },
 
-        speak: (text) => {
-            // v4.0.9: 修正語音權限，讓房主 (isHost) 也能聽到語音提示
-            if ((app.state.role === 'teacher' || app.state.isHost) && app.state.voiceEnabled && window.speechSynthesis) {
-                // [修改] 移除了 window.speechSynthesis.cancel() 
-                // 原因：為了讓語音排隊播放，而不是切斷上一句。
-                
-                // [修正] 語音口語化轉換：將符號轉為中文
-                let spokenText = text
-                    .replace(/\*/g, '乘以')   // 電腦符號 * -> 乘以
-                    .replace(/\//g, '除以')   // 電腦符號 / -> 除以
-                    .replace(/×/g, '乘以')    // 數學符號 × -> 乘以
-                    .replace(/÷/g, '除以')    // 數學符號 ÷ -> 除以
-                    .replace(/-/g, '減')      // 減號唸起來順一點
-                    .replace(/\+/g, '加');    // 加號唸起來順一點
+        // --- [新增] 背景音樂與漸變引擎 ---
+       toggleBgm: () => {
+            // 玩家手動點擊開關，視同已發生互動
+            app.state.hasInteracted = true;
+            app.state.firstTimeBgm = false;
 
-                // 移除表情符號，避免語音引擎讀出亂碼
+            app.state.bgmEnabled = !app.state.bgmEnabled;
+            localStorage.setItem('pharaoh_bgm', app.state.bgmEnabled);
+            app.updateBgmUI();
+            
+            if (app.state.bgmEnabled) {
+                app.playBgm(app.state.currentBgm || 'lobby', true); // 強制重播目前場景音樂
+            } else {
+                app.fadeOutAndPauseBgm(); // 平滑淡出
+            }
+        },
+
+        fadeOutAndPauseBgm: () => {
+            const bgmAudio = app.state.bgmAudio;
+            app.state.isSwitchingTrack = true; // [修正] 關閉音樂時也視同切換狀態，防止干擾
+            if (app.state.bgmFadeInterval) clearInterval(app.state.bgmFadeInterval);
+            app.state.bgmFadeInterval = setInterval(() => {
+                if (bgmAudio.volume > 0.05) {
+                    bgmAudio.volume -= 0.05;
+                } else {
+                    bgmAudio.volume = 0;
+                    bgmAudio.pause();
+                    app.state.isSwitchingTrack = false;
+                    clearInterval(app.state.bgmFadeInterval);
+                }
+            }, 50);
+        },
+
+        updateBgmUI: () => {
+            // 更新文字狀態
+            const labelText = app.state.bgmEnabled ? "🎵 BGM" : "🔇 BGM";
+            document.querySelectorAll('.bgm-text').forEach(el => el.textContent = labelText);
+            
+            // 更新大廳的拉條狀態
+            const lobbyToggle = document.getElementById('lobby-bgm-toggle');
+            if (lobbyToggle) lobbyToggle.checked = app.state.bgmEnabled;
+            
+            // 更新戰鬥區的拉條狀態
+            const combatToggle = document.getElementById('combat-bgm-toggle');
+            if (combatToggle) combatToggle.checked = app.state.bgmEnabled;
+        },
+
+        playBgm: (trackName, force = false) => {
+            // 如果玩家沒有開啟音樂，我們只紀錄當前場景，不播放
+            if (!app.state.bgmEnabled) {
+                app.state.currentBgm = trackName;
+                return;
+            }
+            
+            if (app.state.currentBgm === trackName && !force) return; 
+            
+            app.state.currentBgm = trackName;
+            const bgmAudio = app.state.bgmAudio;
+            const targetUrl = app.state.bgmTracks[trackName];
+
+            // 平滑過度：先淡出目前的音樂
+            if (app.state.bgmFadeInterval) clearInterval(app.state.bgmFadeInterval);
+
+            // [修正] 標記正在切換曲目，防止被語音播報的音量漸變機制打斷
+            app.state.isSwitchingTrack = true;
+
+            if (!bgmAudio.paused && bgmAudio.src) {
+                app.state.bgmFadeInterval = setInterval(() => {
+                    if (bgmAudio.volume > 0.05) {
+                        bgmAudio.volume -= 0.05;
+                    } else {
+                        clearInterval(app.state.bgmFadeInterval);
+                        app.state.isSwitchingTrack = false;
+                        app.startNewBgmTrack(targetUrl, trackName);
+                    }
+                }, 50);
+            } else {
+                app.state.isSwitchingTrack = false;
+                app.startNewBgmTrack(targetUrl, trackName);
+            }
+        },
+
+        startNewBgmTrack: (url, trackName) => {
+            const bgmAudio = app.state.bgmAudio;
+            bgmAudio.src = url;
+            bgmAudio.loop = true; // 音樂循環播放
+            bgmAudio.volume = 0;
+            
+            // 關鍵檢查：如果尚未點擊互動，或是設定為關閉，就只載入音軌但不播放
+            if (!app.state.hasInteracted || !app.state.bgmEnabled) return;
+
+            const playPromise = bgmAudio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    app.fadeInBgm();
+                }).catch(error => {
+                    console.warn("🔔 瀏覽器等待玩家互動後播放");
+                });
+            }
+        },
+
+        fadeInBgm: () => {
+            // [修正] 如果正在「切換曲目」的過程中，不要讓語音避讓機制的漸變去蓋掉換曲邏輯
+            if (app.state.isSwitchingTrack) return;
+
+            const bgmAudio = app.state.bgmAudio;
+            if (app.state.bgmFadeInterval) clearInterval(app.state.bgmFadeInterval);
+            app.state.bgmFadeInterval = setInterval(() => {
+                // 計算當前音量與目標音量的差距
+                const diff = app.state.bgmTargetVolume - bgmAudio.volume;
+                
+                // 如果差距大於單次調整步長 (0.05)，則平滑加減
+                if (Math.abs(diff) > 0.05) {
+                    bgmAudio.volume += diff > 0 ? 0.05 : -0.05;
+                } else {
+                    // 到達目標音量，停止計時器
+                    bgmAudio.volume = app.state.bgmTargetVolume;
+                    clearInterval(app.state.bgmFadeInterval);
+                }
+            }, 100);
+        },
+
+        speak: (text) => {
+            if ((app.state.role === 'teacher' || app.state.isHost) && app.state.voiceEnabled && window.speechSynthesis) {
+                
+                let spokenText = text
+                    .replace(/\*/g, '乘以')
+                    .replace(/\//g, '除以')
+                    .replace(/×/g, '乘以')
+                    .replace(/÷/g, '除以')
+                    .replace(/-/g, '減')
+                    .replace(/\+/g, '加');
+
                 const cleanText = spokenText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
 
                 const u = new SpeechSynthesisUtterance(cleanText);
                 u.lang = 'zh-TW';
-                // [建議] 排隊模式下，語速設為 1.0 (正常) 或 1.1，避免大量訊息堆積時講太久
-                // [修改] 動態讀取介面上的語速 (預設1.5)
                 const rateInput = document.getElementById('voice-rate-input');
                 u.rate = rateInput ? parseFloat(rateInput.value) : 1.5; 
+
+                // --- [新增] 語音避讓 (Audio Ducking) ---
+                u.onstart = () => {
+                    app.state.bgmTargetVolume = 0.05; // 語音播報時，音樂降至 5% 避免蓋過語音
+                    app.fadeInBgm(); // 利用漸變邏輯平滑降音量
+                };
+                u.onend = () => {
+                    app.state.bgmTargetVolume = 0.3;  // 語音結束後，恢復正常音量
+                    app.fadeInBgm();
+                };
+                u.onerror = () => {
+                    app.state.bgmTargetVolume = 0.3;
+                    app.fadeInBgm();
+                };
+
                 window.speechSynthesis.speak(u);
             }
-        },
-        
-        toggleVoice: () => {
-            app.state.voiceEnabled = !app.state.voiceEnabled;
-            app.el('voice-toggle-btn').textContent = app.state.voiceEnabled ? "🔊 語音開" : "🔇 語音關";
         },
 
         generatePredefinedCards: () => { /* 佔位符 */ },
@@ -11342,8 +11547,15 @@ for (const slot of slots) {
             app.toast('🎁 寶箱已開啟！全員選擇獎勵！', 1);
         },
 
-        // [v4.7.3.3 修改] 顯示獎勵面板 (本地生成隨機金幣並渲染按鈕)
+       // [v4.7.3.3 修改] 顯示獎勵面板 (本地生成隨機金幣並渲染按鈕)
         showRewardSelection: () => {
+            // [修正] 這裡只是打完單隻怪物開寶箱，不該播放最終勝利 BGM，改為播放獲得寶藏的過場音效
+            if (app.state.bgmEnabled) {
+                const chestAudio = new Audio("https://taira-komori.net/sound_os2/game01/powerup10.mp3");
+                chestAudio.volume = 0.4;
+                chestAudio.play().catch(()=>{});
+            }
+
             // 1. 本地產生隨機金幣數值 (10 ~ 50)
             const rndGold = Math.floor(Math.random() * 41) + 10;
             app.state.currentRandomGold = rndGold; // 暫存起來，等按下按鈕時使用
@@ -11789,9 +12001,11 @@ for (const slot of slots) {
             }
         },
       // 開啟黑市
+        // 開啟黑市
         openBlackMarket: () => {
             app.el('page-lobby').classList.add('hidden');
             app.el('black-market-interface').classList.remove('hidden');
+            app.playBgm('lobby'); // [新增] 黑市內繼續播放輕音樂
             
             // [v4.7.6.8] 初始化黑市分頁 (預設顯示 1~9 級商品)
             app.state.bmCurrentTab = 1;
@@ -11837,6 +12051,7 @@ for (const slot of slots) {
             app.el('black-market-interface').classList.add('hidden');
             app.el('page-lobby').classList.remove('hidden');
             app.handleMerchantDialogue('leave');
+            app.playBgm('lobby'); // [新增] 返回大廳播放輕音樂
         },
 
         // 渲染黑市主介面 [v4.7.8.4] 新增 equipped 參數
@@ -13137,11 +13352,12 @@ for (const slot of slots) {
 
         // --- v4.8.0 冒險戰役系統邏輯 ---
 
-       // 1. 進入戰役模式介面
+      // 1. 進入戰役模式介面
         enterCampaignMode: () => {
             app.el('page-lobby').classList.add('hidden');
             app.el('page-campaign').classList.remove('hidden');
             app.el('black-market-interface').classList.add('hidden'); // 確保黑市關閉
+            app.playBgm('lobby'); // [新增] 確保戰役地圖播放輕音樂
             
             // 檢查管理員權限
             const isAdmin = localStorage.getItem('campaign_admin_token') === 'valid';
@@ -13162,6 +13378,7 @@ for (const slot of slots) {
         returnToLobby: () => {
             app.el('page-campaign').classList.add('hidden');
             app.el('page-lobby').classList.remove('hidden');
+            app.playBgm('lobby'); // [新增] 從戰役返回時恢復輕音樂
         },
 
         // 2. 戰役管理員驗證
