@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.5.7 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.5.8 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -658,7 +658,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.5.7 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.5.8 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -8654,8 +8654,8 @@ for (const slot of slots) {
                             }, 100);
                             
                             // 播放玻璃碎裂音效
-                            const audio = new Audio("https://taira-komori.net/sound_os2/game01/glass_break1.mp3");
-                            audio.volume = 0.5;
+                            const audio = new Audio("https://taira-komori.net/sound_os2/daily02/money_box1.mp3");
+                            audio.volume = 0.1;
                             audio.play().catch(()=>{});
                         } else {
                             // 若沒被護盾擋住，才顯示正常傷害數字
@@ -10458,8 +10458,8 @@ for (const slot of slots) {
             document.body.appendChild(overlay);
 
             // 播放警告警報音效
-            const audio = new Audio("https://taira-komori.net/sound_os2/system01/warning1.mp3");
-            audio.volume = 0.5;
+            const audio = new Audio("https://taira-komori.net/sound_os2/sf01/machine_call.mp3");
+            audio.volume = 0.08;
             audio.play().catch(()=>{});
 
             // 強烈震動回饋 (SOS 節奏)
@@ -10563,7 +10563,7 @@ for (const slot of slots) {
             // 漸顯並播放微小魔力凝聚聲 (選用較輕的音效)
             effect.style.opacity = '1';
             const audioCharge = new Audio("https://taira-komori.net/sound_os2/game01/button01b.mp3");
-            audioCharge.volume = 0.3;
+            audioCharge.volume = 0.1;
             audioCharge.play().catch(()=>{});
 
             // 【階段二：停頓後，開始往後退聚氣】
@@ -11597,8 +11597,8 @@ for (const slot of slots) {
         showRewardSelection: () => {
             // [修正] 這裡只是打完單隻怪物開寶箱，不該播放最終勝利 BGM，改為播放獲得寶藏的過場音效
             if (app.state.bgmEnabled) {
-                const chestAudio = new Audio("https://taira-komori.net/sound_os2/game01/powerup10.mp3");
-                chestAudio.volume = 0.4;
+                const chestAudio = new Audio("https://taira-komori.net/sound_os2/game01/coin02.mp3");
+                chestAudio.volume = 0.1;
                 chestAudio.play().catch(()=>{});
             }
 
@@ -11815,7 +11815,7 @@ for (const slot of slots) {
                     
                     // 播放購買音效 (模擬)
                     const audio = new Audio("https://taira-komori.net/sound_os2/game01/coin01.mp3"); // 範例音效
-                    audio.volume = 0.3;
+                    audio.volume = 0.2;
                     audio.play().catch(()=>{});
 
                     // 立即更新商店 UI (讓金幣與按鈕狀態同步)
@@ -12089,7 +12089,7 @@ for (const slot of slots) {
             // 播放音效與隨機台詞
             app.handleMerchantDialogue('歡迎光臨');
             const audio = new Audio("https://taira-komori.net/sound_os2/daily01/knocking_a_wooden_door1.mp3"); // 門鈴0
-            audio.volume = 0.3;
+            audio.volume = 0.1;
             audio.play().catch(()=>{});
         },
 
@@ -12399,7 +12399,7 @@ for (const slot of slots) {
                     
                     // 音效
                     const audio = new Audio("https://taira-komori.net/sound_os2/game01/coin01.mp3");
-                    audio.volume = 0.3;
+                    audio.volume = 0.1;
                     audio.play().catch(()=>{});
 
                     // 更新介面 [v4.7.8.5 修正] 確保讀取 Google Auth 頭像
@@ -12428,7 +12428,7 @@ for (const slot of slots) {
                  
                 // 音效
                 const audio = new Audio("https://taira-komori.net/sound_os2/game01/coin01.mp3");
-                audio.volume = 0.3;
+                audio.volume = 0.1;
                 audio.play().catch(()=>{});
 
                 app.el('bm-item-detail-panel').classList.add('hidden');
@@ -12496,7 +12496,7 @@ for (const slot of slots) {
                         
                         // 音效
                         const audio = new Audio("https://taira-komori.net/sound_os2/game01/coin01.mp3");
-                        audio.volume = 0.3;
+                        audio.volume = 0.1;
                         audio.play().catch(()=>{});
                     } else {
                         app.toast('❌ 交易失敗');
@@ -13249,8 +13249,8 @@ for (const slot of slots) {
             app.showDamageText('鍊成成功!', '#fbbf24', 'bp-inventory-grid'); // 金色特效
             
             if (navigator.vibrate) navigator.vibrate([100, 100, 200]);
-            const audio = new Audio("https://taira-komori.net/sound_os2/game01/magic01.mp3");
-            audio.volume = 0.5;
+            const audio = new Audio("https://taira-komori.net/sound_os2/game01/powerup10.mp3");
+            audio.volume = 0.1;
             audio.play().catch(()=>{});
 
             app.saveBackpackData();
@@ -13360,7 +13360,7 @@ for (const slot of slots) {
         
         // 音效
         const audio = new Audio("https://taira-komori.net/sound_os2/game01/poka01.mp3");
-        audio.volume = 0.4;
+        audio.volume = 0.2;
         audio.play().catch(()=>{});
     },
 
@@ -13375,7 +13375,7 @@ for (const slot of slots) {
             
             // 音效
             const audio = new Audio("https://taira-komori.net/sound_os2/game01/poka02.mp3");
-            audio.volume = 0.4;
+            audio.volume = 0.2;
             audio.play().catch(()=>{});
         },
 
