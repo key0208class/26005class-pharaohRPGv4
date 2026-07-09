@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.6.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.6.1 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -658,7 +658,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.6.0 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.6.1 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -678,9 +678,14 @@
                        <div id="auth-panel-logged-in" class="hidden flex-col items-center animate-[fadeIn_0.5s_ease-out]">
                              <img id="user-avatar" src="" class="w-24 h-24 rounded-full border-4 border-amber-400 shadow-lg mb-4 object-cover" alt="Avatar">
                              <div class="text-sm text-gray-500 font-bold mb-1">歡迎回來</div>
-                             <div id="auth-name-display-area" class="flex items-center justify-center gap-2 mb-4 w-full">
+                            <div id="auth-name-display-area" class="flex items-center justify-center gap-2 mb-4 w-full">
                                  <h2 id="user-display-name" class="text-2xl font-black text-amber-900 truncate max-w-[200px]">冒險者</h2>
                                  <button onclick="app.toggleEditName()" class="text-gray-400 hover:text-amber-600 p-1 rounded-full transition-colors" title="修改名稱">✏️</button>
+                             </div>
+                             <!-- [新增] 登入者性別選擇區塊 -->
+                             <div id="auth-gender-toggle" class="flex justify-center items-center gap-3 mb-4 w-full animate-[fadeIn_0.3s_ease-out]">
+                                 <button onclick="app.setGender('male')" id="btn-gender-male" class="px-4 py-1 rounded-full text-xs font-bold transition-all border-2 border-amber-400 bg-amber-100 text-amber-900 shadow-sm hover:scale-105 active:scale-95">♂️ 男性</button>
+                                 <button onclick="app.setGender('female')" id="btn-gender-female" class="px-4 py-1 rounded-full text-xs font-bold transition-all border-2 border-transparent bg-white text-gray-400 hover:border-amber-200 hover:scale-105 active:scale-95">♀️ 女性</button>
                              </div>
 
                              <div id="auth-name-edit-area" class="hidden flex-col items-center gap-2 mb-4 w-full animate-[fadeIn_0.2s_ease-out]">
@@ -742,6 +747,11 @@
                             <div class="w-full mt-4">
                                 <label class="block text-amber-800 font-bold mb-2 text-left ml-1 text-sm">你的暱稱</label>
                                 <input type="text" id="lobby-player-name" class="w-full p-3 border-2 border-amber-300 rounded-xl text-center text-xl font-bold placeholder-amber-200 focus:outline-none focus:border-amber-500 transition-colors" placeholder="輸入暱稱...">
+                            </div>
+                            <!-- [新增] 訪客性別選擇區塊 -->
+                            <div class="flex justify-center items-center gap-3 mt-4 w-full">
+                                <button onclick="app.setGender('male')" id="btn-guest-gender-male" class="px-4 py-1 rounded-full text-xs font-bold transition-all border-2 border-amber-400 bg-amber-100 text-amber-900 shadow-sm hover:scale-105 active:scale-95">♂️ 男性</button>
+                                <button onclick="app.setGender('female')" id="btn-guest-gender-female" class="px-4 py-1 rounded-full text-xs font-bold transition-all border-2 border-transparent bg-white text-gray-400 hover:border-amber-200 hover:scale-105 active:scale-95">♀️ 女性</button>
                             </div>
 
                             <div class="bg-amber-50 rounded-xl p-2 mt-4 border border-amber-200 w-full">
@@ -1836,7 +1846,7 @@
                     <h3 class="absolute top-4 left-0 w-full text-center text-amber-500 font-black text-2xl tracking-widest drop-shadow-md z-10 pointer-events-none" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">🛡️ 冒險者裝備</h3>
                     
                     <!-- 裝備背景與欄位容器 -->
-                    <div class="relative w-full h-full bg-no-repeat bg-center bg-cover" style="background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%96%B0%E4%BA%BA%E7%89%A9%E8%A3%9D%E5%82%99%E5%9C%962.png');">
+                    <div id="backpack-bg-container" class="relative w-full h-full bg-no-repeat bg-center bg-cover transition-all duration-500" style="background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%96%B0%E4%BA%BA%E7%89%A9%E8%A3%9D%E5%82%99%E5%9C%962.png');">
                         
                         <!-- 7個裝備欄位 (3左 3右 + 1中上職業格) -->
                         <!-- [新增] 職業書裝備欄位 (置中偏上，位於 5級 和 15級 之間) -->
@@ -2912,7 +2922,11 @@
             userRef.on('value', snapshot => {
                 const data = snapshot.val() || {};
                 
-                // [新增] 讀取戰役通關紀錄
+            // [新增] 讀取性別與更新UI
+            app.state.gender = data.gender || 'male';
+            app.updateGenderUI();
+
+            // [新增] 讀取戰役通關紀錄
                 app.state.campaignProgress = data.campaignProgress || {};
                 
                 // 1. 處理名稱與等級
@@ -3011,10 +3025,49 @@
                     console.error(err);
                     app.toast('❌ 更新失敗，請稍後再試');
                 });
-            } else {
+           } else {
                 app.toast('❌ 請先登入 Google 帳號');
             }
         },
+
+        // --- [新增] 性別設定與 UI 更新系統 ---
+        updateGenderUI: () => {
+            const isFemale = app.state.gender === 'female';
+            const activeClass = 'border-amber-400 bg-amber-100 text-amber-900 shadow-sm';
+            const inactiveClass = 'border-transparent bg-white text-gray-400 hover:border-amber-200';
+            
+            // 更新登入者面板按鈕
+            const btnMale = app.el('btn-gender-male');
+            const btnFemale = app.el('btn-gender-female');
+            if(btnMale && btnFemale) {
+                btnMale.className = `px-4 py-1 rounded-full text-xs font-bold transition-all border-2 hover:scale-105 active:scale-95 ${!isFemale ? activeClass : inactiveClass}`;
+                btnFemale.className = `px-4 py-1 rounded-full text-xs font-bold transition-all border-2 hover:scale-105 active:scale-95 ${isFemale ? activeClass : inactiveClass}`;
+            }
+            
+            // 更新訪客面板按鈕
+            const guestMale = app.el('btn-guest-gender-male');
+            const guestFemale = app.el('btn-guest-gender-female');
+            if(guestMale && guestFemale) {
+                guestMale.className = `px-4 py-1 rounded-full text-xs font-bold transition-all border-2 hover:scale-105 active:scale-95 ${!isFemale ? activeClass : inactiveClass}`;
+                guestFemale.className = `px-4 py-1 rounded-full text-xs font-bold transition-all border-2 hover:scale-105 active:scale-95 ${isFemale ? activeClass : inactiveClass}`;
+            }
+        },
+
+        setGender: (gender) => {
+            app.state.gender = gender;
+            app.updateGenderUI();
+            
+            if (app.state.user) {
+                // 若已登入 Google，同步存入 Firebase
+                db.ref(`users/${app.state.user.uid}`).update({ gender: gender });
+            } else {
+                // 若為訪客，存入 LocalStorage
+                localStorage.setItem('pharaoh_gender', gender);
+            }
+            app.toast(`✨ 已切換為${gender === 'female' ? '女性' : '男性'}冒險者`, 1);
+        },
+        // -------------------------------------
+
         // v4.1.5: 處理登出 (包含 Firebase 與 本地)
         logout: () => {
             // 無論是 Google 登入還是匿名，都先清除本地舊暫存，避免殘留
@@ -3544,7 +3597,9 @@
                         app.state.myName = savedName;
                         app.el('lobby-player-name').value = savedName;
                     }
-                    // [新增] 訪客讀取本地通關紀錄
+                    // [新增] 訪客讀取性別與通關紀錄
+                    app.state.gender = localStorage.getItem('pharaoh_gender') || 'male';
+                    app.updateGenderUI();
                     app.state.campaignProgress = JSON.parse(localStorage.getItem('pharaoh_guest_progress') || '{}');
                     app.el('lobby-high-score').textContent = localStorage.getItem('pharaoh_high_score') || '0';
                 }
@@ -12836,17 +12891,19 @@ for (const slot of slots) {
                     userData.gold = data.totalGold || 0;
                     userData.exp = data.totalExp || 0;
                     userData.highScore = data.highScore || 0; // 讀取最高分
-                    userData.inventory = data.inventory || {};
+                   userData.inventory = data.inventory || {};
                     userData.equipped = data.equipped || {};
+                    userData.gender = data.gender || 'male'; // [新增] 讀取性別
                     
                     app.state.currentBackpackData = userData; // 暫存
                     app.renderCharacterBackpackUI();
                 });
             } else {
                 // 訪客：讀取 LocalStorage
-                userData.inventory = JSON.parse(localStorage.getItem('pharaoh_guest_inventory') || '{}');
+              userData.inventory = JSON.parse(localStorage.getItem('pharaoh_guest_inventory') || '{}');
                 userData.equipped = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
                 userData.highScore = parseInt(localStorage.getItem('pharaoh_high_score') || '0'); // 讀取本地最高分
+                userData.gender = localStorage.getItem('pharaoh_gender') || 'male'; // [新增] 讀取訪客性別
                 
                 // 訪客金幣可能在黑市變動，嘗試讀取介面上的值或預設
                 const goldEl = app.el('bm-user-gold');
@@ -12862,6 +12919,14 @@ for (const slot of slots) {
             const data = app.state.currentBackpackData;
             const globalList = app.state.globalSettings?.blackMarketList || []; 
             
+            // [新增] 根據性別動態切換裝備圖背景
+            const bgContainer = app.el('backpack-bg-container');
+            if (bgContainer) {
+                const maleUrl = 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%96%B0%E4%BA%BA%E7%89%A9%E8%A3%9D%E5%82%99%E5%9C%962.png';
+                const femaleUrl = 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%96%B0%E4%BA%BA%E7%89%A9%E8%A3%9D%E5%82%99%E5%9C%962(%E5%A5%B3).jpeg';
+                bgContainer.style.backgroundImage = `url('${data.gender === 'female' ? femaleUrl : maleUrl}')`;
+            }
+
             // --- A. 渲染人物資料 (右側上方) ---
             app.el('bp-user-name').textContent = data.name;
             app.el('bp-user-avatar').src = data.photo;
