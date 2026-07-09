@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.5.8 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.5.9 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -658,7 +658,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.5.8 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.5.9 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -2617,7 +2617,7 @@
                                 </div>
                         </div>
 
-                        <div id="student-inventory" class="hidden flex items-center justify-between bg-amber-100/50 p-2 rounded-lg border border-amber-200 mx-2"><div class="flex items-center gap-2 mr-4 flex-shrink-0"><span class="text-1xl font-black text-amber-900 flex items-center shadow-sm bg-amber-200 px-2 rounded-lg">🎒 背包</span><div id="abyss-bonus-badge" class="hidden items-center gap-1 bg-red-100/90 text-red-900 px-2 py-0.5 rounded shadow-[0_0_12px_rgba(239,68,68,0.8)] text-xs font-black border-2 border-red-400 animate-pulse" title="深淵之印：本局固化攻擊力加成"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%94%BB%E6%93%8A%E5%8A%9B%E5%9B%BA%E5%8C%96.png" class="w-4 h-4 object-contain filter drop-shadow-sm"><span id="abyss-bonus-value" class="drop-shadow-sm">+0</span></div><div id="flame-bonus-badge" class="hidden items-center gap-1 bg-orange-100/90 text-orange-900 px-2 py-0.5 rounded shadow-[0_0_12px_rgba(249,115,22,0.8)] text-xs font-black border-2 border-orange-400 animate-pulse" title="爆炎刻印持續加成"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%81%AB%E5%8A%9B%E6%8F%90%E5%8D%87.png" class="w-4 h-4 object-contain filter drop-shadow-sm"><span id="flame-bonus-value" class="drop-shadow-sm">+0</span><span id="flame-bonus-rounds" class="text-[0.6rem] bg-orange-800 text-orange-100 px-1 rounded-full">3</span></div><div id="nile-bonus-badge" class="hidden items-center gap-1 bg-blue-100/90 text-blue-900 px-2 py-0.5 rounded shadow-[0_0_12px_rgba(59,130,246,0.8)] text-xs font-black border-2 border-blue-400 animate-pulse" title="尼羅河恩賜：可用2或3顆骰子解題"><span class="text-base drop-shadow-sm leading-none">🌊</span><span id="nile-bonus-rounds" class="text-[0.6rem] bg-blue-800 text-blue-100 px-1 rounded-full">2</span></div></div><div id="inventory-list" class="flex gap-3 flex-1 justify-end"></div></div>
+                        <div id="student-inventory" class="hidden flex items-center justify-between bg-amber-100/50 p-2 rounded-lg border border-amber-200 mx-2"><div class="flex items-center gap-2 mr-4 flex-shrink-0"><span class="text-1xl font-black text-amber-900 flex items-center shadow-sm bg-amber-200 px-2 rounded-lg">🎒 背包</span><div id="abyss-bonus-badge" class="hidden flex-col items-center justify-center bg-red-100/90 text-red-900 rounded-lg shadow-[0_0_12px_rgba(239,68,68,0.8)] font-black border border-red-400 animate-pulse w-10 h-10 shrink-0 relative" title="深淵之印：本局固化攻擊力加成"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%94%BB%E6%93%8A%E5%8A%9B%E5%9B%BA%E5%8C%96.png" class="w-5 h-5 object-contain filter drop-shadow-sm mb-3"><span id="abyss-bonus-value" class="absolute bottom-0 w-full text-center bg-red-900/80 text-white text-[0.6rem] rounded-b-[7px] leading-none py-0.5 tracking-tighter">+0</span></div><div id="flame-bonus-badge" class="hidden flex-col items-center justify-center bg-orange-100/90 text-orange-900 rounded-lg shadow-[0_0_12px_rgba(249,115,22,0.8)] font-black border border-orange-400 animate-pulse w-10 h-10 shrink-0 relative" title="爆炎刻印持續加成"><span id="flame-bonus-rounds" class="absolute -top-1.5 -right-1.5 bg-orange-800 text-orange-100 text-[0.55rem] w-4 h-4 flex items-center justify-center rounded-full shadow-sm leading-none border border-orange-200 z-10">3</span><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%81%AB%E5%8A%9B%E6%8F%90%E5%8D%87.png" class="w-5 h-5 object-contain filter drop-shadow-sm mb-3"><span id="flame-bonus-value" class="absolute bottom-0 w-full text-center bg-orange-800/90 text-white text-[0.6rem] rounded-b-[7px] leading-none py-0.5 tracking-tighter">+0</span></div><div id="nile-bonus-badge" class="hidden flex-col items-center justify-center bg-blue-100/90 text-blue-900 rounded-lg shadow-[0_0_12px_rgba(59,130,246,0.8)] font-black border border-blue-400 animate-pulse w-10 h-10 shrink-0 relative" title="尼羅河恩賜：可用2或3顆骰子解題"><span id="nile-bonus-rounds" class="absolute -top-1.5 -right-1.5 bg-blue-800 text-blue-100 text-[0.55rem] w-4 h-4 flex items-center justify-center rounded-full shadow-sm leading-none border border-blue-200 z-10">2</span><span class="text-xl drop-shadow-sm leading-none mb-3">🌊</span><span class="absolute bottom-0 w-full text-center bg-blue-800/90 text-white text-[0.5rem] rounded-b-[7px] leading-none py-[3px] tracking-widest">恩賜</span></div></div><div id="inventory-list" class="flex gap-3 flex-1 justify-end"></div></div>
 
                         <div class="bg-white rounded-xl p-4 shadow border-2 border-amber-300">
                              <div class="flex flex-col md:flex-row items-center justify-center mb-3 relative w-full gap-2 md:gap-0 md:h-12">
@@ -10580,8 +10580,8 @@ for (const slot of slots) {
                 // 【階段三：蓄力完成，極速往前衝刺穿透】
                 setTimeout(() => {
                     // 播放重劈拔刀音效
-                    const audioSlash = new Audio("https://taira-komori.net/sound_os2/arms01/shoot5.mp3");
-                    audioSlash.volume = 0.7;
+                    const audioSlash = new Audio("https://taira-komori.net/sound_os2/jidaigeki01/katana1.mp3");
+                    audioSlash.volume = 0.2;
                     audioSlash.play().catch(()=>{});
 
                     // 改變過渡設定：使用 cubic-bezier 製造「初速極快」的衝刺感
@@ -10877,7 +10877,7 @@ for (const slot of slots) {
                     flameBadgeEl.classList.remove('hidden');
                     flameBadgeEl.classList.add('flex');
                     app.el('flame-bonus-value').textContent = `+${flameBonus}`;
-                    app.el('flame-bonus-rounds').textContent = `${flameRounds}回`;
+                    app.el('flame-bonus-rounds').textContent = `${flameRounds}`;
                 } else {
                     flameBadgeEl.classList.add('hidden');
                     flameBadgeEl.classList.remove('flex');
@@ -10891,7 +10891,7 @@ for (const slot of slots) {
                 if (nileRounds > 0) {
                     nileBadgeEl.classList.remove('hidden');
                     nileBadgeEl.classList.add('flex');
-                    app.el('nile-bonus-rounds').textContent = `${nileRounds}回`;
+                    app.el('nile-bonus-rounds').textContent = `${nileRounds}`;
                 } else {
                     nileBadgeEl.classList.add('hidden');
                     nileBadgeEl.classList.remove('flex');
