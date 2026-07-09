@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.5.9 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.6.0 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -658,7 +658,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.5.9 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.6.0 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -3038,12 +3038,12 @@
             }
         },
 
-        // [v4.3.0] 離開遊戲邏輯 (房主解散房間 vs 玩家個人離開)
+       // [v4.3.0] 離開遊戲邏輯 (房主解散房間 vs 玩家個人離開)
         leaveGame: () => {
             const isHost = app.state.isHost;
             const msg = isHost 
                 ? '⚠️ 警告：您是隊長！\n離開將會「解散整個房間」，所有人的連線將中斷。\n確定要結束並返回大廳嗎？' 
-                : '🔙 確定要離開目前的冒險並返回大廳嗎？';
+                : '🔙 確定要離開目前的冒險並返回大廳嗎？\n\n(注意：離開後你將從隊伍名單中移除。若只是網路不穩想重連，請按「取消」，並直接重新整理網頁即可恢復連線。)';
 
             if(!confirm(msg)) return;
 
@@ -3058,8 +3058,14 @@
                 db.ref(`classes/${app.state.classId}`).remove()
                     .then(() => window.location.reload())
                     .catch(e => { console.error(e); window.location.reload(); });
+            } else if (app.state.classId && app.state.myTeam && app.state.myName) {
+                // [新增機制] 玩家主動離開 -> 發送戰鬥日誌廣播，並從 Firebase 移除該玩家節點
+                app.addCombatLog('item', `🏃 【${app.state.myName}】已撤退並離開了冒險。`);
+                db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}`).remove()
+                    .then(() => window.location.reload())
+                    .catch(e => { console.error(e); window.location.reload(); });
             } else {
-                // 玩家離開 -> 只重整頁面 (或是可選擇從 players 移除自己，這邊選擇保留數據但切斷連結)
+                // 例外狀況防護
                 window.location.reload();
             }
         },
