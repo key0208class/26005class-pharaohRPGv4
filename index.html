@@ -2877,6 +2877,32 @@
                 lobby: 0.15,   // 大廳音樂音量
                 combat: 0.08,  // 戰鬥音樂音量 (改為0.08降低音量)
                 victory: 0.08   // 勝利音樂音量 (改為0.1降低音量)
+            },
+            // --- [新增] 音效集中管理系統 ---
+            seEnabled: localStorage.getItem('pharaoh_se') !== 'false', // 音效開關，預設開啟
+            seTracks: {
+                shieldBreak: 'https://taira-komori.net/sound_os2/daily02/money_box1.mp3', // 護盾破碎 (玻璃碎裂)
+                bossWarning: 'https://taira-komori.net/sound_os2/sf01/machine_call.mp3', // Boss來襲警報
+                charge: 'https://taira-komori.net/sound_os2/game01/button01b.mp3', // 蓄力
+                slash: 'https://taira-komori.net/sound_os2/jidaigeki01/katana1.mp3', // 重劈拔刀
+                chest: 'https://taira-komori.net/sound_os2/game01/coin02.mp3', // 寶箱
+                coin: 'https://taira-komori.net/sound_os2/game01/coin01.mp3', // 獲得金幣
+                knock: 'https://taira-komori.net/sound_os2/daily01/knocking_a_wooden_door1.mp3', // 敲門/門鈴
+                levelUp: 'https://taira-komori.net/sound_os2/game01/powerup10.mp3', // 角色升級
+                hit1: 'https://taira-komori.net/sound_os2/game01/poka01.mp3', // 打擊1
+                hit2: 'https://taira-komori.net/sound_os2/game01/poka02.mp3' // 打擊2
+            },
+            seVolumes: {
+                shieldBreak: 0.1,
+                bossWarning: 0.08,
+                charge: 0.1,
+                slash: 0.2,
+                chest: 0.1,
+                coin: 0.1,
+                knock: 0.1,
+                levelUp: 0.1,
+                hit1: 0.1,
+                hit2: 0.1
             }
         },
 
@@ -2919,6 +2945,7 @@
 
             // 從 Firebase 讀取該用戶的完整資料
             const userRef = db.ref(`users/${user.uid}`);
+            userRef.off('value'); // [新增] 先註銷舊監聽，防止重複綁定
             userRef.on('value', snapshot => {
                 const data = snapshot.val() || {};
                 
@@ -3336,6 +3363,10 @@
             const logRef = db.ref(`classes/${app.state.classId}/combatLogs`);
             const chatRef = db.ref(`classes/${app.state.classId}/chatMsgs`);
 
+            // [新增] 先註銷舊監聽，避免重複綁定與記憶體洩漏
+            logRef.off();
+            chatRef.off();
+
             // 監聽日誌
             logRef.limitToLast(50).on('child_added', snap => {
                 const data = snap.val();
@@ -3489,6 +3520,9 @@
             const chatRef = db.ref(`global_chat/messages`);
             const container = app.el('lobby-chat-container');
             if (!container) return;
+
+            // [新增] 先註銷舊監聽，避免重複綁定與記憶體洩漏
+            chatRef.off();
 
             const isAdmin = localStorage.getItem('pharaoh_admin_token') === 'valid' || localStorage.getItem('campaign_admin_token') === 'valid';
 
@@ -3753,6 +3787,9 @@
             const listEl = app.el('lobby-room-list');
             const myName = localStorage.getItem('pharaoh_player_name') || '未命名';
             app.el('lobby-high-score').textContent = localStorage.getItem('pharaoh_high_score') || '0';
+
+            // [新增] 先註銷舊監聽，防止多次點擊手動重新整理時累積監聽器
+            db.ref('classes').off('value');
 
             // 監聽所有房間變化
             db.ref('classes').on('value', snapshot => {
@@ -4068,6 +4105,15 @@
             app.el('page-lobby').classList.add('hidden');
             app.el('game-board').classList.remove('hidden');
             app.el('admin-gear-btn').classList.add('hidden');
+
+            // [新增] 進入房間時註銷大廳相關監聽，降低背景流量消耗與重複監聽
+            try {
+                db.ref('classes').off('value');
+                db.ref('global_chat/messages').off();
+                console.log("🔊 成功註銷大廳與世界頻道監聽器，節省流量！");
+            } catch(e) {
+                console.warn("註銷大廳監聽器失敗:", e);
+            }
             
             app.el('display-class-id').textContent = app.state.classId;
             const roleText = app.state.isHost ? '👑 隊長 (主控)' : '🤠 冒險者';
@@ -5642,7 +5688,11 @@
         },
 
       listenToGameData: () => {
+            if (!app.state.classId) return;
             const classRef = db.ref(`classes/${app.state.classId}`);
+            
+            // [新增] 先註銷舊監聽，防止重新載入或連線時重複監聽
+            classRef.off('value');
             
             classRef.on('value', snapshot => {
                 const data = snapshot.val();
@@ -8715,9 +8765,7 @@ for (const slot of slots) {
                             }, 100);
                             
                             // 播放玻璃碎裂音效
-                            const audio = new Audio("https://taira-komori.net/sound_os2/daily02/money_box1.mp3");
-                            audio.volume = 0.1;
-                            audio.play().catch(()=>{});
+                            app.playSe('shieldBreak');
                         } else {
                             // 若沒被護盾擋住，才顯示正常傷害數字
                             app.showDamageText(damage);
@@ -9206,6 +9254,23 @@ for (const slot of slots) {
                 };
 
                 window.speechSynthesis.speak(u);
+            }
+        },
+
+        // --- [新增] 播放音效集中管理方法 ---
+        playSe: (seName) => {
+            if (!app.state.seEnabled) return;
+            const url = app.state.seTracks[seName];
+            if (!url) {
+                console.warn(`🔊 音效 "${seName}" 未定義`);
+                return;
+            }
+            try {
+                const audio = new Audio(url);
+                audio.volume = app.state.seVolumes[seName] !== undefined ? app.state.seVolumes[seName] : 0.1;
+                audio.play().catch(()=>{});
+            } catch (e) {
+                console.error("🔊 音效播放失敗:", e);
             }
         },
 
@@ -10519,9 +10584,7 @@ for (const slot of slots) {
             document.body.appendChild(overlay);
 
             // 播放警告警報音效
-            const audio = new Audio("https://taira-komori.net/sound_os2/sf01/machine_call.mp3");
-            audio.volume = 0.08;
-            audio.play().catch(()=>{});
+            app.playSe('bossWarning');
 
             // 強烈震動回饋 (SOS 節奏)
             if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200, 300, 500, 100, 500]);
@@ -10623,9 +10686,7 @@ for (const slot of slots) {
 
             // 漸顯並播放微小魔力凝聚聲 (選用較輕的音效)
             effect.style.opacity = '1';
-            const audioCharge = new Audio("https://taira-komori.net/sound_os2/game01/button01b.mp3");
-            audioCharge.volume = 0.1;
-            audioCharge.play().catch(()=>{});
+            app.playSe('charge');
 
             // 【階段二：停頓後，開始往後退聚氣】
             setTimeout(() => {
@@ -10641,9 +10702,7 @@ for (const slot of slots) {
                 // 【階段三：蓄力完成，極速往前衝刺穿透】
                 setTimeout(() => {
                     // 播放重劈拔刀音效
-                    const audioSlash = new Audio("https://taira-komori.net/sound_os2/jidaigeki01/katana1.mp3");
-                    audioSlash.volume = 0.2;
-                    audioSlash.play().catch(()=>{});
+                    app.playSe('slash');
 
                     // 改變過渡設定：使用 cubic-bezier 製造「初速極快」的衝刺感
                     effect.style.transition = `left ${dashTime}ms cubic-bezier(0.5, 0, 0.2, 1), top ${dashTime}ms cubic-bezier(0.5, 0, 0.2, 1), transform ${dashTime}ms ease-in, opacity ${dashTime}ms ease-out`;
@@ -11657,11 +11716,7 @@ for (const slot of slots) {
        // [v4.7.3.3 修改] 顯示獎勵面板 (本地生成隨機金幣並渲染按鈕)
         showRewardSelection: () => {
             // [修正] 這裡只是打完單隻怪物開寶箱，不該播放最終勝利 BGM，改為播放獲得寶藏的過場音效
-            if (app.state.bgmEnabled) {
-                const chestAudio = new Audio("https://taira-komori.net/sound_os2/game01/coin02.mp3");
-                chestAudio.volume = 0.1;
-                chestAudio.play().catch(()=>{});
-            }
+            app.playSe('chest');
 
             // 1. 本地產生隨機金幣數值 (10 ~ 50)
             const rndGold = Math.floor(Math.random() * 41) + 10;
@@ -11875,9 +11930,7 @@ for (const slot of slots) {
                     app.showDamageText(`-${conf.price}G`, '#fbbf24', 'ingame-shop-overlay'); // 金幣特效
                     
                     // 播放購買音效 (模擬)
-                    const audio = new Audio("https://taira-komori.net/sound_os2/game01/coin01.mp3"); // 範例音效
-                    audio.volume = 0.2;
-                    audio.play().catch(()=>{});
+                    app.playSe('coin');
 
                     // 立即更新商店 UI (讓金幣與按鈕狀態同步)
                     // 我們手動構造一個更新後的 playerData 來重繪，提升反應速度
@@ -12149,9 +12202,7 @@ for (const slot of slots) {
             
             // 播放音效與隨機台詞
             app.handleMerchantDialogue('歡迎光臨');
-            const audio = new Audio("https://taira-komori.net/sound_os2/daily01/knocking_a_wooden_door1.mp3"); // 門鈴0
-            audio.volume = 0.1;
-            audio.play().catch(()=>{});
+            app.playSe('knock'); // 門鈴0
         },
 
         closeBlackMarket: () => {
@@ -12459,9 +12510,7 @@ for (const slot of slots) {
                     app.handleMerchantDialogue('custom', '呵呵呵... 交易愉快。');
                     
                     // 音效
-                    const audio = new Audio("https://taira-komori.net/sound_os2/game01/coin01.mp3");
-                    audio.volume = 0.1;
-                    audio.play().catch(()=>{});
+                    app.playSe('coin');
 
                     // 更新介面 [v4.7.8.5 修正] 確保讀取 Google Auth 頭像
                      db.ref(`users/${app.state.user.uid}`).once('value', snap => {
@@ -12488,9 +12537,7 @@ for (const slot of slots) {
                  app.handleMerchantDialogue('custom', '呵呵呵... 交易愉快。');
                  
                 // 音效
-                const audio = new Audio("https://taira-komori.net/sound_os2/game01/coin01.mp3");
-                audio.volume = 0.1;
-                audio.play().catch(()=>{});
+                    app.playSe('coin');
 
                 app.el('bm-item-detail-panel').classList.add('hidden');
                 app.el('bm-item-detail-panel').classList.remove('flex');
@@ -12556,9 +12603,7 @@ for (const slot of slots) {
                         app.renderBlackMarketUI(newData.displayName, newData.photoURL, newData.totalGold, app.getAccountLevel(newData.totalExp), newData.inventory || {});
                         
                         // 音效
-                        const audio = new Audio("https://taira-komori.net/sound_os2/game01/coin01.mp3");
-                        audio.volume = 0.1;
-                        audio.play().catch(()=>{});
+                    app.playSe('coin');
                     } else {
                         app.toast('❌ 交易失敗');
                     }
@@ -13320,9 +13365,7 @@ for (const slot of slots) {
             app.showDamageText('鍊成成功!', '#fbbf24', 'bp-inventory-grid'); // 金色特效
             
             if (navigator.vibrate) navigator.vibrate([100, 100, 200]);
-            const audio = new Audio("https://taira-komori.net/sound_os2/game01/powerup10.mp3");
-            audio.volume = 0.1;
-            audio.play().catch(()=>{});
+            app.playSe('levelUp');
 
             app.saveBackpackData();
             app.renderCharacterBackpackUI();
@@ -13430,9 +13473,7 @@ for (const slot of slots) {
         app.closeBackpackPanel(); // 裝備後關閉面板
         
         // 音效
-        const audio = new Audio("https://taira-komori.net/sound_os2/game01/poka01.mp3");
-        audio.volume = 0.2;
-        audio.play().catch(()=>{});
+        app.playSe('hit1');
     },
 
         // 4. 卸下裝備
@@ -13445,9 +13486,7 @@ for (const slot of slots) {
             app.renderCharacterBackpackUI();
             
             // 音效
-            const audio = new Audio("https://taira-komori.net/sound_os2/game01/poka02.mp3");
-            audio.volume = 0.2;
-            audio.play().catch(()=>{});
+            app.playSe('hit2');
         },
 
         // 5. 儲存資料 (寫入 DB 或 LocalStorage)
