@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.6.4 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.6.5 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -658,7 +658,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.6.4 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.6.5 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -1711,88 +1711,115 @@
                         </div>
                     </div>
                     <!-- 資訊交流管理分頁內容結束 -->
-					<!-- [新增 v4.8.0.8] 角色圖示設定分頁 -->
+					<!-- [新增 v4.8.0.8] 角色圖示設定分頁 (APNG支援版 - 升級設計) -->
                     <div id="tab-content-sprites" class="admin-tab-content space-y-4">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-                            
-                            <!-- 左側：編輯與預覽區 -->
-                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-300 flex flex-col gap-4">
-                                <div class="flex justify-between items-center border-b border-slate-200 pb-2">
-                                    <h4 class="font-bold text-slate-800 text-lg">🧙 角色素材編輯器</h4>
-                                    <button onclick="app.addNewSprite()" class="text-xs bg-green-600 text-white px-3 py-1 rounded font-bold hover:bg-green-700">➕ 新增空白</button>
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-[500px]">
+                            <!-- 左側：角色清單 (佔 4 欄) -->
+                            <div class="lg:col-span-4 bg-[#fdfbf7] rounded-2xl border-2 border-[#d4c4a8] flex flex-col h-[400px] lg:h-auto overflow-hidden shadow-lg relative">
+                                <div class="bg-gradient-to-r from-[#e6d5b8] to-[#d4c4a8] p-4 border-b-2 border-[#c2b092] font-black text-amber-900 text-lg flex justify-between items-center shrink-0 shadow-sm">
+                                    <span class="drop-shadow-sm">🧙 角色資料庫</span>
+                                    <button onclick="app.addNewSprite()" class="text-sm bg-gradient-to-b from-green-500 to-green-600 text-white px-4 py-2 rounded-xl font-bold hover:from-green-400 hover:to-green-500 shadow-md active:scale-95 transition-all flex items-center gap-2 border border-green-700">➕ 建立角色</button>
                                 </div>
-
-                                <input type="hidden" id="edit-sprite-idx">
-                                
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 mb-1">角色名稱</label>
-                                    <input type="text" id="edit-sprite-name" class="w-full border-2 border-slate-300 rounded-lg p-2 font-bold text-slate-800 bg-white" placeholder="例如：勇者阿土">
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 mb-1">圖片網址 (128x160px)</label>
-                                    <input type="text" id="edit-sprite-url" oninput="app.loadSpritePreview()" class="w-full border-2 border-slate-300 rounded-lg p-2 text-xs font-mono text-gray-600 bg-white" placeholder="https://...">
-                                </div>
-
-                                <div class="flex gap-6 items-start">
-                                    <!-- 切圖校正區 -->
-                                    <div>
-                                        <div class="text-[0.6rem] font-bold text-slate-500 mb-1 flex justify-between">
-                                            <span>拖曳圖片調整位置</span>
-                                            <span id="sprite-offset-display">0, 0</span>
-                                        </div>
-                                        <div class="sprite-preview-container" id="sprite-crop-area" onmousedown="app.startSpriteDrag(event)">
-                                            <!-- 網格線 (5行4格, 每格32x32) -->
-                                            <div class="sprite-grid-overlay">
-                                                <!-- 橫線 -->
-                                                <div class="grid-line-h" style="top:32px"></div>
-                                                <div class="grid-line-h" style="top:64px"></div>
-                                                <div class="grid-line-h" style="top:96px"></div>
-                                                <div class="grid-line-h" style="top:128px"></div>
-                                                <!-- 直線 -->
-                                                <div class="grid-line-v" style="left:32px"></div>
-                                                <div class="grid-line-v" style="left:64px"></div>
-                                                <div class="grid-line-v" style="left:96px"></div>
-                                            </div>
-                                            <img id="edit-sprite-source" src="" class="sprite-source-img" style="transform: translate(0px, 0px);">
-                                        </div>
-                                        <div class="text-[0.6rem] text-center text-gray-400 mt-1">128x160 (32px/格)</div>
-                                    </div>
-
-                                    <!-- 動畫預覽區 -->
-                                    <div class="flex-1 flex flex-col items-center">
-                                        <div class="text-xs font-bold text-slate-500 mb-1">動作預覽</div>
-                                        <canvas id="sprite-anim-canvas" width="32" height="32" class="anim-canvas mb-2"></canvas>
-                                        
-                                        <div class="grid grid-cols-2 gap-1 w-full">
-                                            <button onclick="app.playSpriteAnimation(0)" class="bg-slate-200 text-slate-700 text-[0.6rem] py-1 rounded hover:bg-slate-300 font-bold border border-slate-300">⏹️ 待機</button>
-                                            <button onclick="app.playSpriteAnimation(4)" class="bg-amber-100 text-amber-800 text-[0.6rem] py-1 rounded hover:bg-amber-200 font-bold border border-amber-200">⬆️ 向北</button>
-                                            <button onclick="app.playSpriteAnimation(3)" class="bg-amber-100 text-amber-800 text-[0.6rem] py-1 rounded hover:bg-amber-200 font-bold border border-amber-200">⬅️ 向西</button>
-                                            <button onclick="app.playSpriteAnimation(1)" class="bg-amber-100 text-amber-800 text-[0.6rem] py-1 rounded hover:bg-amber-200 font-bold border border-amber-200">➡️ 向東</button>
-                                            <button onclick="app.playSpriteAnimation(2)" class="bg-amber-100 text-amber-800 text-[0.6rem] py-1 rounded hover:bg-amber-200 font-bold border border-amber-200">⬇️ 向南</button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="mt-auto pt-4 border-t border-slate-200 flex gap-2">
-                                    <button onclick="app.deleteCurrentSprite()" class="flex-1 bg-red-100 text-red-600 py-2 rounded-lg font-bold hover:bg-red-200 transition-colors">🗑️ 刪除</button>
-                                    <button onclick="app.saveCurrentSprite()" class="flex-[2] bg-blue-600 text-white py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition-transform active:scale-95">💾 暫存設定</button>
+                                <div id="sprite-list-container" class="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]">
+                                    <!-- JS 生成 -->
                                 </div>
                             </div>
 
-                            <!-- 右側：已存列表 -->
-                            <div class="bg-white rounded-xl border border-slate-300 flex flex-col h-[500px] lg:h-auto overflow-hidden">
-                                <div class="bg-slate-100 p-3 border-b border-slate-200 font-bold text-slate-700 text-sm">
-                                    📂 已建立的角色圖示
+                            <!-- 右側：編輯與預覽區 (佔 8 欄) -->
+                            <div class="lg:col-span-8 bg-[#fdfbf7] p-5 rounded-2xl border-2 border-[#d4c4a8] flex flex-col gap-5 shadow-lg overflow-y-auto custom-scrollbar h-[500px] lg:h-auto relative bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]">
+                                <div class="flex justify-between items-end border-b-2 border-[#d4c4a8] pb-3 shrink-0">
+                                    <div>
+                                        <h4 class="font-black text-amber-900 text-2xl flex items-center gap-2">📝 素材編輯器</h4>
+                                        <p class="text-xs text-amber-700 font-bold mt-1">設定角色的動態素材，支援 APNG / GIF 格式</p>
+                                    </div>
+                                    <span class="text-xs text-indigo-700 font-black bg-indigo-100 px-3 py-1.5 rounded-lg border-2 border-indigo-300 shadow-inner">支援透明動圖</span>
                                 </div>
-                                <div id="sprite-list-container" class="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
-                                    <!-- JS 生成 -->
+
+                                <input type="hidden" id="edit-sprite-idx">
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <!-- 網址輸入區 -->
+                                    <div class="space-y-4 bg-white/60 p-4 rounded-xl border border-[#e6d5b8] shadow-sm">
+                                        <div>
+                                            <label class="block text-sm font-black text-amber-900 mb-1.5">角色名稱</label>
+                                            <input type="text" id="edit-sprite-name" class="w-full border-2 border-[#d4c4a8] rounded-xl p-2.5 font-bold text-slate-800 bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-inner" placeholder="例如：傳說中的勇者">
+                                        </div>
+                                        
+                                        <div class="pt-2 border-t border-[#e6d5b8] space-y-3">
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-600 mb-1">1. 靜態頭像 (列表/對話用)</label>
+                                                <input type="text" id="edit-sprite-url-static" oninput="app.playSpriteAnimation('static')" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono text-blue-700 bg-white focus:ring-1 focus:ring-blue-400" placeholder="https://...">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-600 mb-1">2. 待機動作 (原地呼吸)</label>
+                                                <input type="text" id="edit-sprite-url-idle" oninput="app.playSpriteAnimation('idle')" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono text-blue-700 bg-white focus:ring-1 focus:ring-blue-400" placeholder="https://...">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-600 mb-1 flex items-center justify-between">
+                                                    <span>3. 左右走動 (走路)</span>
+                                                    <span class="text-amber-600 font-black text-[0.6rem] bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200">※左走自動翻轉</span>
+                                                </label>
+                                                <input type="text" id="edit-sprite-url-walkh" oninput="app.playSpriteAnimation('right')" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono text-blue-700 bg-white focus:ring-1 focus:ring-blue-400" placeholder="填入向右走的圖片 https://...">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-600 mb-1">4. 向上走動 (背影)</label>
+                                                <input type="text" id="edit-sprite-url-walkup" oninput="app.playSpriteAnimation('up')" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono text-blue-700 bg-white focus:ring-1 focus:ring-blue-400" placeholder="https://...">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-600 mb-1">5. 向下走動 (正面)</label>
+                                                <input type="text" id="edit-sprite-url-walkdown" oninput="app.playSpriteAnimation('down')" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono text-blue-700 bg-white focus:ring-1 focus:ring-blue-400" placeholder="https://...">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-600 mb-1">6. 施法/攻擊動作</label>
+                                                <input type="text" id="edit-sprite-url-cast" oninput="app.playSpriteAnimation('cast')" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono text-blue-700 bg-white focus:ring-1 focus:ring-blue-400" placeholder="https://...">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 預覽測試區 -->
+                                    <div class="flex flex-col items-center justify-start bg-slate-800 p-6 rounded-2xl border-4 border-slate-700 shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)] relative overflow-hidden">
+                                        
+                                        <div class="absolute top-3 left-3 flex gap-1">
+                                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                                            <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                        </div>
+
+                                        <div class="text-sm font-black text-slate-300 mb-5 w-full text-center tracking-widest">👁️ 動作即時預覽 👁️</div>
+                                        
+                                        <!-- 預覽框 -->
+                                        <div class="w-32 h-32 md:w-40 md:h-40 rounded-xl border-2 border-slate-600 shadow-2xl flex items-center justify-center mb-8 relative overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-slate-900 transition-all duration-300 hover:scale-105" id="preview-stage">
+                                            <!-- 地板發光效果 -->
+                                            <div class="absolute bottom-4 w-24 h-6 bg-green-500/20 blur-xl rounded-full"></div>
+                                            
+                                            <!-- 預覽圖片元素 -->
+                                            <img id="sprite-preview-img" src="" class="w-3/4 h-3/4 object-contain transition-transform duration-200 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] relative z-10" alt="">
+                                        </div>
+
+                                        <!-- 測試按鈕群 -->
+                                        <div class="grid grid-cols-3 gap-2 w-full max-w-[220px]">
+                                            <button onclick="app.playSpriteAnimation('static')" class="col-span-3 mb-2 bg-gradient-to-b from-slate-600 to-slate-700 text-white text-xs py-2 rounded-lg hover:from-slate-500 hover:to-slate-600 font-bold border-b-4 border-slate-800 active:border-b-0 active:translate-y-1 shadow-md transition-all">🖼️ 靜態預覽</button>
+                                            
+                                            <button onclick="app.playSpriteAnimation('cast')" class="bg-gradient-to-b from-purple-500 to-purple-600 text-white text-xs py-2 rounded-lg hover:from-purple-400 hover:to-purple-500 font-bold border-b-4 border-purple-800 active:border-b-0 active:translate-y-1 shadow-md transition-all flex flex-col items-center justify-center gap-1"><span class="text-sm">✨</span>施法</button>
+                                            <button onclick="app.playSpriteAnimation('up')" class="bg-gradient-to-b from-blue-500 to-blue-600 text-white text-xs py-2 rounded-lg hover:from-blue-400 hover:to-blue-500 font-bold border-b-4 border-blue-800 active:border-b-0 active:translate-y-1 shadow-md transition-all flex flex-col items-center justify-center gap-1"><span class="text-sm">⬆️</span>向上</button>
+                                            <button onclick="app.playSpriteAnimation('idle')" class="bg-gradient-to-b from-amber-500 to-amber-600 text-white text-xs py-2 rounded-lg hover:from-amber-400 hover:to-amber-500 font-bold border-b-4 border-amber-800 active:border-b-0 active:translate-y-1 shadow-md transition-all flex flex-col items-center justify-center gap-1"><span class="text-sm">⏱️</span>待機</button>
+                                            
+                                            <button onclick="app.playSpriteAnimation('left')" class="bg-gradient-to-b from-blue-500 to-blue-600 text-white text-xs py-2 rounded-lg hover:from-blue-400 hover:to-blue-500 font-bold border-b-4 border-blue-800 active:border-b-0 active:translate-y-1 shadow-md transition-all flex flex-col items-center justify-center gap-1"><span class="text-sm">⬅️</span>向左</button>
+                                            <button onclick="app.playSpriteAnimation('down')" class="bg-gradient-to-b from-blue-500 to-blue-600 text-white text-xs py-2 rounded-lg hover:from-blue-400 hover:to-blue-500 font-bold border-b-4 border-blue-800 active:border-b-0 active:translate-y-1 shadow-md transition-all flex flex-col items-center justify-center gap-1"><span class="text-sm">⬇️</span>向下</button>
+                                            <button onclick="app.playSpriteAnimation('right')" class="bg-gradient-to-b from-blue-500 to-blue-600 text-white text-xs py-2 rounded-lg hover:from-blue-400 hover:to-blue-500 font-bold border-b-4 border-blue-800 active:border-b-0 active:translate-y-1 shadow-md transition-all flex flex-col items-center justify-center gap-1"><span class="text-sm">➡️</span>向右</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-auto pt-5 border-t-2 border-[#d4c4a8] flex gap-4 shrink-0">
+                                    <button onclick="app.deleteCurrentSprite()" class="flex-1 bg-gradient-to-b from-red-100 to-red-200 text-red-800 py-3 rounded-xl font-black hover:from-red-200 hover:to-red-300 transition-all shadow-md border-b-4 border-red-300 active:border-b-0 active:translate-y-1 flex items-center justify-center gap-2">🗑️ 刪除角色</button>
+                                    <button onclick="app.saveCurrentSprite(event)" class="flex-[2] bg-gradient-to-b from-blue-600 to-blue-700 text-white py-3 rounded-xl font-black shadow-lg hover:from-blue-500 hover:to-blue-600 transition-all border-b-4 border-blue-900 active:border-b-0 active:translate-y-1 flex items-center justify-center gap-2 text-lg">💾 儲存設定至列表</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-					
-               <div class="mt-4 pt-4 border-t border-gray-100">
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-100">
                     <button onclick="app.saveAdminSettings()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-slate-900 active:scale-95 transition-transform">💾 儲存全域設定</button>
                 </div>
              </div>
@@ -4749,7 +4776,7 @@
             }
             container.innerHTML = html;
         },
-        // --- v4.8.0.8 角色圖示管理系統 ---
+        // --- v4.8.0.8 角色圖示管理系統 (APNG動畫支援版 - 升級設計) ---
         
         // 渲染已儲存的角色列表
         renderSpriteListUI: () => {
@@ -4759,15 +4786,13 @@
             
             let html = '';
             if (list.length === 0) {
-                html = '<div class="text-center text-gray-400 py-10 text-xs">暫無角色資料</div>';
+                html = '<div class="text-center text-amber-800/60 py-12 text-sm font-black border-4 border-dashed border-[#d4c4a8] rounded-xl m-2 bg-white/50 flex flex-col items-center gap-2"><span>📂</span> 尚未建立角色，請點擊上方新增</div>';
             } else {
                 list.forEach((s, idx) => {
-                    const isSelected = idx === currentIdx ? 'selected' : '';
-                    // 這裡使用 canvas 來繪製靜態預覽圖太耗資源，改用 CSS 背景定位顯示第一格(待機)
-                    // 背景位移: left -offsetX, top -offsetY
-                    const bgPos = `-${s.offsetX || 0}px -${s.offsetY || 0}px`;
+                    const isSelected = idx === currentIdx ? 'bg-amber-100 border-amber-500 shadow-md ring-4 ring-amber-500/20 scale-[1.02]' : 'bg-white/80 border-[#d4c4a8] hover:bg-white hover:scale-[1.01] hover:shadow';
+                    const imgUrl = s.urlStatic || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
                     
-                    html += `<div onclick="app.editSprite(${idx})" class="sprite-list-item ${isSelected} cursor-pointer"><div class="w-8 h-8 rounded bg-slate-200 border border-slate-300 overflow-hidden relative flex-shrink-0"><div style="width:32px; height:32px; background-image: url('${s.url}'); background-position: ${bgPos}; background-size: auto; image-rendering: pixelated;"></div></div><div class="font-bold text-slate-700 text-sm truncate flex-1">${s.name}</div><div class="text-[0.6rem] text-gray-400 font-mono">#${idx+1}</div></div>`;
+                    html += `<div onclick="app.editSprite(${idx})" class="flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all duration-200 mb-2 ${isSelected}"><div class="w-12 h-12 rounded-full bg-slate-800 border-2 border-amber-300 overflow-hidden flex-shrink-0 shadow-inner flex items-center justify-center p-1"><img src="${imgUrl}" class="max-w-full max-h-full object-contain drop-shadow-md"></div><div class="font-black text-amber-900 text-base truncate flex-1">${s.name}</div><div class="text-xs text-amber-100 bg-amber-800 px-2 py-1 rounded-lg font-mono shadow-inner border border-amber-900">#${idx+1}</div></div>`;
                 });
             }
             container.innerHTML = html;
@@ -4777,19 +4802,20 @@
         addNewSprite: () => {
             if (!app.state.tempSpriteList) app.state.tempSpriteList = [];
             
-            // 預設空白資料
             const newSprite = {
-                name: '新角色',
-                url: '',
-                offsetX: 0,
-                offsetY: 0
+                name: '新角色 ' + (app.state.tempSpriteList.length + 1),
+                urlStatic: '',
+                urlWalkH: '',
+                urlWalkUp: '',
+                urlWalkDown: '',
+                urlIdle: '',
+                urlCast: ''
             };
-            app.state.tempSpriteList.push(newSprite);
             
-            // 選中新角色並編輯
-            const newIdx = app.state.tempSpriteList.length - 1;
-            app.editSprite(newIdx);
-            app.renderSpriteListUI();
+            app.state.tempSpriteList.unshift(newSprite);
+            app.editSprite(0);
+            
+            if(app.toast) app.toast('✨ 已建立新角色欄位', 0);
         },
 
         // 編輯角色 (載入資料到編輯器)
@@ -4798,166 +4824,108 @@
             if (!s) return;
 
             app.el('edit-sprite-idx').value = idx;
-            app.el('edit-sprite-name').value = s.name;
-            app.el('edit-sprite-url').value = s.url;
+            app.el('edit-sprite-name').value = s.name || '';
+            app.el('edit-sprite-url-static').value = s.urlStatic || '';
+            app.el('edit-sprite-url-idle').value = s.urlIdle || '';
+            app.el('edit-sprite-url-walkh').value = s.urlWalkH || '';
+            app.el('edit-sprite-url-walkup').value = s.urlWalkUp || '';
+            app.el('edit-sprite-url-walkdown').value = s.urlWalkDown || '';
+            app.el('edit-sprite-url-cast').value = s.urlCast || '';
             
-            // 設定圖片與偏移
-            const img = app.el('edit-sprite-source');
-            img.src = s.url;
-            img.style.transform = `translate(-${s.offsetX || 0}px, -${s.offsetY || 0}px)`;
-            
-            // 更新偏移顯示
-            app.el('sprite-offset-display').textContent = `${s.offsetX || 0}, ${s.offsetY || 0}`;
-            
-            // 重置動畫與列表狀態
-            app.stopSpriteAnimation();
-            app.renderSpriteListUI(); // 更新選取狀態
-        },
-
-        // 讀取圖片預覽 (輸入網址時觸發)
-        loadSpritePreview: () => {
-            const url = app.el('edit-sprite-url').value;
-            app.el('edit-sprite-source').src = url;
-            // 重置偏移
-            app.el('edit-sprite-source').style.transform = `translate(0px, 0px)`;
-            app.el('sprite-offset-display').textContent = `0, 0`;
+            app.playSpriteAnimation('static');
+            app.renderSpriteListUI(); 
         },
 
         // 儲存當前編輯
-        saveCurrentSprite: () => {
+        saveCurrentSprite: (event) => {
             const idx = parseInt(app.el('edit-sprite-idx').value);
-            if (isNaN(idx)) return app.toast('請先新增或選擇一個角色');
-
-            const name = app.el('edit-sprite-name').value.trim();
-            const url = app.el('edit-sprite-url').value.trim();
-            
-            // 從 DOM 讀取目前的偏移量 (在 drag 結束時會更新到 dataset 或直接讀 style)
-            // 這裡我們直接解析 style.transform
-            const img = app.el('edit-sprite-source');
-            const transform = img.style.transform; // "translate(-10px, -5px)"
-            let offX = 0, offY = 0;
-            const match = transform.match(/translate\((-?\d+)px,\s*(-?\d+)px\)/);
-            if (match) {
-                offX = Math.abs(parseInt(match[1])); // 存正數
-                offY = Math.abs(parseInt(match[2]));
+            if (isNaN(idx)) {
+                if(app.toast) app.toast('請先新增或選擇一個角色', 1);
+                return;
             }
 
-            if (!name || !url) return app.toast('名稱與圖片網址不可為空', 1);
+            const name = app.el('edit-sprite-name').value.trim();
+            if (!name) {
+                if(app.toast) app.toast('❌ 角色名稱不可為空', 1);
+                return;
+            }
 
             app.state.tempSpriteList[idx] = {
                 name: name,
-                url: url,
-                offsetX: offX,
-                offsetY: offY
+                urlStatic: app.el('edit-sprite-url-static').value.trim(),
+                urlIdle: app.el('edit-sprite-url-idle').value.trim(),
+                urlWalkH: app.el('edit-sprite-url-walkh').value.trim(),
+                urlWalkUp: app.el('edit-sprite-url-walkup').value.trim(),
+                urlWalkDown: app.el('edit-sprite-url-walkdown').value.trim(),
+                urlCast: app.el('edit-sprite-url-cast').value.trim()
             };
 
             app.renderSpriteListUI();
-            app.toast('✅ 角色設定已暫存 (記得儲存全域設定)');
+            
+            if(event && event.currentTarget) {
+                const btn = event.currentTarget;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ 已成功儲存';
+                btn.classList.add('bg-green-600');
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('bg-green-600');
+                }, 1000);
+            }
+            
+            if(app.toast) app.toast('✅ 角色設定已暫存，請記得點擊最下方「儲存全域設定」', 0);
         },
 
         deleteCurrentSprite: () => {
             const idx = parseInt(app.el('edit-sprite-idx').value);
             if (isNaN(idx)) return;
             
-            if (confirm('🗑️ 確定要刪除此角色嗎？')) {
+            if (confirm('🗑️ 確定要刪除此角色嗎？這個動作無法復原喔！')) {
                 app.state.tempSpriteList.splice(idx, 1);
-                // 清空編輯區
                 app.el('edit-sprite-idx').value = '';
                 app.el('edit-sprite-name').value = '';
-                app.el('edit-sprite-url').value = '';
-                app.el('edit-sprite-source').src = '';
+                app.el('edit-sprite-url-static').value = '';
+                app.el('edit-sprite-url-idle').value = '';
+                app.el('edit-sprite-url-walkh').value = '';
+                app.el('edit-sprite-url-walkup').value = '';
+                app.el('edit-sprite-url-walkdown').value = '';
+                app.el('edit-sprite-url-cast').value = '';
+                app.el('sprite-preview-img').src = '';
                 app.renderSpriteListUI();
+                if(app.toast) app.toast('🗑️ 角色已刪除', 0);
             }
         },
 
-        // --- 拖曳校正邏輯 ---
-        startSpriteDrag: (e) => {
-            e.preventDefault();
-            const img = app.el('edit-sprite-source');
-            if (!img.src) return;
+        // 測試動畫切換邏輯
+        playSpriteAnimation: (action) => {
+            const img = app.el('sprite-preview-img');
+            const stage = app.el('preview-stage');
+            if (!img) return;
 
-            const startX = e.clientX;
-            const startY = e.clientY;
-            
-            // 解析目前的 translate 值
-            const transform = img.style.transform;
-            let initialOffX = 0, initialOffY = 0;
-            const match = transform.match(/translate\((-?\d+)px,\s*(-?\d+)px\)/);
-            if (match) {
-                initialOffX = parseInt(match[1]);
-                initialOffY = parseInt(match[2]);
+            let targetUrl = '';
+            let scaleX = 1; 
+
+            if (action === 'static') targetUrl = app.el('edit-sprite-url-static').value;
+            else if (action === 'idle') targetUrl = app.el('edit-sprite-url-idle').value;
+            else if (action === 'cast') targetUrl = app.el('edit-sprite-url-cast').value;
+            else if (action === 'up') targetUrl = app.el('edit-sprite-url-walkup').value;
+            else if (action === 'down') targetUrl = app.el('edit-sprite-url-walkdown').value;
+            else if (action === 'right') targetUrl = app.el('edit-sprite-url-walkh').value;
+            else if (action === 'left') {
+                targetUrl = app.el('edit-sprite-url-walkh').value;
+                scaleX = -1; 
             }
 
-            const onMove = (moveEvent) => {
-                const dx = moveEvent.clientX - startX;
-                const dy = moveEvent.clientY - startY;
-                
-                // 計算新位置 (限制不要拖太遠，例如 +/- 64px)
-                const newX = initialOffX + dx;
-                const newY = initialOffY + dy;
-                
-                img.style.transform = `translate(${newX}px, ${newY}px)`;
-                // 顯示絕對值的偏移量 (儲存用)
-                app.el('sprite-offset-display').textContent = `${Math.abs(newX)}, ${Math.abs(newY)}`;
-            };
-
-            const onUp = () => {
-                document.removeEventListener('mousemove', onMove);
-                document.removeEventListener('mouseup', onUp);
-            };
-
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup', onUp);
-        },
-
-        // --- 動畫播放邏輯 ---
-        playSpriteAnimation: (row) => {
-            const img = app.el('edit-sprite-source');
-            if (!img.src) return;
-
-            const canvas = app.el('sprite-anim-canvas');
-            const ctx = canvas.getContext('2d');
+            img.src = targetUrl.trim() || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+            img.style.transform = `scaleX(${scaleX})`;
             
-            // 讀取偏移量
-            const transform = img.style.transform;
-            let offX = 0, offY = 0;
-            const match = transform.match(/translate\((-?\d+)px,\s*(-?\d+)px\)/);
-            if (match) {
-                offX = Math.abs(parseInt(match[1]));
-                offY = Math.abs(parseInt(match[2]));
+            if(stage) {
+                stage.style.borderColor = action === 'cast' ? '#a855f7' : (action === 'idle' ? '#f59e0b' : (action === 'static' ? '#475569' : '#3b82f6'));
             }
-
-            app.stopSpriteAnimation(); // 先停止舊的
-
-            let frame = 0;
-            const totalFrames = 4;
-            const frameWidth = 32;
-            const frameHeight = 32;
-            
-            // 為了讓動畫清楚，設定 FPS (例如 150ms 一張)
-            app.state.spriteAnimInterval = setInterval(() => {
-                // 清空畫布
-                ctx.clearRect(0, 0, 32, 32);
-                
-                // 計算來源座標: 
-                // X = (col * 32) + offsetX
-                // Y = (row * 32) + offsetY
-                const srcX = (frame * frameWidth) + offX;
-                const srcY = (row * frameHeight) + offY;
-
-                // 繪製
-                ctx.drawImage(img, srcX, srcY, frameWidth, frameHeight, 0, 0, 32, 32);
-
-                // 下一格
-                frame = (frame + 1) % totalFrames;
-            }, 200); // 速度
         },
-
+        
         stopSpriteAnimation: () => {
-            if (app.state.spriteAnimInterval) {
-                clearInterval(app.state.spriteAnimInterval);
-                app.state.spriteAnimInterval = null;
-            }
+            // 保留空函式以防其他地方呼叫報錯
         },
 	   // --- v4.2.2 怪物列表管理系統 ---
         // 切換列表/編輯視圖
