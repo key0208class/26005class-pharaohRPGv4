@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.7.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.7.2 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -626,7 +626,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.7.0 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.7.2 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -2501,28 +2501,26 @@
 
             <div class="tablet-layout">
                 <div class="tablet-left flex flex-col gap-4">
-                    <div class="bg-amber-100 rounded-2xl p-4 shadow-inner text-center relative border-2 border-amber-300">
-                        <div id="round-display" class="absolute right-3 top-2 text-XL font-black text-amber-900/60 font-mono tracking-widest select-none">ROUND 1</div>
+                    <!-- [可修改] 狀態顯示區最外層，設定 min-h-[70px] 使其高度固定，騰出下方空間給角色/寵物 -->
+                    <div id="game-status-box" class="bg-amber-100 rounded-2xl p-3 shadow-inner relative border-2 border-amber-300 flex flex-col items-center justify-center min-h-[70px] transition-colors duration-300">
+                        <!-- 右上角：回合數與剩餘答案 (群組化對齊) -->
+                        <div class="absolute right-3 top-2 flex flex-col items-stretch z-10 min-w-[80px]">
+                            <!-- [可修改] 回合數字體：text-base / md:text-lg -->
+                            <div id="round-display" class="text-base md:text-lg font-black text-amber-900/60 font-mono tracking-widest select-none leading-none text-center mb-1">ROUND 1</div>
+                            <!-- [可修改] 可解答案字體：text-xs / md:text-sm -->
+                            <div id="solvable-count-display" class="hidden text-xs md:text-sm font-bold text-amber-700 bg-amber-200/50 px-2 py-1 rounded border border-amber-300 shadow-sm animate-pulse text-center w-full">可解答案: 0</div>
+                        </div>
                         
-                        <div id="game-status-text" class="text-xl font-bold text-amber-800">等待遊戲開始...</div>
-                        <div id="timer-display" class="hidden mt-2 text-4xl font-black text-red-600 font-mono drop-shadow-sm">30</div>
-                    <!-- [新增 v4.7.3] 戰利品選擇面板 -->
-                        <div id="reward-selection-panel" class="hidden mt-4 animate-[popIn_0.5s_ease-out]">
-                            <div class="text-sm font-bold text-amber-900 mb-2 animate-bounce">🎁 戰鬥勝利！請選擇一項戰利品：</div>
-                            <div class="grid grid-cols-3 gap-2">
-                                <button onclick="app.handleRewardSelect(1)" class="flex flex-col items-center justify-center p-2 bg-gradient-to-b from-red-50 to-red-100 border-2 border-red-300 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-transform group">
-                                    <span class="text-2xl mb-1 filter drop-shadow-sm group-hover:scale-110 transition-transform">❤️</span>
-                                    <span class="text-[0.65rem] font-black text-red-800 leading-tight">最大血量<br>+10</span>
-                                </button>
-                                <button onclick="app.handleRewardSelect(2)" class="flex flex-col items-center justify-center p-2 bg-gradient-to-b from-yellow-50 to-yellow-100 border-2 border-yellow-300 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-transform group">
-                                    <span class="text-2xl mb-1 filter drop-shadow-sm group-hover:scale-110 transition-transform">💰</span>
-                                    <span class="text-[0.65rem] font-black text-yellow-800 leading-tight">隨機金幣<br>10~50</span>
-                                </button>
-                                <button onclick="app.handleRewardSelect(3)" class="flex flex-col items-center justify-center p-2 bg-gradient-to-b from-indigo-50 to-indigo-100 border-2 border-indigo-300 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-transform group">
-                                    <span class="text-2xl mb-1 filter drop-shadow-sm group-hover:scale-110 transition-transform">🛒</span>
-                                    <span class="text-[0.65rem] font-black text-indigo-800 leading-tight">進入<br>商店</span>
-                                </button>
-                            </div>
+                        <!-- 狀態與倒數計時同列 -->
+                        <div class="flex flex-row items-center justify-center gap-4 mt-2 w-full px-2">
+                            <!-- [可修改] 遊戲狀態文字大小 -->
+                            <div id="game-status-text" class="text-base md:text-xl font-bold text-amber-800 whitespace-nowrap truncate max-w-[60%] md:max-w-[70%]">等待遊戲開始...</div>
+                            <!-- [可修改] 倒數計時文字大小：text-4xl / md:text-5xl (移除外框背景，保留純紅字) -->
+                            <div id="timer-display" class="hidden text-4xl md:text-5xl font-black text-red-600 font-mono drop-shadow-md leading-none">30</div>
+                        </div>
+
+                    <!-- [新增 v4.7.3] 戰利品選擇面板 (容器撐滿左右 w-full) -->
+                        <div id="reward-selection-panel" class="hidden mt-4 w-full animate-[popIn_0.5s_ease-out]">
                         </div>
                     </div>
 <div class="relative bg-amber-50/50 rounded-2xl p-4 min-h-[400px] flex flex-col items-center justify-center border-2 border-amber-200">
@@ -6207,10 +6205,9 @@
 
        updateUI: (data) => {
             const statusEl = app.el('game-status-text');
-            const statusBox = statusEl.parentElement;
+            const statusBox = app.el('game-status-box'); // [修改] 精確抓取外層容器ID
             
             // v3.2.4 優化：狀態改變時的同步語音與提示邏輯
-           // v3.2.4 優化：狀態改變時的同步語音與提示邏輯
             if (app.state.lastStatus !== data.status) {
                 // v3.2.9 新增：偵測轉為等待狀態時，觸發自動擲骰
                 if (data.status === 'waiting' && app.state.lastStatus !== 'waiting' && app.state.autoRollEnabled) {
@@ -6221,12 +6218,12 @@
                 if (data.status === 'dead_end') {
                     const msg = "⚠️ 此局無解！";
                     app.toast(msg, 1);
-                    // 確保語音不重複觸發
                 }
             }
 
-            statusBox.className = "bg-amber-100 rounded-2xl p-4 shadow-inner text-center relative border-2 border-amber-300 transition-colors duration-300";
-            statusEl.className = "text-xl font-bold text-amber-800";
+            // [修改] 調整為固定高度與排版，避免因倒數計時而變更高度撐大版面
+            statusBox.className = "bg-amber-100 rounded-2xl p-3 shadow-inner relative border-2 border-amber-300 flex flex-col items-center justify-center min-h-[70px] transition-colors duration-300";
+            statusEl.className = "text-base md:text-lg font-bold text-amber-800 whitespace-nowrap truncate max-w-[65%] md:max-w-[80%]";
             
             const statusMap = {
                 'waiting': '等待法老王開啟試煉...',
@@ -6239,17 +6236,16 @@
             
             // [新增] 更新回合數顯示
             if (app.el('round-display')) {
-                // 如果想要改顯示中文，可改為: `第 ${data.round || 1} 回合`
                 app.el('round-display').textContent = `第 ${data.round || 1} 回合`;
             }
 
-            // 特殊狀態樣式
+            // 特殊狀態樣式 (統一使用一列排版)
             if (data.status === 'dead_end') {
-                statusBox.className = "bg-red-100 rounded-2xl p-4 shadow-inner text-center relative border-2 border-red-400 animate-pulse";
-                statusEl.className = "text-xl font-black text-red-800";
+                statusBox.className = "bg-red-100 rounded-2xl p-3 shadow-inner relative border-2 border-red-400 flex flex-col items-center justify-center min-h-[70px] animate-pulse transition-colors duration-300";
+                statusEl.className = "text-base md:text-xl font-black text-red-800 whitespace-nowrap truncate max-w-[60%] md:max-w-[70%]";
             }
 
-           app.updateDiceUI(data.dice);
+            app.updateDiceUI(data.dice);
             app.renderPyramid(data.pyramid);
 
             // [v4.7.5.4] 時之沙特殊顯示邏輯：顯示提示並隱藏倒數
@@ -6267,7 +6263,6 @@
                     for (let t of targets) {
                         const sol = app.findSolution([d8, d10, d12], t);
                         if (sol) {
-                            // 取出前兩個數字運算 (例如 (8+5)*2 -> 8+5)
                             const match = sol.match(/(\d+\s*[\+\-\*\/]\s*\d+)/);
                             let shortHint = match ? match[0] : sol;
                             shortHint = shortHint.replace(/\*/g, '×').replace(/\//g, '÷');
@@ -6279,7 +6274,6 @@
                     
                     if (!hasSolution) {
                         hintText = "已無可解數字";
-                        // 若無解，且是房主，則自動推進回合 (稍微延遲讓玩家看到訊息)
                         if (app.state.isHost && !app.state.autoNextTimer) {
                             app.state.autoNextTimer = setTimeout(() => {
                                 app.forceNextRound();
@@ -6291,10 +6285,10 @@
                     hintText = "圖騰全數清除";
                 }
 
-                // 更新狀態欄文字
-                const statusBox = app.el('game-status-text').parentElement;
-                statusBox.className = "bg-blue-100 rounded-2xl p-4 shadow-inner text-center relative border-2 border-blue-400 transition-colors duration-300";
-                app.el('game-status-text').innerHTML = `<div class="flex flex-col items-center animate-pulse"><div class="text-2xl font-black text-blue-800 flex items-center gap-2">⏳ 時間凍結中</div><div class="text-lg font-bold text-blue-600 mt-1 font-mono">${hintText}</div></div>`;
+                // [修改] 更新狀態欄文字 (改為單行排版，適應固定高度)
+                const statusBoxFrozen = app.el('game-status-box');
+                if(statusBoxFrozen) statusBoxFrozen.className = "bg-blue-100 rounded-2xl p-3 shadow-inner relative border-2 border-blue-400 flex flex-col items-center justify-center min-h-[70px] transition-colors duration-300";
+                app.el('game-status-text').innerHTML = `<div class="flex flex-row items-center gap-3 animate-pulse"><span class="text-base md:text-xl font-black text-blue-800">⏳凍結中</span><span class="text-sm md:text-base font-bold text-blue-600 font-mono">${hintText}</span></div>`;
 
             } else {
                 // 正常倒數顯示邏輯
@@ -6304,6 +6298,41 @@
                     if(data.timer === 0) app.handleTimeUp(); 
                 } else {
                     app.el('timer-display').classList.add('hidden');
+                }
+            }
+
+            // [新增] 計算並顯示「可以解答的剩餘答案」數量 (包含UX防呆增強)
+            const solvableEl = app.el('solvable-count-display');
+            if (solvableEl) {
+                // 必須是遊玩狀態且骰子有正常數值才計算
+                if (data.status === 'playing' && data.dice && data.dice.d8 !== '-' && data.dice.d8 !== '?') {
+                    const currentDice = [Number(data.dice.d8), Number(data.dice.d10), Number(data.dice.d12)];
+                    const remainingTargets = (data.pyramid || []).filter(c => c && !c.isTaken).map(c => c.number);
+                    let solvableCount = 0;
+                    
+                    try {
+                        // 針對版面上還剩下的數字，逐一測試是否能被解答
+                        for (let target of remainingTargets) {
+                            if (app.findSolution(currentDice, target)) {
+                                solvableCount++;
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Error calculating solutions:', err);
+                    }
+                    
+                    solvableEl.textContent = `可解答案: ${solvableCount}`;
+                    
+                    // [可修改] 剩餘答案的字體大小與樣式 (統一設為 text-xs md:text-sm 並置中，加入震動防呆)
+                    if (solvableCount === 0) {
+                        solvableEl.className = "text-xs md:text-sm font-bold text-red-700 bg-red-200/80 px-2 py-1 rounded border border-red-400 shadow-sm animate-pulse hover:animate-shake text-center w-full block";
+                    } else {
+                        solvableEl.className = "text-xs md:text-sm font-bold text-amber-700 bg-amber-200/50 px-2 py-1 rounded border border-amber-300 shadow-sm text-center w-full block";
+                    }
+                    
+                    solvableEl.classList.remove('hidden');
+                } else {
+                    solvableEl.classList.add('hidden');
                 }
             }
             
@@ -12088,7 +12117,9 @@ for (const slot of slots) {
             // 2. 動態生成按鈕 HTML (無空白節點寫法)，將金幣數值直接顯示
             
             const panel = app.el('reward-selection-panel');
-            panel.innerHTML = `<div class="text-sm font-bold text-amber-900 mb-2 animate-bounce">🎁 戰鬥勝利！請選擇一項戰利品：</div><div class="grid grid-cols-3 gap-2"><button onclick="app.handleRewardSelect(1)" class="flex flex-col items-center justify-center p-2 bg-gradient-to-b from-red-50 to-red-100 border-2 border-red-300 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-transform group"><span class="text-2xl mb-1 filter drop-shadow-sm group-hover:scale-110 transition-transform">❤️</span><span class="text-[0.65rem] font-black text-red-800 leading-tight">最大血量<br>+10</span></button><button onclick="app.handleRewardSelect(2)" class="flex flex-col items-center justify-center p-2 bg-gradient-to-b from-yellow-50 to-yellow-100 border-2 border-yellow-300 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-transform group"><span class="text-2xl mb-1 filter drop-shadow-sm group-hover:scale-110 transition-transform">💰</span><span class="text-[0.65rem] font-black text-yellow-800 leading-tight">獲得金幣<br>${rndGold} G</span></button><button onclick="app.handleRewardSelect(3)" class="flex flex-col items-center justify-center p-2 bg-gradient-to-b from-indigo-50 to-indigo-100 border-2 border-indigo-300 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-transform group"><span class="text-2xl mb-1 filter drop-shadow-sm group-hover:scale-110 transition-transform">🛒</span><span class="text-[0.65rem] font-black text-indigo-800 leading-tight">進入<br>商店</span></button></div>`;
+            
+            // [修改] 格子改小，內部改為左右排列 (flex-row)，並填滿左右寬度
+            panel.innerHTML = `<div class="text-sm md:text-base font-bold text-amber-900 mb-2 animate-bounce text-center">🎁 戰鬥勝利！請選擇一項戰利品：</div><div class="grid grid-cols-3 gap-2 w-full px-1"><button onclick="app.handleRewardSelect(1)" class="flex flex-row items-center justify-center gap-1.5 p-1.5 md:p-2 bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-300 rounded-lg shadow-sm hover:scale-105 active:scale-95 transition-transform group w-full"><span class="text-xl md:text-2xl filter drop-shadow-sm group-hover:scale-110 transition-transform">❤️</span><span class="text-[0.65rem] md:text-xs font-black text-red-800 leading-tight text-left">最大血量<br>+10</span></button><button onclick="app.handleRewardSelect(2)" class="flex flex-row items-center justify-center gap-1.5 p-1.5 md:p-2 bg-gradient-to-r from-yellow-50 to-yellow-100 border-2 border-yellow-300 rounded-lg shadow-sm hover:scale-105 active:scale-95 transition-transform group w-full"><span class="text-xl md:text-2xl filter drop-shadow-sm group-hover:scale-110 transition-transform">💰</span><span class="text-[0.65rem] md:text-xs font-black text-yellow-800 leading-tight text-left">隨機金幣<br>${rndGold} G</span></button><button onclick="app.handleRewardSelect(3)" class="flex flex-row items-center justify-center gap-1.5 p-1.5 md:p-2 bg-gradient-to-r from-indigo-50 to-indigo-100 border-2 border-indigo-300 rounded-lg shadow-sm hover:scale-105 active:scale-95 transition-transform group w-full"><span class="text-xl md:text-2xl filter drop-shadow-sm group-hover:scale-110 transition-transform">🛒</span><span class="text-[0.65rem] md:text-xs font-black text-indigo-800 leading-tight text-left">進入<br>商店</span></button></div>`;
 
             // 3. 隱藏倒數計時與狀態文字，顯示獎勵面板
             app.el('game-status-text').classList.add('hidden');
