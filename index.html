@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.6.7 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.7.0 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -626,7 +626,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.6.7 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.7.0 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -2899,7 +2899,221 @@
             }
         },
 
-        el: (id) => document.getElementById(id),
+     el: (id) => document.getElementById(id),
+
+        // ==========================================
+        // --- [新增] 資源預載引擎 (解決破圖與延遲) ---
+        // ==========================================
+        preloadImages: (urls) => {
+            if (!urls || urls.length === 0) return;
+            // 過濾重複網址與空值，避免重複發送請求浪費資源
+            const uniqueUrls = [...new Set(urls.filter(url => url && typeof url === 'string' && url.trim() !== ''))];
+            
+            uniqueUrls.forEach(url => {
+                // 利用 JS 原生物件在背景偷偷下載圖片進瀏覽器 Cache
+                const img = new Image();
+                img.src = url;
+            });
+            console.log(`📦 [預載系統] 已將 ${uniqueUrls.length} 張圖片送入背景載入佇列。`);
+        },
+
+        // 啟動靜態圖庫預載 (系統固定的圖片、特效、UI)
+        initStaticPreload: () => {
+            // 💡【未來修改提醒】：若未來有在程式碼中新增寫死的圖片網址，請加入此陣列中
+            const staticAssets = [
+                // --- 商人與人物介面 ---
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%95%86%E4%BA%BA.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%96%B0%E4%BA%BA%E7%89%A9%E8%A3%9D%E5%82%99%E5%9C%962(%E5%A5%B3).jpeg",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%96%B0%E4%BA%BA%E7%89%A9%E8%A3%9D%E5%82%99%E5%9C%962.png",
+                // --- 裝備圖示 (法老王/聖甲蟲/草木等) ---
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E6%B3%95%E8%80%81%E7%8E%8B%E7%9A%84%E8%AD%B7%E7%AC%A61.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E6%B3%95%E8%80%81%E7%8E%8B%E7%9A%84%E8%AD%B7%E7%AC%A62.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E6%B3%95%E8%80%81%E7%8E%8B%E7%9A%84%E8%AD%B7%E7%AC%A63.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E6%B3%95%E8%80%814.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E6%B3%95%E8%80%815.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E6%B3%95%E8%80%81%E7%8E%8B%E7%9A%84%E8%AD%B7%E7%AC%A65.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%81%96%E7%94%B2%E8%9F%B2%E5%BE%BD%E7%AB%A0.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%81%96%E7%94%B2%E5%BE%BD%E7%AB%A0LV4.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%81%96%E7%94%B2%E5%BE%BD%E7%AB%A0LV5.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%8D%89%E6%9C%A8%E7%B2%BE%E8%8F%AFLV1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%8D%89%E6%9C%A8%E7%B2%BE%E8%8F%AFLV2.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%8D%89%E6%9C%A8%E7%B2%BE%E8%8F%AFLV3.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%8D%89%E6%9C%A8%E7%B2%BE%E8%8F%AFLV4.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%8D%89%E6%9C%A8%E7%B2%BE%E8%8F%AFLV5.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%97%A5LV1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%97%A5LV2.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%97%A5LV3.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%97%A5LV4.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%97%A5LV5.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%8D%89%E6%9C%A8%E7%B2%BE%E8%8F%AFNEWLV1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%8D%89%E6%9C%A8%E7%B2%BE%E8%8F%AFNEWLV2.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%8D%89%E6%9C%A8%E7%B2%BE%E8%8F%AFNEWLV3.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%8D%89%E6%9C%A8%E7%B2%BE%E8%8F%AFNEWLV4.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%8D%89%E6%9C%A8%E7%B2%BE%E8%8F%AFNEWLV5.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E5%95%86%E6%9C%83%E5%BE%BD%E7%AB%A0.png",
+                // --- 武器系列 ---
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/sword1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/sword2.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/sword3.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/sword4.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/sword5.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/sword6.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/sword7.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/4%E5%8A%A0+.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/4%E7%81%ABX.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/4%E5%86%B0-.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/4%E9%99%A4.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E6%A3%AE%E4%B9%8B%E5%86%92%E9%9A%AA%E8%80%85%E4%B9%8B%E5%8A%8DNEW.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E7%82%8E%E4%B9%8B%E5%86%92%E9%9A%AA%E8%80%85%E4%B9%8B%E5%8A%8DNEW.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E5%86%B0%E4%B9%8B%E5%86%92%E9%9A%AA%E8%80%85%E4%B9%8B%E5%8A%8DNEW.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E6%9A%97%E4%B9%8B%E5%86%92%E9%9A%AA%E8%80%85%E4%B9%8B%E5%8A%8DNEW.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E5%86%92%E9%9A%AA%E8%80%85%E4%B9%8B%E5%8A%8D+.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E5%86%92%E9%9A%AA%E8%80%85%E4%B9%8B%E5%8A%8D-.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E5%86%92%E9%9A%AA%E8%80%85%E4%B9%8B%E5%8A%8DX.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E5%86%92%E9%9A%AA%E8%80%85%E4%B9%8B%E5%8A%8D%C3%B7.png",
+                // --- 裝飾、證明、刻印與其他道具 ---
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/1%E7%B4%9A%E7%8B%A9%E7%8D%B5%E8%AD%89%E6%98%8E.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/2%E7%B4%9A%E7%8B%A9%E7%8D%B5%E8%AD%89%E6%98%8E.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/3%E7%B4%9A%E7%8B%A9%E7%8D%B5%E8%AD%89%E6%98%8E.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95+.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95++.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95+++.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0LV1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0LV2.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0LV3.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8BLV1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8BLV2.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8BLV3.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0LV1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0LV2.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0LV3.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E5%A4%A7%E5%9C%B0%E7%86%94%E7%88%90.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%81%96%E5%85%89%E6%81%A9%E5%85%B8.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%81%96%E5%85%89%E6%81%A9%E5%85%B8LV1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%81%96%E5%85%89%E6%81%A9%E5%85%B8LV2.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%81%96%E5%85%89%E6%81%A9%E5%85%B8LV3.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%81%96LV1-1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%81%96LV2-1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E8%81%96LV3-1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/8/%E5%8F%B2%E8%90%8A%E5%A7%86%E7%9A%84%E7%8E%8B%E5%86%A0.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/1%E5%88%9D%E5%BF%83%E8%80%85%E8%81%B7%E6%A5%AD%E6%9B%B8.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/1%E7%99%82%E5%82%B7.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/1%E7%99%82%E5%82%B7a.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E6%9E%97%E4%B9%8B%E5%BF%831.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%81%AB%E7%84%B0%E4%B9%8B%E5%BF%831.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B5%B7%E6%B4%8B%E4%B9%8B%E5%BF%831.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%9A%97%E9%BB%91%E4%B9%8B%E5%BF%831.png",
+                // --- 卡背與遊戲通用 UI ---
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/BK8K9kH.jpg",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/jZAPi9w.jpg",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/YBrnPT7.jpg",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/gold.jpg",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/platinum.jpg",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/yauTZnK.jpg",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/AuMVWei.jpg",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%8D%8E%E5%8B%B5%E5%AF%B6%E7%AE%B1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/UI_bossIntro_BG.png",
+                // --- 寶物與地圖裝飾 ---
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/Camp_Key_Dark_UI.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/Camp_Key_Earth_UI.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/Camp_Key_Elec_UI.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/Camp_Key_Fire_UI.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/Camp_Key_Frost_UI.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/Camp_Key_Leaves_UI.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/Camp_Key_Mine_UI.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/Camp_Key_Water_UI.png",
+				"https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%B4%85%E8%89%B2%E6%9C%AA%E9%80%9A%E9%97%9C.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%B6%A0%E8%89%B2%E9%80%9A%E9%97%9C.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/1.%E5%8F%B2%E8%90%8A%E5%A7%86%E7%8E%8B%E5%9C%B0%E5%9C%96-%E6%B2%BC%E6%BE%A4_.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/2.%E6%86%A4%E6%80%92%E9%B3%A5%E5%9C%B0%E5%9C%96-%E8%8D%89%E5%8E%9F_.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/3.%E8%BF%AA%E4%BA%9E%E5%B8%83%E7%BE%85%E5%9C%B0%E5%9C%96-%E6%B4%9E%E7%A9%B4_.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/4.%E6%B3%B0%E8%8A%99%E5%8A%AA%E7%89%B9%E5%9C%B0%E5%9C%96-%E6%B5%B7%E6%B4%8B_.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/5.%E5%86%A5%E7%82%8E%E5%85%8B%E5%9C%96%E6%A0%BC%E4%BA%9E%E5%9C%B0%E5%9C%96-%E7%81%AB%E5%B1%B1_.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/6.%E8%90%AC%E9%AD%94%E4%B9%8B%E7%8E%8B-%E9%AB%98%E5%B1%B1_.png",
+				 
+                // --- 戰鬥特效系列 ---
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E9%96%83%E9%9B%BB%E7%89%B9%E6%95%88.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%AA%E7%97%95.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a2.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a2-2.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0a1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0a2.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%83%88%E7%84%B0%E9%A2%A8%E6%9A%B4.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8Ba1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8Ba2.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95a3.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0a1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0a2.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5a22.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%94%BB%E6%93%8A%E5%8A%9B%E5%9B%BA%E5%8C%96.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%83%88%E7%84%B0%E9%A2%A8%E6%9A%B42.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a3.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%94%BB%E6%93%8A%E5%8A%9B%E9%99%8D%E4%BD%8E.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5a31.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%AD%A6%E5%91%8A!_BOSS.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%81%AB%E5%8A%9B%E6%8F%90%E5%8D%87.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B5%81%E8%A1%80%E7%8B%80%E6%85%8B.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%AF%92%E8%97%A5%E7%8B%80%E6%85%8B.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A1%80%E7%A5%AD%E7%89%B9%E6%95%88.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%87%B4%E5%91%BD.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8B(%E5%AF%92%E5%86%B0%E9%99%84%E9%AB%94).png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A8%99%E8%A8%981.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A8%99%E8%A8%98%E5%8D%94%E5%90%8C%E6%94%BB%E6%93%8A.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/1%E6%B0%B4%E6%B3%A2%E7%B4%8B%E7%89%B9%E6%95%88.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/2%E8%97%8D%E5%85%89%E8%83%8C%E6%99%AF%E7%89%B9%E6%95%88.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/3%E8%97%8D%E5%85%89%E5%9C%B0%E7%92%B0%E7%89%B9%E6%95%88.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/4%E7%81%AB%E7%84%B0%E5%9C%B0%E7%92%B0%E7%89%B9%E6%95%88.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/5%E7%81%AB%E7%84%B0%E5%9C%88%E7%89%B9%E6%95%88.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/6%E9%BB%83%E5%85%89%E8%83%8C%E6%99%AF%E7%89%B9%E6%95%88.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/7%E9%BB%83%E5%85%89%E7%82%B8%E8%A3%82%E7%89%B9%E6%95%88.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/1.%E5%9B%9E%E5%BE%A9%E8%A1%80%E9%87%8F%E7%89%B9%E6%95%88_.png",
+                // --- 預設小怪代表圖 ---
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/sb1-1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/sb1-2.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/1-1.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/1-3.png"
+            ];
+            app.preloadImages(staticAssets);
+        },
+
+        // 啟動動態資料庫圖片預載 (抓取管理員在 Firebase 設定的怪物/裝備/地圖)
+        initDynamicPreload: (settings) => {
+            let dynamicUrls = [];
+            
+            // 取出所有自訂怪物圖片
+            const monsters = settings.monsterList || [];
+            monsters.forEach(m => {
+                if (m.img1) dynamicUrls.push(m.img1);
+                if (m.img2) dynamicUrls.push(m.img2);
+                if (m.img3) dynamicUrls.push(m.img3);
+            });
+
+            // 取出黑市商品各等級圖片
+            const blackMarket = settings.blackMarketList || [];
+            blackMarket.forEach(item => {
+                for(let i = 1; i <= 10; i++) {
+                    if (item[`img${i}`]) dynamicUrls.push(item[`img${i}`]);
+                }
+            });
+
+            // 戰役地圖與 BOSS
+            const campaigns = settings.campaigns || [];
+            campaigns.forEach(chap => {
+                (chap.stages || []).forEach(stage => {
+                    if (stage.mapUrl) dynamicUrls.push(stage.mapUrl);
+                    if (stage.bossImg) dynamicUrls.push(stage.bossImg);
+                });
+            });
+
+            // 角色圖示
+            const sprites = settings.spriteList || [];
+            sprites.forEach(s => {
+                if (s.url) dynamicUrls.push(s.url);
+            });
+
+            app.preloadImages(dynamicUrls);
+        },
 
         // v4.1.5: Google 登入邏輯
         loginGoogle: () => {
@@ -3606,7 +3820,10 @@
             }
         },
 
-        init: () => {
+       init: () => {
+            // [新增] 網頁一載入，立刻在背景偷偷下載共用的靜態資源
+            app.initStaticPreload();
+
             app.createPredefinedCards();
             
             // 監聽 Google 登入狀態
@@ -5588,6 +5805,11 @@
 				  // [新增] 初始化渲染大廳與跑馬燈公告
                 app.renderLobbyAnnouncements();
                 app.renderMarquee();
+
+                // =====================================
+                // [新增] 將讀取到的資料庫圖片進行背景預載
+                app.initDynamicPreload(settings);
+                // =====================================
             });
         },
 
