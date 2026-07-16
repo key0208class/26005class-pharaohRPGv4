@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.7.6 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.7.7 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -626,7 +626,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.7.6 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.7.7 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -730,7 +730,7 @@
 
                         <!-- [新增 v4.7.7.4] 角色背包按鈕 -->
                         <div class="mt-4">
-                            <button onclick="app.openCharacterBackpack()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 rounded-xl shadow-md border-2 border-slate-600 hover:border-amber-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-3 group relative overflow-hidden">
+                            <button id="btn-lobby-backpack" onclick="app.openCharacterBackpack()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 rounded-xl shadow-md border-2 border-slate-600 hover:border-amber-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-3 group relative overflow-hidden">
                                 <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-20 transition-opacity"></div>
                                 <span class="text-2xl filter drop-shadow">🎒</span>
                                 <span class="text-lg tracking-widest">角色背包</span>
@@ -3242,6 +3242,9 @@
                     // 4. 性別
                     app.state.gender = cData.gender || 'male';
                     app.updateGenderUI();
+                    
+                    // [新增 v4.8.9.7.7] 預先載入快取的戰役通關紀錄，讓玩家一進來就能秒進戰役
+                    app.state.campaignProgress = cData.campaignProgress || {};
                     // 5. 裝備預覽
                     const equipContainer = app.el('lobby-auth-equip-list');
                     if(equipContainer && cData.equipped && app.state.globalSettings?.blackMarketList) {
@@ -3267,8 +3270,9 @@
             userRef.on('value', snapshot => {
                 const data = snapshot.val() || {};
                 
-                // [新增 v4.8.9.7.6] 資料抵達，解除同步鎖，並儲存最新快取供下次使用
+              // [新增 v4.8.9.7.6] 資料抵達，解除同步鎖，並儲存最新快取供下次使用
                 app.state.isDataSyncing = false;
+                app.updateSyncLockUI(false); // [新增 v4.8.9.7.7] 雲端資料對齊完畢，點亮背包與黑市按鈕
                 localStorage.setItem(`pharaoh_cache_${user.uid}`, JSON.stringify(data));
                 
             // [新增] 讀取性別與更新UI
@@ -3934,10 +3938,25 @@
                 }
             }
         },
-
+// [新增 v4.8.9.7.7] UI 同步鎖視覺控制器：將指定按鈕反灰
+        updateSyncLockUI: (isSyncing) => {
+            const bpBtn = document.getElementById('btn-lobby-backpack');
+            const bmBtn = document.getElementById('btn-lobby-blackmarket');
+            
+            if (isSyncing) {
+                // 套用反灰、半透明、禁止指標互動樣式 (覆蓋原本的 hover/active 效果)
+                if (bpBtn) bpBtn.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed', 'active:scale-100');
+                if (bmBtn) bmBtn.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed', 'active:scale-100');
+            } else {
+                // 恢復正常彩色樣式
+                if (bpBtn) bpBtn.classList.remove('opacity-50', 'grayscale', 'cursor-not-allowed', 'active:scale-100');
+                if (bmBtn) bmBtn.classList.remove('opacity-50', 'grayscale', 'cursor-not-allowed', 'active:scale-100');
+            }
+        },
       init: () => {
             // [新增 v4.8.9.7.6] 設定資料同步鎖，防止載入期間玩家亂點導致物品複製BUG
             app.state.isDataSyncing = true; 
+            app.updateSyncLockUI(true); // [新增 v4.8.9.7.7] 網頁剛開啟，立即將按鈕反灰鎖定
 
             // [優化 v4.8.9.7.6] 將龐大的圖片預載延後 2 秒執行，把剛開網頁的寶貴頻寬讓給玩家資料讀取
             setTimeout(() => {
@@ -3952,6 +3971,7 @@
                     app.handleAuthUser(user);
                 } else {
                     app.state.isDataSyncing = false; // [新增 v4.8.9.7.6] 訪客模式直接解除同步鎖
+                    app.updateSyncLockUI(false);     // [新增 v4.8.9.7.7] 訪客無須連線，直接恢復按鈕色彩
                     app.state.user = null;
                     app.el('auth-panel-guest').classList.remove('hidden');
                     app.el('auth-panel-logged-in').classList.add('hidden');
