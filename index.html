@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.7.5 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.7.6 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -626,7 +626,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.7.5 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.7.6 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -3194,7 +3194,7 @@
                 });
         },
 
-        // v4.1.5: 處理登入後的 UI 與資料同步 (v4.7.8.0 更新: 加入經驗條與裝備顯示)
+       // v4.1.5: 處理登入後的 UI 與資料同步 (v4.7.8.0 更新: 加入經驗條與裝備顯示)
         handleAuthUser: (user) => {
             app.state.user = user;
             // 預設先用 Google 名稱，稍後資料庫監聽器會覆蓋
@@ -3215,11 +3215,61 @@
             // 填入基本資料
             app.el('user-avatar').src = user.photoURL;
 
+            // --- [新增 v4.8.9.7.6] Optimistic UI：先從本地快取抓資料「秒速」畫上畫面 ---
+            const cachedDataStr = localStorage.getItem(`pharaoh_cache_${user.uid}`);
+            if (cachedDataStr) {
+                try {
+                    const cData = JSON.parse(cachedDataStr);
+                    // 1. 名字與等級
+                    const cFinalName = cData.displayName || user.displayName;
+                    app.state.myName = cFinalName;
+                    const cExp = cData.totalExp || 0;
+                    const cAccLv = app.getAccountLevel(cExp);
+                    app.el('user-display-name').innerHTML = `${cFinalName} <span class="text-sm bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">Lv.${cAccLv}</span>`;
+                    app.el('lobby-player-name').value = cFinalName;
+                    
+                    // 2. 經驗條
+                    const cBase = app.getAccumulatedExp(cAccLv);
+                    const cNext = app.getAccumulatedExp(cAccLv + 1);
+                    const cPct = Math.min(100, Math.max(0, ((cExp - cBase) / (cNext - cBase)) * 100));
+                    if(app.el('lobby-auth-exp-fill')) {
+                        app.el('lobby-auth-exp-fill').style.width = `${cPct}%`;
+                        app.el('lobby-auth-exp-text').textContent = `${Math.floor(cExp - cBase)} / ${cNext - cBase}`;
+                    }
+                    // 3. 分數與金幣
+                    if (app.el('lobby-high-score-auth')) app.el('lobby-high-score-auth').textContent = cData.highScore || 0;
+                    if (app.el('lobby-total-gold-auth')) app.el('lobby-total-gold-auth').textContent = cData.totalGold || 0;
+                    // 4. 性別
+                    app.state.gender = cData.gender || 'male';
+                    app.updateGenderUI();
+                    // 5. 裝備預覽
+                    const equipContainer = app.el('lobby-auth-equip-list');
+                    if(equipContainer && cData.equipped && app.state.globalSettings?.blackMarketList) {
+                        let equipHtml = '';
+                        const globalList = app.state.globalSettings.blackMarketList;
+                        Object.values(cData.equipped).forEach(itemId => {
+                            const item = globalList[itemId];
+                            if(item) {
+                                const targetLv = item.currentEditLv || 1;
+                                const img = item[`img${targetLv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+                                equipHtml += `<img src="${img}" class="w-6 h-6 rounded bg-slate-900 border border-amber-500/50 object-contain p-0.5" title="${item.name}">`;
+                            }
+                        });
+                        equipContainer.innerHTML = equipHtml;
+                    }
+                } catch(e) { console.warn("快取讀取失敗", e); }
+            }
+            // --- 結束本地快取渲染 ---
+
             // 從 Firebase 讀取該用戶的完整資料
             const userRef = db.ref(`users/${user.uid}`);
             userRef.off('value'); // [新增] 先註銷舊監聽，防止重複綁定
             userRef.on('value', snapshot => {
                 const data = snapshot.val() || {};
+                
+                // [新增 v4.8.9.7.6] 資料抵達，解除同步鎖，並儲存最新快取供下次使用
+                app.state.isDataSyncing = false;
+                localStorage.setItem(`pharaoh_cache_${user.uid}`, JSON.stringify(data));
                 
             // [新增] 讀取性別與更新UI
             app.state.gender = data.gender || 'male';
@@ -3885,9 +3935,14 @@
             }
         },
 
-       init: () => {
-            // [新增] 網頁一載入，立刻在背景偷偷下載共用的靜態資源
-            app.initStaticPreload();
+      init: () => {
+            // [新增 v4.8.9.7.6] 設定資料同步鎖，防止載入期間玩家亂點導致物品複製BUG
+            app.state.isDataSyncing = true; 
+
+            // [優化 v4.8.9.7.6] 將龐大的圖片預載延後 2 秒執行，把剛開網頁的寶貴頻寬讓給玩家資料讀取
+            setTimeout(() => {
+                app.initStaticPreload();
+            }, 2000);
 
             app.createPredefinedCards();
             
@@ -3896,6 +3951,7 @@
                 if (user) {
                     app.handleAuthUser(user);
                 } else {
+                    app.state.isDataSyncing = false; // [新增 v4.8.9.7.6] 訪客模式直接解除同步鎖
                     app.state.user = null;
                     app.el('auth-panel-guest').classList.remove('hidden');
                     app.el('auth-panel-logged-in').classList.add('hidden');
@@ -13007,9 +13063,11 @@ for (const slot of slots) {
                 });
             }
         },
-      // 開啟黑市
-        // 開啟黑市
+      // 開啟黑市    
         openBlackMarket: () => {
+            // [新增 v4.8.9.7.6] 同步鎖防護：若資料還沒抓完，禁止打開黑市，防止金幣與物品複製BUG
+            if (app.state.isDataSyncing) return app.toast('🔄 雲端資料同步中，為確保交易安全，請稍候一秒...', 1);
+
             app.el('page-lobby').classList.add('hidden');
             app.el('black-market-interface').classList.remove('hidden');
             app.playBgm('lobby'); // [新增] 黑市內繼續播放輕音樂
@@ -13759,6 +13817,9 @@ for (const slot of slots) {
         
         // 1. 開啟背包 (判斷訪客或登入者)
         openCharacterBackpack: () => {
+            // [新增 v4.8.9.7.6] 同步鎖防護：若資料還沒抓完，禁止打開背包，防止裝備錯亂與複製BUG
+            if (app.state.isDataSyncing) return app.toast('🔄 雲端資料同步中，請稍候一秒再開啟背包...', 1);
+
             app.el('page-lobby').classList.add('hidden');
             app.el('character-backpack-modal').classList.remove('hidden');
             app.closeBackpackPanel(); // [新增防護] 確保開啟背包時，下方道具面板是關閉的狀態
