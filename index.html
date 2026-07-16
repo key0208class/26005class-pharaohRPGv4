@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.7.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.7.5 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -626,7 +626,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.7.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.7.5 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -914,7 +914,7 @@
                     <h3 class="text-2xl font-black text-slate-900">⚙️ 全域遊戲設定</h3>
                     <div class="flex items-center gap-3">
                         <button onclick="app.logoutAdmin()" class="bg-slate-200 text-slate-600 px-3 py-1 rounded-lg text-sm font-bold hover:bg-red-100 hover:text-red-600 transition-colors">🔒 登出</button>
-                        <button onclick="app.el('admin-settings-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 font-bold text-xl px-2">✕</button>
+                        <button onclick="app.closeAdminSettings()" class="text-gray-400 hover:text-gray-600 font-bold text-xl px-2">✕</button>
                     </div>
                 </div>
 
@@ -1697,44 +1697,82 @@
                                     <input type="text" id="edit-sprite-name" class="w-full border-2 border-slate-300 rounded-lg p-2 font-bold text-slate-800 bg-white" placeholder="例如：勇者阿土">
                                 </div>
 
-                                <div class="flex gap-2 items-end">
-                                    <div class="flex-1">
-                                        <label class="block text-xs font-bold text-gray-500 mb-1">圖片網址 (實際遊戲顯示用)</label>
-                                        <input type="text" id="edit-sprite-url" oninput="app.triggerSpriteProcessing()" class="w-full border-2 border-slate-300 rounded-lg p-2 text-xs font-mono text-gray-600 bg-white" placeholder="https://...">
+                                <!-- 基礎移動圖片設定 -->
+                                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative">
+                                    <div class="absolute -top-2 left-3 bg-blue-100 text-blue-800 text-[0.6rem] px-2 font-black border border-blue-200 rounded">1. 基礎移動圖 (預設 5行 4格)</div>
+                                    <div class="flex gap-2 items-end mt-1">
+                                        <div class="flex-1">
+                                            <input type="text" id="edit-sprite-url" oninput="app.triggerSpriteProcessing()" class="w-full border-2 border-slate-300 rounded p-1.5 text-xs font-mono bg-slate-50" placeholder="圖片網址 https://...">
+                                        </div>
+                                        <input type="file" id="sprite-file-input" class="hidden" accept="image/*" onchange="app.handleSpriteUpload(event, 'base')">
+                                        <button onclick="document.getElementById('sprite-file-input').click()" class="bg-slate-700 text-white px-2 py-1.5 rounded font-bold text-xs hover:bg-slate-800 shadow-sm shrink-0" title="本機測試">📁</button>
                                     </div>
-                                    <input type="file" id="sprite-file-input" class="hidden" accept="image/*" onchange="app.handleSpriteUpload(event)">
-                                    <button onclick="document.getElementById('sprite-file-input').click()" class="bg-slate-700 text-white px-3 py-2 rounded-lg font-bold text-xs hover:bg-slate-800 shadow-sm shrink-0 h-[38px]" title="此功能僅供本機測試切割用，不會上傳至伺服器">📁 本機測試</button>
+                                    <div class="flex gap-2 mt-2 items-center">
+                                        <div class="flex items-center gap-1 text-[0.65rem] font-bold text-gray-500">
+                                            <span>橫列</span><input type="number" id="edit-sprite-rows" value="5" min="1" onchange="app.updateSpriteGridConfig('base')" class="w-10 border rounded text-center py-0.5">
+                                            <span class="ml-1">直欄</span><input type="number" id="edit-sprite-cols" value="4" min="1" onchange="app.updateSpriteGridConfig('base')" class="w-10 border rounded text-center py-0.5">
+                                        </div>
+                                        <button onclick="app.openSpriteGridModal('base')" class="ml-auto bg-blue-50 text-blue-700 border border-blue-300 px-2 py-1 rounded font-bold text-[0.65rem] hover:bg-blue-100 shadow-sm">✂️ 調整網格</button>
+                                    </div>
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-2 bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                                    <div>
-                                        <label class="block text-[0.65rem] font-bold text-gray-500 mb-1 text-center">橫列數 (Rows - 動作數量)</label>
-                                        <input type="number" id="edit-sprite-rows" value="5" min="1" onchange="app.updateSpriteGridConfig()" class="w-full border border-slate-300 rounded p-1 text-center text-sm font-bold text-slate-700">
+                                <!-- 專屬動作圖片設定 -->
+                                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative">
+                                    <div class="absolute -top-2 left-3 bg-indigo-100 text-indigo-800 text-[0.6rem] px-2 font-black border border-indigo-200 rounded">2. 專屬動作圖 (預設 5行 4格)</div>
+                                    <div class="flex gap-2 items-end mt-1">
+                                        <div class="flex-1">
+                                            <input type="text" id="edit-sprite-action-url" oninput="app.triggerActionProcessing()" class="w-full border-2 border-slate-300 rounded p-1.5 text-xs font-mono bg-slate-50" placeholder="圖片網址 https://...">
+                                        </div>
+                                        <input type="file" id="sprite-action-file-input" class="hidden" accept="image/*" onchange="app.handleSpriteUpload(event, 'action')">
+                                        <button onclick="document.getElementById('sprite-action-file-input').click()" class="bg-indigo-600 text-white px-2 py-1.5 rounded font-bold text-xs hover:bg-indigo-700 shadow-sm shrink-0" title="本機測試">📁</button>
                                     </div>
-                                    <div>
-                                        <label class="block text-[0.65rem] font-bold text-gray-500 mb-1 text-center">直欄數 (Cols - 幀數)</label>
-                                        <input type="number" id="edit-sprite-cols" value="4" min="1" onchange="app.updateSpriteGridConfig()" class="w-full border border-slate-300 rounded p-1 text-center text-sm font-bold text-slate-700">
+                                    <div class="flex gap-2 mt-2 items-center">
+                                        <div class="flex items-center gap-1 text-[0.65rem] font-bold text-gray-500">
+                                            <span>橫列</span><input type="number" id="edit-sprite-action-rows" value="5" min="1" onchange="app.updateSpriteGridConfig('action')" class="w-10 border rounded text-center py-0.5">
+                                            <span class="ml-1">直欄</span><input type="number" id="edit-sprite-action-cols" value="4" min="1" onchange="app.updateSpriteGridConfig('action')" class="w-10 border rounded text-center py-0.5">
+                                        </div>
+                                        <button onclick="app.openSpriteGridModal('action')" class="ml-auto bg-indigo-50 text-indigo-700 border border-indigo-300 px-2 py-1 rounded font-bold text-[0.65rem] hover:bg-indigo-100 shadow-sm">✂️ 調整網格</button>
                                     </div>
                                 </div>
 
-                                <button onclick="app.openSpriteGridModal()" class="w-full bg-blue-50 text-blue-700 border-2 border-blue-200 py-2 rounded-lg font-bold text-sm hover:bg-blue-100 transition-colors shadow-sm flex items-center justify-center gap-2">
-                                    <span>✂️</span> 手動調整切割線
-                                </button>
+                                <!-- 靜態視圖與方向測試 (專業排版) -->
+                                <div class="flex-1 flex flex-col items-center mt-1 border-t border-slate-200 pt-3">
+                                    <div class="flex w-full items-start justify-between gap-4">
+                                        <!-- 畫布區 -->
+                                        <div class="flex flex-col items-center shrink-0">
+                                            <div class="text-[0.65rem] font-bold text-slate-500 mb-1">目前視圖</div>
+                                            <div class="checkerboard p-1 rounded-xl shadow-inner border border-slate-300">
+                                                <canvas id="sprite-anim-canvas" width="64" height="64" class="anim-canvas"></canvas>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- 十字方向鍵區 (移動測試) -->
+                                        <div class="flex flex-col items-center flex-1">
+                                            <div class="text-[0.65rem] font-bold text-blue-700 mb-1">方向移動測試</div>
+                                            <div class="grid grid-cols-3 gap-1 w-24">
+                                                <div></div>
+                                                <button onclick="app.playSpriteAnimation(4)" class="bg-amber-100 text-amber-800 text-[0.55rem] py-2 rounded hover:bg-amber-200 font-bold border border-amber-300 shadow-sm">上</button>
+                                                <div></div>
+                                                <button onclick="app.playSpriteAnimation(3)" class="bg-amber-100 text-amber-800 text-[0.55rem] py-2 rounded hover:bg-amber-200 font-bold border border-amber-300 shadow-sm">左</button>
+                                                <button onclick="app.playSpriteAnimation(0)" class="bg-slate-200 text-slate-700 text-[0.55rem] py-2 rounded hover:bg-slate-300 font-black border border-slate-400 shadow-sm">待機</button>
+                                                <button onclick="app.playSpriteAnimation(1)" class="bg-amber-100 text-amber-800 text-[0.55rem] py-2 rounded hover:bg-amber-200 font-bold border border-amber-300 shadow-sm">右</button>
+                                                <div></div>
+                                                <button onclick="app.playSpriteAnimation(2)" class="bg-amber-100 text-amber-800 text-[0.55rem] py-2 rounded hover:bg-amber-200 font-bold border border-amber-300 shadow-sm">下</button>
+                                                <div></div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                <div class="flex-1 flex flex-col items-center mt-2 border-t border-slate-200 pt-4">
-                                    <div class="text-xs font-bold text-slate-500 mb-2">動態預覽檢視</div>
-                                    <div class="checkerboard p-2 rounded-xl shadow-inner border border-slate-300 mb-4">
-                                        <canvas id="sprite-anim-canvas" width="64" height="64" class="anim-canvas"></canvas>
+                                    <!-- 專屬動作測試區 -->
+                                    <div class="w-full bg-slate-100 rounded-lg p-2 border border-slate-200 mt-3 shadow-inner">
+                                        <div class="text-center text-[0.65rem] font-bold text-indigo-700 mb-2">✨ 專屬動作預覽</div>
+                                        <div class="grid grid-cols-4 gap-1.5 w-full">
+                                            <button onclick="app.playActionAnimation('happy')" class="bg-pink-50 text-pink-800 text-[0.6rem] py-2 rounded-lg hover:bg-pink-100 font-bold border border-pink-300 shadow-sm active:translate-y-0.5">🥰 開心</button>
+                                            <button onclick="app.playActionAnimation('flower')" class="bg-purple-50 text-purple-800 text-[0.6rem] py-2 rounded-lg hover:bg-purple-100 font-bold border border-purple-300 shadow-sm active:translate-y-0.5">🌸 灑花</button>
+                                            <button onclick="app.playActionAnimation('hurt')" class="bg-red-50 text-red-800 text-[0.6rem] py-2 rounded-lg hover:bg-red-100 font-bold border border-red-300 shadow-sm active:translate-y-0.5">🤕 受傷</button>
+                                            <button onclick="app.playActionAnimation('attack')" class="bg-orange-50 text-orange-800 text-[0.6rem] py-2 rounded-lg hover:bg-orange-100 font-bold border border-orange-300 shadow-sm active:translate-y-0.5">⚔️ 攻擊</button>
+                                        </div>
                                     </div>
-                                    
-                                    <div class="grid grid-cols-3 gap-2 w-full max-w-[240px]">
-                                        <button onclick="app.playSpriteAnimation(0)" class="col-start-2 bg-amber-100 text-amber-800 text-[0.6rem] py-1.5 rounded-lg hover:bg-amber-200 font-bold border border-amber-200 shadow-sm">待機 (Row 1)</button>
-                                        <button onclick="app.playSpriteAnimation(4)" class="col-start-2 bg-amber-100 text-amber-800 text-[0.6rem] py-1.5 rounded-lg hover:bg-amber-200 font-bold border border-amber-200 shadow-sm">向上走 (Row 5)</button>
-                                        <button onclick="app.playSpriteAnimation(3)" class="col-start-1 bg-amber-100 text-amber-800 text-[0.6rem] py-1.5 rounded-lg hover:bg-amber-200 font-bold border border-amber-200 shadow-sm">向左走 (Row 4)</button>
-                                        <button onclick="app.playSpriteAnimation(2)" class="col-start-2 bg-amber-100 text-amber-800 text-[0.6rem] py-1.5 rounded-lg hover:bg-amber-200 font-bold border border-amber-200 shadow-sm">向下走 (Row 3)</button>
-                                        <button onclick="app.playSpriteAnimation(1)" class="col-start-3 bg-amber-100 text-amber-800 text-[0.6rem] py-1.5 rounded-lg hover:bg-amber-200 font-bold border border-amber-200 shadow-sm">向右走 (Row 2)</button>
-                                    </div>
-                                    <p class="text-[0.6rem] text-slate-400 mt-2 text-center">依據標準RPG Sprite設定：<br>1.待機 2.向右 3.向下 4.向左 5.向上</p>
                                 </div>
 
                                 <div class="mt-auto pt-4 border-t border-slate-200 flex gap-2 shrink-0">
@@ -1744,12 +1782,41 @@
                             </div>
 
                             <!-- 右側：已存列表 -->
-                            <div class="bg-white rounded-xl border border-slate-300 flex flex-col h-[500px] lg:h-auto overflow-hidden">
-                                <div class="bg-slate-100 p-3 border-b border-slate-200 font-bold text-slate-700 text-sm flex items-center gap-2">
+                            <div class="bg-white rounded-xl border border-slate-300 flex flex-col h-[600px] lg:h-auto overflow-hidden shadow-sm">
+                                <div class="bg-slate-100 p-3 border-b border-slate-200 font-bold text-slate-700 text-sm flex items-center gap-2 shrink-0">
                                     📂 已建立的角色圖示
                                 </div>
-                                <div id="sprite-list-container" class="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar bg-slate-50">
+                                <div id="sprite-list-container" class="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar bg-slate-50 border-b-4 border-slate-300 min-h-[150px]">
                                     <!-- JS 生成 -->
+                                </div>
+                                
+                                <!-- 動態動作展示區 (高度調整為約 1/3 ~ 2/5) -->
+                                <div class="h-[260px] shrink-0 flex flex-col relative bg-slate-900 overflow-hidden group">
+                                    <div class="absolute top-2 left-2 right-2 z-20 flex flex-col gap-1.5 pointer-events-none transition-opacity duration-300">
+                                        <div class="flex gap-2 items-center pointer-events-auto">
+                                            <button onclick="app.toggleShowcaseAI()" id="btn-showcase-ai" class="bg-green-600 text-white text-[0.65rem] px-2.5 py-1.5 rounded shadow-lg border border-green-500 font-bold hover:bg-green-500 active:scale-95 transition-all">▶ 隨機展示</button>
+                                            <span class="text-white/90 text-[0.6rem] bg-black/60 px-2 py-0.5 rounded border border-white/20 hidden md:inline-block shadow-sm backdrop-blur-sm">手動控制區：</span>
+                                            <button onclick="app.controlShowcase('idle', 0)" class="bg-slate-700 text-white text-[0.6rem] px-2 py-1 rounded hover:bg-slate-600 border border-slate-600 shadow-lg transition-colors ml-auto active:scale-95">🛑 停止</button>
+                                        </div>
+                                        <div class="flex flex-wrap gap-1 pointer-events-auto">
+                                            <!-- 方向鍵 -->
+                                            <button onclick="app.controlShowcase('dir', 3)" class="bg-blue-600/90 text-white text-[0.6rem] px-2.5 py-1 rounded hover:bg-blue-500 border border-blue-500 shadow-lg transition-all active:scale-95">⬆️</button>
+                                            <button onclick="app.controlShowcase('dir', 0)" class="bg-blue-600/90 text-white text-[0.6rem] px-2.5 py-1 rounded hover:bg-blue-500 border border-blue-500 shadow-lg transition-all active:scale-95">⬇️</button>
+                                            <button onclick="app.controlShowcase('dir', 1)" class="bg-blue-600/90 text-white text-[0.6rem] px-2.5 py-1 rounded hover:bg-blue-500 border border-blue-500 shadow-lg transition-all active:scale-95">⬅️</button>
+                                            <button onclick="app.controlShowcase('dir', 2)" class="bg-blue-600/90 text-white text-[0.6rem] px-2.5 py-1 rounded hover:bg-blue-500 border border-blue-500 shadow-lg transition-all active:scale-95">➡️</button>
+                                            <span class="w-px bg-white/20 mx-1 my-1"></span>
+                                            <!-- 專屬動作鍵 -->
+                                            <button onclick="app.controlShowcase('action', 'happy')" class="bg-pink-600/90 text-white text-[0.6rem] px-2.5 py-1 rounded hover:bg-pink-500 border border-pink-500 shadow-lg transition-all active:scale-95">🥰</button>
+                                            <button onclick="app.controlShowcase('action', 'flower')" class="bg-purple-600/90 text-white text-[0.6rem] px-2.5 py-1 rounded hover:bg-purple-500 border border-purple-500 shadow-lg transition-all active:scale-95">🌸</button>
+                                            <button onclick="app.controlShowcase('action', 'hurt')" class="bg-red-600/90 text-white text-[0.6rem] px-2.5 py-1 rounded hover:bg-red-500 border border-red-500 shadow-lg transition-all active:scale-95">🤕</button>
+                                            <button onclick="app.controlShowcase('action', 'attack')" class="bg-orange-600/90 text-white text-[0.6rem] px-2.5 py-1 rounded hover:bg-orange-500 border border-orange-500 shadow-lg transition-all active:scale-95">⚔️</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 展示用 Canvas (草地紋理) -->
+                                    <div class="w-full h-full relative border-t-2 border-slate-700 shadow-[inset_0_4px_10px_rgba(0,0,0,0.5)]" style="background-image: url('https://www.transparenttextures.com/patterns/grass.png'); background-color: #274e13;">
+                                        <canvas id="showcase-canvas" class="absolute inset-0 w-full h-full cursor-crosshair transition-opacity duration-300" onmousedown="app.clickShowcase(event)"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -4430,7 +4497,7 @@
         logoutAdmin: () => {
             if(confirm('🔒 確定要登出管理員模式嗎？\n下次進入需要重新輸入密碼。')) {
                 localStorage.removeItem('pharaoh_admin_token');
-                app.el('admin-settings-modal').classList.add('hidden');
+                app.closeAdminSettings();
                 app.toast('🔒 管理員已登出');
             }
         },
@@ -5012,11 +5079,13 @@
         addNewSprite: () => {
             if (!app.state.tempSpriteList) app.state.tempSpriteList = [];
             
-            // 預設 RPG 規格: 5 列 4 欄
+            // 新增分離的專屬網格參數
             const newSprite = {
-                name: '新角色', url: '', cols: 4, rows: 5,
+                name: '新角色', url: '', actionUrl: '', 
+                cols: 4, rows: 5, actionCols: 4, actionRows: 5,
                 sortOrder: Date.now(),
-                gridX: [0.25, 0.5, 0.75], gridY: [0.2, 0.4, 0.6, 0.8]
+                gridX: [0.25, 0.5, 0.75], gridY: [0.2, 0.4, 0.6, 0.8],
+                actionGridX: [0.25, 0.5, 0.75], actionGridY: [0.2, 0.4, 0.6, 0.8]
             };
             app.state.tempSpriteList.push(newSprite);
             
@@ -5030,102 +5099,89 @@
 
             app.el('edit-sprite-idx').value = idx;
             app.el('edit-sprite-name').value = s.name;
-            app.el('edit-sprite-url').value = s.url;
+            app.el('edit-sprite-url').value = s.url || '';
+            app.el('edit-sprite-action-url').value = s.actionUrl || ''; 
             app.el('edit-sprite-cols').value = s.cols || 4;
             app.el('edit-sprite-rows').value = s.rows || 5;
+            app.el('edit-sprite-action-cols').value = s.actionCols || 4;
+            app.el('edit-sprite-action-rows').value = s.actionRows || 5;
             
-            // 清除暫存的本地測試圖片，確保載入的是已存的正確網址
             app.state.tempLocalSpriteData = null;
+            app.state.tempLocalActionSpriteData = null; 
 
-            // 暫存目前的網格設定到 state 以供操作
+            // 分離暫存兩種網格設定
             app.state.tempGridConfig = {
                 gridX: s.gridX ? [...s.gridX] : [0.25, 0.5, 0.75],
                 gridY: s.gridY ? [...s.gridY] : [0.2, 0.4, 0.6, 0.8]
             };
+            app.state.tempActionGridConfig = {
+                gridX: s.actionGridX ? [...s.actionGridX] : [0.25, 0.5, 0.75],
+                gridY: s.actionGridY ? [...s.actionGridY] : [0.2, 0.4, 0.6, 0.8]
+            };
 
             app.stopSpriteAnimation();
-            app.triggerSpriteProcessing(); // 載入並重繪
-            app.renderSpriteListUI(); // 更新高亮
+            app.triggerSpriteProcessing(); 
+            app.triggerActionProcessing(); 
+            app.renderSpriteListUI(); 
+            
+            // 啟動右側展示區 AI
+            app.initShowcaseCanvas();
         },
 
-        // 處理本地上傳圖檔 (僅供預覽，不上傳雲端)
-        handleSpriteUpload: (event) => {
+        handleSpriteUpload: (event, type = 'base') => {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    app.state.tempLocalSpriteData = e.target.result; // 暫存在記憶體
-                    app.toast("📂 本地預覽載入成功！(此圖片不會儲存至雲端)", 1);
-                    app.triggerSpriteProcessing();
-                    
-                    // 清空 input 讓下次點擊同檔案也能觸發
+                    if (type === 'base') {
+                        app.state.tempLocalSpriteData = e.target.result;
+                        app.triggerSpriteProcessing();
+                    } else {
+                        app.state.tempLocalActionSpriteData = e.target.result;
+                        app.triggerActionProcessing();
+                    }
+                    app.toast(`📂 ${type === 'base' ? '基礎圖' : '專屬圖'}本地預覽載入成功！`, 1);
                     event.target.value = '';
                 };
                 reader.readAsDataURL(file);
             }
         },
 
-        // 當欄列數改變時，重新平均分配網格線
-        updateSpriteGridConfig: () => {
-            const cols = parseInt(app.el('edit-sprite-cols').value) || 1;
-            const rows = parseInt(app.el('edit-sprite-rows').value) || 1;
+        updateSpriteGridConfig: (type = 'base') => {
+            const prefix = type === 'base' ? 'edit-sprite' : 'edit-sprite-action';
+            const cols = parseInt(app.el(`${prefix}-cols`).value) || 1;
+            const rows = parseInt(app.el(`${prefix}-rows`).value) || 1;
             
             const gridX = [];
             for (let i = 1; i < cols; i++) gridX.push(i / cols);
             const gridY = [];
             for (let i = 1; i < rows; i++) gridY.push(i / rows);
 
-            app.state.tempGridConfig = { gridX, gridY };
-            app.triggerSpriteProcessing();
-        },
-
-       // 核心：載入圖片並存入暫存 Canvas (解決 CORS 跨域阻擋問題)
-        triggerSpriteProcessing: () => {
-            app.stopSpriteAnimation();
-            
-            const canvas = app.el('sprite-anim-canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 優先使用本地預覽圖，若無則使用輸入框的網址
-            const url = app.state.tempLocalSpriteData || app.el('edit-sprite-url').value.trim();
-
-            if (!url) {
-                app.state.processedSpriteCanvas = null;
-                return;
+            if (type === 'base') {
+                app.state.tempGridConfig = { gridX, gridY };
+                app.triggerSpriteProcessing();
+            } else {
+                app.state.tempActionGridConfig = { gridX, gridY };
+                app.triggerActionProcessing();
             }
-
-            const img = new Image();
-            // 【關鍵修正】移除了 img.crossOrigin = "Anonymous"; 
-            // 因為已經移除去背功能，不需要讀取像素，單純將圖片畫在 Canvas 上進行裁切播放。
-            // 瀏覽器允許我們畫上「跨域」的圖片，這樣就能徹底解決外部伺服器阻擋的問題！
-            
-            img.onload = () => {
-                const offCanvas = document.createElement('canvas');
-                offCanvas.width = img.width; 
-                offCanvas.height = img.height;
-                const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
-                offCtx.drawImage(img, 0, 0);
-
-                app.state.processedSpriteCanvas = offCanvas;
-                app.playSpriteAnimation(0); // 預設播第一排 (待機)
-            };
-            
-            img.onerror = () => { 
-                // 若依然載入失敗，給予更明確的提示
-                app.toast("⚠️ 圖片網址失效或網路異常，無法載入圖片", 1); 
-            };
-            
-            img.src = url;
         },
 
-        // --- 手動網格調整器邏輯 ---
-        openSpriteGridModal: () => {
-            const url = app.state.tempLocalSpriteData || app.el('edit-sprite-url').value.trim();
-            if (!url) return app.toast("❌ 請先輸入圖片網址或使用本機測試", 1);
+        // --- 手動網格調整器邏輯 (支援 Base 與 Action) ---
+
+        openSpriteGridModal: (type = 'base') => {
+            app.state.currentGridEditType = type; // 紀錄目前編輯的是哪一種
             
-            app.state.gridZoom = 1.0; // 初始化縮放比例
-            app.zoomSpriteGrid(0);    // 套用預設縮放
+            let url = '';
+            if (type === 'base') {
+                url = app.state.tempLocalSpriteData || app.el('edit-sprite-url').value.trim();
+            } else {
+                url = app.state.tempLocalActionSpriteData || app.el('edit-sprite-action-url').value.trim();
+            }
+            
+            if (!url) return app.toast(`❌ 請先輸入${type === 'base'?'基礎':'專屬'}圖片網址或使用本機測試`, 1);
+            
+            app.state.gridZoom = 1.0; 
+            app.zoomSpriteGrid(0);    
             
             app.el('sprite-grid-preview').src = url;
             app.el('sprite-grid-modal').classList.remove('hidden');
@@ -5133,19 +5189,13 @@
             app.renderSpriteGridLines();
         },
 
-        // 網格縮放功能
         zoomSpriteGrid: (factor) => {
             if (app.state.gridZoom === undefined) app.state.gridZoom = 1.0;
             app.state.gridZoom += factor;
-            
-            // 限制縮放範圍 (0.5倍 到 3.0倍)
             if (app.state.gridZoom < 0.5) app.state.gridZoom = 0.5;
             if (app.state.gridZoom > 3.0) app.state.gridZoom = 3.0;
-
             const wrapper = app.el('sprite-grid-wrapper');
-            if (wrapper) {
-                wrapper.style.transform = `scale(${app.state.gridZoom})`;
-            }
+            if (wrapper) wrapper.style.transform = `scale(${app.state.gridZoom})`;
         },
 
         closeSpriteGridModal: () => {
@@ -5155,49 +5205,49 @@
 
         confirmSpriteGrid: () => {
             app.closeSpriteGridModal();
-            app.triggerSpriteProcessing(); // 重新觸發動畫渲染
+            if (app.state.currentGridEditType === 'base') {
+                app.triggerSpriteProcessing(); 
+            } else {
+                app.triggerActionProcessing();
+            }
             app.toast('✅ 網格已調整');
         },
 
         renderSpriteGridLines: () => {
             const container = app.el('sprite-grid-lines');
-            const { gridX, gridY } = app.state.tempGridConfig;
+            const config = app.state.currentGridEditType === 'base' ? app.state.tempGridConfig : app.state.tempActionGridConfig;
             let html = '';
 
-            // 生成垂直線 (X)
-            gridX.forEach((x, i) => {
+            config.gridX.forEach((x, i) => {
                 html += `<div class="sprite-grid-handle-v" style="left: ${x * 100}%" onmousedown="app.startSpriteGridDrag(event, 'x', ${i})" ontouchstart="app.startSpriteGridDrag(event, 'x', ${i})"></div>`;
             });
-            // 生成水平線 (Y)
-            gridY.forEach((y, i) => {
+            config.gridY.forEach((y, i) => {
                 html += `<div class="sprite-grid-handle-h" style="top: ${y * 100}%" onmousedown="app.startSpriteGridDrag(event, 'y', ${i})" ontouchstart="app.startSpriteGridDrag(event, 'y', ${i})"></div>`;
             });
-
             container.innerHTML = html;
         },
 
-        startSpriteGridDrag: (e, type, index) => {
+        startSpriteGridDrag: (e, axis, index) => {
             e.preventDefault();
             const wrapper = app.el('sprite-grid-wrapper');
-            // 計算時需考慮 zoom 所帶來的影響，使用 getBoundingClientRect() 可以取得縮放後的實際像素
             const rect = wrapper.getBoundingClientRect();
-            
             const isTouch = e.type === 'touchstart';
+            const config = app.state.currentGridEditType === 'base' ? app.state.tempGridConfig : app.state.tempActionGridConfig;
 
             const onMove = (moveEvent) => {
                 const clientX = isTouch ? moveEvent.touches[0].clientX : moveEvent.clientX;
                 const clientY = isTouch ? moveEvent.touches[0].clientY : moveEvent.clientY;
                 
-                if (type === 'x') {
+                if (axis === 'x') {
                     let val = (clientX - rect.left) / rect.width;
                     if (val > 0.01 && val < 0.99) {
-                        app.state.tempGridConfig.gridX[index] = val;
+                        config.gridX[index] = val;
                         app.renderSpriteGridLines();
                     }
                 } else {
                     let val = (clientY - rect.top) / rect.height;
                     if (val > 0.01 && val < 0.99) {
-                        app.state.tempGridConfig.gridY[index] = val;
+                        config.gridY[index] = val;
                         app.renderSpriteGridLines();
                     }
                 }
@@ -5213,30 +5263,34 @@
         },
 
         // --- 儲存與動畫播放邏輯 ---
+        // --- 儲存與動畫播放邏輯 ---
         saveCurrentSprite: () => {
             const idx = parseInt(app.el('edit-sprite-idx').value);
             if (isNaN(idx)) return app.toast('請先新增或選擇一個角色');
 
             const name = app.el('edit-sprite-name').value.trim();
-            const url = app.el('edit-sprite-url').value.trim(); // 確保只存入真正的 URL
-            const cols = parseInt(app.el('edit-sprite-cols').value) || 4;
-            const rows = parseInt(app.el('edit-sprite-rows').value) || 5;
-            
             if (!name) return app.toast('名稱不可為空', 1);
-            if (!url) app.toast('⚠️ 警告：圖片網址為空，若剛剛使用本機預覽，請確認已有可連結的外部網址，否則遊戲內無法顯示！', 1);
 
             app.state.tempSpriteList[idx] = {
-                name, url, cols, rows,
+                name, 
+                url: app.el('edit-sprite-url').value.trim(), 
+                actionUrl: app.el('edit-sprite-action-url').value.trim(), 
+                cols: parseInt(app.el('edit-sprite-cols').value) || 4, 
+                rows: parseInt(app.el('edit-sprite-rows').value) || 5,
+                actionCols: parseInt(app.el('edit-sprite-action-cols').value) || 4, 
+                actionRows: parseInt(app.el('edit-sprite-action-rows').value) || 5,
                 sortOrder: app.state.tempSpriteList[idx].sortOrder || Date.now(),
-                gridX: [...app.state.tempGridConfig.gridX],
-                gridY: [...app.state.tempGridConfig.gridY]
+                gridX: [...(app.state.tempGridConfig.gridX || [])],
+                gridY: [...(app.state.tempGridConfig.gridY || [])],
+                actionGridX: [...(app.state.tempActionGridConfig.gridX || [])],
+                actionGridY: [...(app.state.tempActionGridConfig.gridY || [])]
             };
             
-            // 儲存後清除本地預覽資料，確保後續切換邏輯乾淨
             app.state.tempLocalSpriteData = null;
+            app.state.tempLocalActionSpriteData = null;
 
             app.renderSpriteListUI();
-            app.toast('✅ 角色切割設定已暫存 (記得點選最下方「儲存全域設定」)');
+            app.toast('✅ 角色設定已暫存 (記得儲存全域設定)');
         },
 
         deleteCurrentSprite: () => {
@@ -5248,7 +5302,9 @@
                 app.el('edit-sprite-idx').value = '';
                 app.el('edit-sprite-name').value = '';
                 app.el('edit-sprite-url').value = '';
+                app.el('edit-sprite-action-url').value = '';
                 app.state.tempLocalSpriteData = null;
+                app.state.tempLocalActionSpriteData = null;
                 
                 app.stopSpriteAnimation();
                 const ctx = app.el('sprite-anim-canvas').getContext('2d');
@@ -5257,10 +5313,48 @@
             }
         },
 
+        triggerSpriteProcessing: () => {
+            const url = app.state.tempLocalSpriteData || app.el('edit-sprite-url').value.trim();
+            app.processImageToCanvas(url, 'processedSpriteCanvas', () => {
+                app.playSpriteAnimation(0); // 預設播第一排 (待機)
+            });
+        },
+
+        triggerActionProcessing: () => {
+            const url = app.state.tempLocalActionSpriteData || app.el('edit-sprite-action-url').value.trim();
+            app.processImageToCanvas(url, 'processedActionSpriteCanvas');
+        },
+
+        // 共用圖片轉 Canvas 處理引擎
+        processImageToCanvas: (url, targetStateKey, callback = null) => {
+            app.stopSpriteAnimation();
+            const canvas = app.el('sprite-anim-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (!url) {
+                app.state[targetStateKey] = null;
+                return;
+            }
+
+            const img = new Image();
+            img.onload = () => {
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = img.width; 
+                offCanvas.height = img.height;
+                const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+                offCtx.drawImage(img, 0, 0);
+                app.state[targetStateKey] = offCanvas;
+                if (callback) callback();
+            };
+            img.onerror = () => { app.toast("⚠️ 圖片網址失效或網路異常", 1); };
+            img.src = url;
+        },
+
         playSpriteAnimation: (row) => {
             app.stopSpriteAnimation();
             const srcCanvas = app.state.processedSpriteCanvas;
-            if (!srcCanvas) return;
+            if (!srcCanvas) return app.toast("⚠️ 請先設定基礎圖片", 1);
 
             const targetCanvas = app.el('sprite-anim-canvas');
             const ctx = targetCanvas.getContext('2d');
@@ -5270,49 +5364,408 @@
             const gridX = app.state.tempGridConfig.gridX || [];
             const gridY = app.state.tempGridConfig.gridY || [];
             
-            // 確保請求的列數在範圍內
             const safeRow = Math.min(row, rows - 1);
-            
-            // 計算 Y 軸裁切邊界
             const pointsY = [0, ...[...gridY].sort((a,b)=>a-b), 1].map(v => Math.floor(v * srcCanvas.height));
             const y1 = pointsY[safeRow];
             const y2 = pointsY[safeRow + 1];
             const cellHeight = y2 - y1;
 
-            // 準備 X 軸的切割點
             const pointsX = [0, ...[...gridX].sort((a,b)=>a-b), 1].map(v => Math.floor(v * srcCanvas.width));
 
             let currentFrame = 0;
             const totalFrames = cols;
 
-            app.state.spriteAnimInterval = setInterval(() => {
+            const animate = () => {
                 ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+                if (cellHeight > 0) {
+                    const x1 = pointsX[currentFrame];
+                    const x2 = pointsX[currentFrame + 1];
+                    const cellWidth = x2 - x1;
+
+                    if (cellWidth > 0) {
+                        const scale = Math.min(targetCanvas.width / cellWidth, targetCanvas.height / cellHeight);
+                        const drawW = cellWidth * scale;
+                        const drawH = cellHeight * scale;
+                        const dx = (targetCanvas.width - drawW) / 2;
+                        const dy = targetCanvas.height - drawH;
+
+                        ctx.drawImage(srcCanvas, x1, y1, cellWidth, cellHeight, dx, dy, drawW, drawH);
+                    }
+                }
+                currentFrame = (currentFrame + 1) % totalFrames;
                 
-                if (cellHeight <= 0) return;
+                // 一般移動使用固定 200ms 的迴圈
+                app.state.spriteAnimInterval = setTimeout(animate, 200); 
+            };
+            animate();
+        },
 
-                const x1 = pointsX[currentFrame];
-                const x2 = pointsX[currentFrame + 1];
-                const cellWidth = x2 - x1;
+        // 專屬動作播放器 (支援定格功能與自適應切割)
+        playActionAnimation: (type) => {
+            app.stopSpriteAnimation();
+            const srcCanvas = app.state.processedActionSpriteCanvas;
+            if (!srcCanvas) return app.toast("⚠️ 請先設定「專屬動作圖」", 1);
 
-                if (cellWidth > 0) {
-                    // 自動計算縮放以塞入 64x64 畫布 (人物置中靠下，呈現比較好看)
-                    const scale = Math.min(targetCanvas.width / cellWidth, targetCanvas.height / cellHeight);
-                    const drawW = cellWidth * scale;
-                    const drawH = cellHeight * scale;
+            const targetCanvas = app.el('sprite-anim-canvas');
+            const ctx = targetCanvas.getContext('2d');
+
+            const cols = parseInt(app.el('edit-sprite-action-cols').value) || 4;
+            const rows = parseInt(app.el('edit-sprite-action-rows').value) || 5;
+            const gridX = app.state.tempActionGridConfig.gridX || [];
+            const gridY = app.state.tempActionGridConfig.gridY || [];
+            
+            const pointsY = [0, ...[...gridY].sort((a,b)=>a-b), 1].map(v => Math.floor(v * srcCanvas.height));
+            const pointsX = [0, ...[...gridX].sort((a,b)=>a-b), 1].map(v => Math.floor(v * srcCanvas.width));
+
+            let frames = [];
+            // 動態抓取畫格：確保不會超過使用者設定的列數
+            if (type === 'happy' && rows > 0) for(let c=0; c<cols; c++) frames.push({r:0, c:c});
+            if (type === 'flower' && rows > 1) for(let c=0; c<cols; c++) frames.push({r:1, c:c});
+            if (type === 'hurt' && rows > 2) for(let c=0; c<cols; c++) frames.push({r:2, c:c});
+            // 攻擊預設使用第4與第5行
+            if (type === 'attack') {
+                if (rows > 3) for(let c=0; c<cols; c++) frames.push({r:3, c:c});
+                if (rows > 4) for(let c=0; c<cols; c++) frames.push({r:4, c:c});
+            }
+
+            if(frames.length === 0) return app.toast("⚠️ 該動作的行數不存在網格設定中", 1);
+
+            let currentFrameIdx = 0;
+            // 💡【可自訂微調參數】：正常速度與定格時間
+            const normalSpeed = 150;     
+            const pauseDuration = 1200;  
+
+            const animate = () => {
+                ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+                const fi = frames[currentFrameIdx];
+                const x1 = pointsX[fi.c], x2 = pointsX[fi.c + 1];
+                const y1 = pointsY[fi.r], y2 = pointsY[fi.r + 1];
+                const cellW = x2 - x1, cellH = y2 - y1;
+
+                if (cellW > 0 && cellH > 0) {
+                    const scale = Math.min(targetCanvas.width / cellW, targetCanvas.height / cellH);
+                    const drawW = cellW * scale, drawH = cellH * scale;
                     const dx = (targetCanvas.width - drawW) / 2;
-                    const dy = targetCanvas.height - drawH; // 靠底貼齊
-
-                    ctx.drawImage(srcCanvas, x1, y1, cellWidth, cellHeight, dx, dy, drawW, drawH);
+                    const dy = targetCanvas.height - drawH;
+                    ctx.drawImage(srcCanvas, x1, y1, cellW, cellH, dx, dy, drawW, drawH);
                 }
 
-                currentFrame = (currentFrame + 1) % totalFrames;
-            }, 200); // 動畫速度 200ms
+                let nextDelay = normalSpeed;
+                if (currentFrameIdx === frames.length - 1) {
+                    nextDelay = pauseDuration; 
+                    currentFrameIdx = 0; 
+                } else {
+                    currentFrameIdx++;
+                }
+                app.state.spriteAnimInterval = setTimeout(animate, nextDelay);
+            };
+            animate();
         },
 
         stopSpriteAnimation: () => {
             if (app.state.spriteAnimInterval) {
-                clearInterval(app.state.spriteAnimInterval);
+                clearTimeout(app.state.spriteAnimInterval);
                 app.state.spriteAnimInterval = null;
+            }
+        },
+
+        // ==========================================
+        // --- [新增] 展示區 AI 行走與動作引擎 ---
+        // ==========================================
+        initShowcaseCanvas: () => {
+            const canvas = app.el('showcase-canvas');
+            if (!canvas) return;
+            const parent = canvas.parentElement;
+            canvas.width = parent.clientWidth;
+            canvas.height = parent.clientHeight;
+            
+            if (app.state.showcaseRAF) cancelAnimationFrame(app.state.showcaseRAF);
+
+            app.state.sc = {
+                active: false,
+                x: canvas.width / 2, 
+                y: canvas.height / 2 + 30, // 中心微偏下(配合腳底對齊)
+                vx: 0, vy: 0,
+                speed: 1.8, // 微調速度讓移動更順暢
+                state: 'idle', 
+                actionType: '',
+                dir: 0, 
+                frame: 0,
+                lastFrameTime: Date.now(),
+                nextStateTime: Date.now() + 1000
+            };
+            
+            app.state.clickEffect = null; // 點擊水波紋效果
+
+            // 直接啟動 RAF，不管 AI 是不是 active，手動控制才會有動畫
+            app.showcaseLoop();
+        },
+
+        toggleShowcaseAI: () => {
+            if (!app.state.sc) app.initShowcaseCanvas();
+            app.state.sc.active = !app.state.sc.active;
+            const btn = app.el('btn-showcase-ai');
+            if (app.state.sc.active) {
+                btn.textContent = '⏹ 停止 AI';
+                btn.className = 'bg-red-600 text-white text-[0.65rem] px-2.5 py-1.5 rounded shadow-lg border border-red-500 font-bold hover:bg-red-500 active:scale-95 transition-all';
+                app.state.sc.lastFrameTime = Date.now();
+                app.state.sc.nextStateTime = Date.now() + 500;
+            } else {
+                btn.textContent = '▶ 隨機展示';
+                btn.className = 'bg-green-600 text-white text-[0.65rem] px-2.5 py-1.5 rounded shadow-lg border border-green-500 font-bold hover:bg-green-500 active:scale-95 transition-all';
+            }
+        },
+
+        controlShowcase: (type, val) => {
+            if (!app.state.sc) app.initShowcaseCanvas();
+            const sc = app.state.sc;
+            
+            // 只要按下手動控制，就自動關閉 AI 隨機展示
+            if (sc.active) {
+                app.toggleShowcaseAI();
+            }
+            
+            sc.nextStateTime = Date.now() + 999999; // 手動控制時，延後 AI 接管
+            
+            if (type === 'dir') {
+                sc.state = 'walk';
+                sc.dir = val;
+                sc.vx = (val === 1) ? -sc.speed : (val === 2) ? sc.speed : 0;
+                sc.vy = (val === 3) ? -sc.speed : (val === 0) ? sc.speed : 0;
+            } else if (type === 'action') {
+                sc.state = 'action';
+                sc.actionType = val;
+                sc.frame = 0;
+                sc.vx = 0; sc.vy = 0;
+                // 不設定 manualActionEndTime，讓它無限循環，直到玩家進行其他操作
+                sc.manualActionEndTime = null;
+            } else if (type === 'idle') {
+                sc.state = 'idle';
+                sc.vx = 0; sc.vy = 0;
+            }
+        },
+
+        clickShowcase: (e) => {
+            if (!app.state.sc) return;
+            const rect = app.el('showcase-canvas').getBoundingClientRect();
+            const targetX = e.clientX - rect.left;
+            const targetY = e.clientY - rect.top;
+            
+            // 加入點擊水波紋效果記錄
+            app.state.clickEffect = { x: targetX, y: targetY, time: Date.now() };
+
+            // 點擊即移動，無論 AI 是否開啟
+            const dx = targetX - app.state.sc.x;
+            const dy = targetY - app.state.sc.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            
+            if(dist > 5) {
+                app.state.sc.vx = (dx / dist) * app.state.sc.speed;
+                app.state.sc.vy = (dy / dist) * app.state.sc.speed;
+                app.state.sc.state = 'walk';
+                
+                // 計算抵達時間並加入一點緩衝
+                const arrivalTime = Date.now() + (dist / app.state.sc.speed) * 16;
+                app.state.sc.manualActionEndTime = arrivalTime;
+                app.state.sc.nextStateTime = arrivalTime + 500; // AI延後接管
+                
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    app.state.sc.dir = dx > 0 ? 2 : 1; 
+                } else {
+                    app.state.sc.dir = dy > 0 ? 0 : 3; 
+                }
+            }
+        },
+
+        showcaseLoop: () => {
+            if (!app.state.sc) return;
+            const sc = app.state.sc;
+            const now = Date.now();
+            
+            // --- AI 狀態機邏輯 (僅 AI 開啟時) ---
+            if (sc.active && now > sc.nextStateTime) {
+                const rand = Math.random();
+                if (sc.state === 'action') {
+                    sc.state = 'idle';
+                    sc.vx = 0; sc.vy = 0;
+                    sc.nextStateTime = now + 1000 + Math.random() * 2000;
+                } else if (rand < 0.4) {
+                    sc.state = 'idle';
+                    sc.vx = 0; sc.vy = 0;
+                    sc.nextStateTime = now + 1000 + Math.random() * 2000;
+                } else if (rand < 0.7) {
+                    sc.state = 'walk';
+                    const angle = Math.random() * Math.PI * 2;
+                    sc.vx = Math.cos(angle) * sc.speed;
+                    sc.vy = Math.sin(angle) * sc.speed;
+                    if (Math.abs(sc.vx) > Math.abs(sc.vy)) sc.dir = sc.vx > 0 ? 2 : 1;
+                    else sc.dir = sc.vy > 0 ? 0 : 3;
+                    sc.nextStateTime = now + 1500 + Math.random() * 2000;
+                } else {
+                    sc.state = 'action';
+                    sc.vx = 0; sc.vy = 0;
+                    const actions = ['happy', 'flower', 'hurt', 'attack'];
+                    sc.actionType = actions[Math.floor(Math.random() * actions.length)];
+                    sc.frame = 0;
+                    
+                    const totalCols = parseInt(app.el('edit-sprite-action-cols').value) || 4;
+                    const frameCount = (sc.actionType === 'attack') ? totalCols * 2 : totalCols;
+                    const cycleDuration = frameCount * 150 + 1050; // 計算完整一次循環(包含最後一格的1200ms定格)
+                    sc.nextStateTime = now + cycleDuration * (Math.floor(Math.random() * 2) + 1); // 隨機播放 1~2 次循環
+                }
+            }
+
+            // --- 手動模式/點擊模式 動作結束檢查 ---
+            if (!sc.active && sc.manualActionEndTime && now > sc.manualActionEndTime) {
+                sc.state = 'idle';
+                sc.vx = 0; sc.vy = 0;
+                sc.manualActionEndTime = null;
+            }
+
+            // --- 預設大小，用於邊界計算 ---
+            const targetSize = 64; 
+            const drawScale = 1.2; 
+            const drawH = targetSize * drawScale;
+
+            // --- 移動與邊界碰撞 ---
+            if (sc.state === 'walk') {
+                sc.x += sc.vx;
+                sc.y += sc.vy;
+                const canvas = app.el('showcase-canvas');
+                
+                const paddingX = targetSize / 2;
+                const paddingY_top = drawH; 
+                const paddingY_bottom = 10; 
+
+                if (sc.x < paddingX || sc.x > canvas.width - paddingX || sc.y < paddingY_top || sc.y > canvas.height - paddingY_bottom) {
+                    // 修正：確實回到正中間
+                    sc.x = canvas.width / 2;
+                    sc.y = canvas.height / 2 + drawH / 2; // 腳底對齊中心偏下
+                    sc.vx = 0;
+                    sc.vy = 0;
+                    sc.state = 'idle';
+                    
+                    if (sc.active) {
+                        sc.nextStateTime = now + 1000;
+                    } else {
+                        sc.manualActionEndTime = null;
+                    }
+                }
+            }
+
+            // --- 動畫幀更新 (加入專屬動作最後一格定格邏輯) ---
+            let frameDelay = 150;
+            if (sc.state === 'action') {
+                const totalCols = parseInt(app.el('edit-sprite-action-cols').value) || 4;
+                const frameCount = (sc.actionType === 'attack') ? totalCols * 2 : totalCols;
+                
+                // 如果目前是該動作的最後一格，則延長停頓時間 (例如 1200ms)
+                if (sc.frame % frameCount === frameCount - 1) {
+                    frameDelay = 1200;
+                }
+            }
+
+            if (now - sc.lastFrameTime > frameDelay) {
+                sc.frame++;
+                sc.lastFrameTime = now;
+            }
+
+            app.drawShowcase();
+            app.state.showcaseRAF = requestAnimationFrame(app.showcaseLoop);
+        },
+
+        drawShowcase: () => {
+            const canvas = app.el('showcase-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const sc = app.state.sc;
+            const now = Date.now();
+
+            // 畫點擊水波紋
+            if (app.state.clickEffect) {
+                const elapsed = now - app.state.clickEffect.time;
+                if (elapsed < 400) { // 400ms動畫
+                    ctx.beginPath();
+                    ctx.arc(app.state.clickEffect.x, app.state.clickEffect.y, elapsed / 8, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${1 - elapsed / 400})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                } else {
+                    app.state.clickEffect = null;
+                }
+            }
+
+            let srcCanvas = null;
+            let row = 0, col = 0;
+            let totalCols = 4;
+            let gridX, gridY;
+
+            if (sc.state === 'action') {
+                srcCanvas = app.state.processedActionSpriteCanvas;
+                gridX = app.state.tempActionGridConfig?.gridX;
+                gridY = app.state.tempActionGridConfig?.gridY;
+                totalCols = parseInt(app.el('edit-sprite-action-cols').value) || 4;
+
+                col = sc.frame % totalCols;
+                if (sc.actionType === 'happy') row = 0;
+                else if (sc.actionType === 'flower') row = 1;
+                else if (sc.actionType === 'hurt') row = 2;
+                else if (sc.actionType === 'attack') {
+                    const attackFrame = sc.frame % (totalCols * 2);
+                    row = 3 + Math.floor(attackFrame / totalCols);
+                    col = attackFrame % totalCols;
+                }
+            } else {
+                srcCanvas = app.state.processedSpriteCanvas;
+                gridX = app.state.tempGridConfig?.gridX;
+                gridY = app.state.tempGridConfig?.gridY;
+                totalCols = parseInt(app.el('edit-sprite-cols').value) || 4;
+                
+                col = sc.state === 'idle' ? 0 : sc.frame % totalCols;
+                if(sc.dir === 0) row = 2;
+                else if(sc.dir === 1) row = 3;
+                else if(sc.dir === 2) row = 1;
+                else if(sc.dir === 3) row = 4;
+                
+                if (sc.state === 'idle') row = 0;
+            }
+
+            if (!srcCanvas) return; 
+
+            gridX = Array.isArray(gridX) && gridX.length > 0 ? gridX : [0.25, 0.5, 0.75];
+            gridY = Array.isArray(gridY) && gridY.length > 0 ? gridY : [0.2, 0.4, 0.6, 0.8];
+
+            const pointsY = [0, ...[...gridY].sort((a,b)=>a-b), 1].map(v => Math.floor(v * srcCanvas.height));
+            const pointsX = [0, ...[...gridX].sort((a,b)=>a-b), 1].map(v => Math.floor(v * srcCanvas.width));
+            
+            const safeRow = Math.min(row, pointsY.length - 2);
+            const safeCol = Math.min(col, pointsX.length - 2);
+
+            const x1 = pointsX[safeCol], x2 = pointsX[safeCol + 1];
+            const y1 = pointsY[safeRow], y2 = pointsY[safeRow + 1];
+            const cellW = x2 - x1, cellH = y2 - y1;
+
+            if (cellW > 0 && cellH > 0) {
+                // 💡【可自訂微調參數】縮小展示區的角色尺寸
+                const targetSize = 64; 
+                const scale = Math.min(targetSize / cellW, targetSize / cellH);
+                
+                const drawScale = 1.2;
+                const drawW = cellW * scale * drawScale;
+                const drawH = cellH * scale * drawScale;
+                
+                const dx = sc.x - drawW / 2;
+                const dy = sc.y - drawH; // 腳底對齊座標
+
+                // 畫角色陰影
+                ctx.fillStyle = "rgba(0,0,0,0.4)";
+                ctx.beginPath();
+                ctx.ellipse(sc.x, sc.y - drawH*0.05, drawW/3, drawH/8, 0, 0, Math.PI*2);
+                ctx.fill();
+
+                ctx.drawImage(srcCanvas, x1, y1, cellW, cellH, dx, dy, drawW, drawH);
             }
         },
 	   // --- v4.2.2 怪物列表管理系統 ---
@@ -5914,7 +6367,7 @@
             app.renderLobbyAnnouncements();
             app.renderMarquee();
                 app.state.globalSettings = settings; 
-                app.el('admin-settings-modal').classList.add('hidden');
+                app.closeAdminSettings();
                 
                 // 若開啟無盡模式，即時更新當前房間設定
                 if (app.state.isHost) {
@@ -15044,10 +15497,42 @@ addRewardItem: () => {
             if(app.el('blackmarket-editor-view')) app.el('blackmarket-editor-view').classList.add('hidden');
             if(app.el('blackmarket-list-view')) app.el('blackmarket-list-view').classList.remove('hidden');
 
+            if (tabName !== 'sprites' && app.state.showcaseRAF) {
+                cancelAnimationFrame(app.state.showcaseRAF);
+                app.state.showcaseRAF = null;
+                if (app.state.sc) app.state.sc.active = false;
+                const btn = app.el('btn-showcase-ai');
+                if (btn) {
+                    btn.textContent = '▶ 隨機展示';
+                    btn.className = 'bg-green-600 text-white text-[0.65rem] px-2 py-1 rounded shadow border border-green-400 font-bold hover:bg-green-500';
+                }
+            }
+
             if (tabName === 'blackmarket') app.renderBlackMarketListUI();
             else if (tabName === 'monsters') app.renderMonsterListUI();
-            else if (tabName === 'sprites') app.renderSpriteListUI();
+            else if (tabName === 'sprites') {
+                app.renderSpriteListUI();
+                const idx = parseInt(app.el('edit-sprite-idx').value);
+                if (!isNaN(idx)) {
+                    // 延遲以確保 DOM 元素已完全顯示並具備正確的寬高
+                    setTimeout(() => app.initShowcaseCanvas(), 50);
+                }
+            }
             else if (tabName === 'announcements') app.renderAdminAnnouncementList(); // [新增]
+        },
+
+        closeAdminSettings: () => {
+            app.el('admin-settings-modal').classList.add('hidden');
+            if (app.state.showcaseRAF) {
+                cancelAnimationFrame(app.state.showcaseRAF);
+                app.state.showcaseRAF = null;
+            }
+            if (app.state.sc) app.state.sc.active = false;
+            const btn = app.el('btn-showcase-ai');
+            if (btn) {
+                btn.textContent = '▶ 隨機展示';
+                btn.className = 'bg-green-600 text-white text-[0.65rem] px-2 py-1 rounded shadow border border-green-400 font-bold hover:bg-green-500';
+            }
         },
 
         // 後台：渲染公告列表
