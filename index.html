@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.7.7 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.8.1 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -626,7 +626,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.7.7 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.8.1 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -2625,8 +2625,18 @@
                             <div id="dynamic-monster-container"></div>
                         </div>
                         
-                        <div id="pyramid-board" class="w-full max-w-[320px] mx-auto scale-90 origin-top">
-                            </div>
+                        <div id="pyramid-board" class="w-full max-w-[320px] mx-auto scale-90 origin-top"></div>
+                        <!-- RPG 角色走動舞台開始 -->
+
+                        <!-- ╔══════════════════════════════════════════════════╗
+                             ║  [可修改] 角色走動舞台尺寸設定                  ║
+                             ║  h-20 = 手機版高度 (約80px)                     ║
+                             ║  md:h-28 = 電腦版高度 (約112px)                 ║
+                             ║  -mt-6 / md:-mt-8 = 負值 margin，用來把舞台往上推，靠近金字塔底部的數字區 ║
+                             ║  z-10 = 確保舞台在圖層上層，不會被覆蓋          ║
+                             ╚══════════════════════════════════════════════════╝ -->
+                        <div id="rpg-stage-container" class="w-full h-20 md:h-28 -mt-6 md:-mt-14 relative overflow-hidden bg-transparent z-10"><canvas id="rpg-stage-canvas" class="absolute inset-0 w-full h-full cursor-pointer" style="image-rendering: pixelated;" onmousedown="app.clickRpgStage(event)" ontouchstart="app.clickRpgStage(event)"></canvas><div class="absolute bottom-1 right-2 text-[0.55rem] font-bold text-amber-700/50 pointer-events-none drop-shadow-sm select-none">點擊左右空地移動角色</div></div>
+                        <!-- RPG 角色走動舞台結束 -->
                     </div>
 
                     <div class="hidden grid grid-cols-4 gap-2 text-center font-bold text-white mt-2">
@@ -4266,9 +4276,13 @@
                     const exists = sn.exists();
                     const pData = sn.val() || {};
                     
+                    // 取得 Google 大頭貼網址 (登入者用 Google 頭像，訪客用預設頭像)
+                    const myPhotoUrl = app.state.user ? app.state.user.photoURL : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                    
                     // 準備更新資料
                     const updates = {
                         name: name,
+                        photo: (exists && pData.photo) ? pData.photo : myPhotoUrl, // [修正 v4.8.9.8.0] 同步大頭貼
                         hp: (exists && pData.hp !== undefined) ? pData.hp : initMaxHp,
                         maxHp: (exists && pData.maxHp !== undefined) ? Math.max(pData.maxHp, initMaxHp) : initMaxHp,
                         equipped: myEquipped, 
@@ -4426,8 +4440,10 @@
                  autoRoll: initAutoRoll, 
                  endlessMode: initEndless
              }).then(() => {
+                 const myPhotoUrl = app.state.user ? app.state.user.photoURL : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
                  db.ref(`classes/${roomId}/players/team1/${name}`).set({
                      name: name,
+                     photo: myPhotoUrl, // [修正 v4.8.9.8.0] 建立房間時存入大頭貼
                      score: 0,
                      gold: 0, 
                      sessionGold: 0,
@@ -4510,6 +4526,9 @@
             
             // [修正] 不管是房主還是隊員，進入戰鬥場景皆切換並播放激昂的戰鬥音樂
             app.playBgm('combat');
+            
+            // [新增] 進入遊戲時初始化 RPG 舞台與預載角色圖片
+            app.initRpgStage();
 
             app.listenToGameData();
             app.initCommunicationListeners(); // 啟動戰鬥日誌與聊天室監聽
@@ -5545,6 +5564,408 @@
             }
         },
 
+        // ==========================================
+        // --- [新增] 遊戲內 RPG 舞台引擎 (多人連線版) ---
+        // ==========================================
+        initRpgStage: () => {
+            app.state.rpgChars = app.state.rpgChars || {};
+            app.state.rpgSprites = app.state.rpgSprites || { male: null, female: null, cache: {} };
+            app.state.avatarImageCache = app.state.avatarImageCache || {}; // 暫存 Google 頭像 Image 物件
+
+            // 1. 從全域設定找出男女冒險家圖示，預先渲染到離線 Canvas
+            const spriteList = app.state.globalSettings?.spriteList || [];
+            let maleConfig = spriteList.find(s => s.name.includes('男')) || spriteList[0];
+            let femaleConfig = spriteList.find(s => s.name.includes('女')) || maleConfig;
+
+            if (maleConfig && maleConfig.url) app.processRpgSprite(maleConfig, 'male');
+            if (femaleConfig && femaleConfig.url) app.processRpgSprite(femaleConfig, 'female');
+
+            const canvas = app.el('rpg-stage-canvas');
+            if (!canvas) return;
+            const parent = canvas.parentElement;
+            canvas.width = parent.clientWidth;
+            canvas.height = parent.clientHeight;
+
+            // 停止舊的迴圈，啟動新迴圈
+            if (app.state.rpgRAF) cancelAnimationFrame(app.state.rpgRAF);
+            app.rpgStageLoop();
+        },
+
+        // 離線渲染 Sprite，加快遊戲內繪製效能
+        processRpgSprite: (config, genderKey) => {
+            const img = new Image();
+            img.crossOrigin = "Anonymous"; // 避免跨域污染 Canvas
+            img.onload = () => {
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = img.width;
+                offCanvas.height = img.height;
+                const ctx = offCanvas.getContext('2d', { willReadFrequently: true });
+                ctx.drawImage(img, 0, 0);
+                app.state.rpgSprites[genderKey] = {
+                    canvas: offCanvas,
+                    config: config
+                };
+            };
+            img.src = config.url;
+        },
+
+        // 預載 Google 頭像
+        loadAvatarImage: (url, uid) => {
+            if (!url || app.state.avatarImageCache[uid]) return;
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = () => { app.state.avatarImageCache[uid] = img; };
+            img.src = url;
+        },
+
+        // 接收 Firebase 玩家資料，更新畫面上的人物 (同步目標點) [v4.8.9.8.0]
+        updateRpgCharacters: (playersObj) => {
+            const currentPlayers = {};
+            const canvas = app.el('rpg-stage-canvas');
+            if (!canvas) return;
+
+            // 固定 Y 軸，所有人都站在畫布底部 (留 5px 給腳底陰影)
+            const fixedY = canvas.height - 5;
+
+            // 整理線上玩家清單
+            Object.keys(playersObj || {}).forEach(teamKey => {
+                const team = playersObj[teamKey];
+                if (!team) return;
+                Object.keys(team).forEach(pName => {
+                    const p = team[pName];
+                    if (!p || !p.name) return;
+                    const uid = p.name; // 使用名字當作唯一鍵值
+                    currentPlayers[uid] = true;
+
+                    // 若是新玩家，給予初始座標與狀態
+                    if (!app.state.rpgChars[uid]) {
+                        // 隨機出生點 (X 軸)，避開邊界
+                        const startX = 30 + Math.random() * Math.max(1, canvas.width - 60);
+                        
+                        const isMe = p.name === app.state.myName;
+                        let gender = isMe ? (app.state.gender || 'male') : (p.gender || (Math.random() > 0.5 ? 'male' : 'female'));
+                        
+                        // 載入頭像 (優先用 Firebase 存的，其次用 Google 登入，最後用預設)
+                        let photoUrl = p.photo || (isMe && app.state.user ? app.state.user.photoURL : null) || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                        app.loadAvatarImage(photoUrl, uid);
+
+                        app.state.rpgChars[uid] = {
+                            name: p.name,
+                            gender: gender,
+                            photo: photoUrl,
+                            isMe: isMe,
+                            x: startX,
+                            y: fixedY,          // 強制鎖定在底部
+                            vx: 0,
+                            vy: 0,
+                            speed: 2.5,         // 統一移動速度，提升手感
+                            state: 'idle',
+                            dir: 0,             // 0=下(正面待機) 1=左 2=右
+                            frame: 0,
+                            lastFrameTime: Date.now(),
+                            nextActionTime: Date.now() + Math.random() * 2000,
+                            manualTarget: null,
+                            lastTargetTs: 0     // 記錄最後接收的目標時間，防止重播舊指令
+                        };
+                    } else {
+                        // 更新舊玩家狀態
+                        const char = app.state.rpgChars[uid];
+                        char.y = fixedY; // 每次 Firebase 更新時確保 Y 軸正確
+
+                        // 如果是自己，即時套用性別
+                        if (p.name === app.state.myName && app.state.gender) {
+                            char.gender = app.state.gender;
+                        }
+
+                        // [關鍵] 接收其他玩家（非自己）的移動目標並同步
+                        if (p.name !== app.state.myName && p.manualTarget && p.manualTarget.timestamp > char.lastTargetTs) {
+                            char.manualTarget = { x: p.manualTarget.x, timestamp: p.manualTarget.timestamp };
+                            char.lastTargetTs = p.manualTarget.timestamp;
+                            char.state = 'walk';
+                            // 重置 AI 亂走計時
+                            char.nextActionTime = Date.now() + 5000;
+                        }
+                        
+                        // 更新頭像（如果 Firebase 裡的頭像改變了，強制重新載入）
+                        if (p.photo && p.photo !== char.photo) {
+                            char.photo = p.photo;
+                            app.loadAvatarImage(p.photo, uid, true); // forceReload=true
+                        }
+                    }
+                });
+            });
+
+            // 移除已經不在房間的玩家
+            Object.keys(app.state.rpgChars).forEach(uid => {
+                if (!currentPlayers[uid]) {
+                    delete app.state.rpgChars[uid];
+                }
+            });
+        },
+
+                // 玩家點擊舞台，廣播移動目標 (只取X軸) [v4.8.9.8.0]
+        clickRpgStage: (e) => {
+            if(e.cancelable) e.preventDefault();
+            const canvas = app.el('rpg-stage-canvas');
+            if (!canvas || !app.state.myName || !app.state.rpgChars[app.state.myName]) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const isTouch = e.type === 'touchstart';
+            const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+            
+            // 只取 X 座標，Y 軸固定在底部
+            const targetX = Math.max(25, Math.min(canvas.width - 25, clientX - rect.left));
+
+            // 畫點擊水波紋 (固定在底部)
+            app.state.rpgClickEffect = { x: targetX, y: canvas.height - 5, time: Date.now() };
+
+            const targetData = { x: targetX, timestamp: Date.now() };
+
+            // 1. 廣播到 Firebase 讓所有人同步
+            if (app.state.classId && app.state.myTeam && app.state.myName) {
+                db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}/manualTarget`)
+                  .set(targetData)
+                  .catch(err => console.warn('移動同步失敗:', err));
+            }
+
+            // 2. 本地立即反應，不等待 Firebase 回傳
+            const myChar = app.state.rpgChars[app.state.myName];
+            myChar.manualTarget = targetData;
+            myChar.lastTargetTs = targetData.timestamp;
+            myChar.state = 'walk';
+            myChar.nextActionTime = Date.now() + 5000; // 暫停 AI 接管 5 秒
+        },
+
+        // RPG 主迴圈：處理純左右尋路與動畫幀 [v4.8.9.8.0]
+        rpgStageLoop: () => {
+            const canvas = app.el('rpg-stage-canvas');
+            if (!canvas) {
+                // Canvas 不存在時繼續保持迴圈，等待頁面切換回來
+                app.state.rpgRAF = requestAnimationFrame(app.rpgStageLoop);
+                return;
+            }
+            
+            // RWD：動態更新 Canvas 寬高以符合父容器
+            const parent = canvas.parentElement;
+            if (parent) {
+                if (canvas.width !== parent.clientWidth) canvas.width = parent.clientWidth;
+                if (canvas.height !== parent.clientHeight) canvas.height = parent.clientHeight;
+            }
+
+            const now = Date.now();
+            const chars = Object.values(app.state.rpgChars || {});
+
+            chars.forEach(char => {
+                // 強制鎖死 Y 軸，不允許上下移動
+                char.y = canvas.height - 5;
+                char.vy = 0;
+
+                // --- 1. AI 隨機行為邏輯 (只有左右走或待機) ---
+                if (!char.manualTarget && !char.aiTarget && now > char.nextActionTime) {
+                    if (char.state === 'walk') {
+                        // 走一走停下休息 (1.5~3 秒)
+                        char.state = 'idle';
+                        char.vx = 0;
+                        char.dir = 0; // 面向正面(待機)
+                        char.nextActionTime = now + 1500 + Math.random() * 1500;
+                    } else {
+                        // 休息完後隨機向左或向右走 (1~2.5 秒)
+                        char.state = 'walk';
+                        const goRight = Math.random() > 0.5;
+                        char.vx = (goRight ? 1 : -1) * (char.speed * 0.55); // AI 走比玩家慢
+                        char.dir = goRight ? 2 : 1; // 2=右, 1=左
+                        char.nextActionTime = now + 1000 + Math.random() * 1500;
+                    }
+                }
+
+                // --- 2. 尋路抵達判定 (純 X 軸) ---
+                const activeTarget = char.manualTarget || char.aiTarget;
+                if (activeTarget) {
+                    const dx = activeTarget.x - char.x;
+                    
+                    if (Math.abs(dx) <= char.speed + 1) {
+                        // 抵達目標，轉為待機
+                        char.x = activeTarget.x;
+                        char.state = 'idle';
+                        char.vx = 0;
+                        char.dir = 0; // 轉回正面
+                        if (char.manualTarget) char.manualTarget = null;
+                        if (char.aiTarget) char.aiTarget = null;
+                        char.nextActionTime = now + 2000; // 休息 2 秒後 AI 才接管
+                    } else {
+                        // 繼續朝目標走
+                        char.vx = (dx > 0 ? 1 : -1) * (char.manualTarget ? char.speed : char.speed * 0.55);
+                        char.dir = dx > 0 ? 2 : 1;
+                        char.state = 'walk';
+                    }
+                }
+
+                // --- 3. 座標更新與左右邊界碰撞 ---
+                if (char.state === 'walk') {
+                    char.x += char.vx;
+
+                    // [可修改] marginX = 角色距離左右邊界的最小距離(px)
+                    const marginX = 25;
+                    let hitWall = false;
+
+                    if (char.x < marginX) { char.x = marginX; hitWall = true; }
+                    if (char.x > canvas.width - marginX) { char.x = canvas.width - marginX; hitWall = true; }
+
+                    if (hitWall) {
+                        if (char.manualTarget) {
+                            // 玩家手動撞牆：直接停下，清除目標
+                            char.manualTarget = null;
+                            char.state = 'idle';
+                            char.vx = 0;
+                            char.dir = 0;
+                            char.nextActionTime = now + 1000;
+                        } else {
+                            // AI 撞牆：設定內部目標為畫布中心點，讓角色確實走回中間
+                            char.aiTarget = { x: canvas.width / 2 };
+                        }
+                    }
+                }
+
+                // --- 4. 動畫幀更新 ---
+                if (now - char.lastFrameTime > 180) { // 每 180ms 切換一幀，稍快一點更流暢
+                    char.frame++;
+                    char.lastFrameTime = now;
+                }
+            });
+
+            app.drawRpgStage(canvas, chars, now);
+            app.state.rpgRAF = requestAnimationFrame(app.rpgStageLoop);
+        },
+
+                // 負責將所有角色畫在 Canvas 上
+        drawRpgStage: (canvas, chars, now) => {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 畫玩家點擊的水波紋
+            if (app.state.rpgClickEffect) {
+                const elapsed = now - app.state.rpgClickEffect.time;
+                if (elapsed < 500) {
+                    ctx.beginPath();
+                    ctx.arc(app.state.rpgClickEffect.x, app.state.rpgClickEffect.y, elapsed / 10, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(251, 191, 36, ${1 - elapsed / 500})`;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                } else {
+                    app.state.rpgClickEffect = null;
+                }
+            }
+
+            // 為了讓 Y 軸越下面的人畫在越上層 (遮擋關係)，先依據 Y 軸排序
+            chars.sort((a, b) => a.y - b.y);
+
+            chars.forEach(char => {
+                // 1. 取得精靈圖設定
+                const spriteData = app.state.rpgSprites[char.gender] || app.state.rpgSprites['male'];
+                if (!spriteData || !spriteData.canvas) return; // 圖還沒載入好
+
+                const srcCanvas = spriteData.canvas;
+                const config = spriteData.config;
+                
+                const cols = config.cols || 4;
+                const gridX = Array.isArray(config.gridX) && config.gridX.length > 0 ? config.gridX : [0.25, 0.5, 0.75];
+                const gridY = Array.isArray(config.gridY) && config.gridY.length > 0 ? config.gridY : [0.2, 0.4, 0.6, 0.8];
+
+                const pointsY = [0, ...[...gridY].sort((a,b)=>a-b), 1].map(v => Math.floor(v * srcCanvas.height));
+                const pointsX = [0, ...[...gridX].sort((a,b)=>a-b), 1].map(v => Math.floor(v * srcCanvas.width));
+
+                // 決定行(方向)與列(動作)
+                let row = 0;
+                if(char.dir === 0) row = 2; // 下
+                else if(char.dir === 1) row = 3; // 左
+                else if(char.dir === 2) row = 1; // 右
+                else if(char.dir === 3) row = 4; // 上
+
+                let col = char.state === 'idle' ? 0 : char.frame % cols;
+                if (char.state === 'idle') row = 0; // 待機動作(第0行)
+
+                const safeRow = Math.min(row, pointsY.length - 2);
+                const safeCol = Math.min(col, pointsX.length - 2);
+
+                const x1 = pointsX[safeCol], x2 = pointsX[safeCol + 1];
+                const y1 = pointsY[safeRow], y2 = pointsY[safeRow + 1];
+                const cellW = x2 - x1, cellH = y2 - y1;
+
+                if (cellW > 0 && cellH > 0) {
+                    // [可修改] targetSize 決定角色大小(px)，已從 40 放大至 60 配合透明舞台
+                    // 提示：增大 = 角色更大更清晰；減小 = 角色較小顯示更多資訊
+                    const targetSize = 60; 
+                    const scale = Math.min(targetSize / cellW, targetSize / cellH);
+                    const drawW = cellW * scale;
+                    const drawH = cellH * scale;
+                    
+                    const drawX = char.x - drawW / 2;
+                    const drawY = char.y - drawH; // char.y 為腳底位置
+
+                    // A. 畫人物腳底陰影 (橢圓形，讓角色有立體感)
+                    ctx.fillStyle = "rgba(0,0,0,0.25)";
+                    ctx.beginPath();
+                    ctx.ellipse(char.x, char.y, drawW / 2.5, drawH / 10, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // B. 畫人物本體精靈圖
+                    ctx.drawImage(srcCanvas, x1, y1, cellW, cellH, drawX, drawY, drawW, drawH);
+
+                    // C. 畫 Google 頭像與光環 [修正 v4.8.9.8.0 - 放大頭像半徑]
+                    const avatarImg = app.state.avatarImageCache[char.name];
+                    // [可修改] avatarRadius 頭像圓圈半徑(px)，已從 8 調大至 11
+                    const avatarRadius = 11;
+                    const avatarY = drawY - avatarRadius - 3; // 浮在角色頭頂
+
+                    if (avatarImg && avatarImg.complete && avatarImg.naturalWidth > 0) {
+                        ctx.save();
+                        
+                        // 自己發綠光，隊友發金光
+                        const glowColor = char.isMe ? "#4ade80" : "#fbbf24";
+                        
+                        // 外層光暈效果
+                        ctx.shadowColor = glowColor;
+                        ctx.shadowBlur = 6;
+                        ctx.beginPath();
+                        ctx.arc(char.x, avatarY, avatarRadius + 2, 0, Math.PI * 2);
+                        ctx.fillStyle = glowColor;
+                        ctx.fill();
+                        ctx.shadowBlur = 0; // 重置陰影避免影響後續繪製
+                        
+                        // 切割圓形並繪製頭像
+                        ctx.beginPath();
+                        ctx.arc(char.x, avatarY, avatarRadius, 0, Math.PI * 2);
+                        ctx.clip();
+                        ctx.drawImage(avatarImg, char.x - avatarRadius, avatarY - avatarRadius, avatarRadius * 2, avatarRadius * 2);
+                        ctx.restore();
+                    } else {
+                        // 頭像未載入時，顯示佔位符 (純色圓圈 + 首字母)
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(char.x, avatarY, avatarRadius + 2, 0, Math.PI * 2);
+                        ctx.fillStyle = char.isMe ? "#4ade80" : "#fbbf24";
+                        ctx.fill();
+                        ctx.font = `bold ${avatarRadius}px 'Noto Sans TC', sans-serif`;
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillStyle = "#1a1a1a";
+                        ctx.fillText(char.name.charAt(0).toUpperCase(), char.x, avatarY);
+                        ctx.textBaseline = "alphabetic";
+                        ctx.restore();
+                    }
+
+                    // D. 畫玩家名稱 (文字描邊增加在透明背景上的可讀性)
+                    const nameY = avatarY - avatarRadius - 4;
+                    ctx.font = "bold 10px 'Noto Sans TC', sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = "rgba(0,0,0,0.85)";
+                    ctx.strokeText(char.name, char.x, nameY);
+                    ctx.fillStyle = char.isMe ? "#4ade80" : "#ffffff";
+                    ctx.fillText(char.name, char.x, nameY);
+                }
+            });
+        },
         // ==========================================
         // --- [新增] 展示區 AI 行走與動作引擎 ---
         // ==========================================
@@ -6729,6 +7150,11 @@
                 }
                 app.state.gameData = data;
                 app.updateUI(data);
+                
+                // [新增] 同步更新 RPG 舞台上的玩家角色
+                if (data.status === 'playing' || data.status === 'waiting') {
+                    app.updateRpgCharacters(data.players);
+                }
             });
         },
 
