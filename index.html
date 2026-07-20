@@ -898,14 +898,14 @@
 </div>
 <!-- 難度選擇視窗結束 -->
         <div id="admin-auth-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
-            <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border-4 border-slate-600 animate-[fadeIn_0.3s_ease-out]">
+            <form onsubmit="event.preventDefault(); app.verifyAdmin();" class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border-4 border-slate-600 animate-[fadeIn_0.3s_ease-out]">
                 <h3 class="text-xl font-black text-slate-800 mb-4 text-center">🛡️ 管理員驗證</h3>
-                <input type="password" id="admin-password-input" class="w-full p-3 border-2 border-slate-300 rounded-xl text-center text-lg mb-4" placeholder="請輸入通行密碼">
+                <input type="password" id="admin-password-input" autocomplete="current-password" autofocus class="w-full p-3 border-2 border-slate-300 rounded-xl text-center text-lg mb-4" placeholder="請輸入通行密碼">
                 <div class="flex gap-2">
-                    <button onclick="app.el('admin-auth-modal').classList.add('hidden')" class="flex-1 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-100">取消</button>
-                    <button onclick="app.verifyAdmin()" class="flex-1 bg-slate-800 text-white py-2 rounded-lg font-bold shadow hover:bg-slate-900">確認</button>
+                    <button type="button" onclick="app.el('admin-auth-modal').classList.add('hidden')" class="flex-1 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-100">取消</button>
+                    <button type="submit" class="flex-1 bg-slate-800 text-white py-2 rounded-lg font-bold shadow hover:bg-slate-900">確認</button>
                 </div>
-            </div>
+            </form>
         </div>
 
        <div id="admin-settings-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
@@ -2292,15 +2292,15 @@
         </div>
         <!-- 戰役管理員驗證視窗 -->
         <div id="campaign-auth-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-backdrop">
-            <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border-4 border-amber-600 animate-[fadeIn_0.3s_ease-out]">
+            <form onsubmit="event.preventDefault(); app.verifyCampaignAdmin();" class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border-4 border-amber-600 animate-[fadeIn_0.3s_ease-out]">
                 <h3 class="text-xl font-black text-amber-900 mb-4 text-center">📖 戰役編年史</h3>
                 <p class="text-xs text-gray-500 mb-4 text-center">請輸入古老的密碼以編輯歷史</p>
-                <input type="password" id="campaign-password-input" class="w-full p-3 border-2 border-amber-300 rounded-xl text-center text-lg mb-4 font-mono" placeholder="Password">
+                <input type="password" id="campaign-password-input" autocomplete="current-password" autofocus class="w-full p-3 border-2 border-amber-300 rounded-xl text-center text-lg mb-4 font-mono" placeholder="Password">
                 <div class="flex gap-2">
-                    <button onclick="app.el('campaign-auth-modal').classList.add('hidden')" class="flex-1 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-100">取消</button>
-                    <button onclick="app.verifyCampaignAdmin()" class="flex-1 bg-amber-700 text-white py-2 rounded-lg font-bold shadow hover:bg-amber-800">解鎖</button>
+                    <button type="button" onclick="app.el('campaign-auth-modal').classList.add('hidden')" class="flex-1 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-100">取消</button>
+                    <button type="submit" class="flex-1 bg-amber-700 text-white py-2 rounded-lg font-bold shadow hover:bg-amber-800">解鎖</button>
                 </div>
-            </div>
+            </form>
         </div>
 
         <!-- 關卡編輯器視窗 (管理員用) -->
@@ -4283,6 +4283,7 @@
                     const updates = {
                         name: name,
                         photo: (exists && pData.photo) ? pData.photo : myPhotoUrl, // [修正 v4.8.9.8.0] 同步大頭貼
+                        gender: app.state.gender || 'male', // [新增] 將性別寫入房間，解決隊友看到隨機性別的問題
                         hp: (exists && pData.hp !== undefined) ? pData.hp : initMaxHp,
                         maxHp: (exists && pData.maxHp !== undefined) ? Math.max(pData.maxHp, initMaxHp) : initMaxHp,
                         equipped: myEquipped, 
@@ -4444,6 +4445,7 @@
                  db.ref(`classes/${roomId}/players/team1/${name}`).set({
                      name: name,
                      photo: myPhotoUrl, // [修正 v4.8.9.8.0] 建立房間時存入大頭貼
+                     gender: app.state.gender || 'male', // [新增] 建立房間時寫入性別
                      score: 0,
                      gold: 0, 
                      sessionGold: 0,
@@ -5623,11 +5625,22 @@
         },
 
         // 預載 Google 頭像
-        loadAvatarImage: (url, uid) => {
-            if (!url || app.state.avatarImageCache[uid]) return;
+        loadAvatarImage: (url, uid, forceReload = false) => {
+            if (!url) return;
+            if (app.state.avatarImageCache[uid] && !forceReload) return;
             const img = new Image();
             img.crossOrigin = "Anonymous";
+            img.referrerPolicy = "no-referrer"; // [修正1] 解決 Google 圖片 CORS/Referrer 阻擋問題
             img.onload = () => { app.state.avatarImageCache[uid] = img; };
+            img.onerror = () => {
+                // [修正2] 若跨域載入失敗，嘗試不帶 crossOrigin 載入 (能強制顯示圖片)
+                if(img.crossOrigin) {
+                    const fallbackImg = new Image();
+                    fallbackImg.referrerPolicy = "no-referrer";
+                    fallbackImg.onload = () => { app.state.avatarImageCache[uid] = fallbackImg; };
+                    fallbackImg.src = url;
+                }
+            };
             img.src = url;
         },
 
@@ -5689,8 +5702,10 @@
                         const char = app.state.rpgChars[uid];
                         char.y = fixedY; // 每次 Firebase 更新時確保 Y 軸正確
 
-                        // 如果是自己，即時套用性別
-                        if (p.name === app.state.myName && app.state.gender) {
+                        // [修正] 即時同步性別 (不論是不是自己，只要資料庫有就更新，解決隨機性別問題)
+                        if (p.gender && p.gender !== char.gender) {
+                            char.gender = p.gender;
+                        } else if (p.name === app.state.myName && app.state.gender && app.state.gender !== char.gender) {
                             char.gender = app.state.gender;
                         }
 
@@ -6180,9 +6195,9 @@
             // 終點：優化微調，讓角色擊打位置更貼近怪物本身
             const targetRect = targetEl.getBoundingClientRect();
             // X 軸調整：從左側稍微靠右一點點，讓手部重疊在卡牌上 (原 -40 改為 -10)
-            const targetX = targetRect.left - 90; 
+            const targetX = targetRect.left - 80; 
             // Y 軸調整：將角色高度對齊怪物的下半部中心，打擊感更扎實
-            const targetY = targetRect.top + (targetRect.height * 0.5);
+            const targetY = targetRect.top + (targetRect.height * 0.0);
 
            app.playRpgCloneAnimation(playerName, startX, startY, targetX, targetY, 'attack', 'attack');
         },
