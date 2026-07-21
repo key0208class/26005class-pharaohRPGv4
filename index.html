@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.9.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.1.1 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -626,7 +626,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.9.0 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.1.1 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -925,6 +925,8 @@
                     <button onclick="app.switchAdminTab('shop')" id="tab-btn-shop" class="admin-tab-btn flex-1 whitespace-nowrap">🛒 冒險商店</button>
 					<!-- [新增 v4.7.6.0] 黑市分頁按鈕 -->
                    <button onclick="app.switchAdminTab('blackmarket')" id="tab-btn-blackmarket" class="admin-tab-btn flex-1 whitespace-nowrap">🧛 黑市商品</button>
+                   <!-- [新增 v4.9.1.0] 寵物系統分頁按鈕 -->
+                   <button onclick="app.switchAdminTab('pets')" id="tab-btn-pets" class="admin-tab-btn flex-1 whitespace-nowrap">🐾 寵物系統</button>
                     <!-- [新增 v4.8.0.8] 角色圖示分頁按鈕 -->
                     <button onclick="app.switchAdminTab('sprites')" id="tab-btn-sprites" class="admin-tab-btn flex-1 whitespace-nowrap">🧙 角色圖示</button>
 					<!-- [新增] 資訊公告分頁按鈕 -->
@@ -1679,6 +1681,23 @@
                         </div>
                     </div>
                     <!-- 資訊交流管理分頁內容結束 -->
+					<!-- [新增 v4.9.1.0] 寵物系統管理分頁內容 -->
+                    <div id="tab-content-pets" class="admin-tab-content space-y-4">
+                        <div class="flex justify-between items-center mb-4 bg-amber-100 p-3 rounded-xl border border-amber-200 shrink-0">
+                            <h4 class="font-bold text-amber-900 text-lg flex items-center gap-2">🐾 寵物族系與型態圖鑑</h4>
+                            <div class="flex gap-2">
+                                <button onclick="app.toast('✅ 寵物資料已暫存 (請記得點擊最下方儲存全域設定)')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-blue-700 active:scale-95 transition-transform flex items-center gap-2">
+                                    <span>💾</span> 暫存設定
+                                </button>
+                                <button onclick="app.addNewPetFamily()" class="bg-amber-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-amber-700 active:scale-95 transition-transform flex items-center gap-2">
+                                    <span>➕</span> 新增族系
+                                </button>
+                            </div>
+                        </div>
+                        <div id="pet-system-container" class="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-10">
+                            <!-- JS 動態生成寵物清單 -->
+                        </div>
+                    </div>
 					<!-- [新增 v4.8.0.8] 角色圖示設定分頁 (整合動態去背與分割) -->
                     <div id="tab-content-sprites" class="admin-tab-content space-y-4">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -1895,6 +1914,67 @@
             </div>
         </div>
         <!-- 玩家閱讀公告彈窗結束 -->
+		<!-- [新增] 寵物召喚祭壇視窗開始 -->
+        <div id="pet-summon-modal" class="fixed inset-0 z-[90] hidden flex-col items-center justify-center bg-slate-900/95 backdrop-blur-md overflow-hidden">
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 pointer-events-none animate-spin-slow"></div>
+            
+            <div class="text-center mb-8 relative z-20">
+                <h2 class="text-4xl md:text-6xl font-black text-amber-400 tracking-widest drop-shadow-[0_4px_0_rgba(0,0,0,0.8)] flex items-center justify-center gap-4">
+                    <span class="text-yellow-300 animate-pulse">✨</span> 魔法召喚祭壇 <span class="text-yellow-300 animate-pulse">✨</span>
+                </h2>
+                <p class="text-amber-200 mt-2 font-bold tracking-widest">注入魔力，喚醒沉睡的生靈</p>
+            </div>
+
+            <!-- 祭壇本體 -->
+            <div class="relative flex flex-col items-center justify-center min-h-[400px]">
+                <div class="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full"></div>
+                
+                <div id="pet-altar-container" class="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center z-10 transition-transform">
+                    <!-- 光柱 (預設隱藏) -->
+                    <div id="pet-summon-beam" class="hidden absolute bottom-[40%] left-1/2 -translate-x-1/2 w-32 h-64 md:w-48 md:h-80 bg-gradient-to-t from-yellow-300 via-amber-200/80 to-transparent blur-md origin-bottom animate-summon-beam z-20 pointer-events-none rounded-t-full"></div>
+                    
+                    <!-- 法陣轉動 -->
+                    <div class="w-full h-full absolute inset-0" style="transform: rotateX(65deg);">
+                        <div class="w-full h-full rounded-full drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]">
+                            <div class="absolute inset-0 border-[6px] md:border-[8px] border-amber-400 border-dashed rounded-full animate-spin-slow"></div>
+                            <div class="absolute inset-6 md:inset-8 border-[4px] md:border-[6px] border-amber-200 border-dotted rounded-full animate-spin-reverse"></div>
+                            <div class="absolute inset-12 md:inset-16 border-2 border-amber-300 flex items-center justify-center rotate-45 animate-spin-slow"></div>
+                            <div class="absolute inset-12 md:inset-16 border-2 border-amber-300 flex items-center justify-center animate-spin-slow"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 待機粒子 -->
+                    <div id="pet-summon-idle-particle" class="absolute bottom-[45%] left-1/2 -translate-x-1/2 animate-float-up z-30 flex flex-col items-center">
+                        <img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%AF%B5%E7%89%A9%E8%9B%8B%E5%9C%96%E7%A4%BA.png" class="w-16 h-16 object-contain filter drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]">
+                    </div>
+                </div>
+                
+                <!-- 祭壇底座 -->
+                <div class="w-56 md:w-72 h-16 bg-[#2d1b0a] rounded-[100%] border-b-[8px] border-[#1a0f05] shadow-[0_15px_30px_rgba(0,0,0,0.6)] -mt-16 md:-mt-20 z-0 relative">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-[100%]"></div>
+                </div>
+            </div>
+
+            <!-- 操作區 -->
+            <div class="mt-8 z-20 flex gap-4">
+                <button onclick="app.closePetSummonAltar()" class="bg-slate-700 text-white font-black text-xl py-3 px-8 rounded-xl shadow-lg border-b-4 border-slate-900 active:border-b-0 active:translate-y-1 transition-all">返回背包</button>
+                <button id="pet-summon-btn" onclick="app.startPetSummon()" class="bg-gradient-to-r from-amber-500 to-amber-700 text-white font-black text-xl py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(217,119,6,0.5)] border-b-4 border-amber-900 active:border-b-0 active:translate-y-1 transition-all flex items-center gap-2">🔮 注入魔力，召喚！</button>
+            </div>
+
+            <!-- 結果顯示遮罩 -->
+            <div id="pet-summon-result" class="hidden absolute inset-0 z-50 flex-col items-center justify-center bg-black/80 backdrop-blur-sm animate-[fadeIn_0.5s_ease-out]">
+                <div class="text-center">
+                    <div id="pet-result-img-wrapper" class="w-32 h-32 md:w-48 md:h-48 mx-auto relative legendary-fx">
+                        <img id="pet-result-img" src="" class="w-full h-full object-contain filter drop-shadow-lg">
+                    </div>
+                    <h3 id="pet-result-name" class="text-4xl md:text-5xl font-black text-white mt-6 drop-shadow-md">寵物名稱</h3>
+                    <div class="inline-block bg-amber-600/80 text-white text-sm font-bold px-3 py-1 rounded-full mt-2 border border-amber-400" id="pet-result-form">第一型態</div>
+                    <p id="pet-result-msg" class="text-lg md:text-xl font-bold text-gray-300 mt-4 bg-black/50 px-6 py-2 rounded-lg border border-gray-600">結果訊息</p>
+                </div>
+                <button onclick="app.closePetSummonAltar()" class="mt-8 bg-white text-black font-black text-xl py-3 px-12 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.5)] hover:scale-105 active:scale-95 transition-all">收下寵物</button>
+            </div>
+        </div>
+        <!-- 寵物召喚祭壇視窗結束 -->
 		<!-- [新增 v4.7.7.4] 角色背包與裝備系統 (RPG Style) -->
         <div id="character-backpack-modal" class="fixed inset-0 z-[80] hidden flex items-center justify-center modal-backdrop backdrop-blur-md">
             <!-- [v4.7.7.7 修改] 羊皮紙風格介面 -->
@@ -5121,6 +5201,148 @@
             }
             container.innerHTML = html;
         },
+		// ==========================================
+        // --- [新增 v4.9.1.0] 寵物系統後台管理邏輯 ---
+        // ==========================================
+        addNewPetFamily: () => {
+            if (!app.state.tempPetList) app.state.tempPetList = [];
+            app.state.tempPetList.push({
+                id: 'pet_' + Date.now(),
+                name: '新寵物族系',
+                weight: 10,
+                isEnabled: false, // 預設關閉防呆
+                forms: [
+                    { lv: 1, name: '第一型態', bmIdx: '', spriteIdx: '', atkName: '野蠻衝刺', atkBaseProb: 20, atkLvCoef: 1, atkDmg: 2, skillName: '烈焰衝擊', skillProb: 50, skillDmg: 4 }
+                ]
+            });
+            const newIdx = app.state.tempPetList.length - 1;
+            if(!app.state.adminPetOpen) app.state.adminPetOpen = {};
+            app.state.adminPetOpen[newIdx] = true; // 新增族系時預設展開
+            app.renderPetListUI();
+            setTimeout(() => {
+                const c = app.el('pet-system-container');
+                if (c) c.scrollTop = c.scrollHeight;
+            }, 100);
+        },
+
+        toggleAdminPetFamily: (fIdx) => {
+            if(!app.state.adminPetOpen) app.state.adminPetOpen = {};
+            app.state.adminPetOpen[fIdx] = !app.state.adminPetOpen[fIdx];
+            const body = document.getElementById(`admin-pet-family-body-${fIdx}`);
+            const icon = document.getElementById(`admin-pet-fold-icon-${fIdx}`);
+            if(body) {
+                if(app.state.adminPetOpen[fIdx]) {
+                    body.classList.remove('hidden');
+                    body.classList.add('flex');
+                    if(icon) icon.textContent = '▲';
+                } else {
+                    body.classList.add('hidden');
+                    body.classList.remove('flex');
+                    if(icon) icon.textContent = '▼';
+                }
+            }
+        },
+
+        deletePetFamily: (fIdx) => {
+            if (confirm('🗑️ 確定要刪除整個寵物族系嗎？(若玩家已擁有該寵物將會出現顯示異常)')) {
+                app.state.tempPetList.splice(fIdx, 1);
+                app.renderPetListUI();
+            }
+        },
+
+        addPetForm: (fIdx) => {
+            if (!app.state.tempPetList[fIdx].forms) app.state.tempPetList[fIdx].forms = [];
+            app.state.tempPetList[fIdx].forms.push({
+                lv: 30, name: '進階型態', bmIdx: '', spriteIdx: '', atkName: '進階攻擊', atkBaseProb: 30, atkLvCoef: 1, atkDmg: 3, skillName: '進階技能', skillProb: 65, skillDmg: 5
+            });
+            app.renderPetListUI();
+        },
+
+        deletePetForm: (fIdx, mIdx) => {
+            if (confirm('🗑️ 確定要刪除此進化型態嗎？')) {
+                app.state.tempPetList[fIdx].forms.splice(mIdx, 1);
+                app.renderPetListUI();
+            }
+        },
+
+        updatePetData: (fIdx, field, val, mIdx = null) => {
+            const family = app.state.tempPetList[fIdx];
+            if (!family) return;
+
+            // 處理族系層級
+            if (mIdx === null) {
+                if (field === 'isEnabled') family.isEnabled = val;
+                else if (field === 'weight') family.weight = Math.max(0, parseInt(val) || 0);
+                else family[field] = val;
+            } 
+            // 處理型態層級
+            else {
+                const form = family.forms[mIdx];
+                if (!form) return;
+                
+                // [修正] 直接用 field.replace('form_', '') 當作 key，修正原本沒有對應 bmIdx 與 spriteIdx 的問題
+                const key = field.replace('form_', '');
+                if (['lv', 'atkBaseProb', 'atkLvCoef', 'atkDmg', 'skillProb', 'skillDmg'].includes(key)) {
+                    form[key] = parseInt(val) || 0;
+                } else {
+                    form[key] = val;
+                }
+            }
+        },
+
+        renderPetListUI: () => {
+            const list = app.state.tempPetList || [];
+            const container = app.el('pet-system-container');
+            if (!container) return;
+
+            const bmList = app.state.globalSettings?.blackMarketList || [];
+            const spriteList = app.state.globalSettings?.spriteList || [];
+
+            if(!app.state.adminPetOpen) app.state.adminPetOpen = {};
+
+            let bmOptsBase = '<option value="">--選擇黑市商品圖(做為寵物蛋/頭像)--</option>';
+            bmList.forEach((bm, i) => { if (bm && !bm.isDeleted) bmOptsBase += `<option value="${i}">${bm.name}</option>`; });
+
+            let spOptsBase = '<option value="">--選擇角色動作(做為戰鬥跟隨與攻擊)--</option>';
+            spriteList.forEach((sp, i) => { if (sp) spOptsBase += `<option value="${i}">${sp.name}</option>`; });
+
+            if(list.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-10 font-bold border-2 border-dashed border-slate-300 rounded-xl m-2">尚未設定任何寵物族系，請點擊上方新增</div>';
+                return;
+            }
+
+            let html = '';
+            list.forEach((family, fIdx) => {
+                const isEnabledChecked = family.isEnabled !== false ? 'checked' : '';
+                
+                const isOpen = app.state.adminPetOpen[fIdx] !== false; // 預設開啟
+                const bodyClass = isOpen ? 'flex' : 'hidden';
+                const foldIcon = isOpen ? '▲' : '▼';
+
+                // 取出族系代表圖 (第一型態的黑市圖片)
+                const firstFormBmIdx = family.forms && family.forms[0] ? family.forms[0].bmIdx : '';
+                const firstBmItem = bmList[firstFormBmIdx];
+                const familyImg = firstBmItem ? (firstBmItem[`img${firstBmItem.currentEditLv||1}`] || firstBmItem.img1 || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png') : 'https://placehold.co/40x40?text=?';
+
+                let formsHtml = '';
+                
+                (family.forms || []).forEach((form, mIdx) => {
+                    let currentBmOpts = bmOptsBase.replace(`value="${form.bmIdx}"`, `value="${form.bmIdx}" selected`);
+                    let currentSpOpts = spOptsBase.replace(`value="${form.spriteIdx}"`, `value="${form.spriteIdx}" selected`);
+                    
+                    // [新增] 即時預覽圖
+                    const bmItem = bmList[form.bmIdx];
+                    const formImg = bmItem ? (bmItem[`img${bmItem.currentEditLv||1}`] || bmItem.img1 || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png') : 'https://placehold.co/40x40?text=?';
+                    
+                    // 嚴格無空白節點壓縮的型態卡片 HTML (加入左側預覽圖)
+                    formsHtml += `<div class="bg-white p-2 rounded-lg border border-amber-200 mb-2 shadow-sm relative flex flex-col md:flex-row gap-3"><div class="w-16 h-16 bg-slate-100 rounded border border-slate-300 flex-shrink-0 flex items-center justify-center overflow-hidden"><img src="${formImg}" class="w-full h-full object-contain"></div><div class="flex-1 flex flex-col"><div class="absolute top-1 right-1"><button onclick="app.deletePetForm(${fIdx}, ${mIdx})" class="text-red-400 hover:text-red-600 font-black px-2 py-0.5 text-lg transition-transform hover:scale-110">×</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2 pr-6"><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-gray-500">進化等級門檻 (Lv)</label><input type="number" value="${form.lv}" onchange="app.updatePetData(${fIdx}, 'form_lv', this.value, ${mIdx})" class="border border-slate-300 rounded px-1 py-0.5 text-sm font-bold w-full focus:bg-amber-50 outline-none" min="1"></div><div class="flex flex-col md:col-span-2"><label class="text-[0.65rem] font-bold text-gray-500">型態名稱 (如: 烈焰豬)</label><input type="text" value="${form.name}" onchange="app.updatePetData(${fIdx}, 'form_name', this.value, ${mIdx})" class="border border-slate-300 rounded px-1 py-0.5 text-sm font-bold w-full focus:bg-amber-50 outline-none"></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-amber-700">對應黑市圖片 (UI顯示用)</label><select onchange="app.updatePetData(${fIdx}, 'form_bmIdx', this.value, ${mIdx}); app.renderPetListUI();" class="border border-amber-300 rounded px-1 py-0.5 text-xs font-bold w-full bg-amber-50 cursor-pointer outline-none">${currentBmOpts}</select></div><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-indigo-700">對應戰鬥動作 (舞台動畫用)</label><select onchange="app.updatePetData(${fIdx}, 'form_spriteIdx', this.value, ${mIdx})" class="border border-indigo-300 rounded px-1 py-0.5 text-xs font-bold w-full bg-indigo-50 cursor-pointer outline-none">${currentSpOpts}</select></div></div><div class="bg-orange-50 p-2 rounded border border-orange-200 mt-1"><div class="text-[0.65rem] font-black text-orange-800 mb-1">⚔️ 基礎攻擊設定 (觸發機率 = 基礎機率 + 寵物等級*係數)</div><div class="grid grid-cols-4 gap-1"><input type="text" value="${form.atkName}" onchange="app.updatePetData(${fIdx}, 'form_atkName', this.value, ${mIdx})" placeholder="攻擊名稱" title="攻擊名稱" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.atkBaseProb}" onchange="app.updatePetData(${fIdx}, 'form_atkBaseProb', this.value, ${mIdx})" placeholder="基礎機率%" title="基礎機率(%)" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.atkLvCoef}" onchange="app.updatePetData(${fIdx}, 'form_atkLvCoef', this.value, ${mIdx})" placeholder="成長係數%" title="每升1級增加的機率(%)" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.atkDmg}" onchange="app.updatePetData(${fIdx}, 'form_atkDmg', this.value, ${mIdx})" placeholder="附加傷害" title="附加傷害" class="border border-red-300 bg-red-50 rounded px-1 py-0.5 text-xs font-black text-red-600 w-full text-center"></div></div><div class="bg-purple-50 p-2 rounded border border-purple-200 mt-1"><div class="text-[0.65rem] font-black text-purple-800 mb-1">✨ 寵物技能設定 (基礎攻擊發動時，有機率變異為此技能)</div><div class="grid grid-cols-3 gap-1"><input type="text" value="${form.skillName}" onchange="app.updatePetData(${fIdx}, 'form_skillName', this.value, ${mIdx})" placeholder="技能名稱" title="技能名稱" class="border border-purple-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.skillProb}" onchange="app.updatePetData(${fIdx}, 'form_skillProb', this.value, ${mIdx})" placeholder="變異機率%" title="變異機率(%)" class="border border-purple-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.skillDmg}" onchange="app.updatePetData(${fIdx}, 'form_skillDmg', this.value, ${mIdx})" placeholder="附加傷害" title="附加傷害" class="border border-red-300 bg-red-50 rounded px-1 py-0.5 text-xs font-black text-red-600 w-full text-center"></div></div></div></div>`;
+                });
+
+                // 族系外框 HTML (改為可摺疊，並加入預覽圖)
+                html += `<div class="bg-white rounded-lg border border-amber-300 shadow-sm relative flex flex-col mb-3"><div class="flex flex-wrap items-center justify-between p-2 bg-amber-50 border-b border-amber-200 cursor-pointer rounded-t-lg hover:bg-amber-100 transition-colors gap-2" onclick="app.toggleAdminPetFamily(${fIdx})"><div class="flex items-center gap-2"><span id="admin-pet-fold-icon-${fIdx}" class="text-amber-600 font-bold text-xs w-4 text-center">${foldIcon}</span><div class="w-10 h-10 bg-white rounded border border-slate-300 overflow-hidden flex-shrink-0"><img src="${familyImg}" class="w-full h-full object-contain"></div><input type="text" value="${family.name}" onclick="event.stopPropagation()" onchange="app.updatePetData(${fIdx}, 'name', this.value)" class="font-black text-lg border-b-2 border-amber-400 bg-transparent focus:outline-none w-32 md:w-48 text-slate-800" placeholder="族系名稱"></div><div class="flex items-center gap-2" onclick="event.stopPropagation()"><div class="flex items-center gap-1 bg-amber-100 border border-amber-300 rounded px-1.5 py-0.5 shadow-inner"><span class="text-[0.6rem] font-black text-amber-800">抽卡權重</span><input type="number" value="${family.weight}" onchange="app.updatePetData(${fIdx}, 'weight', this.value)" class="w-10 border-none bg-transparent text-center font-bold text-sm outline-none text-amber-900" min="0"></div><label class="flex items-center gap-1 text-xs font-bold text-slate-700 cursor-pointer bg-white px-2 py-1 rounded border border-slate-200 shadow-sm">開放抽取 <div class="switch scale-[0.6] m-0"><input type="checkbox" onchange="app.updatePetData(${fIdx}, 'isEnabled', this.checked)" ${isEnabledChecked}><span class="slider"></span></div></label><button onclick="app.deletePetFamily(${fIdx})" class="text-red-500 hover:text-white hover:bg-red-500 bg-white border border-red-200 px-2 py-0.5 rounded text-xs font-bold transition-colors shadow-sm z-10">刪除族系</button></div></div><div id="admin-pet-family-body-${fIdx}" class="p-3 flex-col ${bodyClass} bg-slate-50 rounded-b-lg"><div class="flex justify-between items-center mb-2"><span class="text-xs font-black text-slate-600 tracking-wider">🧬 成長進化路線</span><button onclick="app.addPetForm(${fIdx})" class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-green-700 shadow-sm transition-transform active:scale-95 flex items-center gap-1"><span>➕</span> 新增進化型態</button></div><div class="space-y-2">${formsHtml}</div></div></div>`;
+            });
+            container.innerHTML = html;
+        },
        // --- v4.8.0.8 角色圖示管理系統 (優化排版與排序版) ---
         
         renderSpriteListUI: () => {
@@ -7159,6 +7381,8 @@
                 app.state.tempMonsterSkills = settings.monsterSkills || [];
 			// [v4.7.6.0] 讀取黑市設定
             app.state.tempBlackMarketList = settings.blackMarketList || [];
+			// [新增 v4.9.1.0] 讀取寵物系統設定
+            app.state.tempPetList = settings.petList || [];
             // [新增] 讀取合成配方
             app.state.tempCraftingRecipes = settings.craftingRecipes || [];
             // [v4.8.0.6] 確保讀取戰役資料到 state，避免存檔時遺失
@@ -7284,6 +7508,8 @@
                 shopConfig: shopConfig,
                 // [v4.7.6.0] 儲存黑市商品列表
             blackMarketList: app.state.tempBlackMarketList || [],
+			// [新增 v4.9.1.0] 儲存寵物系統列表
+            petList: app.state.tempPetList || [],
             // [新增] 儲存合成配方
             craftingRecipes: app.state.tempCraftingRecipes || [],
             // [v4.8.0.6] 確保戰役資料被寫回，避免遺失
@@ -14965,7 +15191,7 @@ for (const slot of slots) {
             app.el('bp-item-action-panel').classList.add('hidden');
             app.el('bp-item-action-panel').classList.remove('flex');
         },
-// [修改] 使用背包消耗品道具 (動態合成系統)
+// [修改] 使用背包消耗品道具 (支援動態合成與寵物蛋)
         useBackpackItem: (itemId) => {
             const globalList = app.state.globalSettings?.blackMarketList || [];
             const item = globalList[itemId];
@@ -14974,9 +15200,173 @@ for (const slot of slots) {
             if (item.name.includes('烈焰熔爐')) {
                 app.state.currentForgeItemId = itemId; // 記錄使用的熔爐ID
                 app.openPlayerCraftingUI();
+            } else if (item.name.includes('寵物蛋')) {
+                // [新增] 攔截寵物蛋，開啟召喚祭壇
+                app.state.currentEggItemId = itemId;
+                app.openPetSummonAltar();
             }
         },
+// ==========================================
+        // --- [新增] 寵物召喚祭壇核心邏輯 ---
+        // ==========================================
+        openPetSummonAltar: () => {
+            // 隱藏背包，顯示祭壇
+            app.el('character-backpack-modal').classList.add('hidden');
+            app.el('pet-summon-modal').classList.remove('hidden');
+            app.el('pet-summon-modal').classList.add('flex');
+            
+            // 重置按鈕與祭壇狀態
+            const btn = app.el('pet-summon-btn');
+            btn.disabled = false;
+            btn.innerHTML = '🔮 注入魔力，召喚！';
+            
+            app.el('pet-altar-container').className = 'relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center z-10 transition-transform';
+            app.el('pet-summon-beam').classList.add('hidden');
+            app.el('pet-summon-result').classList.add('hidden');
+            app.el('pet-summon-result').classList.remove('flex');
+            app.el('pet-summon-idle-particle').classList.remove('hidden');
+            
+            app.playSe('charge'); // 進入時的魔法音效
+        },
 
+        startPetSummon: () => {
+            const eggItemId = app.state.currentEggItemId;
+            const petList = app.state.globalSettings?.petList || [];
+            
+            // 1. 過濾開放抽取且有設定權重的寵物
+            const pool = petList.map((p, idx) => ({ ...p, originalIdx: idx })).filter(p => p.isEnabled !== false && p.weight > 0);
+            
+            if (pool.length === 0) {
+                app.toast('❌ 目前祭壇沒有開放任何寵物可供召喚！', 1);
+                app.closePetSummonAltar();
+                return;
+            }
+
+            // 鎖定按鈕
+            const btn = app.el('pet-summon-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-spin text-2xl">🌀</span> 召喚中...';
+
+            // 2. 依據權重 (Weight) 進行抽卡演算法
+            let totalWeight = 0;
+            pool.forEach(p => totalWeight += parseInt(p.weight));
+            
+            let randomNum = Math.random() * totalWeight;
+            let selectedPet = pool[0];
+            for (let i = 0; i < pool.length; i++) {
+                randomNum -= parseInt(pool[i].weight);
+                if (randomNum <= 0) {
+                    selectedPet = pool[i];
+                    break;
+                }
+            }
+
+            // 3. 啟動動畫序列
+            // 階段一：祭壇震動共鳴
+            app.el('pet-altar-container').classList.add('animate-altar-rumble');
+            app.el('pet-summon-idle-particle').classList.add('hidden');
+            if (navigator.vibrate) navigator.vibrate([50, 50, 100, 50, 100]); // 震動回饋
+            app.playSe('charge');
+            
+            setTimeout(() => {
+                // 階段二：光柱爆發
+                app.el('pet-altar-container').classList.remove('animate-altar-rumble');
+                app.el('pet-summon-beam').classList.remove('hidden');
+                if (navigator.vibrate) navigator.vibrate([200, 100, 300]); 
+                app.playSe('slash'); // 借用拔刀音效製造爆發感
+                
+                setTimeout(() => {
+                    // 階段三：寫入資料庫並展示結果
+                    app.processPetSummonResult(selectedPet, eggItemId);
+                }, 1500); // 配合光柱升起動畫時間
+            }, 1500); // 震動時間
+        },
+
+        processPetSummonResult: (pet, eggItemId) => {
+            const uid = app.state.user ? app.state.user.uid : null;
+            if (!uid) {
+                app.toast('❌ 訪客無法與寵物締結契約，請登入 Google 帳號！', 1);
+                app.closePetSummonAltar();
+                return;
+            }
+
+            const userRef = db.ref(`users/${uid}`);
+            userRef.transaction(userData => {
+                if (userData) {
+                    // 扣除 1 顆寵物蛋
+                    if (userData.inventory && userData.inventory[eggItemId] > 0) {
+                        userData.inventory[eggItemId]--;
+                        if (userData.inventory[eggItemId] === 0) delete userData.inventory[eggItemId];
+                    } else {
+                        return; // 數量不足防呆，取消寫入
+                    }
+
+                    // 檢查與更新寵物資料
+                    if (!userData.pets) userData.pets = {};
+                    
+                    if (userData.pets[pet.originalIdx]) {
+                        // 已經擁有：增加 1000 EXP
+                        userData.pets[pet.originalIdx].exp = (userData.pets[pet.originalIdx].exp || 0) + 1000;
+                        userData._tempSummonStatus = 'duplicate'; 
+                    } else {
+                        // 首次獲得：新增 Lv.1 寵物
+                        userData.pets[pet.originalIdx] = {
+                            exp: 0,
+                            level: 1
+                        };
+                        userData._tempSummonStatus = 'new';
+                    }
+                }
+                return userData;
+            }, (error, committed, snapshot) => {
+                if (committed) {
+                    const newData = snapshot.val();
+                    const status = newData._tempSummonStatus;
+                    
+                    // 清除臨時狀態旗標
+                    db.ref(`users/${uid}/_tempSummonStatus`).remove();
+
+                    // 取出第一型態的圖片 (若無則使用預設寵物蛋圖)
+                    const globalBm = app.state.globalSettings?.blackMarketList || [];
+                    const firstForm = (pet.forms && pet.forms[0]) ? pet.forms[0] : {};
+                    const bmItem = globalBm[firstForm.bmIdx];
+                    const petImg = bmItem ? (bmItem[`img${bmItem.currentEditLv||1}`] || bmItem.img1) : 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%AF%B5%E7%89%A9%E8%9B%8B%E5%9C%96%E7%A4%BA.png';
+
+                    // 填寫結果介面資料
+                    app.el('pet-result-img').src = petImg;
+                    app.el('pet-result-name').textContent = pet.name;
+                    app.el('pet-result-form').textContent = firstForm.name || '第一型態';
+                    
+                    if (status === 'duplicate') {
+                        app.el('pet-result-msg').innerHTML = `🐾 <span class="text-amber-400">重複獲得！</span>轉化為 <span class="text-green-400 font-black">+1000</span> 點寵物經驗！`;
+                        app.el('pet-result-img-wrapper').className = 'w-32 h-32 md:w-48 md:h-48 mx-auto relative epic-fx'; // 重複給予史詩紫光
+                    } else {
+                        app.el('pet-result-msg').innerHTML = `🎉 <span class="text-green-400">首次獲得！</span>成功與【${pet.name}】締結契約！`;
+                        app.el('pet-result-img-wrapper').className = 'w-32 h-32 md:w-48 md:h-48 mx-auto relative legendary-fx'; // 首次獲得傳說金光
+                    }
+
+                    // 顯示結果視窗
+                    app.el('pet-summon-result').classList.remove('hidden');
+                    app.el('pet-summon-result').classList.add('flex');
+                    app.playSe('levelUp'); // 播放勝利獲得音效
+                    
+                    // 同步更新記憶體中的背包數量 (重要：這樣回去背包介面時蛋的數量才會減少)
+                    app.state.currentBackpackData.inventory = newData.inventory || {};
+                } else {
+                    app.toast('❌ 祭壇魔力中斷，蛋數量不足或網路異常。', 1);
+                    app.closePetSummonAltar();
+                }
+            });
+        },
+
+        closePetSummonAltar: () => {
+            app.el('pet-summon-modal').classList.add('hidden');
+            app.el('pet-summon-modal').classList.remove('flex');
+            
+            // 恢復顯示背包，並強制重繪背包 UI 以更新剩餘的蛋數量
+            app.el('character-backpack-modal').classList.remove('hidden');
+            app.renderCharacterBackpackUI(); 
+        },
         // --- [新增] 玩家合成系統 UI 與邏輯 ---
         openPlayerCraftingUI: () => {
             app.el('player-crafting-modal').classList.remove('hidden');
@@ -16479,17 +16869,21 @@ addRewardItem: () => {
                 }
             }
 
-            if (tabName === 'blackmarket') app.renderBlackMarketListUI();
-            else if (tabName === 'monsters') app.renderMonsterListUI();
-            else if (tabName === 'sprites') {
+        if (tabName === 'blackmarket') {
+                app.renderBlackMarketListUI();
+            } else if (tabName === 'monsters') {
+                app.renderMonsterListUI();
+            } else if (tabName === 'pets') {
+                app.renderPetListUI(); 
+            } else if (tabName === 'sprites') {
                 app.renderSpriteListUI();
                 const idx = parseInt(app.el('edit-sprite-idx').value);
                 if (!isNaN(idx)) {
-                    // 延遲以確保 DOM 元素已完全顯示並具備正確的寬高
                     setTimeout(() => app.initShowcaseCanvas(), 50);
                 }
+            } else if (tabName === 'announcements') {
+                app.renderAdminAnnouncementList(); 
             }
-            else if (tabName === 'announcements') app.renderAdminAnnouncementList(); // [新增]
         },
 
         closeAdminSettings: () => {
