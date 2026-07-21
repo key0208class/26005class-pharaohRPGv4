@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.8.9.8.4 - 冒險模式版</title>
+    <title>神殿試煉 v4.8.9.9.0 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -626,7 +626,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.8.4 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.8.9.9.0 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -6158,7 +6158,7 @@
         // 計算標記衝刺的座標並觸發替身
         triggerMarkDashAnimation: (playerName, cardIdx, actType) => {
             const char = app.state.rpgChars[playerName];
-            if (!char || char.isHidden) return;
+            if (!char) return; // 移除 char.isHidden 限制，允許中斷動作
 
             const cardEl = document.getElementById(`pyramid-card-${cardIdx}`);
             const canvas = app.el('rpg-stage-canvas');
@@ -6181,7 +6181,7 @@
         // [新增] 計算攻擊瞬移的座標並觸發替身
         triggerAttackDashAnimation: (playerName) => {
             const char = app.state.rpgChars[playerName];
-            if (!char || char.isHidden) return;
+            if (!char) return; // 移除 char.isHidden 限制，允許中斷動作
 
             const canvas = app.el('rpg-stage-canvas');
             const targetEl = document.getElementById('active-monster-card');
@@ -6202,12 +6202,22 @@
            app.playRpgCloneAnimation(playerName, startX, startY, targetX, targetY, 'attack', 'attack');
         },
 
-        // 召喚替身飛躍全螢幕 (升級版：支援 3 階段來回 與 攻擊瞬移)
+        // 召喚替身飛躍全螢幕 (升級版：支援 3 階段來回 與 攻擊瞬移，加入中斷回收機制)
         playRpgCloneAnimation: (playerName, startX, startY, targetX, targetY, actionType, mode = 'mark') => {
             const char = app.state.rpgChars[playerName];
             if (!char) return;
             const spriteData = app.state.rpgSprites[char.gender] || app.state.rpgSprites['male'];
             if (!spriteData || !spriteData.actionCanvas || !spriteData.baseCanvas) return;
+
+            // 0. 中斷現有動畫 (防禦：標記途中收到攻擊)
+            if (char.cloneDiv && char.cloneDiv.parentNode) {
+                char.cloneDiv.parentNode.removeChild(char.cloneDiv);
+            }
+            if (char.cloneRAF) cancelAnimationFrame(char.cloneRAF);
+            if (char.cloneTimeouts) {
+                char.cloneTimeouts.forEach(clearTimeout);
+            }
+            char.cloneTimeouts = [];
 
             // 1. 隱藏本尊
             char.isHidden = true;
@@ -6215,10 +6225,10 @@
 
             // 2. 建立全螢幕漂浮替身容器
             const cloneDiv = document.createElement('div');
+            char.cloneDiv = cloneDiv; // 記錄在角色物件中
             const cloneCanvas = document.createElement('canvas');
-            // [特效優化] 攻擊時替身稍微放大更有魄力
+            
             const targetSize = (mode === 'attack') ? 95 : 75; 
-            // [修正] 增加畫布寬高倍率為 2 倍，避免攻擊放大時 Google 大頭貼與名稱被畫布邊緣切除 (Clipping)
             cloneCanvas.width = targetSize * 2.2;
             cloneCanvas.height = targetSize * 2.2;
             
@@ -6232,10 +6242,8 @@
                 pointer-events: none;
                 z-index: 10000;
             `;
-            // 若為攻擊模式，加入微弱的白光殘影特效
-            if (mode === 'attack') {
-                cloneDiv.style.filter = 'drop-shadow(0 0 15px rgba(255,255,255,0.8))';
-            }
+            if (mode === 'attack') cloneDiv.style.filter = 'drop-shadow(0 0 15px rgba(255,255,255,0.8))';
+            
             cloneDiv.appendChild(cloneCanvas);
             document.body.appendChild(cloneDiv);
 
@@ -6244,22 +6252,20 @@
             const config = spriteData.config;
             let frame = 0;
             let lastFrameTs = Date.now();
-            let animRAF;
             
             let phase = (mode === 'attack') ? 'teleport' : 'fly_up'; 
-            const flightTime = (mode === 'attack') ? 150 : 300; // 瞬移極快
+            const flightTime = (mode === 'attack') ? 150 : 300; 
             
-            // 計算動作停留時間
             const cols = config.actionCols || 4;
             const framesCount = (actionType === 'attack') ? cols * 2 : cols;
-            const holdTime = framesCount * 150 + 1000;  // 播完後定格 1 秒
+            const holdTime = framesCount * 150 + 1000;  
             const returnTime = 250; 
             
-            // 階段排程控制器
-            setTimeout(() => { phase = 'action'; frame = 0; }, flightTime);
+            // 階段排程控制器 (全部存入 char.cloneTimeouts 統一管理)
+            char.cloneTimeouts.push(setTimeout(() => { phase = 'action'; frame = 0; }, flightTime));
             
             if (mode === 'mark') {
-                setTimeout(() => { 
+                char.cloneTimeouts.push(setTimeout(() => { 
                     phase = 'fly_down'; 
                     const canvas = app.el('rpg-stage-canvas');
                     if (canvas) {
@@ -6268,15 +6274,13 @@
                         cloneDiv.style.left = `${cRect.left + canvas.width / 2}px`;
                         cloneDiv.style.top = `${cRect.top + canvas.height - 5}px`;
                     }
-                }, flightTime + holdTime);
+                }, flightTime + holdTime));
 
-                setTimeout(() => { phase = 'end'; }, flightTime + holdTime + returnTime);
+                char.cloneTimeouts.push(setTimeout(() => { phase = 'end'; }, flightTime + holdTime + returnTime));
             } else if (mode === 'attack') {
-                // 攻擊模式沒有飛回，直接結束淡出
-                setTimeout(() => { phase = 'end'; }, flightTime + holdTime);
+                char.cloneTimeouts.push(setTimeout(() => { phase = 'end'; }, flightTime + holdTime));
             }
 
-            // 啟動第一段飛行 (衝向目標)
             void cloneDiv.offsetWidth;
             if (mode === 'attack') {
                 cloneDiv.style.transition = `left ${flightTime}ms cubic-bezier(0.1, 0.9, 0.2, 1), top ${flightTime}ms cubic-bezier(0.1, 0.9, 0.2, 1), opacity ${flightTime}ms ease-in`;
@@ -6286,21 +6290,21 @@
             cloneDiv.style.left = `${targetX}px`;
             cloneDiv.style.top = `${targetY}px`;
             
-            app.playSe('charge'); // 衝刺音效
+            app.playSe('charge');
 
-            // 4. 替身影像繪製迴圈 (依據階段自動切換素材)
+            // 4. 替身影像繪製迴圈
             const drawClone = () => {
                 if (phase === 'end') {
-                    // 結束：淡出並恢復本尊
                     cloneDiv.style.transition = 'opacity 200ms ease-out';
                     cloneDiv.style.opacity = '0';
-                    setTimeout(() => {
-                        cloneDiv.remove();
+                    char.cloneTimeouts.push(setTimeout(() => {
+                        if (cloneDiv.parentNode) cloneDiv.remove();
+                        char.cloneDiv = null;
                         const canvas = app.el('rpg-stage-canvas');
-                        if (canvas) char.x = canvas.width / 2; // 強制歸位到正中間
+                        if (canvas) char.x = canvas.width / 2;
                         char.isHidden = false;
                         char.nextActionTime = Date.now() + 1000;
-                    }, 200);
+                    }, 200));
                     return;
                 }
 
@@ -6311,7 +6315,7 @@
                     const maxFrames = isAttackAction ? totalCols * 2 : totalCols;
                     
                     if (phase === 'action' && frame >= maxFrames - 1) {
-                        // 定格不動
+                        // 定格
                     } else {
                         frame++;
                     }
@@ -6320,19 +6324,18 @@
 
                 ctx.clearRect(0, 0, cloneCanvas.width, cloneCanvas.height);
 
-                let srcCanvas, gridX, gridY, cols, row, col;
+                let srcCanvas, gridX, gridY, cCols, row, col;
 
                 if (phase === 'fly_up' || phase === 'fly_down' || phase === 'teleport') {
                     srcCanvas = spriteData.baseCanvas;
-                    cols = config.cols || 4;
+                    cCols = config.cols || 4;
                     gridX = Array.isArray(config.gridX) && config.gridX.length>0 ? config.gridX : [0.25,0.5,0.75];
                     gridY = Array.isArray(config.gridY) && config.gridY.length>0 ? config.gridY : [0.2,0.4,0.6,0.8];
-                    // 攻擊瞬移時面向右邊 (1) 錯，右邊是 1 嗎？ 原版 0:下, 1:左, 2:右, 3:上
-                    row = phase === 'teleport' ? 1 : (phase === 'fly_up' ? 4 : 2); // 4是上, 2是下。我們保留原版替換的 logic
-                    col = frame % cols;
+                    row = phase === 'teleport' ? 1 : (phase === 'fly_up' ? 4 : 2);
+                    col = frame % cCols;
                 } else {
                     srcCanvas = spriteData.actionCanvas;
-                    cols = config.actionCols || 4;
+                    cCols = config.actionCols || 4;
                     gridX = Array.isArray(config.actionGridX) && config.actionGridX.length>0 ? config.actionGridX : [0.25,0.5,0.75];
                     gridY = Array.isArray(config.actionGridY) && config.actionGridY.length>0 ? config.actionGridY : [0.2,0.4,0.6,0.8];
                     
@@ -6340,11 +6343,11 @@
                     else if (actionType === 'flower') row = 1;
                     else if (actionType === 'hurt') row = 2;
                     else if (actionType === 'attack') {
-                        const attackFrame = frame % (cols * 2);
-                        row = 3 + Math.floor(attackFrame / cols);
-                        col = attackFrame % cols;
+                        const attackFrame = frame % (cCols * 2);
+                        row = 3 + Math.floor(attackFrame / cCols);
+                        col = attackFrame % cCols;
                     }
-                    if (actionType !== 'attack') col = frame % cols;
+                    if (actionType !== 'attack') col = frame % cCols;
                 }
 
                 const pointsY = [0, ...[...gridY].sort((a,b)=>a-b), 1].map(v => Math.floor(v * srcCanvas.height));
@@ -6362,21 +6365,16 @@
                     const drawX = cloneCanvas.width / 2 - drawW / 2;
                     const drawY = cloneCanvas.height - drawH - 10; 
 
-                    // 陰影
                     ctx.fillStyle = "rgba(0,0,0,0.3)";
                     ctx.beginPath();
                     ctx.ellipse(cloneCanvas.width/2, drawY + drawH, drawW/2.5, drawH/10, 0, 0, Math.PI*2);
                     ctx.fill();
 
-                    // 繪製
                     ctx.drawImage(srcCanvas, x1, y1, cellW, cellH, drawX, drawY, drawW, drawH);
 
-                    // 頭像跟隨與防裁切優化
                     const avatarImg = app.state.avatarImageCache[char.name];
                     if (avatarImg && avatarImg.complete && avatarImg.naturalWidth > 0) {
-                        // 依據模式調整頭像大小，攻擊時跟著變大更有氣勢
                         const r = (mode === 'attack') ? 16 : 12;
-                        // 微調 Y 軸，把頭像與名字稍微往上推，避免擋住攻擊特效
                         const ay = drawY - r - 6; 
                         
                         ctx.save();
@@ -6393,7 +6391,6 @@
                         ctx.drawImage(avatarImg, cloneCanvas.width/2 - r, ay - r, r*2, r*2);
                         ctx.restore();
                         
-                        // 名字
                         ctx.font = "bold 10px 'Noto Sans TC', sans-serif";
                         ctx.textAlign = "center";
                         ctx.lineWidth = 3;
@@ -6403,9 +6400,9 @@
                         ctx.fillText(char.name, cloneCanvas.width/2, ay - r - 4);
                     }
                 }
-                animRAF = requestAnimationFrame(drawClone);
+                char.cloneRAF = requestAnimationFrame(drawClone);
             };
-            animRAF = requestAnimationFrame(drawClone);
+            char.cloneRAF = requestAnimationFrame(drawClone);
         },
         // ==========================================
         // --- [新增] 展示區 AI 行走與動作引擎 ---
@@ -7938,16 +7935,16 @@
             // 若想要稍微有點順序，可以依名字排序： allPlayers.sort((a, b) => a.name.localeCompare(b.name));
 
             // 共用渲染邏輯：產生無空白節點的 HTML 字串
-           // 共用渲染邏輯：產生無空白節點的 HTML 字串 (v4.6.4 DQ升級版)
+         // 共用渲染邏輯：產生無空白節點的 HTML 字串 (v4.6.4 DQ升級版)
             const generateBoardHtml = (isCompact) => {
-                const avatars = ['💂','👸','🧙','🧝','🧛','🧚','🧞','🧜','🧟','🕵️'];
                 let listHtml = '';
                 
                 if (allPlayers.length === 0) {
                     listHtml = `<div class="text-center text-gray-400 py-4 text-xs">等待冒險者加入...</div>`;
                 } else {
                     allPlayers.forEach((p, index) => {
-                        const avatar = avatars[index % avatars.length];
+                        // 取得玩家個人頭像
+                        const userPhoto = p.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
                         const isMe = (p.name === app.state.myName);
                         const highlightClass = isMe ? 'bg-amber-100 border-amber-300' : 'bg-white border-slate-100';
                         const nameClass = isMe ? 'text-amber-900' : 'text-slate-700';
@@ -7973,41 +7970,28 @@
                             if (p.items.elixir > 0) itemsBadge += '🏺';
                         }
 
-                        // [UI調整] 
-                        // Row 1: Avatar + Lv + Name + Gold
-                        // Row 2: EXP Bar (左側) + Items (中間) + Score (右側)
-                        // 使用 flex-col 與 w-full 確保佈局
-                        
-                        // [v4.7.2.1] 進度條顏色：LV1~3 淺藍, LV4~6 深藍, LV7~10 金色
+                        // [v4.7.2.1] 進度條顏色
                         let barColor = 'bg-sky-400';
                         if (expInfo.lv >= 4 && expInfo.lv <= 6) barColor = 'bg-blue-700';
                         else if (expInfo.lv >= 7) barColor = 'bg-yellow-400';
                         
-                        // [新增] 讀取玩家血量，若無資料則預設 100
+                        // 讀取玩家血量
                         const currentHp = p.hp !== undefined ? p.hp : 100;
                         const maxHp = p.maxHp !== undefined ? p.maxHp : 100;
-                        // 血量過低時顯示紅色警示
                         const hpColorClass = currentHp < 30 ? 'text-red-600 animate-pulse' : 'text-red-500';
 
-                     // [修改 v4.7.0] 判斷是否受傷、補血或死亡復活中
+                        // 判斷是否受傷、補血或死亡復活中
                         const prevHp = app.state.lastPlayerHps[p.name];
                         let damageEffectClass = '';
                         
                         if (prevHp !== undefined) {
                             if (currentHp < prevHp) {
-                                // 血量減少：觸發受傷特效與動作
                                 damageEffectClass = 'player-damaged';
-                                if (typeof app.triggerRpgHurt === 'function') {
-                                    app.triggerRpgHurt(p.name);
-                                }
+                                if (typeof app.triggerRpgHurt === 'function') app.triggerRpgHurt(p.name);
                             } else if (currentHp > prevHp) {
-                                // [新增] 血量增加：觸發開心(補血)動作
-                                if (typeof app.triggerRpgHappy === 'function') {
-                                    app.triggerRpgHappy(p.name);
-                                }
+                                if (typeof app.triggerRpgHappy === 'function') app.triggerRpgHappy(p.name);
                             }
                         }
-                        // 更新血量紀錄
                         app.state.lastPlayerHps[p.name] = currentHp;
 
                         // 復活倒數 HTML
@@ -8023,8 +8007,7 @@
                             }
                         }
 
-                        // [修改 v4.7.0] 更新 HTML 結構，加入 HP/MaxHP 顯示、受傷特效、復活遮罩 (無空白節點壓縮版)
-                        // [v4.7.8.8] 生成裝備圖示 HTML
+                        // 生成裝備圖示 HTML
                         let equippedHtml = '';
                         if (p.equipped) {
                             const globalList = app.state.globalSettings?.blackMarketList || [];
@@ -8034,21 +8017,17 @@
                                     const lv = item.currentEditLv || 1;
                                     const img = item[`img${lv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
                                     const maxLv = item.maxLv || 1;
-                                    // 若最高等級 > 1 才顯示 LV 標籤 (極簡版，僅顯示數字)
                                     const lvTag = maxLv > 1 ? `<span class="absolute -bottom-1 -right-1 bg-black/80 text-amber-300 text-[0.5rem] px-0.5 rounded leading-none font-bold">${lv}</span>` : '';
-                                    
                                     equippedHtml += `<div class="relative w-5 h-5 bg-slate-800 rounded border border-amber-500/50 flex items-center justify-center shadow-sm" title="${item.name}"><img src="${img}" class="w-full h-full object-contain p-0.5">${lvTag}</div>`;
                                 }
                             });
                         }
-                        
-                        // 包裝裝備容器 (如果有的話)
                         if (equippedHtml) {
                             equippedHtml = `<div class="flex items-center gap-0.5 ml-1 bg-black/10 p-0.5 rounded">${equippedHtml}</div>`;
                         }
 
-                        // [修改 v4.7.8.8] 更新 HTML 結構，加入 HP/MaxHP 與 裝備顯示
-                        listHtml += `<div class="flex flex-col p-2 ${highlightClass} ${damageEffectClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01] relative overflow-hidden"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-1 overflow-hidden"><span class="text-xl filter drop-shadow-sm grayscale-[0.2]">${avatar}</span><span class="text-xs font-black text-white bg-slate-600 px-1 rounded transform scale-90">Lv.${expInfo.lv}</span><div class="flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 rounded border border-red-100 shadow-sm"><span class="text-[0.6rem] ${hpColorClass}">❤️</span><span class="text-[0.65rem] font-black text-slate-700 leading-none">${currentHp}/${maxHp}</span></div>${equippedHtml}<span class="font-bold ${nameClass} text-sm truncate max-w-[60px] md:max-w-[100px]">${p.name}</span></div><div class="flex items-center gap-1 text-xs font-bold text-yellow-700 bg-yellow-100 px-1.5 rounded-full border border-yellow-200"><span>💰</span><span>${gold}</span></div></div><div class="flex items-center justify-between w-full gap-2"><div class="flex-1 flex flex-col justify-center h-full"><div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden border border-black/10"><div class="${barColor} h-full transition-all duration-500" style="width:${expInfo.percent}%"></div></div></div><div class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden flex-shrink-0 text-right min-w-[20px]">${itemsBadge}</div><div class="font-black text-amber-700 text-lg leading-none">${p.score}</div></div>${deadOverlayHtml}</div>`;
+                        // [修改] 更新 HTML 結構：加入動態人物頭像
+                        listHtml += `<div class="flex flex-col p-2 ${highlightClass} ${damageEffectClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01] relative overflow-hidden"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-1 overflow-hidden"><img src="${userPhoto}" class="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-amber-300 object-cover shadow-sm flex-shrink-0"><span class="text-xs font-black text-white bg-slate-600 px-1 rounded transform scale-90">Lv.${expInfo.lv}</span><div class="flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 rounded border border-red-100 shadow-sm"><span class="text-[0.6rem] ${hpColorClass}">❤️</span><span class="text-[0.65rem] font-black text-slate-700 leading-none">${currentHp}/${maxHp}</span></div>${equippedHtml}<span class="font-bold ${nameClass} text-sm truncate max-w-[60px] md:max-w-[100px]">${p.name}</span></div><div class="flex items-center gap-1 text-xs font-bold text-yellow-700 bg-yellow-100 px-1.5 rounded-full border border-yellow-200"><span>💰</span><span>${gold}</span></div></div><div class="flex items-center justify-between w-full gap-2"><div class="flex-1 flex flex-col justify-center h-full"><div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden border border-black/10"><div class="${barColor} h-full transition-all duration-500" style="width:${expInfo.percent}%"></div></div></div><div class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden flex-shrink-0 text-right min-w-[20px]">${itemsBadge}</div><div class="font-black text-amber-700 text-lg leading-none">${p.score}</div></div>${deadOverlayHtml}</div>`;
                     });
                 }
                 return listHtml;
