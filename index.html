@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.1.1 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.1.3 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -626,7 +626,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.1.1 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.1.3 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -3354,12 +3354,12 @@
             }
             // --- 結束本地快取渲染 ---
 
-            // 從 Firebase 讀取該用戶的完整資料
+          // 從 Firebase 讀取該用戶的完整資料
             const userRef = db.ref(`users/${user.uid}`);
             userRef.off('value'); // [新增] 先註銷舊監聽，防止重複綁定
             userRef.on('value', snapshot => {
                 const data = snapshot.val() || {};
-                
+
               // [新增 v4.8.9.7.6] 資料抵達，解除同步鎖，並儲存最新快取供下次使用
                 app.state.isDataSyncing = false;
                 app.updateSyncLockUI(false); // [新增 v4.8.9.7.7] 雲端資料對齊完畢，點亮背包與黑市按鈕
@@ -3511,11 +3511,19 @@
         },
         // -------------------------------------
 
-        // v4.1.5: 處理登出 (包含 Firebase 與 本地)
+       // v4.1.5: 處理登出 (包含 Firebase 與 本地)
         logout: () => {
             // 無論是 Google 登入還是匿名，都先清除本地舊暫存，避免殘留
             localStorage.removeItem('pharaoh_v3_state');
             
+            // [新增] 判定是否為 GM 帳號，若是則清除權限並直接重整回歸訪客
+            if (app.state.user && app.state.user.uid === 'gm_admin_master_999') {
+                localStorage.removeItem('pharaoh_admin_token'); // 順便登出管理員身分
+                app.toast('👋 結束 GM 測試模式');
+                setTimeout(() => location.reload(), 500);
+                return;
+            }
+
             if (app.state.user) {
                 // 有 Google 登入：執行 Firebase 登出
                 auth.signOut().then(() => {
@@ -4654,7 +4662,7 @@
             }
         },
 
-        // [v4.2.3 修改] 驗證成功後寫入紀錄
+        // [v4.2.3 修改] 驗證成功後寫入紀錄，並加掛 GM 神級帳號判定邏輯
         verifyAdmin: () => {
             const pwd = app.el('admin-password-input').value;
             if (pwd === '6317261') {
@@ -4665,17 +4673,53 @@
                 app.fetchGlobalSettingsToUI(); 
                 app.el('admin-settings-modal').classList.remove('hidden');
                 app.toast('🔓 管理員驗證成功');
+
+                // [新增] 如果沒有登入 Google (是訪客狀態)，才載入 GM 專屬神級帳號
+                if (!app.state.user) {
+                    const gmUid = 'gm_admin_master_999';
+                    const gmUser = {
+                        uid: gmUid,
+                        displayName: 'GM 創世神',
+                        photoURL: 'https://cdn-icons-png.flaticon.com/512/6024/6024190.png'
+                    };
+                    
+                    const gmRef = db.ref(`users/${gmUid}`);
+                    gmRef.once('value', snap => {
+                        const data = snap.val() || {};
+                        const lv99Exp = app.getAccumulatedExp(99) + 1000; // 確保獲得99級經驗值
+                        
+                        gmRef.update({
+                            displayName: gmUser.displayName,
+                            photoURL: gmUser.photoURL,
+                            totalExp: data.totalExp ? Math.max(data.totalExp, lv99Exp) : lv99Exp,
+                            totalGold: 3000000, // [修改] 固定 300萬金幣
+                            isHidden: true, // 防呆：後台自動標記為隱藏
+                            lastActive: firebase.database.ServerValue.TIMESTAMP
+                        }).then(() => {
+                            app.handleAuthUser(gmUser); // 將其當作登入者載入系統
+                            app.toast('✨ 已切換至【GM 創世神】專屬測試帳號！', 1);
+                        });
+                    });
+                } else {
+                    app.toast(`✨ 保留目前帳號【${app.state.myName}】，並取得管理員權限！`, 1);
+                }
+
             } else {
                 app.toast('❌ 密碼錯誤');
             }
         },
 
-        // [v4.2.3 新增] 管理員登出功能
+       // [v4.2.3 新增] 管理員登出功能
         logoutAdmin: () => {
             if(confirm('🔒 確定要登出管理員模式嗎？\n下次進入需要重新輸入密碼。')) {
                 localStorage.removeItem('pharaoh_admin_token');
                 app.closeAdminSettings();
                 app.toast('🔒 管理員已登出');
+                
+                // [修正] 若當前為 GM 創世神，則直接觸發系統登出並重整頁面，恢復訪客身分
+                if (app.state.user && app.state.user.uid === 'gm_admin_master_999') {
+                    app.logout();
+                }
             }
         },
 // v4.1.8: 管理員分頁切換
@@ -14081,8 +14125,11 @@ for (const slot of slots) {
             // 判斷是否為管理員
             const isAdmin = localStorage.getItem('pharaoh_admin_token') === 'valid' || localStorage.getItem('campaign_admin_token') === 'valid';
 
-            let players = [];
+          let players = [];
             Object.keys(usersData).forEach(uid => {
+                // [新增] 絕對排除 GM 創世神帳號，不顯示在排行榜上
+                if (uid === 'gm_admin_master_999') return;
+
                 const data = usersData[uid];
                 
                 // 一般玩家看不到被隱藏的人
@@ -14218,7 +14265,7 @@ for (const slot of slots) {
             let userPhoto = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
             let accLv = 1;
             
-            // 若有登入 Google，讀取 Firebase 資料
+          // 若有登入 Google，讀取 Firebase 資料
             if (app.state.user) {
                 const uid = app.state.user.uid;
                 userName = app.state.user.displayName;
@@ -14229,6 +14276,13 @@ for (const slot of slots) {
                     const data = snap.val() || {};
                     userGold = data.totalGold || 0;
                     userExp = data.totalExp || 0;
+                    
+                    // [修正] 如果是 GM 創世神，每次進入黑市時自動將金錢補齊到 300 萬
+                    if (uid === 'gm_admin_master_999' && userGold < 3000000) {
+                        userGold = 3000000;
+                        db.ref(`users/${uid}/totalGold`).set(3000000);
+                    }
+                    
                     accLv = app.getAccountLevel(userExp);
                     
                     // 渲染介面 (傳入 inventory 與 equipped)
@@ -15164,12 +15218,20 @@ for (const slot of slots) {
             const btnEquip = app.el('btn-bp-equip');
             const btnUse = app.el('btn-bp-use');
             
-            // 如果道具名稱包含特定字眼(消耗品)，則顯示「使用」並隱藏「裝備」
-            if (itemData.name.includes('熔爐')) {
+           // 如果道具名稱包含特定字眼(消耗品)，則顯示對應操作並隱藏「裝備」
+            if (itemData.name.includes('熔爐') || itemData.name.includes('寵物蛋')) {
                 btnEquip.classList.add('hidden');
                 btnEquip.classList.remove('flex');
                 btnUse.classList.remove('hidden');
                 btnUse.classList.add('flex');
+                
+                // 動態改變按鈕文字
+                if (itemData.name.includes('寵物蛋')) {
+                    btnUse.innerHTML = '<span>🔮</span> 召喚';
+                } else {
+                    btnUse.innerHTML = '<span>🔥</span> 使用';
+                }
+                
                 btnUse.onclick = () => app.useBackpackItem(itemId);
             } else {
                 btnEquip.classList.remove('hidden');
