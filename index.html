@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.2.6.8 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.2.6.9 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -714,7 +714,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.6.8 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.6.9 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -17981,13 +17981,18 @@ addRewardItem: () => {
             localStorage.setItem('pharaoh_is_host', 'true');
             localStorage.setItem('pharaoh_role', 'student');
 
-            // 讀取裝備與計算初始道具
+           // 讀取裝備與計算初始道具
             let myEquipped = {};
+            let myPets = {}; // [修正] 新增讀取寵物資料變數
             if (app.state.user) {
-                const snap = await db.ref(`users/${app.state.user.uid}/equipped`).once('value');
-                myEquipped = snap.val() || {};
+                // [修正] 改為讀取整個 user 節點，才能同時拿到 equipped 跟 pets
+                const snap = await db.ref(`users/${app.state.user.uid}`).once('value');
+                const userData = snap.val() || {};
+                myEquipped = userData.equipped || {};
+                myPets = userData.pets || {};
             } else {
                 myEquipped = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
+                myPets = JSON.parse(localStorage.getItem('pharaoh_guest_pets') || '{}'); // [修正] 訪客模式也讀取寵物
             }
             const startItems = app.calculateEquippedStartItems(myEquipped);
             
@@ -18032,7 +18037,7 @@ addRewardItem: () => {
                 db.ref(`classes/${roomId}/players/team1/${name}`).set({
                     name: name,
                     score: 0, gold: 0, sessionGold: 0, hp: initMaxHp, maxHp: initMaxHp,
-                    items: startItems, equipped: myEquipped,
+                    items: startItems, equipped: myEquipped, pets: myPets, // [修正] 將 pets 寫入房間中，讓戰鬥能抓到正確經驗與型態
                     lastActive: firebase.database.ServerValue.TIMESTAMP
                 });
                 
