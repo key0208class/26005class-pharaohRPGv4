@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.2.5 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.2.6.4 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -714,7 +714,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.5 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.6.4 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -2120,34 +2120,67 @@
                     <!-- 裝備背景與欄位容器 -->
                     <div id="backpack-bg-container" class="relative w-full h-full bg-no-repeat bg-center bg-cover transition-all duration-500" style="background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%96%B0%E4%BA%BA%E7%89%A9%E8%A3%9D%E5%82%99%E5%9C%962.png');">
                         
-                        <!-- 7個裝備欄位 (3左 3右 + 1中上職業格) -->
-                        <!-- [新增] 職業書裝備欄位 (置中偏上，位於 5級 和 15級 之間) -->
-                        <!-- 💡微調提示：
-                             top-[2%]: 控制垂直位置，數值越小越往上
-                             left-[50%]: 50%代表水平置中，搭配 -translate-x-1/2 確保完美置中
-                             如果之後想調整位置，修改這兩個數值即可。
+                        <!-- 8個裝備欄位 (3左 + 3右 + 中上職業 + 中下寵物) -->
+                        
+                        <!-- 
+                            💡【裝備格子排版自訂指南】💡
+                            每個格子都有類似 "absolute top-[12%] left-[10%]" 這樣的屬性。
+                            你可以修改中括號 [] 裡面的數字來調整格子的精確位置：
+                            
+                            1. 上下移動：
+                               - top-[數字%]：距離頂部多遠。數字越大越往下。
+                               - bottom-[數字%]：距離底部多遠。數字越大越往上。
+                               (通常上面格子用 top，下面格子用 bottom)
+                            
+                            2. 左右移動：
+                               - left-[數字%]：距離左側多遠。數字越大越往右。
+                               - right-[數字%]：距離右側多遠。數字越大越往左。
+                            
+                            3. 中心對齊技巧 (適用於職業、寵物)：
+                               - 同時使用 "left-[50%]" 和 "-translate-x-1/2"，可以保證格子絕對水平置中。
+                               
+                            4. 格子大小：
+                               - w-[90px] h-[90px]：控制格子的寬度與高度，可以統一改為 80px 或 100px。
                         -->
-                        <div id="equip-slot-6" onclick="app.handleUnequipItem(6)" class="absolute top-[8%] left-[43%] -translate-x-1/2 w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg z-10">
+
+                        <!-- 索引 6：職業書 (正中間偏上) -->
+                        <div id="equip-slot-6" onclick="app.handleUnequipItem(6)" class="absolute top-[8%] left-[42%] -translate-x-1/2 w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg z-10">
                             <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">CLASS</span>
                         </div>
 
+                        <!-- 索引 0：左上裝備 (HEAD) -->
                         <div id="equip-slot-0" onclick="app.handleUnequipItem(0)" class="absolute top-[12%] left-[10%] w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg">
                             <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">HEAD</span>
                         </div>
+                        
+                        <!-- 索引 2：左中裝備 (HAND) -->
                         <div id="equip-slot-2" onclick="app.handleUnequipItem(2)" class="absolute top-[42%] left-[10%] w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg">
                             <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">HAND</span>
                         </div>
+                        
+                        <!-- 索引 4：左下裝備 (ACC1) -->
                         <div id="equip-slot-4" onclick="app.handleUnequipItem(4)" class="absolute bottom-[15%] left-[10%] w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg">
                             <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">ACC1</span>
                         </div>
+
+                        <!-- 索引 1：右上裝備 (BODY) -->
                         <div id="equip-slot-1" onclick="app.handleUnequipItem(1)" class="absolute top-[12%] right-[10%] w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg">
                             <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">BODY</span>
                         </div>
+                        
+                        <!-- 索引 3：右中裝備 (OFF) -->
                         <div id="equip-slot-3" onclick="app.handleUnequipItem(3)" class="absolute top-[42%] right-[10%] w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg">
                             <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">OFF</span>
                         </div>
+                        
+                        <!-- 索引 5：右下裝備 (ACC2) -->
                         <div id="equip-slot-5" onclick="app.handleUnequipItem(5)" class="absolute bottom-[15%] right-[10%] w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg">
                             <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-8">ACC2</span>
+                        </div>
+                        
+                        <!-- 索引 7：寵物系統專屬格 (正中間偏下) -->
+                        <div id="equip-slot-7" onclick="app.handleUnequipItem(7)" class="absolute bottom-[7%] left-[42%] -translate-x-1/2 w-[90px] h-[90px] bg-[url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png')] bg-contain bg-no-repeat bg-center flex items-center justify-center cursor-pointer transition-transform hover:scale-110 group filter drop-shadow-lg border-2 border-dashed border-amber-500/50 rounded-lg z-10">
+                            <span class="text-xs text-amber-200/50 font-bold group-hover:opacity-0 mt-6 tracking-widest flex flex-col items-center"><span class="text-2xl drop-shadow-md mb-1">🐾</span>PET</span>
                         </div>
                         
                         <div class="absolute bottom-2 left-0 w-full flex items-center justify-center pointer-events-none">
@@ -2225,7 +2258,7 @@
                                 <div id="bp-panel-icon" class="w-16 h-16 rounded-lg border-2 border-amber-600/30 bg-amber-900/5 flex items-center justify-center shrink-0 shadow-inner"></div>
                                 <div class="flex-1 min-w-0">
                                     <h4 id="bp-panel-name" class="font-black text-amber-900 text-lg truncate">道具名稱</h4>
-                                    <p id="bp-panel-desc" class="text-xs text-amber-800/80 font-bold leading-tight line-clamp-2 mt-1">道具說明</p>
+                                    <div id="bp-panel-desc" class="text-xs text-amber-800/80 font-bold leading-snug mt-1 max-h-28 overflow-y-auto custom-scrollbar pr-1">道具說明</div>
                                 </div>
                                 <button onclick="app.closeBackpackPanel()" class="absolute top-2 right-2 text-amber-900/40 hover:text-amber-900 font-bold">✕</button>
                             </div>
@@ -3092,6 +3125,8 @@
             </button>
         </div>
     </div>
+    <!-- [新增] 寵物樂園詳細資料視窗 -->
+    <div id="pet-paradise-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-backdrop backdrop-blur-md"><div class="bg-slate-900 rounded-2xl w-full max-w-6xl mx-4 shadow-[0_0_30px_rgba(217,70,239,0.5)] border-4 border-fuchsia-700 flex flex-col md:flex-row overflow-hidden relative animate-[popIn_0.3s_ease-out] max-h-[90vh]"><button onclick="app.closePetParadise()" class="absolute top-3 right-3 z-50 bg-red-800 text-white w-8 h-8 rounded-lg font-black shadow-lg hover:bg-red-700 hover:scale-105 active:scale-95 transition-all border-2 border-red-900 flex items-center justify-center">&#x2715;</button><div class="w-full md:w-5/12 bg-slate-800 border-b-4 md:border-b-0 md:border-r-4 border-fuchsia-900 flex flex-col p-4 md:p-6 overflow-y-auto custom-scrollbar relative"><div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30 pointer-events-none"></div><div class="relative z-10 flex flex-col h-full"><div class="flex items-center gap-4 mb-4 border-b-2 border-fuchsia-500/50 pb-4"><div class="w-20 h-20 bg-black rounded-lg border-2 border-fuchsia-400 p-1 flex-shrink-0 shadow-[0_0_15px_rgba(217,70,239,0.5)] flex items-center justify-center"><img id="paradise-pet-icon" src="" class="max-w-full max-h-full object-contain"></div><div class="flex flex-col justify-center"><div class="text-xs text-fuchsia-300 font-mono bg-fuchsia-900/50 px-2 py-0.5 rounded border border-fuchsia-500/50 w-fit mb-1" id="paradise-pet-family">族系名稱</div><h3 id="paradise-pet-name" class="text-2xl font-black text-white tracking-wider drop-shadow-md">寵物名稱</h3></div></div><div class="bg-black/60 rounded-lg p-3 border border-slate-600 mb-4 shadow-inner"><div class="flex justify-between items-center mb-1"><span class="text-fuchsia-400 font-black text-sm">LEVEL <span id="paradise-pet-lv" class="text-xl">1</span></span><span class="text-xs text-slate-400 font-mono" id="paradise-pet-exp-text">0/0</span></div><div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700"><div id="paradise-pet-exp-bar" class="bg-gradient-to-r from-fuchsia-600 to-purple-400 h-full transition-all duration-500" style="width:0%"></div></div></div><div class="flex-1 bg-slate-900/80 rounded-lg p-3 border border-slate-700 shadow-inner mb-4 overflow-y-auto custom-scrollbar"><h4 class="text-sm font-black text-slate-300 border-b border-slate-600 pb-1 mb-2 flex items-center gap-2"><span class="text-fuchsia-400">📊</span> 幻獸數據</h4><div class="grid grid-cols-2 gap-2 mb-3"><div class="bg-orange-900/30 border border-orange-700/50 p-2 rounded flex flex-col justify-center"><div class="text-[0.65rem] text-orange-400 font-bold mb-0.5">基礎攻擊 (觸發率 <span id="paradise-atk-prob">0</span>%)</div><div id="paradise-atk-name" class="text-sm font-black text-white truncate">攻擊名稱</div><div class="text-[0.65rem] text-orange-300 mt-0.5">附加傷害: <span id="paradise-atk-dmg" class="text-orange-400 font-mono font-bold">+0</span></div></div><div class="bg-purple-900/30 border border-purple-700/50 p-2 rounded flex flex-col justify-center"><div class="text-[0.65rem] text-purple-400 font-bold mb-0.5">暴擊技能 (暴擊率 <span id="paradise-skill-prob">0</span>%)</div><div id="paradise-skill-name" class="text-sm font-black text-white truncate">技能名稱</div><div class="text-[0.65rem] text-purple-300 mt-0.5">附加傷害: <span id="paradise-skill-dmg" class="text-purple-400 font-mono font-bold">+0</span></div></div></div><h4 class="text-sm font-black text-slate-300 border-b border-slate-600 pb-1 mb-2 flex items-center gap-2 mt-4"><span class="text-blue-400">📝</span> 幻獸檔案</h4><div id="paradise-pet-desc" class="text-xs text-slate-400 leading-relaxed font-medium">寵物說明...</div></div><div class="grid grid-cols-2 gap-3 mt-auto shrink-0"><button id="btn-pet-feed" onclick="app.interactWithPet('feed')" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-2 rounded-lg border-b-4 border-slate-800 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-2">🥖 餵食</button><button id="btn-pet-bathe" onclick="app.interactWithPet('bathe')" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-2 rounded-lg border-b-4 border-slate-800 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-2">🛁 水浴</button></div></div></div><div class="w-full md:w-7/12 flex flex-col relative bg-black"><div class="p-2 bg-slate-900 border-b border-slate-700 flex justify-between items-center z-10 shrink-0 shadow-md"><span class="text-fuchsia-400 font-black flex items-center gap-2"><span class="text-lg">🏕️</span> 互動樂園</span><span class="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-600">點擊空地指揮移動</span></div><div class="flex-1 relative overflow-hidden bg-slate-800 flex items-center justify-center" id="paradise-stage-wrapper"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%AF%B5%E7%89%A9%E6%A8%82%E5%9C%92%E8%83%8C%E6%99%AF%E5%9C%96.jpeg" class="absolute inset-0 w-full h-full object-cover opacity-80 select-none" draggable="false"><canvas id="paradise-canvas" class="absolute inset-0 w-full h-full cursor-pointer z-10" style="image-rendering: pixelated;" onmousedown="app.clickPetParadise(event)" ontouchstart="app.clickPetParadise(event)"></canvas></div></div></div></div>
 	<script>
     // --- Firebase 配置 ---
     const firebaseConfig = {
@@ -3195,7 +3230,10 @@
                 summonBeam: 0.08,
                 summonExplode: 0.2,
                 summonSuccess: 0.1
-            }
+            },
+            // --- [新增] 寵物樂園狀態 ---
+            paradisePet: null,   // 樂園中的寵物物件 (含座標、動畫幀等)
+            paradiseRAF: null    // requestAnimationFrame 的 ID，用於停止動畫迴圈
         },
 
      el: (id) => document.getElementById(id),
@@ -3342,6 +3380,9 @@
 "https://class.kh.edu.tw/sites/30033/upload_file/6/4.%E6%B3%B0%E8%8A%99%E5%8A%AA%E7%89%B9%E5%9C%B0%E5%9C%96-%E6%B5%B7%E6%B4%8B_.png",
 "https://class.kh.edu.tw/sites/30033/upload_file/6/5.%E5%86%A5%E7%82%8E%E5%85%8B%E5%9C%96%E6%A0%BC%E4%BA%9E%E5%9C%B0%E5%9C%96-%E7%81%AB%E5%B1%B1_.png",
 "https://class.kh.edu.tw/sites/30033/upload_file/6/6.%E8%90%AC%E9%AD%94%E4%B9%8B%E7%8E%8B-%E9%AB%98%E5%B1%B1_.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%AF%B5%E7%89%A9%E6%A8%82%E5%9C%92%E8%83%8C%E6%99%AF%E5%9C%96.jpeg",
+
+
 				 
                 // --- 戰鬥特效系列 ---
                 "https://class.kh.edu.tw/sites/30033/upload_file/6/%E9%96%83%E9%9B%BB%E7%89%B9%E6%95%88.png",
@@ -5421,14 +5462,14 @@
                 id: 'pet_' + Date.now(),
                 name: '新寵物族系',
                 weight: 10,
-                isEnabled: false, // 預設關閉防呆
+                isEnabled: false,
                 forms: [
-                    { lv: 1, name: '第一型態', bmIdx: '', spriteIdx: '', atkName: '野蠻衝刺', atkBaseProb: 20, atkLvCoef: 1, atkDmg: 2, skillName: '烈焰衝擊', skillProb: 50, skillDmg: 4 }
+                    { lv: 1, name: '第一型態', imgUrl: '', desc: '這是一隻神秘的生物...', spriteIdx: '', atkName: '野蠻衝刺', atkBaseProb: 20, atkLvCoef: 1, atkDmg: 2, skillName: '烈焰衝擊', skillProb: 50, skillDmg: 4 }
                 ]
             });
             const newIdx = app.state.tempPetList.length - 1;
             if(!app.state.adminPetOpen) app.state.adminPetOpen = {};
-            app.state.adminPetOpen[newIdx] = true; // 新增族系時預設展開
+            app.state.adminPetOpen[newIdx] = true;
             app.renderPetListUI();
             setTimeout(() => {
                 const c = app.el('pet-system-container');
@@ -5464,7 +5505,7 @@
         addPetForm: (fIdx) => {
             if (!app.state.tempPetList[fIdx].forms) app.state.tempPetList[fIdx].forms = [];
             app.state.tempPetList[fIdx].forms.push({
-                lv: 30, name: '進階型態', bmIdx: '', spriteIdx: '', atkName: '進階攻擊', atkBaseProb: 30, atkLvCoef: 1, atkDmg: 3, skillName: '進階技能', skillProb: 65, skillDmg: 5
+                lv: 30, name: '進階型態', imgUrl: '', desc: '寵物進化後變得更強大了。', spriteIdx: '', atkName: '進階攻擊', atkBaseProb: 30, atkLvCoef: 1, atkDmg: 3, skillName: '進階技能', skillProb: 65, skillDmg: 5
             });
             app.renderPetListUI();
         },
@@ -5530,23 +5571,18 @@
                 const bodyClass = isOpen ? 'flex' : 'hidden';
                 const foldIcon = isOpen ? '▲' : '▼';
 
-                // 取出族系代表圖 (第一型態的黑市圖片)
-                const firstFormBmIdx = family.forms && family.forms[0] ? family.forms[0].bmIdx : '';
-                const firstBmItem = bmList[firstFormBmIdx];
-                const familyImg = firstBmItem ? (firstBmItem[`img${firstBmItem.currentEditLv||1}`] || firstBmItem.img1 || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png') : 'https://placehold.co/40x40?text=?';
+                // 取出族系代表圖 (獨立圖片)
+                const firstForm = family.forms && family.forms[0] ? family.forms[0] : {};
+                const familyImg = firstForm.imgUrl || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
 
                 let formsHtml = '';
                 
                 (family.forms || []).forEach((form, mIdx) => {
-                    let currentBmOpts = bmOptsBase.replace(`value="${form.bmIdx}"`, `value="${form.bmIdx}" selected`);
                     let currentSpOpts = spOptsBase.replace(`value="${form.spriteIdx}"`, `value="${form.spriteIdx}" selected`);
+                    const formImg = form.imgUrl || 'https://placehold.co/40x40?text=?';
                     
-                    // [新增] 即時預覽圖
-                    const bmItem = bmList[form.bmIdx];
-                    const formImg = bmItem ? (bmItem[`img${bmItem.currentEditLv||1}`] || bmItem.img1 || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png') : 'https://placehold.co/40x40?text=?';
-                    
-                    // 嚴格無空白節點壓縮的型態卡片 HTML (加入左側預覽圖)
-                    formsHtml += `<div class="bg-white p-2 rounded-lg border border-amber-200 mb-2 shadow-sm relative flex flex-col md:flex-row gap-3"><div class="w-16 h-16 bg-slate-100 rounded border border-slate-300 flex-shrink-0 flex items-center justify-center overflow-hidden"><img src="${formImg}" class="w-full h-full object-contain"></div><div class="flex-1 flex flex-col"><div class="absolute top-1 right-1"><button onclick="app.deletePetForm(${fIdx}, ${mIdx})" class="text-red-400 hover:text-red-600 font-black px-2 py-0.5 text-lg transition-transform hover:scale-110">×</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2 pr-6"><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-gray-500">進化等級門檻 (Lv)</label><input type="number" value="${form.lv}" onchange="app.updatePetData(${fIdx}, 'form_lv', this.value, ${mIdx})" class="border border-slate-300 rounded px-1 py-0.5 text-sm font-bold w-full focus:bg-amber-50 outline-none" min="1"></div><div class="flex flex-col md:col-span-2"><label class="text-[0.65rem] font-bold text-gray-500">型態名稱 (如: 烈焰豬)</label><input type="text" value="${form.name}" onchange="app.updatePetData(${fIdx}, 'form_name', this.value, ${mIdx})" class="border border-slate-300 rounded px-1 py-0.5 text-sm font-bold w-full focus:bg-amber-50 outline-none"></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-amber-700">對應黑市圖片 (UI顯示用)</label><select onchange="app.updatePetData(${fIdx}, 'form_bmIdx', this.value, ${mIdx}); app.renderPetListUI();" class="border border-amber-300 rounded px-1 py-0.5 text-xs font-bold w-full bg-amber-50 cursor-pointer outline-none">${currentBmOpts}</select></div><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-indigo-700">對應戰鬥動作 (舞台動畫用)</label><select onchange="app.updatePetData(${fIdx}, 'form_spriteIdx', this.value, ${mIdx})" class="border border-indigo-300 rounded px-1 py-0.5 text-xs font-bold w-full bg-indigo-50 cursor-pointer outline-none">${currentSpOpts}</select></div></div><div class="bg-orange-50 p-2 rounded border border-orange-200 mt-1"><div class="text-[0.65rem] font-black text-orange-800 mb-1">⚔️ 基礎攻擊設定 (觸發機率 = 基礎機率 + 寵物等級*係數)</div><div class="grid grid-cols-4 gap-1"><input type="text" value="${form.atkName}" onchange="app.updatePetData(${fIdx}, 'form_atkName', this.value, ${mIdx})" placeholder="攻擊名稱" title="攻擊名稱" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.atkBaseProb}" onchange="app.updatePetData(${fIdx}, 'form_atkBaseProb', this.value, ${mIdx})" placeholder="基礎機率%" title="基礎機率(%)" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.atkLvCoef}" onchange="app.updatePetData(${fIdx}, 'form_atkLvCoef', this.value, ${mIdx})" placeholder="成長係數%" title="每升1級增加的機率(%)" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.atkDmg}" onchange="app.updatePetData(${fIdx}, 'form_atkDmg', this.value, ${mIdx})" placeholder="附加傷害" title="附加傷害" class="border border-red-300 bg-red-50 rounded px-1 py-0.5 text-xs font-black text-red-600 w-full text-center"></div></div><div class="bg-purple-50 p-2 rounded border border-purple-200 mt-1"><div class="text-[0.65rem] font-black text-purple-800 mb-1">✨ 寵物技能設定 (基礎攻擊發動時，有機率變異為此技能)</div><div class="grid grid-cols-3 gap-1"><input type="text" value="${form.skillName}" onchange="app.updatePetData(${fIdx}, 'form_skillName', this.value, ${mIdx})" placeholder="技能名稱" title="技能名稱" class="border border-purple-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.skillProb}" onchange="app.updatePetData(${fIdx}, 'form_skillProb', this.value, ${mIdx})" placeholder="變異機率%" title="變異機率(%)" class="border border-purple-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.skillDmg}" onchange="app.updatePetData(${fIdx}, 'form_skillDmg', this.value, ${mIdx})" placeholder="附加傷害" title="附加傷害" class="border border-red-300 bg-red-50 rounded px-1 py-0.5 text-xs font-black text-red-600 w-full text-center"></div></div></div></div>`;
+                    // 嚴格無空白節點壓縮的型態卡片 HTML (支援圖片 URL、說明、暴擊文字)
+                    formsHtml += `<div class="bg-white p-2 rounded-lg border border-amber-200 mb-2 shadow-sm relative flex flex-col md:flex-row gap-3"><div class="w-16 h-16 bg-slate-100 rounded border border-slate-300 flex-shrink-0 flex items-center justify-center overflow-hidden"><img src="${formImg}" class="w-full h-full object-contain"></div><div class="flex-1 flex flex-col"><div class="absolute top-1 right-1"><button onclick="app.deletePetForm(${fIdx}, ${mIdx})" class="text-red-400 hover:text-red-600 font-black px-2 py-0.5 text-lg transition-transform hover:scale-110">×</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2 pr-6"><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-gray-500">進化等級門檻 (Lv)</label><input type="number" value="${form.lv}" onchange="app.updatePetData(${fIdx}, 'form_lv', this.value, ${mIdx})" class="border border-slate-300 rounded px-1 py-0.5 text-sm font-bold w-full focus:bg-amber-50 outline-none" min="1"></div><div class="flex flex-col md:col-span-2"><label class="text-[0.65rem] font-bold text-gray-500">型態名稱 (如: 烈焰豬)</label><input type="text" value="${form.name}" onchange="app.updatePetData(${fIdx}, 'form_name', this.value, ${mIdx})" class="border border-slate-300 rounded px-1 py-0.5 text-sm font-bold w-full focus:bg-amber-50 outline-none"></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-amber-700">寵物圖片 URL (獨立網址)</label><input type="text" value="${form.imgUrl || ''}" onchange="app.updatePetData(${fIdx}, 'form_imgUrl', this.value, ${mIdx}); app.renderPetListUI();" placeholder="輸入 https://..." class="border border-amber-300 rounded px-1 py-0.5 text-xs font-mono w-full bg-amber-50 outline-none"></div><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-indigo-700">對應戰鬥動作 (舞台動畫用)</label><select onchange="app.updatePetData(${fIdx}, 'form_spriteIdx', this.value, ${mIdx})" class="border border-indigo-300 rounded px-1 py-0.5 text-xs font-bold w-full bg-indigo-50 cursor-pointer outline-none">${currentSpOpts}</select></div></div><div class="mb-2 flex flex-col"><label class="text-[0.65rem] font-bold text-gray-500">寵物說明 (背景故事與能力備註)</label><textarea onchange="app.updatePetData(${fIdx}, 'form_desc', this.value, ${mIdx})" class="w-full border border-slate-300 rounded px-1 py-1 text-[0.65rem] font-bold text-gray-700 bg-white focus:bg-amber-50 outline-none resize-none h-10 custom-scrollbar" placeholder="在此輸入寵物的說明...">${form.desc || ''}</textarea></div><div class="bg-orange-50 p-2 rounded border border-orange-200 mt-1"><div class="text-[0.65rem] font-black text-orange-800 mb-1">⚔️ 基礎攻擊設定 (觸發機率 = 基礎機率 + 寵物等級*係數)</div><div class="grid grid-cols-4 gap-1"><input type="text" value="${form.atkName}" onchange="app.updatePetData(${fIdx}, 'form_atkName', this.value, ${mIdx})" placeholder="攻擊名稱" title="攻擊名稱" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.atkBaseProb}" onchange="app.updatePetData(${fIdx}, 'form_atkBaseProb', this.value, ${mIdx})" placeholder="基礎機率%" title="基礎機率(%)" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.atkLvCoef}" onchange="app.updatePetData(${fIdx}, 'form_atkLvCoef', this.value, ${mIdx})" placeholder="成長係數%" title="每升1級增加的機率(%)" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.atkDmg}" onchange="app.updatePetData(${fIdx}, 'form_atkDmg', this.value, ${mIdx})" placeholder="附加傷害" title="附加傷害" class="border border-red-300 bg-red-50 rounded px-1 py-0.5 text-xs font-black text-red-600 w-full text-center"></div></div><div class="bg-purple-50 p-2 rounded border border-purple-200 mt-1"><div class="text-[0.65rem] font-black text-purple-800 mb-1">✨ 寵物技能設定 (基礎攻擊發動時，有機率升級為此暴擊技能)</div><div class="grid grid-cols-3 gap-1"><input type="text" value="${form.skillName}" onchange="app.updatePetData(${fIdx}, 'form_skillName', this.value, ${mIdx})" placeholder="技能名稱" title="技能名稱" class="border border-purple-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.skillProb}" onchange="app.updatePetData(${fIdx}, 'form_skillProb', this.value, ${mIdx})" placeholder="暴擊率%" title="暴擊率(%)" class="border border-purple-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.skillDmg}" onchange="app.updatePetData(${fIdx}, 'form_skillDmg', this.value, ${mIdx})" placeholder="附加傷害" title="附加傷害" class="border border-red-300 bg-red-50 rounded px-1 py-0.5 text-xs font-black text-red-600 w-full text-center"></div></div></div></div>`;
                 });
 
                 // 族系外框 HTML (改為可摺疊，並加入預覽圖)
@@ -8446,16 +8482,32 @@
 
                         // 生成裝備圖示 HTML
                         let equippedHtml = '';
+                        let petAvatarHtml = ''; // [新增] 寵物頭像
+
                         if (p.equipped) {
                             const globalList = app.state.globalSettings?.blackMarketList || [];
                             Object.values(p.equipped).forEach(itemId => {
-                                const item = globalList[itemId];
-                                if (item) {
-                                    const lv = item.currentEditLv || 1;
-                                    const img = item[`img${lv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-                                    const maxLv = item.maxLv || 1;
-                                    const lvTag = maxLv > 1 ? `<span class="absolute -bottom-1 -right-1 bg-black/80 text-amber-300 text-[0.5rem] px-0.5 rounded leading-none font-bold">${lv}</span>` : '';
-                                    equippedHtml += `<div class="relative w-5 h-5 bg-slate-800 rounded border border-amber-500/50 flex items-center justify-center shadow-sm" title="${item.name}"><img src="${img}" class="w-full h-full object-contain p-0.5">${lvTag}</div>`;
+                                if (String(itemId).startsWith('pet_')) {
+                                    // 渲染寵物頭像
+                                    const petIdx = itemId.replace('pet_', '');
+                                    if (p.pets && p.pets[petIdx] !== undefined) {
+                                        const petState = app.getPetCurrentState(petIdx, p.pets[petIdx].exp);
+                                        if (petState) {
+                                            const bmItem = globalList[petState.bmIdx];
+                                            const img = bmItem ? (bmItem[`img${bmItem.currentEditLv||1}`] || bmItem.img1) : '';
+                                            petAvatarHtml = `<div class="relative w-6 h-6 ml-1 bg-fuchsia-900/50 rounded-full border border-fuchsia-400 shadow-[0_0_8px_rgba(217,70,239,0.5)] flex items-center justify-center animate-bounce" title="寵物: ${petState.formName} (LV${petState.level})"><img src="${img}" class="w-full h-full object-contain p-0.5 drop-shadow-md"></div>`;
+                                        }
+                                    }
+                                } else {
+                                    // 渲染一般裝備
+                                    const item = globalList[itemId];
+                                    if (item) {
+                                        const lv = item.currentEditLv || 1;
+                                        const img = item[`img${lv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+                                        const maxLv = item.maxLv || 1;
+                                        const lvTag = maxLv > 1 ? `<span class="absolute -bottom-1 -right-1 bg-black/80 text-amber-300 text-[0.5rem] px-0.5 rounded leading-none font-bold">${lv}</span>` : '';
+                                        equippedHtml += `<div class="relative w-5 h-5 bg-slate-800 rounded border border-amber-500/50 flex items-center justify-center shadow-sm" title="${item.name}"><img src="${img}" class="w-full h-full object-contain p-0.5">${lvTag}</div>`;
+                                    }
                                 }
                             });
                         }
@@ -8463,8 +8515,8 @@
                             equippedHtml = `<div class="flex items-center gap-0.5 ml-1 bg-black/10 p-0.5 rounded">${equippedHtml}</div>`;
                         }
 
-                        // [修改] 更新 HTML 結構：加入動態人物頭像
-                        listHtml += `<div class="flex flex-col p-2 ${highlightClass} ${damageEffectClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01] relative overflow-hidden"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-1 overflow-hidden"><img src="${userPhoto}" class="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-amber-300 object-cover shadow-sm flex-shrink-0"><span class="text-xs font-black text-white bg-slate-600 px-1 rounded transform scale-90">Lv.${expInfo.lv}</span><div class="flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 rounded border border-red-100 shadow-sm"><span class="text-[0.6rem] ${hpColorClass}">❤️</span><span class="text-[0.65rem] font-black text-slate-700 leading-none">${currentHp}/${maxHp}</span></div>${equippedHtml}<span class="font-bold ${nameClass} text-sm truncate max-w-[60px] md:max-w-[100px]">${p.name}</span></div><div class="flex items-center gap-1 text-xs font-bold text-yellow-700 bg-yellow-100 px-1.5 rounded-full border border-yellow-200"><span>💰</span><span>${gold}</span></div></div><div class="flex items-center justify-between w-full gap-2"><div class="flex-1 flex flex-col justify-center h-full"><div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden border border-black/10"><div class="${barColor} h-full transition-all duration-500" style="width:${expInfo.percent}%"></div></div></div><div class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden flex-shrink-0 text-right min-w-[20px]">${itemsBadge}</div><div class="font-black text-amber-700 text-lg leading-none">${p.score}</div></div>${deadOverlayHtml}</div>`;
+                        // [修改] 將 petAvatarHtml 插入到人物頭像與名稱之間
+                        listHtml += `<div class="flex flex-col p-2 ${highlightClass} ${damageEffectClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01] relative overflow-hidden"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-1 overflow-hidden"><img src="${userPhoto}" class="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-amber-300 object-cover shadow-sm flex-shrink-0"><span class="text-xs font-black text-white bg-slate-600 px-1 rounded transform scale-90">Lv.${expInfo.lv}</span><div class="flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 rounded border border-red-100 shadow-sm"><span class="text-[0.6rem] ${hpColorClass}">❤️</span><span class="text-[0.65rem] font-black text-slate-700 leading-none">${currentHp}/${maxHp}</span></div>${equippedHtml}${petAvatarHtml}<span class="font-bold ${nameClass} text-sm truncate max-w-[60px] md:max-w-[100px]">${p.name}</span></div><div class="flex items-center gap-1 text-xs font-bold text-yellow-700 bg-yellow-100 px-1.5 rounded-full border border-yellow-200"><span>💰</span><span>${gold}</span></div></div><div class="flex items-center justify-between w-full gap-2"><div class="flex-1 flex flex-col justify-center h-full"><div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden border border-black/10"><div class="${barColor} h-full transition-all duration-500" style="width:${expInfo.percent}%"></div></div></div><div class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden flex-shrink-0 text-right min-w-[20px]">${itemsBadge}</div><div class="font-black text-amber-700 text-lg leading-none">${p.score}</div></div>${deadOverlayHtml}</div>`;
                     });
                 }
                 return listHtml;
@@ -11498,6 +11550,65 @@ for (const slot of slots) {
         generatePredefinedCards: () => { /* 佔位符 */ },
         createPredefinedCards: () => { /* 佔位符 */ },
         
+        // ==========================================
+        // --- [修改] 寵物等級計算 - 套用人物帳號升級曲線 (Google)先易後難 ---
+        // ==========================================
+        getPetLevelInfo: (exp) => {
+            const totalExp = exp || 0;
+            // 寵物最高 99 級，套用帳號升級的 getAccumulatedExp 曲線
+            let lv = 1;
+            while (lv < 99) {
+                if (totalExp >= app.getAccumulatedExp(lv + 1)) {
+                    lv++;
+                } else {
+                    break;
+                }
+            }
+            const currentBase = app.getAccumulatedExp(lv);
+            const nextBase = app.getAccumulatedExp(lv + 1);
+            const range = nextBase - currentBase;
+            const currentInLevel = totalExp - currentBase;
+            const percent = lv >= 99 ? 100 : Math.min(100, Math.floor((currentInLevel / range) * 100));
+            return { lv, percent, currentExp: currentInLevel, nextExp: range, totalExp };
+        },
+
+        getPetCurrentState: (petIdx, exp) => {
+            const petList = app.state.globalSettings?.petList || [];
+            const family = petList[petIdx];
+            if (!family) return null;
+
+            const expInfo = app.getPetLevelInfo(exp);
+            const level = expInfo.lv;
+            let currentForm = family.forms[0];
+
+            for (let i = family.forms.length - 1; i >= 0; i--) {
+                if (level >= family.forms[i].lv) {
+                    currentForm = family.forms[i];
+                    break;
+                }
+            }
+
+            const atkProb = (currentForm.atkBaseProb || 0) + (level * (currentForm.atkLvCoef || 0));
+
+            return {
+                familyIdx: petIdx,
+                name: family.name,
+                level: level,
+                expInfo: expInfo, // 包含進度條所需資訊
+                formName: currentForm.name,
+                imgUrl: currentForm.imgUrl || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png',
+                desc: currentForm.desc || '這是一隻神祕的寵物...',
+                spriteIdx: currentForm.spriteIdx,
+                atkName: currentForm.atkName,
+                atkProb: Math.min(100, atkProb), 
+                atkDmg: currentForm.atkDmg,
+                skillName: currentForm.skillName,
+                skillProb: currentForm.skillProb,
+                skillDmg: currentForm.skillDmg
+            };
+        },
+
+        // ==========================================
         // --- [新增] DQ 風格等級計算系統 ---
         // 1. Google 帳號永久等級 (1-99等) - 曲線動態加成版
         getAccountLevel: (totalExp) => {
@@ -13123,41 +13234,43 @@ for (const slot of slots) {
         // [新增] 顯示傷害數字浮動特效 (v4.6.4 優化：放慢速度、加大字體)
         // [新增] 顯示傷害數字浮動特效 (vv4.6.5 支援文字與顏色)
        // [新增] 顯示傷害數字浮動特效 (v4.7.2 優化：支援指定顯示目標與補血特效)
-        showDamageText: (text, color = "#ff2a2a", targetId = null) => {
-            // 決定定位目標：優先使用指定ID，否則找怪物卡，再沒有就找螢幕中心
-            let targetEl = targetId ? document.getElementById(targetId) : app.el('active-monster-card');
-            
-            // 特例：如果是攻擊傷害(未指定targetId)且場上無怪物卡，則不顯示數字(避免飄在半空)
-            if (!targetId && !targetEl && typeof text === 'number') return; 
-            
+        // [修改] 顯示傷害數字浮動特效 (v4.9.x 優化：支援自訂座標，供寵物樂園跳字使用)
+        showDamageText: (text, color = "#ff2a2a", targetId = null, customX = null, customY = null) => {
             let left, top;
-            if (targetEl) {
-                const rect = targetEl.getBoundingClientRect();
-                const randomX = (Math.random() - 0.5) * 40; 
-                // 如果是指定目標(如小隊視窗)，顯示在該區域中心；如果是怪物，顯示在頂部
-                left = rect.left + (rect.width / 2) + randomX;
-                top = targetId ? (rect.top + rect.height / 2) : rect.top;
+
+            // 如果有傳入精確自訂座標，優先使用 (寵物樂園跳字)
+            if (customX !== null && customY !== null) {
+                left = customX;
+                top = customY;
             } else {
-                left = window.innerWidth / 2;
-                top = window.innerHeight / 3;
+                let targetEl = targetId ? document.getElementById(targetId) : app.el('active-monster-card');
+                // 特例：如果是攻擊傷害且場上無怪物卡，則不顯示數字
+                if (!targetId && !targetEl && typeof text === 'number') return;
+                if (targetEl) {
+                    const rect = targetEl.getBoundingClientRect();
+                    const randomX = (Math.random() - 0.5) * 40;
+                    left = rect.left + (rect.width / 2) + randomX;
+                    top = targetId ? (rect.top + rect.height / 2) : rect.top;
+                } else {
+                    left = window.innerWidth / 2;
+                    top = window.innerHeight / 3;
+                }
             }
 
             const el = document.createElement('div');
-            // 如果傳入的是數字，且不是補血(綠色)，加上負號
-            // 簡單判斷：如果是綠色(#22c55e)，通常是補血，顯示 +號
             if (typeof text === 'number') {
-                if (color === '#22c55e') el.textContent = `+${text}`;
+                if (color === '#22c55e' || color === '#4ade80') el.textContent = `+${text}`;
                 else el.textContent = `-${text}`;
             } else {
                 el.textContent = text;
             }
-            
+
             el.style.cssText = `
                 position: fixed;
                 left: ${left}px;
                 top: ${top}px;
                 transform: translateX(-50%);
-                color: ${color}; 
+                color: ${color};
                 font-family: 'Arial Black', sans-serif;
                 font-size: ${typeof text === 'number' ? '3.5rem' : '2.5rem'};
                 font-weight: 900;
@@ -13170,13 +13283,10 @@ for (const slot of slots) {
             `;
 
             document.body.appendChild(el);
-
             requestAnimationFrame(() => {
-                // 補血往上飄，傷害也往上飄
                 el.style.top = `${top - 150}px`;
                 el.style.opacity = '0';
             });
-
             setTimeout(() => { if (el && el.parentNode) el.remove(); }, 2500);
         },
 		
@@ -15201,8 +15311,9 @@ for (const slot of slots) {
                     userData.gold = data.totalGold || 0;
                     userData.exp = data.totalExp || 0;
                     userData.highScore = data.highScore || 0; // 讀取最高分
-                   userData.inventory = data.inventory || {};
+                    userData.inventory = data.inventory || {};
                     userData.equipped = data.equipped || {};
+                    userData.pets = data.pets || {}; // [新增] 讀取寵物資料
                     userData.gender = data.gender || 'male'; // [新增] 讀取性別
                     
                     app.state.currentBackpackData = userData; // 暫存
@@ -15212,6 +15323,7 @@ for (const slot of slots) {
                 // 訪客：讀取 LocalStorage
               userData.inventory = JSON.parse(localStorage.getItem('pharaoh_guest_inventory') || '{}');
                 userData.equipped = JSON.parse(localStorage.getItem('pharaoh_guest_equipped') || '{}');
+                userData.pets = JSON.parse(localStorage.getItem('pharaoh_guest_pets') || '{}'); // [新增] 讀取訪客寵物
                 userData.highScore = parseInt(localStorage.getItem('pharaoh_high_score') || '0'); // 讀取本地最高分
                 userData.gender = localStorage.getItem('pharaoh_gender') || 'male'; // [新增] 讀取訪客性別
                 
@@ -15224,12 +15336,11 @@ for (const slot of slots) {
             }
         },
 
-       // 2. 渲染背包 UI (左右欄)
+        // 2. 渲染背包 UI (左右欄)
         renderCharacterBackpackUI: () => {
             const data = app.state.currentBackpackData;
             const globalList = app.state.globalSettings?.blackMarketList || []; 
             
-            // [新增] 根據性別動態切換裝備圖背景
             const bgContainer = app.el('backpack-bg-container');
             if (bgContainer) {
                 const maleUrl = 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%96%B0%E4%BA%BA%E7%89%A9%E8%A3%9D%E5%82%99%E5%9C%962.png';
@@ -15237,14 +15348,13 @@ for (const slot of slots) {
                 bgContainer.style.backgroundImage = `url('${data.gender === 'female' ? femaleUrl : maleUrl}')`;
             }
 
-            // --- A. 渲染人物資料 (右側上方) ---
+            // --- A. 渲染人物資料 ---
             app.el('bp-user-name').textContent = data.name;
             app.el('bp-user-avatar').src = data.photo;
             app.el('bp-user-gold').textContent = data.gold;
             const hsEl = app.el('bp-user-highscore');
             if(hsEl) hsEl.textContent = data.highScore;
             
-            // 計算經驗條與等級 (支援動態倍率版)
             const accLv = app.getAccountLevel(data.exp);
             const currentLevelExpBase = app.getAccumulatedExp(accLv);
             const nextLevelExp = app.getAccumulatedExp(accLv + 1);
@@ -15257,88 +15367,89 @@ for (const slot of slots) {
             app.el('bp-exp-next').textContent = nextLevelExp;
             app.el('bp-exp-bar').style.width = `${percent}%`;
 
-           // [新增 v4.7.8.0] 渲染背包標頭的小裝備圖示 (v4.7.8.1 修正：確保卸下時清空)
             const headerEquipContainer = app.el('bp-header-equip-list');
             if (headerEquipContainer) {
                 let tinyHtml = '';
                 if (data.equipped) {
                     Object.values(data.equipped).forEach(itemId => {
+                        if (String(itemId).startsWith('pet_')) return; // 寵物不在此顯示
                         const item = globalList[itemId];
                         if(item) {
                             const targetLv = item.currentEditLv || 1;
                             const img = item[`img${targetLv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-                            // 使用 w-5 h-5 (20px) 的小圖示
                             tinyHtml += `<img src="${img}" class="w-5 h-5 rounded bg-slate-900 border border-amber-500/30 object-contain p-0.5">`;
                         }
                     });
                 }
                 headerEquipContainer.innerHTML = tinyHtml;
             }
-            // --- B. 渲染裝備欄 (左側 6 格 + 1 職業格) [修改：加入職業書專屬設定] ---
-            // 定義每個格子的解鎖等級 (第7格索引6為職業書，設為1等即解鎖)
-            const unlockLevels = [5, 15, 25, 35, 45, 55, 1];
-            const slotLabels = ['LV.5','LV.15','LV.25','LV.35','LV.45','LV.55','職業'];
-            
-            // [v4.7.8.2] 讀取是否啟用等級限制 (預設開啟)
+
+            // --- B. 渲染裝備欄 (左側) ---
+            const unlockLevels = [5, 15, 25, 35, 45, 55, 1, 1];
+            const slotLabels = ['LV.5','LV.15','LV.25','LV.35','LV.45','LV.55','職業','寵物'];
             const limitEnabled = app.state.globalSettings?.equipSlotLimitEnabled !== false;
 
-            // 將迴圈次數改為 7，處理所有格子
-            for (let i = 0; i < 7; i++) {
+            for (let i = 0; i < 8; i++) {
                 const slotEl = app.el(`equip-slot-${i}`);
+                if (!slotEl) continue; 
+
                 const equippedItemId = data.equipped[i];
-                // 若限制開啟且等級不足，則鎖定；若限制關閉，則全開
                 const isLocked = limitEnabled && (accLv < unlockLevels[i]); 
 
-                // 清理舊的 class，保留定位與背景圖
                 const baseClasses = slotEl.className.split(' ').filter(c => 
                     c.startsWith('absolute') || c.startsWith('top') || c.startsWith('bottom') || c.startsWith('left') || c.startsWith('right') || 
                     c.startsWith('w-') || c.startsWith('h-') || c.startsWith('bg-') || c.startsWith('flex') || c.startsWith('items-') || 
-                    c.startsWith('justify-') || c.startsWith('transition-') || c.startsWith('group') || c.startsWith('filter') || c.startsWith('drop-shadow')
+                    c.startsWith('justify-') || c.startsWith('transition-') || c.startsWith('group') || c.startsWith('filter') || c.startsWith('drop-shadow') || c.startsWith('z-')
                 ).join(' ');
 
-                // 重置點擊事件
                 slotEl.onclick = null;
                 slotEl.classList.remove('cursor-pointer', 'hover:scale-110', 'grayscale');
 
                 if (isLocked) {
-                    // 鎖定狀態
                     slotEl.innerHTML = `<div class="bg-black/60 absolute inset-0 flex flex-col items-center justify-center rounded-lg border-2 border-red-900/50 backdrop-blur-[1px]"><span class="text-2xl opacity-80">🔒</span><span class="text-xs text-red-400 font-black mt-1 tracking-wider">${slotLabels[i]}</span></div>`;
                     slotEl.className = `${baseClasses} grayscale cursor-not-allowed`;
                 } else {
-                    // 解鎖狀態
                     slotEl.onclick = () => app.handleUnequipItem(i);
                     slotEl.classList.add('cursor-pointer', 'hover:scale-110');
 
-                    if (equippedItemId && globalList[equippedItemId]) {
-                        const itemInfo = globalList[equippedItemId];
-                        const targetLv = itemInfo.currentEditLv || 1; 
-                        const img = itemInfo[`img${targetLv}`] || itemInfo.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-                        
-                        // [修改] 只有當 MaxLV > 1 時才顯示 LV 標籤
-                        const lvTag = itemInfo.maxLv > 1 ? `<div class="absolute -bottom-1 -right-1 bg-black/80 text-amber-400 text-[0.6rem] font-bold px-1.5 rounded border border-amber-600/50 shadow">LV${targetLv}</div>` : '';
-
-                        slotEl.innerHTML = `<img src="${img}" class="w-[85%] h-[85%] object-contain filter drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">${lvTag}`;
-                        slotEl.className = `${baseClasses} border-2 border-amber-400/80 shadow-[0_0_15px_rgba(251,191,36,0.4)] rounded-lg bg-black/20`; 
+                    if (equippedItemId) {
+                        // [新增] 判斷是否為寵物
+                        if (String(equippedItemId).startsWith('pet_')) {
+                            const petIdx = equippedItemId.replace('pet_', '');
+                            const petExp = data.pets ? (data.pets[petIdx]?.exp || 0) : 0;
+                            const petState = app.getPetCurrentState(petIdx, petExp);
+                            if (petState) {
+                                const img = petState.imgUrl || 'https://placehold.co/40x40?text=?';
+                                slotEl.innerHTML = `<img src="${img}" class="w-[90%] h-[90%] object-contain filter drop-shadow-[0_0_10px_rgba(217,70,239,0.8)] animate-pulse"><div class="absolute -bottom-1.5 -right-1.5 bg-fuchsia-900 text-white text-[0.6rem] font-black px-1.5 py-0.5 rounded-full border border-fuchsia-400 shadow-lg z-10 leading-none">LV${petState.level}</div>`;
+                                slotEl.className = `${baseClasses} border-2 border-fuchsia-500 shadow-[0_0_20px_rgba(217,70,239,0.6)] rounded-lg bg-black/40`;
+                            }
+                        } else if (globalList[equippedItemId]) {
+                            // 一般裝備
+                            const itemInfo = globalList[equippedItemId];
+                            const targetLv = itemInfo.currentEditLv || 1; 
+                            const img = itemInfo[`img${targetLv}`] || itemInfo.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+                            const lvTag = itemInfo.maxLv > 1 ? `<div class="absolute -bottom-1 -right-1 bg-black/80 text-amber-400 text-[0.6rem] font-bold px-1.5 rounded border border-amber-600/50 shadow">LV${targetLv}</div>` : '';
+                            slotEl.innerHTML = `<img src="${img}" class="w-[85%] h-[85%] object-contain filter drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">${lvTag}`;
+                            slotEl.className = `${baseClasses} border-2 border-amber-400/80 shadow-[0_0_15px_rgba(251,191,36,0.4)] rounded-lg bg-black/20`; 
+                        }
                     } else {
-                        // 空格狀態
-                        slotEl.innerHTML = `<span class="text-xs text-amber-200/40 font-bold group-hover:opacity-0 mt-8 tracking-widest">${slotLabels[i]}</span>`;
+                        let emptyIcon = i === 7 ? '<span class="text-2xl drop-shadow-md mb-1">🐾</span>' : '';
+                        let mtClass = i === 7 ? 'mt-6' : 'mt-8';
+                        slotEl.innerHTML = `<span class="text-xs text-amber-200/40 font-bold group-hover:opacity-0 ${mtClass} tracking-widest flex flex-col items-center">${emptyIcon}${slotLabels[i]}</span>`;
                         slotEl.className = baseClasses;
                     }
                 }
             }
 
-            // --- C. 渲染背包網格 (右側下方) ---
+            // --- C. 渲染背包網格 (混合一般物品與寵物) ---
             const gridContainer = app.el('bp-inventory-grid');
             let gridHtml = '';
             let hasItem = false;
 
-            // 統計已裝備數量
             const equippedCounts = {};
-            Object.values(data.equipped).forEach(id => {
-                equippedCounts[id] = (equippedCounts[id] || 0) + 1;
-            });
+            Object.values(data.equipped).forEach(id => { equippedCounts[id] = (equippedCounts[id] || 0) + 1; });
 
-            // 遍歷背包
+            // 渲染一般物品
             Object.keys(data.inventory).forEach(itemId => {
                 const totalCount = data.inventory[itemId];
                 const usedCount = equippedCounts[itemId] || 0;
@@ -15350,24 +15461,83 @@ for (const slot of slots) {
                     const displayName = itemData.isDeleted ? `${itemData.name} <span class="text-red-400 font-black">(絕版)</span>` : itemData.name;
                     const targetLv = itemData.currentEditLv || 1;
                     const img = itemData[`img${targetLv}`] || itemData.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-
-                    // [修改] 只有當 MaxLV > 1 時才顯示左上角的 LV 標籤
                     const lvBadge = itemData.maxLv > 1 ? `<div class="absolute top-1 left-1 bg-red-900/90 text-amber-200 text-[0.55rem] font-black px-1.5 py-0.5 rounded border border-amber-500/30 shadow-sm z-10 leading-none">LV${targetLv}</div>` : '';
 
-                    // [修改] 點擊觸發 selectBackpackItem 而不是直接裝備
                     gridHtml += `<div onclick="app.selectBackpackItem('${itemId}')" class="relative group cursor-pointer rounded-lg hover:scale-105 transition-transform aspect-square shadow-md flex flex-col items-center justify-center bg-white/20 hover:bg-white/40 border border-amber-900/10" style="background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png'); background-size: cover; background-repeat: no-repeat;">${lvBadge}<div class="absolute top-1 right-1 text-[0.6rem] bg-black/70 text-white px-1.5 py-0.5 rounded font-bold border border-white/20 z-10 leading-none">x${remainCount}</div><div class="w-full h-full p-3 flex items-center justify-center"><img src="${img}" class="max-w-full max-h-full object-contain filter drop-shadow-md group-hover:scale-110 transition-transform"></div><div class="absolute bottom-1.5 w-[90%] bg-black/80 text-amber-100 text-[0.6rem] font-bold truncate text-center rounded border border-amber-500/30 backdrop-blur-[1px] py-0.5 shadow-sm pointer-events-none">${displayName}</div></div>`;
                 }
             });
 
+            // [新增] 渲染寵物
+            if (data.pets) {
+                Object.keys(data.pets).forEach(petIdx => {
+                    const isEquipped = Object.values(data.equipped).includes(`pet_${petIdx}`);
+                    if (!isEquipped) {
+                        hasItem = true;
+                        const petExp = data.pets[petIdx].exp || 0;
+                        const petState = app.getPetCurrentState(petIdx, petExp);
+                        if (petState) {
+                            const img = petState.imgUrl || 'https://placehold.co/40x40?text=?';
+                            gridHtml += `<div onclick="app.selectBackpackItem('pet_${petIdx}')" class="relative group cursor-pointer rounded-lg hover:scale-105 transition-transform aspect-square shadow-md flex flex-col items-center justify-center bg-fuchsia-900/20 hover:bg-fuchsia-900/40 border border-fuchsia-500/30" style="background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png'); background-size: cover; background-repeat: no-repeat;"><div class="absolute top-1 left-1 bg-fuchsia-600 text-white text-[0.55rem] font-black px-1.5 py-0.5 rounded border border-white/50 shadow-sm z-10 leading-none">LV${petState.level}</div><div class="w-full h-full p-3 flex items-center justify-center"><img src="${img}" class="max-w-full max-h-full object-contain filter drop-shadow-[0_0_8px_rgba(217,70,239,0.6)] group-hover:scale-110 transition-transform"></div><div class="absolute bottom-1.5 w-[90%] bg-fuchsia-900/80 text-fuchsia-100 text-[0.6rem] font-bold truncate text-center rounded border border-fuchsia-500/50 backdrop-blur-[1px] py-0.5 shadow-sm pointer-events-none">${petState.formName}</div></div>`;
+                        }
+                    }
+                });
+            }
+
             if (!hasItem) {
                 gridHtml = `<div class="col-span-full text-center text-amber-900/40 py-10 flex flex-col items-center"><span class="text-4xl mb-2 grayscale opacity-30">🎒</span><span>背包內沒有可裝備的物品</span></div>`;
             }
-            
             gridContainer.innerHTML = gridHtml;
         },
 
-        // [新增] 選取背包物品 (顯示詳情面板)
+        // [修改] 選取背包物品 (顯示詳情面板，支援寵物)
         selectBackpackItem: (itemId) => {
+            const btnEquip = app.el('btn-bp-equip');
+            const btnUse = app.el('btn-bp-use');
+            const btnDiscard = app.el('btn-bp-discard');
+
+            // --- 寵物點擊邏輯 ---
+            if (String(itemId).startsWith('pet_')) {
+                const petIdx = itemId.replace('pet_', '');
+                const petExp = app.state.currentBackpackData.pets ? (app.state.currentBackpackData.pets[petIdx]?.exp || 0) : 0;
+                const petState = app.getPetCurrentState(petIdx, petExp);
+                if (!petState) return;
+
+                const img = petState.imgUrl;
+                const exp = petState.expInfo;
+
+                app.el('bp-panel-name').textContent = `${petState.name} - ${petState.formName} (LV${petState.level})`;
+                
+                // 寵物說明面板 - 字體加大、排版升級
+                app.el('bp-panel-desc').innerHTML = `<div class="text-[0.75rem] text-slate-600 mb-2 leading-snug italic border-l-2 border-fuchsia-400 pl-2">${petState.desc}</div><div class="flex items-center gap-2 mb-2"><span class="text-[0.7rem] text-fuchsia-800 font-black whitespace-nowrap">LV${petState.level} EXP</span><div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden"><div class="bg-gradient-to-r from-fuchsia-500 to-purple-600 h-full transition-all" style="width:${exp.percent}%"></div></div><span class="text-[0.65rem] text-fuchsia-700 font-bold whitespace-nowrap">${exp.currentExp}/${exp.nextExp}</span></div><div class="text-[0.8rem] text-orange-700 font-black mb-1">⚔️ ${petState.atkName} &nbsp;<span class="font-normal text-orange-500">觸發率 ${petState.atkProb}%・傷害 +${petState.atkDmg}</span></div><div class="text-[0.8rem] text-purple-700 font-black">✨ ${petState.skillName} &nbsp;<span class="font-normal text-purple-500">暴擊率 ${petState.skillProb}%・傷害 +${petState.skillDmg}</span></div>`;
+                
+                app.el('bp-panel-icon').innerHTML = `<img src="${img}" class="w-full h-full object-contain filter drop-shadow-[0_0_5px_rgba(217,70,239,0.6)]">`;
+
+                btnEquip.classList.remove('hidden'); btnEquip.classList.add('flex');
+                btnUse.classList.add('hidden'); btnUse.classList.remove('flex');
+                
+                // 開放放生按鈕
+                btnDiscard.classList.remove('hidden'); btnDiscard.classList.add('flex');
+                btnDiscard.innerHTML = '<span>👋</span> 放生';
+                btnDiscard.className = "flex-1 bg-slate-300 text-slate-700 font-bold py-2 rounded-lg shadow-md hover:bg-slate-400 active:scale-95 transition-colors flex justify-center items-center gap-2";
+                
+                btnEquip.onclick = () => app.handleEquipItem(itemId);
+                btnDiscard.onclick = () => app.handleReleasePet(petIdx);
+
+                // [新增] 將 btnUse 變成『🪐️ 樂園』按鈕
+                btnUse.classList.remove('hidden'); btnUse.classList.add('flex');
+                btnUse.innerHTML = '<span>🪐️</span> 互動';
+                btnUse.className = "flex-1 bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white font-bold py-2 rounded-lg shadow-md hover:from-fuchsia-500 hover:to-purple-500 active:scale-95 transition-transform flex justify-center items-center gap-2";
+                btnUse.onclick = () => {
+                    app.closeBackpackPanel();
+                    app.openPetParadise(petIdx);
+                };
+
+                app.el('bp-item-action-panel').classList.remove('hidden');
+                app.el('bp-item-action-panel').classList.add('flex');
+                return;
+            }
+
+            // --- 一般物品點擊邏輯 ---
             const list = app.state.globalSettings?.blackMarketList || [];
             const itemData = list[itemId];
             if (!itemData) return;
@@ -15376,61 +15546,45 @@ for (const slot of slots) {
             const lvData = (itemData.levelData && itemData.levelData[targetLv]) ? itemData.levelData[targetLv] : {};
             const img = itemData[`img${targetLv}`] || itemData.img1 || '';
 
-            // 更新面板內容
             app.el('bp-panel-name').textContent = itemData.maxLv > 1 ? `${itemData.name} (LV${targetLv})` : itemData.name;
             app.el('bp-panel-desc').textContent = lvData.desc || '暫無說明';
             app.el('bp-panel-icon').innerHTML = `<img src="${img}" class="w-full h-full object-contain filter drop-shadow-sm">`;
 
-            // 設定按鈕事件與按鈕切換顯示
-            const btnEquip = app.el('btn-bp-equip');
-            const btnUse = app.el('btn-bp-use');
-            
-           // 如果道具名稱包含特定字眼(消耗品)，則顯示對應操作並隱藏「裝備」
             if (itemData.name.includes('熔爐') || itemData.name.includes('寵物蛋')) {
-                btnEquip.classList.add('hidden');
-                btnEquip.classList.remove('flex');
-                btnUse.classList.remove('hidden');
-                btnUse.classList.add('flex');
-                
-                // 動態改變按鈕文字
-                if (itemData.name.includes('寵物蛋')) {
-                    btnUse.innerHTML = '<span>🔮</span> 召喚';
-                } else {
-                    btnUse.innerHTML = '<span>🔥</span> 使用';
-                }
-                
+                btnEquip.classList.add('hidden'); btnEquip.classList.remove('flex');
+                btnUse.classList.remove('hidden'); btnUse.classList.add('flex');
+                btnUse.innerHTML = itemData.name.includes('寵物蛋') ? '<span>🔮</span> 召喚' : '<span>🔥</span> 使用';
                 btnUse.onclick = () => app.useBackpackItem(itemId);
             } else {
-                btnEquip.classList.remove('hidden');
-                btnEquip.classList.add('flex');
-                btnUse.classList.add('hidden');
-                btnUse.classList.remove('flex');
+                btnEquip.classList.remove('hidden'); btnEquip.classList.add('flex');
+                btnUse.classList.add('hidden'); btnUse.classList.remove('flex');
                 btnEquip.onclick = () => app.handleEquipItem(itemId);
             }
 
-            app.el('btn-bp-discard').onclick = () => app.handleDiscardItem(itemId);
+            btnDiscard.classList.remove('hidden'); btnDiscard.classList.add('flex');
+            btnDiscard.onclick = () => app.handleDiscardItem(itemId);
 
-            // 顯示面板
             app.el('bp-item-action-panel').classList.remove('hidden');
             app.el('bp-item-action-panel').classList.add('flex');
         },
 
-        // [新增] 關閉背包面板
+        // [新增防護] 關閉背包面板
         closeBackpackPanel: () => {
             app.el('bp-item-action-panel').classList.add('hidden');
             app.el('bp-item-action-panel').classList.remove('flex');
         },
-// [修改] 使用背包消耗品道具 (支援動態合成與寵物蛋)
+
         useBackpackItem: (itemId) => {
             const globalList = app.state.globalSettings?.blackMarketList || [];
             const item = globalList[itemId];
             if (!item) return;
 
+            app.closeBackpackPanel();
+
             if (item.name.includes('烈焰熔爐')) {
-                app.state.currentForgeItemId = itemId; // 記錄使用的熔爐ID
+                app.state.currentForgeItemId = itemId; 
                 app.openPlayerCraftingUI();
             } else if (item.name.includes('寵物蛋')) {
-                // [新增] 攔截寵物蛋，開啟召喚祭壇
                 app.state.currentEggItemId = itemId;
                 app.openPetSummonAltar();
             }
@@ -15460,8 +15614,7 @@ for (const slot of slots) {
                 let probHtml = '<div class="flex flex-wrap justify-center gap-3 md:gap-6 bg-black/40 p-3 md:p-4 rounded-2xl border-2 border-amber-500/30 backdrop-blur-sm shadow-inner">';
                 pool.forEach(p => {
                     const firstForm = (p.forms && p.forms[0]) ? p.forms[0] : {};
-                    const bmItem = globalBm[firstForm.bmIdx];
-                    const petImg = bmItem ? (bmItem[`img${bmItem.currentEditLv||1}`] || bmItem.img1) : 'https://placehold.co/40x40?text=?';
+                    const petImg = firstForm.imgUrl || 'https://placehold.co/40x40?text=?';
                     const pct = ((parseInt(p.weight) / totalWeight) * 100).toFixed(1);
                     
                     probHtml += `<div class="flex flex-col items-center gap-1.5 bg-slate-800/80 px-3 py-2 rounded-xl border border-slate-600 shadow-lg transition-transform hover:scale-110"><div class="w-12 h-12 md:w-14 md:h-14 bg-slate-900 rounded-full flex items-center justify-center border-2 border-amber-400/50 shadow-[0_0_10px_rgba(251,191,36,0.3)] overflow-hidden"><img src="${petImg}" class="w-[80%] h-[80%] object-contain drop-shadow-md"></div><span class="text-[0.65rem] md:text-xs font-black text-amber-100 max-w-[60px] truncate text-center">${p.name}</span><span class="text-xs md:text-sm font-black text-amber-400 bg-black/80 px-2.5 py-0.5 rounded-full border border-amber-500/50 shadow-inner">${pct}%</span></div>`;
@@ -15636,11 +15789,9 @@ for (const slot of slots) {
                     // 清除臨時狀態旗標
                     db.ref(`users/${uid}/_tempSummonStatus`).remove();
 
-                    // 取出第一型態的圖片 (若無則使用預設寵物蛋圖)
-                    const globalBm = app.state.globalSettings?.blackMarketList || [];
+                    // 取出第一型態的圖片 (完全獨立)
                     const firstForm = (pet.forms && pet.forms[0]) ? pet.forms[0] : {};
-                    const bmItem = globalBm[firstForm.bmIdx];
-                    const petImg = bmItem ? (bmItem[`img${bmItem.currentEditLv||1}`] || bmItem.img1) : 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%AF%B5%E7%89%A9%E8%9B%8B%E5%9C%96%E7%A4%BA.png';
+                    const petImg = firstForm.imgUrl || 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%AF%B5%E7%89%A9%E8%9B%8B%E5%9C%96%E7%A4%BA.png';
 
                     // 填寫結果介面資料
                     app.el('pet-result-img').src = petImg;
@@ -15662,6 +15813,7 @@ for (const slot of slots) {
                     
                     // 同步更新記憶體中的背包數量 (重要：這樣回去背包介面時蛋的數量才會減少)
                     app.state.currentBackpackData.inventory = newData.inventory || {};
+                    app.state.currentBackpackData.pets = newData.pets || {}; // [新增] 同步寵物資料，抽到重複時背包會馬上顯示新經驗
                 } else {
                     app.toast('❌ 祭壇魔力中斷，蛋數量不足或網路異常。', 1);
                     app.closePetSummonAltar();
@@ -15889,110 +16041,718 @@ for (const slot of slots) {
             app.renderCharacterBackpackUI();
             app.closeBackpackPanel();
         },// [新增] 丟棄物品邏輯
+        // [新增] 放生寵物邏輯 (解除契約)
+        handleReleasePet: (petIdx) => {
+            const data = app.state.currentBackpackData;
+            const petState = app.getPetCurrentState(petIdx, data.pets[petIdx]?.exp || 0);
+
+            if (!confirm(`👋 確定要解除與【${petState.name}】的契約嗎？\n\n警告：放生後若再次抽到，等級將會從 1 級重新開始計算！\n(已裝備的寵物會自動卸下)`)) return;
+
+            // 1. 若裝備中，自動卸下
+            let unequipped = false;
+            if (data.equipped[7] === `pet_${petIdx}`) {
+                delete data.equipped[7];
+                unequipped = true;
+            }
+
+            // 2. 從擁有的寵物清單中刪除
+            delete data.pets[petIdx];
+
+            // 3. 儲存並刷新畫面
+            app.saveBackpackData();
+            app.renderCharacterBackpackUI();
+            app.closeBackpackPanel();
+            app.toast(`💨 已放生 ${petState.name}，願原力與牠同在。`, 1);
+            if (unequipped) app.playSe('hit2');
+        },
+
         handleDiscardItem: (itemId) => {
             const data = app.state.currentBackpackData;
             const currentQty = data.inventory[itemId] || 0;
-            
-            // 判斷可用數量 (扣除已裝備的)
             let usedCount = 0;
             Object.values(data.equipped).forEach(id => { if(id === itemId) usedCount++; });
             const availableQty = currentQty - usedCount;
 
             if (availableQty <= 0) return app.toast('❌ 此物品已全部裝備中，無法丟棄！');
-
-            // 詢問數量
             const input = prompt(`🗑️ 確定要丟棄「${app.state.globalSettings?.blackMarketList[itemId]?.name}」嗎？\n目前持有: ${currentQty} (可用: ${availableQty})\n\n請輸入要丟棄的數量：`, "1");
-            
-            if (input === null) return; // 取消
+            if (input === null) return; 
             
             const qty = parseInt(input);
             if (isNaN(qty) || qty <= 0) return app.toast('❌ 請輸入有效的數量');
             if (qty > availableQty) return app.toast(`❌ 數量不足！你只有 ${availableQty} 個未裝備的物品。`);
 
-            // 執行扣除
             if (confirm(`⚠️ 警告：丟棄後無法復原！\n確認丟棄 ${qty} 個？`)) {
                 data.inventory[itemId] -= qty;
                 if (data.inventory[itemId] <= 0) delete data.inventory[itemId];
                 
-                app.saveBackpackData(); // 儲存
-                app.renderCharacterBackpackUI(); // 重繪
-                app.closeBackpackPanel(); // 關閉面板
+                app.saveBackpackData(); 
+                app.renderCharacterBackpackUI(); 
+                app.closeBackpackPanel(); 
                 app.toast(`🗑️ 已丟棄 ${qty} 個物品`);
             }
         },
 
-        // 3. 裝備物品 (自動尋找符合等級的空位) [v4.7.8.3 修正：參照全域設定]
-   handleEquipItem: (itemId) => {
-        const data = app.state.currentBackpackData;
-        
-        // [v4.7.8.5 新增] 同名物品限制檢查 + [新增] 冒險者之劍系列限制
-        const globalList = app.state.globalSettings?.blackMarketList || [];
-        const targetItem = globalList[itemId];
-        
-        if (targetItem) {
-            const currentEquippedIds = Object.values(data.equipped);
-            for (const eqId of currentEquippedIds) {
-                const equippedItem = globalList[eqId];
-                if (equippedItem) {
-                    // 1. 同名物品阻擋
-                    if (equippedItem.name === targetItem.name) {
-                         return app.toast(`❌ 無法裝備：身上已有同名物品「${targetItem.name}」`, 1);
-                    }
-                    // 2. 「冒險者之劍」系列阻擋：只要名稱都包含此關鍵字，不可重複裝備
-                    if (targetItem.name.includes('冒險者之劍') && equippedItem.name.includes('冒險者之劍')) {
-                         return app.toast(`❌ 無法裝備：身上已裝備其他「冒險者之劍」系列武器！`, 1);
+        // 3. 裝備物品 (自動尋找符合等級的空位，支援寵物)
+        handleEquipItem: (itemId) => {
+            const data = app.state.currentBackpackData;
+            const globalList = app.state.globalSettings?.blackMarketList || [];
+            
+            // --- 如果是寵物 ---
+            if (String(itemId).startsWith('pet_')) {
+                if (!data.equipped[7]) {
+                    data.equipped[7] = itemId;
+                    app.saveBackpackData();
+                    app.renderCharacterBackpackUI(); 
+                    app.closeBackpackPanel();
+                    app.playSe('hit1');
+                    return;
+                } else {
+                    return app.toast('❌ 寵物格已滿！請先卸下目前的寵物夥伴。', 1);
+                }
+            }
+
+            // --- 一般裝備防呆 ---
+            const targetItem = globalList[itemId];
+            if (targetItem) {
+                const currentEquippedIds = Object.values(data.equipped);
+                for (const eqId of currentEquippedIds) {
+                    if(String(eqId).startsWith('pet_')) continue; // 略過寵物
+                    const equippedItem = globalList[eqId];
+                    if (equippedItem) {
+                        if (equippedItem.name === targetItem.name) {
+                             return app.toast(`❌ 無法裝備：身上已有同名物品「${targetItem.name}」`, 1);
+                        }
+                        if (targetItem.name.includes('冒險者之劍') && equippedItem.name.includes('冒險者之劍')) {
+                             return app.toast(`❌ 無法裝備：身上已裝備其他「冒險者之劍」系列武器！`, 1);
+                        }
                     }
                 }
             }
-        }
-        const accLv = app.getAccountLevel(data.exp);
-        const unlockLevels = [5, 15, 25, 35, 45, 55]; // 一般裝備格解鎖等級
-        
-        // [v4.7.8.3] 讀取全域設定：裝備限制開關 (預設開啟)
-        const limitEnabled = app.state.globalSettings?.equipSlotLimitEnabled !== false;
 
-        let emptySlot = -1;
+            const accLv = app.getAccountLevel(data.exp);
+            const unlockLevels = [5, 15, 25, 35, 45, 55]; 
+            const limitEnabled = app.state.globalSettings?.equipSlotLimitEnabled !== false;
 
-        // --- [新增] 嚴格判斷裝備類別 ---
-        if (targetItem && targetItem.name.includes('職業書')) {
-            // 1. 若裝備名稱包含「職業書」，只能放進專屬格子(索引 6)，且無視一般等級限制
-            if (!data.equipped[6]) {
-                emptySlot = 6;
+            let emptySlot = -1;
+
+            if (targetItem && targetItem.name.includes('職業書')) {
+                if (!data.equipped[6]) emptySlot = 6;
+                else return app.toast('❌ 職業格已滿！請先卸下目前的職業書。', 1);
+            } else if (targetItem && targetItem.name.includes('寵物') && !targetItem.name.includes('寵物蛋')) {
+                // 舊版黑市買的寵物防禦
+                if (!data.equipped[7]) emptySlot = 7;
+                else return app.toast('❌ 寵物格已滿！請先卸下目前的寵物夥伴。', 1);
             } else {
-                return app.toast('❌ 職業格已滿！請先卸下目前的職業書。', 1);
-            }
-        } else {
-            // 2. 若為一般裝備，只能放在 0~5 格
-            for (let i = 0; i < 6; i++) {
-                const isUnlocked = !limitEnabled || (accLv >= unlockLevels[i]);
-                if (isUnlocked) {
-                    if (!data.equipped[i]) {
-                        emptySlot = i;
-                        break;
+                for (let i = 0; i < 6; i++) {
+                    const isUnlocked = !limitEnabled || (accLv >= unlockLevels[i]);
+                    if (isUnlocked) {
+                        if (!data.equipped[i]) {
+                            emptySlot = i;
+                            break;
+                        }
                     }
                 }
+                if (emptySlot === -1) {
+                    const hasLockedSlot = limitEnabled && unlockLevels.some(lv => accLv < lv);
+                    if (hasLockedSlot) return app.toast('❌ 無可用欄位！(一般裝備欄需升級解鎖)', 1);
+                    else return app.toast('❌ 一般裝備欄已滿！請先卸下舊裝備。', 1);
+                }
+            }
+
+            data.equipped[emptySlot] = itemId;
+            app.saveBackpackData();
+            app.renderCharacterBackpackUI(); 
+            app.closeBackpackPanel(); 
+            app.playSe('hit1');
+        },
+
+        // ==========================================
+        // --- [新增] 寵物樂園互動系統 ---
+        // ==========================================
+        
+        // 獨立出的更新左側面板函式 (供升級時呼叫)
+        updatePetParadisePanel: (petIdx) => {
+            const data = app.state.currentBackpackData;
+            const petExp = data.pets[petIdx]?.exp || 0;
+            const petState = app.getPetCurrentState(petIdx, petExp);
+            if (!petState) return;
+
+            app.el('paradise-pet-icon').src = petState.imgUrl;
+            app.el('paradise-pet-family').textContent = petState.name;
+            app.el('paradise-pet-name').textContent = petState.formName;
+            app.el('paradise-pet-lv').textContent = petState.level;
+            app.el('paradise-pet-exp-text').textContent = `${petState.expInfo.currentExp} / ${petState.expInfo.nextExp}`;
+            app.el('paradise-pet-exp-bar').style.width = `${petState.expInfo.percent}%`;
+            app.el('paradise-atk-name').textContent = petState.atkName;
+            app.el('paradise-atk-prob').textContent = petState.atkProb;
+            app.el('paradise-atk-dmg').textContent = `+${petState.atkDmg}`;
+            app.el('paradise-skill-name').textContent = petState.skillName;
+            app.el('paradise-skill-prob').textContent = petState.skillProb;
+            app.el('paradise-skill-dmg').textContent = `+${petState.skillDmg}`;
+            app.el('paradise-pet-desc').textContent = petState.desc;
+        },
+
+        openPetParadise: (petIdx) => {
+            app.state.currentParadisePetIdx = petIdx; // 紀錄目前正在互動的寵物索引
+            app.updatePetParadisePanel(petIdx);
+
+            app.el('character-backpack-modal').classList.add('hidden');
+            app.el('pet-paradise-modal').classList.remove('hidden');
+            app.el('pet-paradise-modal').classList.add('flex');
+
+            const data = app.state.currentBackpackData;
+            const petExp = data.pets[petIdx]?.exp || 0;
+            const petState = app.getPetCurrentState(petIdx, petExp);
+            app.initPetParadiseCanvas(petState.spriteIdx);
+
+            // 啟動冷卻 UI 更新迴圈
+            app.updatePetInteractionUI();
+            if (app.state.petInteractionInterval) clearInterval(app.state.petInteractionInterval);
+            app.state.petInteractionInterval = setInterval(app.updatePetInteractionUI, 1000);
+        },
+
+        closePetParadise: () => {
+            app.el('pet-paradise-modal').classList.add('hidden');
+            app.el('pet-paradise-modal').classList.remove('flex');
+            
+            if (app.state.paradiseRAF) {
+                cancelAnimationFrame(app.state.paradiseRAF);
+                app.state.paradiseRAF = null;
+            }
+            if (app.state.petInteractionInterval) {
+                clearInterval(app.state.petInteractionInterval);
+                app.state.petInteractionInterval = null;
             }
             
-            // 一般裝備錯誤訊息處理
-            if (emptySlot === -1) {
-                const hasLockedSlot = limitEnabled && unlockLevels.some(lv => accLv < lv);
-                if (hasLockedSlot) {
-                    return app.toast('❌ 無可用欄位！(一般裝備欄需升級解鎖)', 1);
+            app.state.paradisePet = null;
+            app.state.currentParadisePetIdx = null;
+            app.state.isPetInteracting = false; 
+
+            app.el('character-backpack-modal').classList.remove('hidden');
+            app.renderCharacterBackpackUI(); // 確保離開時背包數值是最新的
+        },
+
+        // --- 互動與冷卻按鈕更新邏輯 ---
+        updatePetInteractionUI: () => {
+            const petIdx = app.state.currentParadisePetIdx;
+            if (!petIdx) return;
+            const data = app.state.currentBackpackData;
+            const pet = data.pets[petIdx];
+            if (!pet) return;
+
+            const now = Date.now();
+            const feedCD = 30 * 60 * 1000; // 餵食冷卻 30 分鐘
+            const batheCD = 60 * 60 * 1000; // 洗澡冷卻 60 分鐘
+
+            const lastFed = pet.lastFed || 0;
+            const lastBathed = pet.lastBathed || 0;
+
+            const timeSinceFed = now - lastFed;
+            const timeSinceBathed = now - lastBathed;
+
+            const btnFeed = app.el('btn-pet-feed');
+            const btnBathe = app.el('btn-pet-bathe');
+            const isLocked = app.state.isPetInteracting;
+
+            const formatTime = (ms) => {
+                const totalSec = Math.ceil(ms / 1000);
+                const min = Math.floor(totalSec / 60);
+                const sec = totalSec % 60;
+                return `${min}:${sec < 10 ? '0'+sec : sec}`;
+            };
+
+            // 餵食按鈕狀態
+            if (timeSinceFed >= feedCD) {
+                btnFeed.innerHTML = '🥖 餵食';
+                if (!isLocked) {
+                    btnFeed.className = "bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg border-b-4 border-green-800 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-2 shadow-[0_0_10px_rgba(34,197,94,0.4)] animate-pulse";
+                    btnFeed.disabled = false;
+                }
+            } else {
+                btnFeed.innerHTML = `🥖 餵食 (${formatTime(feedCD - timeSinceFed)})`;
+                btnFeed.className = "bg-slate-700 text-slate-500 font-bold py-2 rounded-lg border-b-4 border-slate-800 cursor-not-allowed transition-all flex items-center justify-center gap-2";
+                btnFeed.disabled = true;
+            }
+
+            // 洗澡按鈕狀態
+            if (timeSinceBathed >= batheCD) {
+                btnBathe.innerHTML = '🛁 水浴';
+                if (!isLocked) {
+                    btnBathe.className = "bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg border-b-4 border-blue-800 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-2 shadow-[0_0_10px_rgba(59,130,246,0.4)] animate-pulse";
+                    btnBathe.disabled = false;
+                }
+            } else {
+                btnBathe.innerHTML = `🛁 水浴 (${formatTime(batheCD - timeSinceBathed)})`;
+                btnBathe.className = "bg-slate-700 text-slate-500 font-bold py-2 rounded-lg border-b-4 border-slate-800 cursor-not-allowed transition-all flex items-center justify-center gap-2";
+                btnBathe.disabled = true;
+            }
+        },
+
+        interactWithPet: (type) => {
+            if (app.state.isPetInteracting) return;
+            const petIdx = app.state.currentParadisePetIdx;
+            if (!petIdx) return;
+            const data = app.state.currentBackpackData;
+            const pet = data.pets[petIdx];
+            if (!pet) return;
+
+            const now = Date.now();
+            if (type === 'feed') {
+                const feedCD = 30 * 60 * 1000;
+                if (now - (pet.lastFed || 0) < feedCD) return;
+                
+                app.state.isPetInteracting = true;
+                pet.lastFed = now; // 記錄時間
+                app.updatePetInteractionUI(); 
+                app.triggerFeedAnimation(petIdx);
+            } else if (type === 'bathe') {
+                const batheCD = 60 * 60 * 1000;
+                if (now - (pet.lastBathed || 0) < batheCD) return;
+                
+                app.state.isPetInteracting = true;
+                pet.lastBathed = now; // 記錄時間
+                app.updatePetInteractionUI();
+                app.triggerBatheAnimation(petIdx);
+            }
+        },
+
+        // --- 互動動畫與特效引擎 ---
+        triggerFeedAnimation: (petIdx) => {
+            const canvas = app.el('paradise-canvas');
+            const sc = app.state.paradisePet; 
+            if (!canvas || !sc) return;
+
+            // 停止 AI 漫遊，強迫轉向正面
+            sc.state = 'idle';
+            sc.dir = 0;
+            sc.vx = 0;
+            sc.vy = 0;
+            sc.nextAiTime = Date.now() + 99999; 
+
+            const rect = canvas.getBoundingClientRect();
+            // 修正為實際縮放比例以確保定位正確
+            const scaleX = rect.width / canvas.width;
+            const scaleY = rect.height / canvas.height;
+            const targetX = rect.left + sc.x * scaleX;
+            const targetY = rect.top + sc.y * scaleY;
+
+            // 產生掉落食物
+            const food = document.createElement('div');
+            // 隨機選一個食物圖示
+            const foods = ['🍗', '🥖', '🍖', '🥪'];
+            food.innerHTML = foods[Math.floor(Math.random() * foods.length)]; 
+            food.style.cssText = `
+                position: fixed;
+                left: ${targetX}px;
+                top: ${rect.top - 50}px;
+                font-size: 40px;
+                transform: translate(-50%, -50%);
+                pointer-events: none;
+                z-index: 10000;
+                transition: top 0.6s cubic-bezier(0.5, 0, 1, 1);
+            `;
+            document.body.appendChild(food);
+
+            // 強制重繪
+            void food.offsetWidth;
+            // 食物掉到腳邊
+            food.style.top = `${targetY - 10}px`; 
+
+            app.playSe('charge'); // 掉落音效
+
+            setTimeout(() => {
+                food.remove();
+                
+                // 寵物開始吃 (開心動作)
+                sc.state = 'action';
+                sc.actionType = 'happy';
+                sc.frame = 0;
+                app.playSe('hit1'); 
+                if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+
+                // 愛心爆發特效
+                app.spawnParticles(targetX, targetY, '❤️', 5);
+
+                setTimeout(() => {
+                    // 根據使用者在需求裡的 1.餵食時，幫我利用能量提升音效
+                    const seAudio = new Audio('https://taira-komori.net/sound_os2/game01/powerup10.mp3');
+                    seAudio.volume = 0.15;
+                    seAudio.play().catch(()=>{});
+
+                    // 給予經驗值與跳字
+                    app.grantPetExpAndCheckLevel(petIdx, 50);
+                    app.showDamageText('+50 EXP', '#4ade80', null, targetX, targetY - 60); 
+                    
+                    setTimeout(() => {
+                        // 恢復常態
+                        sc.state = 'idle';
+                        sc.nextAiTime = Date.now() + 1000;
+                        app.state.isPetInteracting = false;
+                        app.updatePetInteractionUI();
+                    }, 1000);
+                }, 800); // 動作演到一半時噴經驗
+            }, 600); // 等待掉落結束
+        },
+
+        triggerBatheAnimation: (petIdx) => {
+            const canvas = app.el('paradise-canvas');
+            const sc = app.state.paradisePet;
+            if (!canvas || !sc) return;
+
+            sc.state = 'idle';
+            sc.dir = 0;
+            sc.vx = 0;
+            sc.vy = 0;
+            sc.nextAiTime = Date.now() + 99999;
+
+            const rect = canvas.getBoundingClientRect();
+            // 修正為實際縮放比例以確保定位正確
+            const scaleX = rect.width / canvas.width;
+            const scaleY = rect.height / canvas.height;
+            const targetX = rect.left + sc.x * scaleX;
+            const targetY = rect.top + sc.y * scaleY;
+
+            // 產生洗澡雲朵
+            const cloud = document.createElement('div');
+            cloud.innerHTML = '🌧️'; 
+            cloud.style.cssText = `
+                position: fixed;
+                left: ${targetX}px;
+                top: ${targetY - 120}px;
+                font-size: 60px;
+                transform: translate(-50%, -50%);
+                pointer-events: none;
+                z-index: 10000;
+                opacity: 0;
+                transition: opacity 0.5s;
+            `;
+            document.body.appendChild(cloud);
+
+            void cloud.offsetWidth;
+            cloud.style.opacity = '1';
+            app.playSe('charge');
+
+            setTimeout(() => {
+                // 寵物洗澡反應 (灑花動作)
+                sc.state = 'action';
+                sc.actionType = 'flower';
+                sc.frame = 0;
+
+                // 產生上升泡泡
+                app.spawnParticles(targetX, targetY, '💧', 8, -100);
+                
+                if (navigator.vibrate) navigator.vibrate([30, 30, 30, 30]);
+
+                setTimeout(() => {
+                    cloud.style.opacity = '0';
+                    setTimeout(() => cloud.remove(), 500);
+
+                    // 閃亮結尾
+                    app.spawnParticles(targetX, targetY, '✨', 4);
+                    
+                    // 根據使用者在需求裡的 2.洗澡時，幫我利用變乾淨音效
+                    const seAudio = new Audio('https://taira-komori.net/sound_os2/anime01/bright_bell1.mp3');
+                    seAudio.volume = 0.2;
+                    seAudio.play().catch(()=>{});
+
+                    app.grantPetExpAndCheckLevel(petIdx, 100);
+                    app.showDamageText('+100 EXP', '#4ade80', null, targetX, targetY - 60);
+                    
+                    setTimeout(() => {
+                        sc.state = 'idle';
+                        sc.nextAiTime = Date.now() + 1000;
+                        app.state.isPetInteracting = false;
+                        app.updatePetInteractionUI();
+                    }, 1000);
+                }, 1500);
+            }, 500);
+        },
+
+        // 通用粒子特效產生器
+        spawnParticles: (x, y, emoji, count, dy = -50) => {
+            for(let i=0; i<count; i++) {
+                const p = document.createElement('div');
+                p.innerHTML = emoji;
+                // 隨機擴散偏移
+                const offsetX = (Math.random() - 0.5) * 80;
+                const offsetY = (Math.random() - 0.5) * 40;
+                
+                p.style.cssText = `
+                    position: fixed;
+                    left: ${x + offsetX}px;
+                    top: ${y + offsetY}px;
+                    font-size: ${20 + Math.random()*15}px;
+                    transform: translate(-50%, -50%);
+                    pointer-events: none;
+                    z-index: 10000;
+                    opacity: 1;
+                    transition: all 1s ease-out;
+                `;
+                document.body.appendChild(p);
+                
+                // 強制重繪後執行飄移與淡出
+                void p.offsetWidth;
+                p.style.top = `${y + offsetY + dy}px`;
+                p.style.opacity = '0';
+                p.style.transform = `translate(-50%, -50%) scale(1.5)`;
+                
+                setTimeout(() => p.remove(), 1000);
+            }
+        },
+
+        grantPetExpAndCheckLevel: (petIdx, expGain) => {
+            const data = app.state.currentBackpackData;
+            const pet = data.pets[petIdx];
+            if (!pet) return;
+
+            const oldLevel = app.getPetLevelInfo(pet.exp).lv;
+            pet.exp += expGain;
+            const newLevelInfo = app.getPetLevelInfo(pet.exp);
+
+            // 儲存並寫入 Firebase / LocalStorage
+            app.saveBackpackData();
+
+            // 即時更新左側數據面板
+            app.updatePetParadisePanel(petIdx);
+
+            if (newLevelInfo.lv > oldLevel) {
+                // 升級！
+                app.playSe('levelUp');
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+                
+                const canvas = app.el('paradise-canvas');
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = rect.width / canvas.width;
+                const scaleY = rect.height / canvas.height;
+                const targetX = rect.left + app.state.paradisePet.x * scaleX;
+                const targetY = rect.top + app.state.paradisePet.y * scaleY;
+
+                setTimeout(() => {
+                    app.showDamageText('LEVEL UP!', '#fbbf24', null, targetX, targetY - 100);
+                }, 500);
+            }
+        },
+
+        initPetParadiseCanvas: (spriteIdx) => {
+            const canvas = app.el('paradise-canvas');
+            if (!canvas) return;
+            // 延遲一幀讓 DOM 完成布局再取實際尺寸
+            setTimeout(() => {
+                const parent = canvas.parentElement;
+                canvas.width = parent.clientWidth || 600;
+                canvas.height = parent.clientHeight || 400;
+
+                app.state.paradisePet = {
+                    x: canvas.width / 2,
+                    y: canvas.height * 0.6,
+                    targetX: null,
+                    targetY: null,
+                    vx: 0,
+                    vy: 0,
+                    speed: 1.8,
+                    state: 'idle',
+                    dir: 0,
+                    frame: 0,
+                    lastFrameTime: Date.now(),
+                    nextAiTime: Date.now() + 2000,
+                    imgCanvas: null,
+                    config: null,
+                    clickEffect: null
+                };
+
+                if (app.state.paradiseRAF) cancelAnimationFrame(app.state.paradiseRAF);
+
+                const spriteList = app.state.globalSettings?.spriteList || [];
+                const spriteData = spriteList[spriteIdx];
+                if (spriteData && spriteData.url) {
+                    app.state.paradisePet.config = spriteData;
+                    const img = new Image();
+                    img.crossOrigin = 'Anonymous';
+                    img.onload = () => {
+                        const off = document.createElement('canvas');
+                        off.width = img.width;
+                        off.height = img.height;
+                        const ctx2 = off.getContext('2d', { willReadFrequently: true });
+                        ctx2.drawImage(img, 0, 0);
+                        if (app.state.paradisePet) app.state.paradisePet.imgCanvas = off;
+                    };
+                    img.src = spriteData.url;
+                }
+
+                app.petParadiseLoop();
+            }, 80);
+        },
+
+        clickPetParadise: (e) => {
+            if (e.cancelable) e.preventDefault();
+            const canvas = app.el('paradise-canvas');
+            const pet = app.state.paradisePet;
+            if (!canvas || !pet) return;
+            const rect = canvas.getBoundingClientRect();
+            const isTouch = e.type === 'touchstart';
+            const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+            const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+            const targetX = (clientX - rect.left) * (canvas.width / rect.width);
+            const targetY = (clientY - rect.top) * (canvas.height / rect.height);
+
+            pet.clickEffect = { x: targetX, y: targetY, time: Date.now() };
+            pet.targetX = targetX;
+            pet.targetY = targetY;
+            const dx = targetX - pet.x;
+            const dy = targetY - pet.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist > 5) {
+                pet.vx = (dx / dist) * pet.speed;
+                pet.vy = (dy / dist) * pet.speed;
+                pet.state = 'walk';
+                if (Math.abs(dx) > Math.abs(dy)) { pet.dir = dx > 0 ? 2 : 1; }
+                else { pet.dir = dy > 0 ? 0 : 3; }
+            }
+            pet.nextAiTime = Date.now() + 5000;
+            app.playSe('charge');
+        },
+
+        petParadiseLoop: () => {
+            const canvas = app.el('paradise-canvas');
+            const pet = app.state.paradisePet;
+            if (!canvas || !pet) return;
+
+            // RWD 自動更新畫布尺寸
+            const parent = canvas.parentElement;
+            if (parent && (canvas.width !== parent.clientWidth || canvas.height !== parent.clientHeight)) {
+                canvas.width = parent.clientWidth;
+                canvas.height = parent.clientHeight;
+            }
+
+            const now = Date.now();
+
+            // AI 随機漫步
+            if (pet.targetX === null && now > pet.nextAiTime) {
+                if (pet.state === 'walk') {
+                    pet.state = 'idle'; pet.vx = 0; pet.vy = 0; pet.dir = 0;
+                    pet.nextAiTime = now + 2000 + Math.random() * 3000;
                 } else {
-                    return app.toast('❌ 一般裝備欄已滿！請先卸下舊裝備。', 1);
+                    pet.state = 'walk';
+                    const angle = Math.random() * Math.PI * 2;
+                    pet.vx = Math.cos(angle) * (pet.speed * 0.5);
+                    pet.vy = Math.sin(angle) * (pet.speed * 0.5);
+                    if (Math.abs(pet.vx) > Math.abs(pet.vy)) pet.dir = pet.vx > 0 ? 2 : 1;
+                    else pet.dir = pet.vy > 0 ? 0 : 3;
+                    pet.nextAiTime = now + 1500 + Math.random() * 2000;
                 }
             }
-        }
 
-        // 執行裝備
-        data.equipped[emptySlot] = itemId;
-        app.saveBackpackData();
-        app.renderCharacterBackpackUI(); 
-        app.closeBackpackPanel(); // 裝備後關閉面板
-        
-        // 音效
-        app.playSe('hit1');
-    },
+            // 移動與銀界
+            if (pet.state === 'walk') {
+                pet.x += pet.vx;
+                pet.y += pet.vy;
+                if (pet.targetX !== null) {
+                    const dx = pet.targetX - pet.x;
+                    const dy = pet.targetY - pet.y;
+                    if (Math.sqrt(dx*dx + dy*dy) < pet.speed + 1) {
+                        pet.x = pet.targetX; pet.y = pet.targetY;
+                        pet.targetX = null; pet.targetY = null;
+                        pet.state = 'idle'; pet.vx = 0; pet.vy = 0; pet.dir = 0;
+                    }
+                }
+                const margin = 40;
+                if (pet.x < margin || pet.x > canvas.width - margin ||
+                    pet.y < margin || pet.y > canvas.height - margin) {
+                    pet.x = Math.max(margin, Math.min(canvas.width - margin, pet.x));
+                    pet.y = Math.max(margin, Math.min(canvas.height - margin, pet.y));
+                    pet.targetX = null; pet.targetY = null;
+                    pet.state = 'idle'; pet.vx = 0; pet.vy = 0; pet.dir = 0;
+                    pet.nextAiTime = now + 1000;
+                }
+            }
+
+            // 動画幀更新
+            if (now - pet.lastFrameTime > 200) {
+                pet.frame++;
+                pet.lastFrameTime = now;
+            }
+
+            app.drawPetParadise(canvas, pet, now);
+            app.state.paradiseRAF = requestAnimationFrame(app.petParadiseLoop);
+        },
+
+        drawPetParadise: (canvas, pet, now) => {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 點擊水波紋
+            if (pet.clickEffect) {
+                const elapsed = now - pet.clickEffect.time;
+                if (elapsed < 600) {
+                    const alpha = 1 - elapsed / 600;
+                    ctx.beginPath();
+                    ctx.arc(pet.clickEffect.x, pet.clickEffect.y, elapsed / 8, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(217, 70, 239, ${alpha})`;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    // 第二圈
+                    ctx.beginPath();
+                    ctx.arc(pet.clickEffect.x, pet.clickEffect.y, elapsed / 16, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                } else {
+                    pet.clickEffect = null;
+                }
+            }
+
+            // 畫寵物圖示
+            if (!pet.imgCanvas || !pet.config) {
+                // 載入中顯示 emoji 占位符
+                ctx.font = 'bold 48px serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🐾', pet.x, pet.y - 24);
+                ctx.font = "12px 'Noto Sans TC', sans-serif";
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                ctx.fillText('角色載入中...', pet.x, pet.y + 20);
+                return;
+            }
+
+            const config = pet.config;
+            const gridX = Array.isArray(config.gridX) && config.gridX.length > 0 ? config.gridX : [0.25, 0.5, 0.75];
+            const gridY = Array.isArray(config.gridY) && config.gridY.length > 0 ? config.gridY : [0.2, 0.4, 0.6, 0.8];
+            const cols = config.cols || 4;
+
+            let row = 0;
+            if (pet.state === 'idle') row = 0;
+            else if (pet.dir === 0) row = 2;
+            else if (pet.dir === 1) row = 3;
+            else if (pet.dir === 2) row = 1;
+            else if (pet.dir === 3) row = 4;
+
+            const col = pet.state === 'idle' ? 0 : (pet.frame % cols);
+
+            const pointsY = [0, ...[...gridY].sort((a,b) => a-b), 1].map(v => Math.floor(v * pet.imgCanvas.height));
+            const pointsX = [0, ...[...gridX].sort((a,b) => a-b), 1].map(v => Math.floor(v * pet.imgCanvas.width));
+            const safeRow = Math.min(row, pointsY.length - 2);
+            const safeCol = Math.min(col, pointsX.length - 2);
+            const x1 = pointsX[safeCol], x2 = pointsX[safeCol + 1];
+            const y1 = pointsY[safeRow], y2 = pointsY[safeRow + 1];
+            const cellW = x2 - x1, cellH = y2 - y1;
+
+            if (cellW > 0 && cellH > 0) {
+                const targetSize = 96;
+                const scale = Math.min(targetSize / cellW, targetSize / cellH);
+                const drawW = cellW * scale;
+                const drawH = cellH * scale;
+                const drawX = pet.x - drawW / 2;
+                const drawY = pet.y - drawH;
+
+                // 脚底陰影
+                ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                ctx.beginPath();
+                ctx.ellipse(pet.x, pet.y, drawW / 2.2, drawH / 9, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.drawImage(pet.imgCanvas, x1, y1, cellW, cellH, drawX, drawY, drawW, drawH);
+            }
+        },
 
         // 4. 卸下裝備
         handleUnequipItem: (slotIndex) => {
@@ -16012,15 +16772,22 @@ for (const slot of slots) {
             const data = app.state.currentBackpackData;
             
             if (app.state.user) {
-                // 寫入 Firebase
-                db.ref(`users/${app.state.user.uid}`).update({
+                // 寫入 Firebase，包含 pets 欄位
+                const updatePayload = {
                     inventory: data.inventory,
-                    equipped: data.equipped
-                });
+                    equipped: data.equipped,
+                    pets: data.pets || null  // null 代表清除整個欄位
+                };
+                // 若 pets 為空物件，直接以 null 寫入以确保 Firebase 刪除該欄位
+                if (data.pets && Object.keys(data.pets).length === 0) {
+                    updatePayload.pets = null;
+                }
+                db.ref(`users/${app.state.user.uid}`).update(updatePayload);
             } else {
                 // 寫入 LocalStorage
                 localStorage.setItem('pharaoh_guest_inventory', JSON.stringify(data.inventory));
                 localStorage.setItem('pharaoh_guest_equipped', JSON.stringify(data.equipped));
+                localStorage.setItem('pharaoh_guest_pets', JSON.stringify(data.pets || {}));
              }
         }, // saveBackpackData 結束
 
