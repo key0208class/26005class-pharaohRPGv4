@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.2.6.7 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.2.6.8 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -714,7 +714,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.6.7 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.6.8 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -8286,6 +8286,14 @@
                                         userData.inventory[itemId] = (userData.inventory[itemId] || 0) + 1;
                                     });
                                 }
+                                // [新增] 同步在戰鬥中獲得經驗的寵物資料到 Google 帳號
+                                if (myData.pets) {
+                                    if (!userData.pets) userData.pets = {};
+                                    Object.keys(myData.pets).forEach(petIdx => {
+                                        userData.pets[petIdx] = userData.pets[petIdx] || { exp: 0, level: 1 };
+                                        userData.pets[petIdx].exp = Math.max(userData.pets[petIdx].exp || 0, myData.pets[petIdx].exp || 0);
+                                    });
+                                }
                                 return userData;
                             }, (error, committed) => {
                                 if (committed) {
@@ -8294,6 +8302,21 @@
                                 }
                             });
                         }
+                    }
+                } else if (app.state.myTeam && app.state.myName) {
+                    // [新增] 訪客模式結算時，同步寵物經驗到 localStorage
+                    const myData = data.players?.[app.state.myTeam]?.[app.state.myName];
+                    const sessionKey = `synced_guest_${app.state.classId}`;
+                    if (myData && !sessionStorage.getItem(sessionKey)) {
+                        if (myData.pets) {
+                            let localPets = JSON.parse(localStorage.getItem('pharaoh_guest_pets') || '{}');
+                            Object.keys(myData.pets).forEach(petIdx => {
+                                localPets[petIdx] = localPets[petIdx] || { exp: 0, level: 1 };
+                                localPets[petIdx].exp = Math.max(localPets[petIdx].exp || 0, myData.pets[petIdx].exp || 0);
+                            });
+                            localStorage.setItem('pharaoh_guest_pets', JSON.stringify(localPets));
+                        }
+                        sessionStorage.setItem(sessionKey, 'true');
                     }
                 }
                 // -----------------------------------------------------
@@ -8505,9 +8528,10 @@
                                     const petState = app.getPetCurrentState(petIdx, petExp);
                                     if (petState) {
                                         const img = petState.imgUrl || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
-                                        // 修改：移除 animate-bounce 避免跳動，大小改為 w-5 h-5，加入詳細的 tooltip 訊息
+                                        // [新增] 詳細的 Tooltip 技能說明
                                         const petTooltip = `🐾 寵物: ${petState.formName} (LV${petState.level})&#10;⚔️ ${petState.atkName} (機率:${petState.atkProb}% / 傷害:+${petState.atkDmg})&#10;✨ ${petState.skillName} (暴擊:${petState.skillProb}% / 傷害:+${petState.skillDmg})`;
-                                        petAvatarHtml = `<div class="relative w-5 h-5 ml-1 bg-fuchsia-900/50 rounded-full border border-fuchsia-400 shadow-sm flex items-center justify-center cursor-help" title="${petTooltip}"><img src="${img}" class="w-full h-full object-contain p-0.5 drop-shadow-md rounded-full"></div>`;
+                                        // [可修改] 寵物頭像大小：w-5 h-5 md:w-6 md:h-6 為外框大小(與玩家頭像一致)；scale-125 控制圖片放大比例(可改為 scale-150 等)
+                                        petAvatarHtml = `<div class="relative w-5 h-5 md:w-6 md:h-6 ml-0.5 bg-fuchsia-900/50 rounded-full border-2 border-fuchsia-400 shadow-sm flex items-center justify-center cursor-help overflow-hidden flex-shrink-0" title="${petTooltip}"><img src="${img}" class="w-full h-full object-contain drop-shadow-md rounded-full scale-125"></div>`;
                                     }
                                 } else {
                                     // 渲染一般裝備
@@ -8526,8 +8550,8 @@
                             equippedHtml = `<div class="flex items-center gap-0.5 ml-1 bg-black/10 p-0.5 rounded">${equippedHtml}</div>`;
                         }
 
-                        // [修改] 將 petAvatarHtml 插入到人物頭像與名稱之間
-                        listHtml += `<div class="flex flex-col p-2 ${highlightClass} ${damageEffectClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01] relative overflow-hidden"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-1 overflow-hidden"><img src="${userPhoto}" class="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-amber-300 object-cover shadow-sm flex-shrink-0"><span class="text-xs font-black text-white bg-slate-600 px-1 rounded transform scale-90">Lv.${expInfo.lv}</span><div class="flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 rounded border border-red-100 shadow-sm"><span class="text-[0.6rem] ${hpColorClass}">❤️</span><span class="text-[0.65rem] font-black text-slate-700 leading-none">${currentHp}/${maxHp}</span></div>${equippedHtml}${petAvatarHtml}<span class="font-bold ${nameClass} text-sm truncate max-w-[60px] md:max-w-[100px]">${p.name}</span></div><div class="flex items-center gap-1 text-xs font-bold text-yellow-700 bg-yellow-100 px-1.5 rounded-full border border-yellow-200"><span>💰</span><span>${gold}</span></div></div><div class="flex items-center justify-between w-full gap-2"><div class="flex-1 flex flex-col justify-center h-full"><div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden border border-black/10"><div class="${barColor} h-full transition-all duration-500" style="width:${expInfo.percent}%"></div></div></div><div class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden flex-shrink-0 text-right min-w-[20px]">${itemsBadge}</div><div class="font-black text-amber-700 text-lg leading-none">${p.score}</div></div>${deadOverlayHtml}</div>`;
+                        // [修改] 將 petAvatarHtml 移到 userPhoto 的 <img> 後面，並統一無空白字串渲染
+                        listHtml += `<div class="flex flex-col p-2 ${highlightClass} ${damageEffectClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01] relative overflow-hidden"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-1 overflow-hidden"><img src="${userPhoto}" class="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-amber-300 object-cover shadow-sm flex-shrink-0">${petAvatarHtml}<span class="text-xs font-black text-white bg-slate-600 px-1 rounded transform scale-90">Lv.${expInfo.lv}</span><div class="flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 rounded border border-red-100 shadow-sm"><span class="text-[0.6rem] ${hpColorClass}">❤️</span><span class="text-[0.65rem] font-black text-slate-700 leading-none">${currentHp}/${maxHp}</span></div>${equippedHtml}<span class="font-bold ${nameClass} text-sm truncate max-w-[60px] md:max-w-[100px]">${p.name}</span></div><div class="flex items-center gap-1 text-xs font-bold text-yellow-700 bg-yellow-100 px-1.5 rounded-full border border-yellow-200"><span>💰</span><span>${gold}</span></div></div><div class="flex items-center justify-between w-full gap-2"><div class="flex-1 flex flex-col justify-center h-full"><div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden border border-black/10"><div class="${barColor} h-full transition-all duration-500" style="width:${expInfo.percent}%"></div></div></div><div class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden flex-shrink-0 text-right min-w-[20px]">${itemsBadge}</div><div class="font-black text-amber-700 text-lg leading-none">${p.score}</div></div>${deadOverlayHtml}</div>`;
                     });
                 }
                 return listHtml;
@@ -9981,6 +10005,14 @@ for (const slot of slots) {
                                 updates[`players/${tKey}/${pName}/exp`] = (p.exp || 0) + extraExp;
                                 updates[`players/${tKey}/${pName}/sessionGold`] = (p.sessionGold || 0) + extraGold;
                                 updates[`players/${tKey}/${pName}/gold`] = (p.gold || 0) + extraGold;
+                                
+                                // [新增] 通關時，給予寵物額外的通關經驗
+                                const equippedPet = p.equipped ? Object.values(p.equipped).find(id => String(id).startsWith('pet_')) : null;
+                                if (equippedPet) {
+                                    const petIdx = equippedPet.replace('pet_', '');
+                                    const currentPetExp = p.pets && p.pets[petIdx] ? (p.pets[petIdx].exp || 0) : 0;
+                                    updates[`players/${tKey}/${pName}/pets/${petIdx}/exp`] = currentPetExp + extraExp;
+                                }
                             });
                         });
                     }
@@ -10029,6 +10061,14 @@ for (const slot of slots) {
                                 updates[`players/${tKey}/${pName}/exp`] = (p.exp || 0) + extraExp;
                                 updates[`players/${tKey}/${pName}/sessionGold`] = (p.sessionGold || 0) + extraGold;
                                 updates[`players/${tKey}/${pName}/gold`] = (p.gold || 0) + extraGold;
+                                
+                                // [新增] 通關時，給予寵物額外的通關經驗
+                                const equippedPet = p.equipped ? Object.values(p.equipped).find(id => String(id).startsWith('pet_')) : null;
+                                if (equippedPet) {
+                                    const petIdx = equippedPet.replace('pet_', '');
+                                    const currentPetExp = p.pets && p.pets[petIdx] ? (p.pets[petIdx].exp || 0) : 0;
+                                    updates[`players/${tKey}/${pName}/pets/${petIdx}/exp`] = currentPetExp + extraExp;
+                                }
                             });
                         });
                     }
@@ -11216,6 +11256,14 @@ for (const slot of slots) {
                                                 const pCurrentExp = pData.exp || 0;
                                                 const newTotalExp = pCurrentExp + mExp;
                                                 updates[pExpPath] = newTotalExp;
+                                                
+                                                // [新增] 戰鬥中寵物獲得擊殺經驗
+                                                const equippedPet = pData.equipped ? Object.values(pData.equipped).find(id => String(id).startsWith('pet_')) : null;
+                                                if (equippedPet) {
+                                                    const petIdx = equippedPet.replace('pet_', '');
+                                                    const currentPetExp = pData.pets && pData.pets[petIdx] ? (pData.pets[petIdx].exp || 0) : 0;
+                                                    updates[`players/${tKey}/${pName}/pets/${petIdx}/exp`] = currentPetExp + mExp;
+                                                }
                                                 
                                                 // 檢查是否升級 (比較舊等級與新等級)
                                                 const oldLv = app.getInGameLevelInfo(pCurrentExp).lv;
