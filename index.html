@@ -6500,7 +6500,7 @@
                                 pet.frame = 0;
                             }
                             
-                            // B. 彈性尋路：計算目標點 (永遠想躲在主人身後 35px 處)
+                            // B. 彈性尋路：計算目標點 (永遠想躲在主人身後 50px 處)
                             let targetX = char.x;
                             if (char.state === 'walk') {
                                 targetX = char.x + (char.dir === 2 ? -50 : 50);
@@ -6627,7 +6627,7 @@
 
                 if (cellW > 0 && cellH > 0) {
                     // [UX設計] 主角 60px，寵物設定為主角的 70% (42px)，營造跟隨感且不喧賓奪主
-                    const targetSize = isPet ? 42 : 60; 
+                    const targetSize = isPet ? 55 : 60; 
                     const scale = Math.min(targetSize / cellW, targetSize / cellH);
                     const drawW = cellW * scale;
                     const drawH = cellH * scale;
