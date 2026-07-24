@@ -6791,6 +6791,150 @@
             app.playRpgCloneAnimation(playerName, startX, startY, targetX, targetY, actType, 'mark');
         },
 
+        // [新增] 寵物攻擊動畫引擎
+        triggerPetAttackAnimation: (playerName, petState, isCrit) => {
+            const char = app.state.rpgChars[playerName];
+            if (!char || !char.pet) return;
+
+            const canvas = app.el('rpg-stage-canvas');
+            const targetEl = document.getElementById('active-monster-card');
+            if (!canvas || !targetEl) return;
+
+            const canvasRect = canvas.getBoundingClientRect();
+            // 寵物起點 (跟隨主人)
+            const startX = canvasRect.left + char.x + 20; 
+            const startY = canvasRect.top + char.y + 10;
+            
+            const targetRect = targetEl.getBoundingClientRect();
+            const targetX = targetRect.left - 50; 
+            const targetY = targetRect.top + (targetRect.height * 0.3);
+
+            // 建立動畫 DOM
+            const petDiv = document.createElement('div');
+            petDiv.style.cssText = `
+                position: fixed;
+                left: ${startX}px;
+                top: ${startY}px;
+                width: 80px;
+                height: 80px;
+                pointer-events: none;
+                z-index: 9999;
+                transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+
+            // 取得寵物圖片
+            let petImgSrc = '';
+            if (petState.spriteIdx !== undefined && app.state.rpgSprites[`pet_sprite_${petState.spriteIdx}`]) {
+                const sp = app.state.rpgSprites[`pet_sprite_${petState.spriteIdx}`];
+                if (sp && sp.url) petImgSrc = sp.url;
+            }
+            if (!petImgSrc && petState.imgUrl) petImgSrc = petState.imgUrl;
+            if (!petImgSrc) {
+                if (char.pet && char.pet.img) {
+                    petImgSrc = char.pet.img.src;
+                }
+            }
+
+            const img = document.createElement('img');
+            img.src = petImgSrc || 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%AF%B5%E7%89%A9%E9%A0%90%E8%A8%AD.png'; 
+            img.style.cssText = `
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                transition: transform 0.3s ease;
+            `;
+
+            // 根據是否為暴擊技能，套用不同效果
+            if (isCrit) {
+                // 寵物技能：體型變大，渾身泛光 (超級賽亞人)
+                petDiv.style.filter = 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.9)) brightness(1.5)';
+                img.style.transform = 'scale(1.8)';
+                petDiv.style.transform = 'rotate(-10deg)';
+            } else {
+                // 基礎攻擊：噴氣出發，虛影速度感
+                petDiv.style.filter = 'drop-shadow(0 0 10px rgba(255, 100, 0, 0.8))';
+                const jet = document.createElement('div');
+                jet.style.cssText = `
+                    position: absolute;
+                    bottom: -15px;
+                    width: 25px;
+                    height: 35px;
+                    background: linear-gradient(to top, rgba(255,50,0,0), rgba(255,200,0,0.8));
+                    border-radius: 50%;
+                    filter: blur(4px);
+                    animation: petJetPulse 0.2s infinite alternate;
+                `;
+                petDiv.appendChild(jet);
+
+                if (!document.getElementById('pet-animation-styles')) {
+                    const style = document.createElement('style');
+                    style.id = 'pet-animation-styles';
+                    style.textContent = `
+                        @keyframes petJetPulse {
+                            0% { transform: scale(1) translateY(0); opacity: 0.8; }
+                            100% { transform: scale(1.2) translateY(5px); opacity: 0.4; }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            }
+
+            petDiv.appendChild(img);
+            document.body.appendChild(petDiv);
+
+            // 1. 衝向怪物
+            setTimeout(() => {
+                petDiv.style.left = `${targetX}px`;
+                petDiv.style.top = `${targetY}px`;
+                if (!isCrit) {
+                     // 基礎攻擊時朝上，帶速度感
+                     petDiv.style.transform = 'rotate(-25deg)';
+                     let shadowCount = 0;
+                     const shadowInterval = setInterval(() => {
+                         if (shadowCount > 6) { clearInterval(shadowInterval); return; }
+                         const shadow = document.createElement('img');
+                         shadow.src = img.src;
+                         const rect = petDiv.getBoundingClientRect();
+                         shadow.style.cssText = `
+                             position: fixed; left: ${rect.left}px; top: ${rect.top}px;
+                             width: ${rect.width}px; height: ${rect.height}px; object-fit: contain;
+                             opacity: 0.4; pointer-events: none; z-index: 9998;
+                             transform: rotate(-25deg); transition: opacity 0.3s;
+                         `;
+                         document.body.appendChild(shadow);
+                         setTimeout(() => { shadow.style.opacity = '0'; }, 50);
+                         setTimeout(() => { if(shadow.parentNode) shadow.parentNode.removeChild(shadow); }, 350);
+                         shadowCount++;
+                     }, 70);
+                }
+            }, 50);
+
+            // 2. 撞擊後碰撞感，微微彈起，落在左手邊定格，然後消失
+            setTimeout(() => {
+                if (targetEl) {
+                    targetEl.style.transform = 'translate(-15px, 5px)';
+                    setTimeout(() => { targetEl.style.transform = 'translate(10px, -5px)'; }, 50);
+                    setTimeout(() => { targetEl.style.transform = 'translate(-5px, 5px)'; }, 100);
+                    setTimeout(() => { targetEl.style.transform = 'translate(0, 0)'; }, 150);
+                }
+                petDiv.style.transition = 'all 0.3s ease-out';
+                petDiv.style.left = `${targetX - 80}px`;
+                petDiv.style.top = `${targetY + 20}px`;
+                petDiv.style.transform = 'rotate(0deg) scale(1)';
+                if(isCrit) img.style.transform = 'scale(1.2)';
+                
+                setTimeout(() => {
+                    petDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        if (petDiv.parentNode) petDiv.parentNode.removeChild(petDiv);
+                    }, 300);
+                }, 800);
+            }, 550);
+        },
+
         // [新增] 計算攻擊瞬移的座標並觸發替身
         triggerAttackDashAnimation: (playerName) => {
             const char = app.state.rpgChars[playerName];
@@ -11097,6 +11241,11 @@ for (const slot of slots) {
 
                                     // 將寵物傷害加入總傷害 (讓它一併計算後續的防禦減免與破盾)
                                     damage += petDamage;
+
+                                    // [新增] 觸發寵物攻擊動畫
+                                    if (typeof app.triggerPetAttackAnimation === 'function') {
+                                        app.triggerPetAttackAnimation(app.state.myName, petState, petIsCrit);
+                                    }
                                 }
                             }
                         }
