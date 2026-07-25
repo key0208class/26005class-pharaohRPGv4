@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.2.7.2 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.2.7.4 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -714,7 +714,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.7.2 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.7.4 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -3385,34 +3385,28 @@
 
 				 
                 // --- 戰鬥特效系列 ---
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E9%96%83%E9%9B%BB%E7%89%B9%E6%95%88.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%AA%E7%97%95.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a1.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a2.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a2-2.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0a1.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0a2.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%83%88%E7%84%B0%E9%A2%A8%E6%9A%B4.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8Ba1.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8Ba2.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95a3.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0a1.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0a2.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5a22.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%94%BB%E6%93%8A%E5%8A%9B%E5%9B%BA%E5%8C%96.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%83%88%E7%84%B0%E9%A2%A8%E6%9A%B42.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a3.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%94%BB%E6%93%8A%E5%8A%9B%E9%99%8D%E4%BD%8E.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5a31.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%AD%A6%E5%91%8A!_BOSS.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%81%AB%E5%8A%9B%E6%8F%90%E5%8D%87.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B5%81%E8%A1%80%E7%8B%80%E6%85%8B.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%AF%92%E8%97%A5%E7%8B%80%E6%85%8B.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A1%80%E7%A5%AD%E7%89%B9%E6%95%88.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%87%B4%E5%91%BD.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8B(%E5%AF%92%E5%86%B0%E9%99%84%E9%AB%94).png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A8%99%E8%A8%981.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A8%99%E8%A8%98%E5%8D%94%E5%90%8C%E6%94%BB%E6%93%8A.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E9%96%83%E9%9B%BB%E7%89%B9%E6%95%88.png", // 閃電特效
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%AA%E7%97%95.png", // 爪痕
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a2.png", // 綠箭(森律)
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a2-3.png", // 綠彈(森律)
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0a1.png", // 長火球
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0a2.png", // 火箭
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%83%88%E7%84%B0%E9%A2%A8%E6%9A%B4.png", // 火刀斬
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8Ba1.png", // 冰箭
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8Ba2.png", // 冰電
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95a3.png", // 冰地刺
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0a1-1.png", // 暗箭
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0a2-1.png", // 暗旋風
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5a22.png", // 鬼手
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%83%88%E7%84%B0%E9%A2%A8%E6%9A%B42.png", // 火風暴
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a3.png", // 綠毒蛇
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%87%B4%E5%91%BD.png", // 紅刀氣
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8B(%E5%AF%92%E5%86%B0%E9%99%84%E9%AB%94).png", // 冰晶
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A8%99%E8%A8%98%E5%8D%94%E5%90%8C%E6%94%BB%E6%93%8A.png", // 藍刀氣
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%81%AB%E7%84%B0%E7%82%B8%E5%9C%B0(%E5%8E%BB%E8%83%8C).png", // 火爆炸
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%86%94%E5%B2%A9%E7%81%AB%E7%90%83(%E5%8E%BB%E8%83%8C).png", // 熔火球
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B0%B4%E5%BD%88(%E5%8E%BB%E8%83%8C).png", // 水彈
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/1.%E5%9B%9E%E5%BE%A9%E8%A1%80%E9%87%8F%E7%89%B9%E6%95%88_.png",
                 "https://class.kh.edu.tw/sites/30033/upload_file/6/1%E6%B0%B4%E6%B3%A2%E7%B4%8B%E7%89%B9%E6%95%88.png",
                 "https://class.kh.edu.tw/sites/30033/upload_file/6/2%E8%97%8D%E5%85%89%E8%83%8C%E6%99%AF%E7%89%B9%E6%95%88.png",
                 "https://class.kh.edu.tw/sites/30033/upload_file/6/3%E8%97%8D%E5%85%89%E5%9C%B0%E7%92%B0%E7%89%B9%E6%95%88.png",
@@ -3420,8 +3414,6 @@
                 "https://class.kh.edu.tw/sites/30033/upload_file/6/5%E7%81%AB%E7%84%B0%E5%9C%88%E7%89%B9%E6%95%88.png",
                 "https://class.kh.edu.tw/sites/30033/upload_file/6/6%E9%BB%83%E5%85%89%E8%83%8C%E6%99%AF%E7%89%B9%E6%95%88.png",
                 "https://class.kh.edu.tw/sites/30033/upload_file/6/7%E9%BB%83%E5%85%89%E7%82%B8%E8%A3%82%E7%89%B9%E6%95%88.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/1.%E5%9B%9E%E5%BE%A9%E8%A1%80%E9%87%8F%E7%89%B9%E6%95%88_.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%81%AB%E7%84%B0%E7%82%B8%E5%9C%B0(%E5%8E%BB%E8%83%8C).png",
                 // --- 預設小怪代表圖 ---
                 "https://class.kh.edu.tw/sites/30033/upload_file/6/sb1-1.png",
                 "https://class.kh.edu.tw/sites/30033/upload_file/6/sb1-2.png",
@@ -5475,7 +5467,7 @@
                 weight: 10,
                 isEnabled: false,
                 forms: [
-                    { lv: 1, name: '第一型態', imgUrl: '', desc: '這是一隻神秘的生物...', spriteIdx: '', atkName: '野蠻衝刺', atkBaseProb: 20, atkLvCoef: 1, atkDmg: 2, skillName: '烈焰衝擊', skillProb: 50, skillDmg: 4 }
+                    { lv: 1, name: '第一型態', imgUrl: '', desc: '這是一隻神秘的生物...', spriteIdx: '', atkName: '野蠻衝刺', atkBaseProb: 20, atkLvCoef: 1, atkDmg: 2, skillName: '烈焰衝擊', skillProb: 50, skillDmg: 4, skillEffect: '' }
                 ]
             });
             const newIdx = app.state.tempPetList.length - 1;
@@ -5516,7 +5508,7 @@
         addPetForm: (fIdx) => {
             if (!app.state.tempPetList[fIdx].forms) app.state.tempPetList[fIdx].forms = [];
             app.state.tempPetList[fIdx].forms.push({
-                lv: 30, name: '進階型態', imgUrl: '', desc: '寵物進化後變得更強大了。', spriteIdx: '', atkName: '進階攻擊', atkBaseProb: 30, atkLvCoef: 1, atkDmg: 3, skillName: '進階技能', skillProb: 65, skillDmg: 5
+                lv: 30, name: '進階型態', imgUrl: '', desc: '寵物進化後變得更強大了。', spriteIdx: '', atkName: '進階攻擊', atkBaseProb: 30, atkLvCoef: 1, atkDmg: 3, skillName: '進階技能', skillProb: 65, skillDmg: 5, skillEffect: ''
             });
             app.renderPetListUI();
         },
@@ -5543,7 +5535,6 @@
                 const form = family.forms[mIdx];
                 if (!form) return;
                 
-                // [修正] 直接用 field.replace('form_', '') 當作 key，修正原本沒有對應 bmIdx 與 spriteIdx 的問題
                 const key = field.replace('form_', '');
                 if (['lv', 'atkBaseProb', 'atkLvCoef', 'atkDmg', 'skillProb', 'skillDmg'].includes(key)) {
                     form[key] = parseInt(val) || 0;
@@ -5569,6 +5560,46 @@
             let spOptsBase = '<option value="">--選擇角色動作(做為戰鬥跟隨與攻擊)--</option>';
             spriteList.forEach((sp, i) => { if (sp) spOptsBase += `<option value="${i}">${sp.name}</option>`; });
 
+            // [新增] 技能特效圖庫清單
+            const skillEffects = [
+                { name: '🚫 無特效', url: '' },
+                { name: '⚡ 閃電', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E9%96%83%E9%9B%BB%E7%89%B9%E6%95%88.png' },
+                { name: '🐾 爪痕', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%AA%E7%97%95.png' },
+                { name: '🌿 綠箭(森律)', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a2.png' },
+                { name: '🍃 綠彈(森律)', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a2-3.png' },
+                { name: '🔥 長火球', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0a1.png' },
+                { name: '🚀 火箭', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0a2.png' },
+                { name: '🗡️ 火刀斬', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%83%88%E7%84%B0%E9%A2%A8%E6%9A%B4.png' },
+                { name: '❄️ 冰箭', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8Ba1.png' },
+                { name: '🧊 冰電', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8Ba2.png' },
+                { name: '🏔️ 冰地刺', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95a3.png' },
+                { name: '🌑 暗箭', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0a1-1.png' },
+                { name: '🌪️ 暗旋風', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0a2-1.png' },
+                { name: '🧟 鬼手', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5a22.png' },
+                { name: '☄️ 火風暴', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%83%88%E7%84%B0%E9%A2%A8%E6%9A%B42.png' },
+                { name: '🐍 綠毒蛇', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a3.png' },
+                { name: '🩸 紅刀氣', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%87%B4%E5%91%BD.png' },
+                { name: '💎 冰晶', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%B0%E8%9D%95%E5%92%92%E7%B4%8B(%E5%AF%92%E5%86%B0%E9%99%84%E9%AB%94).png' },
+                { name: '🌀 藍刀氣', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A8%99%E8%A8%98%E5%8D%94%E5%90%8C%E6%94%BB%E6%93%8A.png' },
+                { name: '💥 火爆炸', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%81%AB%E7%84%B0%E7%82%B8%E5%9C%B0(%E5%8E%BB%E8%83%8C).png' },
+                { name: '🔥 熔火球', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%86%94%E5%B2%A9%E7%81%AB%E7%90%83(%E5%8E%BB%E8%83%8C).png' },
+                { name: '💧 水彈', url: 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B0%B4%E5%BD%88(%E5%8E%BB%E8%83%8C).png' }
+            ];
+            
+            const buildSkillEffectOpts = (selectedUrl) => {
+                let opts = '';
+                let found = false;
+                skillEffects.forEach(fx => {
+                    const isSelected = fx.url === selectedUrl ? 'selected' : '';
+                    if (fx.url === selectedUrl) found = true;
+                    opts += `<option value="${fx.url}" ${isSelected}>${fx.name}</option>`;
+                });
+                if (selectedUrl && !found) {
+                    opts += `<option value="${selectedUrl}" selected>🌐 自訂特效圖</option>`;
+                }
+                return opts;
+            };
+
             if(list.length === 0) {
                 container.innerHTML = '<div class="text-center text-gray-500 py-10 font-bold border-2 border-dashed border-slate-300 rounded-xl m-2">尚未設定任何寵物族系，請點擊上方新增</div>';
                 return;
@@ -5577,12 +5608,10 @@
             let html = '';
             list.forEach((family, fIdx) => {
                 const isEnabledChecked = family.isEnabled !== false ? 'checked' : '';
-                
-                const isOpen = app.state.adminPetOpen[fIdx] !== false; // 預設開啟
+                const isOpen = app.state.adminPetOpen[fIdx] !== false; 
                 const bodyClass = isOpen ? 'flex' : 'hidden';
                 const foldIcon = isOpen ? '▲' : '▼';
 
-                // 取出族系代表圖 (獨立圖片)
                 const firstForm = family.forms && family.forms[0] ? family.forms[0] : {};
                 const familyImg = firstForm.imgUrl || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
 
@@ -5591,12 +5620,11 @@
                 (family.forms || []).forEach((form, mIdx) => {
                     let currentSpOpts = spOptsBase.replace(`value="${form.spriteIdx}"`, `value="${form.spriteIdx}" selected`);
                     const formImg = form.imgUrl || 'https://placehold.co/40x40?text=?';
+                    const fxPreviewSrc = form.skillEffect || 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
                     
-                    // 嚴格無空白節點壓縮的型態卡片 HTML (支援圖片 URL、說明、暴擊文字)
-                    formsHtml += `<div class="bg-white p-2 rounded-lg border border-amber-200 mb-2 shadow-sm relative flex flex-col md:flex-row gap-3"><div class="w-16 h-16 bg-slate-100 rounded border border-slate-300 flex-shrink-0 flex items-center justify-center overflow-hidden"><img src="${formImg}" class="w-full h-full object-contain"></div><div class="flex-1 flex flex-col"><div class="absolute top-1 right-1"><button onclick="app.deletePetForm(${fIdx}, ${mIdx})" class="text-red-400 hover:text-red-600 font-black px-2 py-0.5 text-lg transition-transform hover:scale-110">×</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2 pr-6"><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-gray-500">進化等級門檻 (Lv)</label><input type="number" value="${form.lv}" onchange="app.updatePetData(${fIdx}, 'form_lv', this.value, ${mIdx})" class="border border-slate-300 rounded px-1 py-0.5 text-sm font-bold w-full focus:bg-amber-50 outline-none" min="1"></div><div class="flex flex-col md:col-span-2"><label class="text-[0.65rem] font-bold text-gray-500">型態名稱 (如: 烈焰豬)</label><input type="text" value="${form.name}" onchange="app.updatePetData(${fIdx}, 'form_name', this.value, ${mIdx})" class="border border-slate-300 rounded px-1 py-0.5 text-sm font-bold w-full focus:bg-amber-50 outline-none"></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-amber-700">寵物圖片 URL (獨立網址)</label><input type="text" value="${form.imgUrl || ''}" onchange="app.updatePetData(${fIdx}, 'form_imgUrl', this.value, ${mIdx}); app.renderPetListUI();" placeholder="輸入 https://..." class="border border-amber-300 rounded px-1 py-0.5 text-xs font-mono w-full bg-amber-50 outline-none"></div><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-indigo-700">對應戰鬥動作 (舞台動畫用)</label><select onchange="app.updatePetData(${fIdx}, 'form_spriteIdx', this.value, ${mIdx})" class="border border-indigo-300 rounded px-1 py-0.5 text-xs font-bold w-full bg-indigo-50 cursor-pointer outline-none">${currentSpOpts}</select></div></div><div class="mb-2 flex flex-col"><label class="text-[0.65rem] font-bold text-gray-500">寵物說明 (背景故事與能力備註)</label><textarea onchange="app.updatePetData(${fIdx}, 'form_desc', this.value, ${mIdx})" class="w-full border border-slate-300 rounded px-1 py-1 text-[0.65rem] font-bold text-gray-700 bg-white focus:bg-amber-50 outline-none resize-none h-10 custom-scrollbar" placeholder="在此輸入寵物的說明...">${form.desc || ''}</textarea></div><div class="bg-orange-50 p-2 rounded border border-orange-200 mt-1"><div class="text-[0.65rem] font-black text-orange-800 mb-1">⚔️ 基礎攻擊設定 (觸發機率 = 基礎機率 + 寵物等級*係數)</div><div class="grid grid-cols-4 gap-1"><input type="text" value="${form.atkName}" onchange="app.updatePetData(${fIdx}, 'form_atkName', this.value, ${mIdx})" placeholder="攻擊名稱" title="攻擊名稱" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.atkBaseProb}" onchange="app.updatePetData(${fIdx}, 'form_atkBaseProb', this.value, ${mIdx})" placeholder="基礎機率%" title="基礎機率(%)" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.atkLvCoef}" onchange="app.updatePetData(${fIdx}, 'form_atkLvCoef', this.value, ${mIdx})" placeholder="成長係數%" title="每升1級增加的機率(%)" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.atkDmg}" onchange="app.updatePetData(${fIdx}, 'form_atkDmg', this.value, ${mIdx})" placeholder="附加傷害" title="附加傷害" class="border border-red-300 bg-red-50 rounded px-1 py-0.5 text-xs font-black text-red-600 w-full text-center"></div></div><div class="bg-purple-50 p-2 rounded border border-purple-200 mt-1"><div class="text-[0.65rem] font-black text-purple-800 mb-1">✨ 寵物技能設定 (基礎攻擊發動時，有機率升級為此暴擊技能)</div><div class="grid grid-cols-3 gap-1"><input type="text" value="${form.skillName}" onchange="app.updatePetData(${fIdx}, 'form_skillName', this.value, ${mIdx})" placeholder="技能名稱" title="技能名稱" class="border border-purple-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.skillProb}" onchange="app.updatePetData(${fIdx}, 'form_skillProb', this.value, ${mIdx})" placeholder="暴擊率%" title="暴擊率(%)" class="border border-purple-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center"><input type="number" value="${form.skillDmg}" onchange="app.updatePetData(${fIdx}, 'form_skillDmg', this.value, ${mIdx})" placeholder="附加傷害" title="附加傷害" class="border border-red-300 bg-red-50 rounded px-1 py-0.5 text-xs font-black text-red-600 w-full text-center"></div></div></div></div>`;
+                    formsHtml += `<div class="bg-white p-2 rounded-lg border border-amber-200 mb-2 shadow-sm relative flex flex-col md:flex-row gap-3"><div class="w-16 h-16 bg-slate-100 rounded border border-slate-300 flex-shrink-0 flex items-center justify-center overflow-hidden"><img src="${formImg}" class="w-full h-full object-contain"></div><div class="flex-1 flex flex-col"><div class="absolute top-1 right-1"><button onclick="app.deletePetForm(${fIdx}, ${mIdx})" class="text-red-400 hover:text-red-600 font-black px-2 py-0.5 text-lg transition-transform hover:scale-110">×</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2 pr-6"><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-gray-500">進化等級門檻 (Lv)</label><input type="number" value="${form.lv}" onchange="app.updatePetData(${fIdx}, 'form_lv', this.value, ${mIdx})" class="border border-slate-300 rounded px-1 py-0.5 text-sm font-bold w-full focus:bg-amber-50 outline-none" min="1"></div><div class="flex flex-col md:col-span-2"><label class="text-[0.65rem] font-bold text-gray-500">型態名稱 (如: 烈焰豬)</label><input type="text" value="${form.name}" onchange="app.updatePetData(${fIdx}, 'form_name', this.value, ${mIdx})" class="border border-slate-300 rounded px-1 py-0.5 text-sm font-bold w-full focus:bg-amber-50 outline-none"></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-amber-700">寵物圖片 URL (獨立網址)</label><input type="text" value="${form.imgUrl || ''}" onchange="app.updatePetData(${fIdx}, 'form_imgUrl', this.value, ${mIdx}); app.renderPetListUI();" placeholder="輸入 https://..." class="border border-amber-300 rounded px-1 py-0.5 text-xs font-mono w-full bg-amber-50 outline-none"></div><div class="flex flex-col"><label class="text-[0.65rem] font-bold text-indigo-700">對應戰鬥動作 (舞台動畫用)</label><select onchange="app.updatePetData(${fIdx}, 'form_spriteIdx', this.value, ${mIdx})" class="border border-indigo-300 rounded px-1 py-0.5 text-xs font-bold w-full bg-indigo-50 cursor-pointer outline-none">${currentSpOpts}</select></div></div><div class="mb-2 flex flex-col"><label class="text-[0.65rem] font-bold text-gray-500">寵物說明 (背景故事與能力備註)</label><textarea onchange="app.updatePetData(${fIdx}, 'form_desc', this.value, ${mIdx})" class="w-full border border-slate-300 rounded px-1 py-1 text-[0.65rem] font-bold text-gray-700 bg-white focus:bg-amber-50 outline-none resize-none h-10 custom-scrollbar" placeholder="在此輸入寵物的說明...">${form.desc || ''}</textarea></div><div class="flex gap-2 mt-1"><div class="flex-1 flex flex-col gap-1"><div class="bg-orange-50 p-1.5 rounded border border-orange-200"><div class="text-[0.6rem] font-black text-orange-800 mb-1">⚔️ 基礎攻擊 (觸發% = 基礎 + Lv*成長)</div><div class="grid grid-cols-4 gap-1"><input type="text" value="${form.atkName}" onchange="app.updatePetData(${fIdx}, 'form_atkName', this.value, ${mIdx})" placeholder="名稱" title="攻擊名稱" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center min-w-0"><input type="number" value="${form.atkBaseProb}" onchange="app.updatePetData(${fIdx}, 'form_atkBaseProb', this.value, ${mIdx})" placeholder="基礎%" title="基礎機率(%)" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center min-w-0"><input type="number" value="${form.atkLvCoef}" onchange="app.updatePetData(${fIdx}, 'form_atkLvCoef', this.value, ${mIdx})" placeholder="成長%" title="每升1級增加的機率(%)" class="border border-orange-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center min-w-0"><input type="number" value="${form.atkDmg}" onchange="app.updatePetData(${fIdx}, 'form_atkDmg', this.value, ${mIdx})" placeholder="+傷害" title="附加傷害" class="border border-red-300 bg-red-50 rounded px-1 py-0.5 text-xs font-black text-red-600 w-full text-center min-w-0"></div></div><div class="bg-purple-50 p-1.5 rounded border border-purple-200"><div class="text-[0.6rem] font-black text-purple-800 mb-1 flex justify-between items-center"><span>✨ 暴擊技能 (取代基礎攻擊)</span><select onchange="app.updatePetData(${fIdx}, 'form_skillEffect', this.value, ${mIdx}); document.getElementById('preview-fx-${fIdx}-${mIdx}').src = this.value || 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';" class="border border-purple-300 rounded px-1 text-[0.6rem] font-bold text-purple-900 bg-white outline-none cursor-pointer max-w-[120px] md:max-w-[140px] truncate" title="選擇技能特效">${buildSkillEffectOpts(form.skillEffect)}</select></div><div class="grid grid-cols-4 gap-1"><input type="text" value="${form.skillName}" onchange="app.updatePetData(${fIdx}, 'form_skillName', this.value, ${mIdx})" placeholder="名稱" title="技能名稱" class="col-span-2 border border-purple-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center min-w-0"><input type="number" value="${form.skillProb}" onchange="app.updatePetData(${fIdx}, 'form_skillProb', this.value, ${mIdx})" placeholder="暴擊%" title="暴擊率(%)" class="border border-purple-300 rounded px-1 py-0.5 text-xs font-bold w-full text-center min-w-0"><input type="number" value="${form.skillDmg}" onchange="app.updatePetData(${fIdx}, 'form_skillDmg', this.value, ${mIdx})" placeholder="+傷害" title="附加傷害" class="border border-red-300 bg-red-50 rounded px-1 py-0.5 text-xs font-black text-red-600 w-full text-center min-w-0"></div></div></div><div class="w-20 md:w-24 shrink-0 flex flex-col"><div class="text-[0.6rem] font-black text-center text-slate-500 mb-1">特效預覽</div><div class="flex-1 w-full bg-amber-50/50 rounded-lg border-2 border-purple-400 flex items-center justify-center overflow-hidden shadow-inner relative" title="特效即時預覽"><img id="preview-fx-${fIdx}-${mIdx}" src="${fxPreviewSrc}" onerror="this.onerror=null; this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';" class="w-[85%] h-[85%] object-contain filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]"></div></div></div></div></div>`;
                 });
 
-                // 族系外框 HTML (改為可摺疊，並加入預覽圖)
                 html += `<div class="bg-white rounded-lg border border-amber-300 shadow-sm relative flex flex-col mb-3"><div class="flex flex-wrap items-center justify-between p-2 bg-amber-50 border-b border-amber-200 cursor-pointer rounded-t-lg hover:bg-amber-100 transition-colors gap-2" onclick="app.toggleAdminPetFamily(${fIdx})"><div class="flex items-center gap-2"><span id="admin-pet-fold-icon-${fIdx}" class="text-amber-600 font-bold text-xs w-4 text-center">${foldIcon}</span><div class="w-10 h-10 bg-white rounded border border-slate-300 overflow-hidden flex-shrink-0"><img src="${familyImg}" class="w-full h-full object-contain"></div><input type="text" value="${family.name}" onclick="event.stopPropagation()" onchange="app.updatePetData(${fIdx}, 'name', this.value)" class="font-black text-lg border-b-2 border-amber-400 bg-transparent focus:outline-none w-32 md:w-48 text-slate-800" placeholder="族系名稱"></div><div class="flex items-center gap-2" onclick="event.stopPropagation()"><div class="flex items-center gap-1 bg-amber-100 border border-amber-300 rounded px-1.5 py-0.5 shadow-inner"><span class="text-[0.6rem] font-black text-amber-800">抽卡權重</span><input type="number" value="${family.weight}" onchange="app.updatePetData(${fIdx}, 'weight', this.value)" class="w-10 border-none bg-transparent text-center font-bold text-sm outline-none text-amber-900" min="0"></div><label class="flex items-center gap-1 text-xs font-bold text-slate-700 cursor-pointer bg-white px-2 py-1 rounded border border-slate-200 shadow-sm">開放抽取 <div class="switch scale-[0.6] m-0"><input type="checkbox" onchange="app.updatePetData(${fIdx}, 'isEnabled', this.checked)" ${isEnabledChecked}><span class="slider"></span></div></label><button onclick="app.deletePetFamily(${fIdx})" class="text-red-500 hover:text-white hover:bg-red-500 bg-white border border-red-200 px-2 py-0.5 rounded text-xs font-bold transition-colors shadow-sm z-10">刪除族系</button></div></div><div id="admin-pet-family-body-${fIdx}" class="p-3 flex-col ${bodyClass} bg-slate-50 rounded-b-lg"><div class="flex justify-between items-center mb-2"><span class="text-xs font-black text-slate-600 tracking-wider">🧬 成長進化路線</span><button onclick="app.addPetForm(${fIdx})" class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-green-700 shadow-sm transition-transform active:scale-95 flex items-center gap-1"><span>➕</span> 新增進化型態</button></div><div class="space-y-2">${formsHtml}</div></div></div>`;
             });
             container.innerHTML = html;
@@ -6801,7 +6829,7 @@
             app.playRpgCloneAnimation(playerName, startX, startY, targetX, targetY, actType, 'mark');
         },
 
-        // [新增] 寵物攻擊動畫引擎 (包含集氣、退後、衝刺、碰撞彈跳與開心動畫)
+       // [新增] 寵物攻擊動畫引擎 (包含集氣、退後、衝刺、碰撞彈跳與施法動畫)
         triggerPetAttackAnimation: (playerName, petState, isCrit) => {
             const char = app.state.rpgChars[playerName];
             if (!char || !char.pet) return;
@@ -6840,7 +6868,7 @@
             // 兜底圖片 (若沒有精靈圖)
             if (!spriteData && petState.imgUrl) petImgSrc = petState.imgUrl;
             if (!spriteData && !petImgSrc && char.pet && char.pet.img) petImgSrc = char.pet.img.src;
-            if (!petImgSrc) petImgSrc = 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%AF%B5%E7%89%A9%E9%A0%90%E8%A8%AD.png';
+            if (!petImgSrc) petImgSrc = 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
 
             let useSprite = !!spriteData;
             const petContent = useSprite ? document.createElement('canvas') : document.createElement('img');
@@ -6849,6 +6877,7 @@
             let animRow = 4; // 預設：上 (0:待機, 1:右, 2:下, 3:左, 4:上)
             let animCols = spriteData ? (spriteData.config.cols || 4) : 4;
             let animType = 'base';
+            let actionType = null;
             let isAnimRunning = true;
             let lastDrawTime = Date.now();
             
@@ -6861,8 +6890,16 @@
                 const drawOverlayPet = () => {
                     if (!isAnimRunning) return;
                     const now = Date.now();
+                    
+                    let maxF = animCols;
+                    if (animType === 'action' && actionType === 'attack') {
+                        if (spriteData.config) maxF = (spriteData.config.actionCols || 4) * 2;
+                    } else if (animType === 'action') {
+                        if (spriteData.config) maxF = spriteData.config.actionCols || 4;
+                    }
+                    
                     if (now - lastDrawTime > 150) {
-                        animFrame = (animFrame + 1) % animCols;
+                        animFrame = (animFrame + 1) % maxF;
                         lastDrawTime = now;
                     }
                     ctx.clearRect(0, 0, petContent.width, petContent.height);
@@ -6875,8 +6912,23 @@
                         const pX = [0, ...[...gX].sort((a,b)=>a-b), 1].map(v => Math.floor(v * sCanvas.width));
                         const pY = [0, ...[...gY].sort((a,b)=>a-b), 1].map(v => Math.floor(v * sCanvas.height));
                         
-                        const safeRow = Math.min(animRow, pY.length - 2);
-                        const safeCol = Math.min(animFrame, pX.length - 2);
+                        let cRow = animRow;
+                        let cCol = animFrame;
+                        
+                        // 支援 8 格攻擊動作
+                        if (animType === 'action') {
+                            if (actionType === 'happy') cRow = 0;
+                            else if (actionType === 'flower') cRow = 1;
+                            else if (actionType === 'hurt') cRow = 2;
+                            else if (actionType === 'attack') {
+                                const ac = config.actionCols || 4;
+                                cRow = 3 + Math.floor(animFrame / ac);
+                                cCol = animFrame % ac;
+                            }
+                        }
+                        
+                        const safeRow = Math.min(cRow, pY.length - 2);
+                        const safeCol = Math.min(cCol, pX.length - 2);
                         const x1 = pX[safeCol], x2 = pX[safeCol+1];
                         const y1 = pY[safeRow], y2 = pY[safeRow+1];
                         const w = x2 - x1, h = y2 - y1;
@@ -6900,59 +6952,125 @@
             petDiv.appendChild(petContent);
             document.body.appendChild(petDiv);
 
-            // 根據是否為暴擊技能，套用不同效果
             if (isCrit) {
-                // --- 暴擊技能：超級賽亞人直接衝刺 ---
-                animType = 'base';
-                animRow = 4; // 上
-                if (spriteData) animCols = spriteData.config.cols || 4;
+                // --- 暴擊技能：法師施法風格 ---
+                // 1. 隱藏本尊
+                char.pet.isHidden = true;
 
-                const canvasRect = canvas.getBoundingClientRect();
-                const startX = canvasRect.left + char.x + 20; 
-                const startY = canvasRect.top + char.y + 10;
-
-                petDiv.style.left = `${startX}px`;
-                petDiv.style.top = `${startY}px`;
-                petDiv.style.transition = 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
-                petDiv.style.filter = 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.9)) brightness(1.5)';
-                petContent.style.transform = 'scale(1.8)';
+                // 2. [可修改] 施法位置設定 (金字塔最上方圖騰的左邊)
+                let castX = targetRect.left - 200; // 預設備用座標
+                let castY = targetRect.top + 150;  
                 
-                setTimeout(() => {
-                    petDiv.style.left = `${targetX}px`;
-                    petDiv.style.top = `${targetY}px`;
-                }, 50);
+                // 動態抓取金字塔最頂端的卡牌位置 (0號卡牌)
+                const topCard = document.getElementById('pyramid-card-0');
+                const pyramidBoard = document.getElementById('pyramid-board');
+                
+                if (topCard) {
+                    const rect = topCard.getBoundingClientRect();
+                    // 設定在頂端卡牌的左側 100px (保留施法與魔法陣的空間，可微調此數值)
+                    castX = rect.left - 100; 
+                    // 高度對齊該卡牌的垂直中心
+                    castY = rect.top + (rect.height / 2);
+                } else if (pyramidBoard) {
+                    const rect = pyramidBoard.getBoundingClientRect();
+                    // 備案：抓整個金字塔容器的左上角
+                    castX = rect.left - 20; 
+                    castY = rect.top + 60;
+                }
+
+                petDiv.style.left = `${castX}px`;
+                petDiv.style.top = `${castY}px`;
+                petDiv.style.transform = 'translate(-50%, -50%) scale(1.3)';
+                petDiv.style.filter = 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.9)) brightness(1.3)';
+
+                // 3. 設定播放專屬攻擊動畫
+                animType = 'action';
+                actionType = 'attack';
+                animRow = 1; // 基礎移動圖:右
+
+                // 4. 繪製魔法陣與光環
+                const magicCircleWrap = document.createElement('div');
+                magicCircleWrap.style.cssText = `
+                    position: absolute; width: 180px; height: 180px;
+                    top: 50%; left: 50%; transform: translate(-50%, -20%) rotateX(70deg);
+                    z-index: -1; pointer-events: none;
+                `;
+                magicCircleWrap.innerHTML = `
+                    <div class="absolute inset-2 border-[3px] border-amber-300/60 border-dashed rounded-full animate-[spin_4s_linear_infinite_reverse]"></div>
+                    <img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E9%AD%94%E6%B3%95%E9%99%A3.png" class="absolute inset-0 w-full h-full object-contain animate-[spin_10s_linear_infinite] opacity-0 transition-opacity duration-1000" id="pet-skill-magic-circle">
+                `;
+                petDiv.insertBefore(magicCircleWrap, petContent);
 
                 setTimeout(() => {
-                    if (targetEl) {
-                        targetEl.style.transform = 'translate(-15px, 5px)';
-                        setTimeout(() => { targetEl.style.transform = 'translate(10px, -5px)'; }, 50);
-                        setTimeout(() => { targetEl.style.transform = 'translate(-5px, 5px)'; }, 100);
-                        setTimeout(() => { targetEl.style.transform = 'translate(0, 0)'; }, 150);
+                    const mc = document.getElementById('pet-skill-magic-circle');
+                    if (mc) mc.style.opacity = '0.8';
+                }, 100);
+
+                app.playSe('charge');
+
+                // 5. 判斷型態階級 (0=第一階, 1=第二階, 2=第三階+)
+                const petList = app.state.globalSettings?.petList || [];
+                let formIndex = 0;
+                const family = petList[petState.familyIdx];
+                if (family && family.forms) {
+                    for (let i = family.forms.length - 1; i >= 0; i--) {
+                        if (petState.level >= family.forms[i].lv) {
+                            formIndex = i;
+                            break;
+                        }
                     }
-                    
+                }
+
+                // 6. 1秒集氣後發射特效
+                setTimeout(() => {
+                    // 結束集氣施法，切換回待機或移動圖
                     animType = 'base';
-                    animRow = 1; // 撞擊後彈起：右
-                    
-                    petDiv.style.transition = 'all 0.3s ease-out';
-                    petDiv.style.left = `${targetX - 80}px`;
-                    petDiv.style.top = `${targetY + 20}px`;
-                    petDiv.style.transform = 'scale(1)';
-                    petContent.style.transform = 'scale(1.2)';
-                    
+                    actionType = null;
+                    animRow = 1; // 基礎移動圖:右
+
+                    const fxUrl = petState.skillEffect || 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0a1.png';
+                    const hitX = targetRect.left + targetRect.width / 2;
+                    const hitY = targetRect.top + targetRect.height / 2;
+
+                    // 依照階級展現不同特效
+                    if (formIndex === 0) {
+                        app.shootPetSkillFx_LV1(castX, castY, hitX, hitY, fxUrl);
+                    } else if (formIndex === 1) {
+                        app.shootPetSkillFx_LV2(castX, castY, hitX, hitY, fxUrl);
+                    } else {
+                        app.shootPetSkillFx_LV3(castX, castY, hitX, hitY, fxUrl);
+                    }
+
+                    // 等待特效飛完 (依等級不同延遲)
+                    const waitTime = formIndex >= 2 ? 1800 : 800;
                     setTimeout(() => {
-                        animType = 'action';
-                        animRow = 0; // 開心
-                        if (spriteData) animCols = spriteData.config.actionCols || 4;
-                        
+                        petDiv.style.transition = 'opacity 0.3s';
+                        petDiv.style.opacity = '0';
                         setTimeout(() => {
-                            petDiv.style.opacity = '0';
-                            setTimeout(() => {
-                                isAnimRunning = false;
-                                if (petDiv.parentNode) petDiv.parentNode.removeChild(petDiv);
-                            }, 300);
-                        }, 1000); // 開心動畫停留 1 秒
-                    }, 300);
-                }, 550);
+                            isAnimRunning = false;
+                            petDiv.remove();
+                            // 恢復本尊 (在舞台上)
+                            if (char && char.pet) {
+                                char.pet.isHidden = false;
+                                char.pet.state = 'action';
+                                char.pet.actionType = 'happy';
+                                char.pet.frame = 0;
+                                char.pet.dir = 1; // 恢復面左(朝向怪物)
+                                char.pet.actionEndTime = Date.now() + 2000;
+                                char.pet.nextActionTime = char.pet.actionEndTime + 1000;
+                            }
+                        }, 300);
+
+                        // 怪物受擊反應
+                        if (targetEl) {
+                            targetEl.style.transform = 'translate(-15px, 5px)';
+                            setTimeout(() => { targetEl.style.transform = 'translate(10px, -5px)'; }, 50);
+                            setTimeout(() => { targetEl.style.transform = 'translate(-5px, 5px)'; }, 100);
+                            setTimeout(() => { targetEl.style.transform = 'translate(0, 0)'; }, 150);
+                        }
+                    }, waitTime);
+
+                }, 1000);
 
             } else {
                 // --- 基礎攻擊：集氣(上) -> 後退 -> 衝刺虛影 -> 撞擊彈跳(右) -> 開心動作(action) -> 回歸舞台 ---
@@ -6981,27 +7099,17 @@
                 // 建立黃光炸裂特效 (集氣脈衝)
                 const chargeFx = document.createElement('div');
                 chargeFx.style.cssText = `
-                    position: absolute;
-                    width: 150px;
-                    height: 150px;
+                    position: absolute; width: 150px; height: 150px;
                     background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/7%E9%BB%83%E5%85%89%E7%82%B8%E8%A3%82%E7%89%B9%E6%95%88.png');
-                    background-size: contain;
-                    background-position: center;
-                    background-repeat: no-repeat;
-                    z-index: -1;
-                    animation: petChargePulse 0.25s infinite alternate;
+                    background-size: contain; background-position: center; background-repeat: no-repeat;
+                    z-index: -1; animation: petChargePulse 0.25s infinite alternate;
                 `;
                 petDiv.insertBefore(chargeFx, petContent);
 
                 if (!document.getElementById('pet-charge-style')) {
                     const style = document.createElement('style');
                     style.id = 'pet-charge-style';
-                    style.textContent = `
-                        @keyframes petChargePulse {
-                            0% { transform: scale(0.3); opacity: 0.5; }
-                            100% { transform: scale(1.3); opacity: 1; filter: brightness(1.5); }
-                        }
-                    `;
+                    style.textContent = `@keyframes petChargePulse { 0% { transform: scale(0.3); opacity: 0.5; } 100% { transform: scale(1.3); opacity: 1; filter: brightness(1.5); } }`;
                     document.head.appendChild(style);
                 }
 
@@ -7018,27 +7126,17 @@
                         // 產生火焰炸地特效 (留在原地)
                         const fireFx = document.createElement('div');
                         fireFx.style.cssText = `
-                            position: fixed;
-                            left: ${animStartX + 30}px;
-                            top: ${animStartY + 30}px;
-                            width: 140px;
-                            height: 140px;
-                            transform: translate(-50%, -50%);
+                            position: fixed; left: ${animStartX + 30}px; top: ${animStartY + 30}px;
+                            width: 140px; height: 140px; transform: translate(-50%, -50%);
                             background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%81%AB%E7%84%B0%E7%82%B8%E5%9C%B0(%E5%8E%BB%E8%83%8C).png');
-                            background-size: contain;
-                            background-position: center;
-                            background-repeat: no-repeat;
-                            z-index: 9998;
-                            opacity: 1;
-                            filter: brightness(1.5);
-                            transition: opacity 0.8s ease-out;
-                            pointer-events: none;
+                            background-size: contain; background-position: center; background-repeat: no-repeat;
+                            z-index: 9998; opacity: 1; filter: brightness(1.5); transition: opacity 0.8s ease-out; pointer-events: none;
                         `;
                         document.body.appendChild(fireFx);
                         setTimeout(() => { fireFx.style.opacity = '0'; }, 200);
                         setTimeout(() => fireFx.remove(), 1000);
 
-                        // 寵物衝刺位移 (播放向上動作)
+                        // 寵物衝刺位移
                         petDiv.style.transition = 'all 0.2s cubic-bezier(0.5, 0, 1, 1)';
                         petDiv.style.left = `${targetX}px`;
                         petDiv.style.top = `${targetY}px`;
@@ -7048,23 +7146,17 @@
                         let shadowCount = 0;
                         const shadowInterval = setInterval(() => {
                             if (shadowCount > 6) { clearInterval(shadowInterval); return; }
-                            
                             const shadow = useSprite ? document.createElement('canvas') : document.createElement('img');
                             if (useSprite) {
-                                shadow.width = petContent.width;
-                                shadow.height = petContent.height;
+                                shadow.width = petContent.width; shadow.height = petContent.height;
                                 shadow.getContext('2d').drawImage(petContent, 0, 0);
-                            } else {
-                                shadow.src = petContent.src;
-                            }
+                            } else shadow.src = petContent.src;
 
                             const rect = petDiv.getBoundingClientRect();
                             shadow.style.cssText = `
                                 position: fixed; left: ${rect.left}px; top: ${rect.top}px;
                                 width: ${rect.width}px; height: ${rect.height}px; object-fit: contain;
-                                opacity: 0.6; pointer-events: none; z-index: 9998;
-                                transition: opacity 0.2s;
-                                filter: drop-shadow(0 0 5px rgba(255,100,0,0.8));
+                                opacity: 0.6; pointer-events: none; z-index: 9998; transition: opacity 0.2s; filter: drop-shadow(0 0 5px rgba(255,100,0,0.8));
                             `;
                             document.body.appendChild(shadow);
                             setTimeout(() => { shadow.style.opacity = '0'; }, 50);
@@ -7074,7 +7166,6 @@
 
                         // 4. 撞擊與彈跳
                         setTimeout(() => {
-                            // 怪物晃動
                             if (targetEl) {
                                 targetEl.style.transform = 'translate(-20px, 10px)';
                                 setTimeout(() => { targetEl.style.transform = 'translate(15px, -10px)'; }, 50);
@@ -7082,12 +7173,10 @@
                                 setTimeout(() => { targetEl.style.transform = 'translate(0, 0)'; }, 150);
                             }
 
-                            // 寵物狀態改為向右 (撞擊後彈跳方向)
                             animType = 'base';
-                            animRow = 1; // 右
+                            animRow = 1; // 撞擊後彈起：右
                             if (spriteData) animCols = spriteData.config.cols || 4;
 
-                            // 慢動作彈跳 (Q彈 cubic-bezier)
                             petDiv.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)'; 
                             petDiv.style.left = `${targetX - 90}px`; // 往左彈
                             petDiv.style.top = `${targetY + 70}px`;
@@ -7095,39 +7184,158 @@
 
                             // 5. 結束動畫：播放開心動作，然後切換回 Canvas 舞台
                             setTimeout(() => {
-                                // 播放開心動作
                                 animType = 'action';
+                                actionType = 'happy';
                                 animRow = 0; // 開心
                                 if (spriteData) animCols = spriteData.config.actionCols || 4;
                                 animFrame = 0;
 
                                 setTimeout(() => {
                                     isAnimRunning = false;
-                                    petDiv.remove(); // 移除 DOM 替身
+                                    petDiv.remove();
 
-                                    // 計算彈跳落點對應到 Canvas 的 X 座標
                                     const canvasRect = canvas.getBoundingClientRect();
                                     const scaleX = canvas.width / canvasRect.width;
                                     const localX = (targetX - 90 - canvasRect.left) * scaleX;
 
-                                    // 解除隱藏本尊，並設定狀態
                                     if (char && char.pet) {
-                                        char.pet.x = Math.max(50, Math.min(canvas.width - 50, localX)); // 防出界
+                                        char.pet.x = Math.max(50, Math.min(canvas.width - 50, localX)); 
                                         char.pet.isHidden = false;
                                         char.pet.state = 'action';
                                         char.pet.actionType = 'happy';
                                         char.pet.frame = 0;
                                         char.pet.dir = 2; // 面向右邊
-                                        char.pet.actionEndTime = Date.now() + 2000; // 開心動作維持2秒
+                                        char.pet.actionEndTime = Date.now() + 2000;
                                         char.pet.nextActionTime = char.pet.actionEndTime + 1000;
                                     }
-
-                                }, 1500); // 彈跳後，開心動作在 DOM 上維持 1.5 秒
-                            }, 600); // 等待彈跳結束
-                        }, 200); // 衝刺飛行時間
-                    }, 300); // 後退蓄力時間
-                }, chargeTime); // 集氣時間
+                                }, 1500);
+                            }, 600);
+                        }, 200);
+                    }, 300);
+                }, chargeTime);
             }
+        },
+
+        // --- [新增] 三種等級的寵物技能特效發射器 ---
+        shootPetSkillFx_LV1: (startX, startY, targetX, targetY, imgUrl) => {
+            const fx = document.createElement('div');
+            const angle = Math.atan2(targetY - startY, targetX - startX) * 180 / Math.PI;
+            fx.style.cssText = `
+                position: fixed; left: ${startX}px; top: ${startY}px; width: 100px; height: 100px;
+                background-image: url('${imgUrl}'); background-size: contain; background-position: center; background-repeat: no-repeat;
+                transform: translate(-50%, -50%) rotate(${angle}deg);
+                z-index: 10000; pointer-events: none; filter: drop-shadow(0 0 10px rgba(255,215,0,0.8));
+                transition: left 0.6s cubic-bezier(0.5, 0, 1, 1), top 0.6s cubic-bezier(0.5, 0, 1, 1);
+            `;
+            document.body.appendChild(fx);
+            app.playSe('slash');
+            
+            void fx.offsetWidth;
+            fx.style.left = `${targetX}px`;
+            fx.style.top = `${targetY}px`;
+            setTimeout(() => fx.remove(), 600);
+        },
+
+        shootPetSkillFx_LV2: (startX, startY, targetX, targetY, imgUrl) => {
+            const angle = Math.atan2(targetY - startY, targetX - startX) * 180 / Math.PI;
+            app.playSe('slash');
+            
+            for(let i=0; i<3; i++) {
+                const fx = document.createElement('div');
+                let yOffset = i === 0 ? 0 : (i === 1 ? -80 : 80);
+                fx.style.cssText = `
+                    position: fixed; left: ${startX}px; top: ${startY}px; width: 60px; height: 60px;
+                    background-image: url('${imgUrl}'); background-size: contain; background-position: center; background-repeat: no-repeat;
+                    transform: translate(-50%, -50%) rotate(${angle}deg);
+                    z-index: 10000; pointer-events: none; filter: drop-shadow(0 0 10px rgba(255,215,0,0.8));
+                    transition: left 0.3s cubic-bezier(0.3, 0, 0.8, 1), top 0.3s ease-in-out;
+                `;
+                document.body.appendChild(fx);
+                void fx.offsetWidth;
+                
+                const midX = startX + (targetX - startX) * 0.5;
+                const midY = startY + (targetY - startY) * 0.5;
+                
+                fx.style.left = `${midX}px`;
+                fx.style.top = `${midY + yOffset}px`;
+                
+                setTimeout(() => {
+                    fx.style.transition = `left 0.3s cubic-bezier(0.2, 1, 0.5, 1), top 0.3s ease-in-out`;
+                    fx.style.left = `${targetX}px`;
+                    fx.style.top = `${targetY}px`;
+                    setTimeout(() => fx.remove(), 300);
+                }, 300);
+            }
+        },
+
+        shootPetSkillFx_LV3: (startX, startY, targetX, targetY, imgUrl) => {
+            const wrap = document.createElement('div');
+            wrap.style.cssText = `
+                position: fixed; left: ${startX}px; top: ${startY}px; width: 150px; height: 150px;
+                transform: translate(-50%, -50%); z-index: 10000; pointer-events: none;
+                animation: pet-spin-fast 1s ease-in forwards;
+            `;
+            
+            let style = document.getElementById('pet-lv3-style');
+            if(!style) {
+                style = document.createElement('style');
+                style.id = 'pet-lv3-style';
+                style.innerHTML = `@keyframes pet-spin-fast { 0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); } 100% { transform: translate(-50%, -50%) rotate(1080deg) scale(0); } }`;
+                document.head.appendChild(style);
+            }
+            
+            for(let i=0; i<3; i++) {
+                const fx = document.createElement('div');
+                const deg = i * 120;
+                fx.style.cssText = `
+                    position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; margin-top: -25px; margin-left: -25px;
+                    background-image: url('${imgUrl}'); background-size: contain; background-position: center; background-repeat: no-repeat;
+                    transform: rotate(${deg}deg) translateY(-50px) rotate(-${deg}deg);
+                    filter: drop-shadow(0 0 10px rgba(255,215,0,0.8));
+                `;
+                wrap.appendChild(fx);
+            }
+            document.body.appendChild(wrap);
+            app.playSe('charge');
+            
+            setTimeout(() => {
+                wrap.remove();
+                const angle = Math.atan2(targetY - startY, targetX - startX) * 180 / Math.PI;
+                const giantFx = document.createElement('div');
+                giantFx.style.cssText = `
+                    position: fixed; left: ${startX}px; top: ${startY}px; width: 150px; height: 150px;
+                    background-image: url('${imgUrl}'); background-size: contain; background-position: center; background-repeat: no-repeat;
+                    transform: translate(-50%, -50%) rotate(${angle}deg);
+                    z-index: 10000; pointer-events: none; filter: drop-shadow(0 0 25px rgba(255,100,0,1)) brightness(1.5);
+                    transition: left 0.4s cubic-bezier(0.5, 0, 1, 1), top 0.4s cubic-bezier(0.5, 0, 1, 1);
+                `;
+                document.body.appendChild(giantFx);
+                app.playSe('slash');
+                
+                void giantFx.offsetWidth;
+                giantFx.style.left = `${targetX}px`;
+                giantFx.style.top = `${targetY}px`;
+                
+                setTimeout(() => {
+                    giantFx.remove();
+                    const boom = document.createElement('div');
+                    boom.style.cssText = `
+                        position: fixed; left: ${targetX}px; top: ${targetY}px; width: 250px; height: 250px;
+                        transform: translate(-50%, -50%) scale(0.5);
+                        background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/7%E9%BB%83%E5%85%89%E7%82%B8%E8%A3%82%E7%89%B9%E6%95%88.png');
+                        background-size: contain; background-position: center; background-repeat: no-repeat;
+                        z-index: 10001; pointer-events: none; opacity: 1; filter: brightness(2);
+                        transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+                    `;
+                    document.body.appendChild(boom);
+                    if (navigator.vibrate) navigator.vibrate([100, 100, 200]);
+                    
+                    void boom.offsetWidth;
+                    boom.style.transform = 'translate(-50%, -50%) scale(2.5)';
+                    boom.style.opacity = '0';
+                    setTimeout(() => boom.remove(), 400);
+                }, 400);
+            }, 1000);
         },
 
         // [新增] 計算攻擊瞬移的座標並觸發替身
@@ -12222,7 +12430,8 @@ for (const slot of slots) {
                 atkDmg: currentForm.atkDmg,
                 skillName: currentForm.skillName,
                 skillProb: currentForm.skillProb,
-                skillDmg: currentForm.skillDmg
+                skillDmg: currentForm.skillDmg,
+                skillEffect: currentForm.skillEffect || '' // [新增提取特效屬性]
             };
         },
 
@@ -13796,7 +14005,7 @@ for (const slot of slots) {
                         setTimeout(() => {
                             // 條件：LV2以上(或裝備新加法劍) 且 連續使用2個以上的加號 -> 觸發進階特效
                             if (countAdd >= 2 && (lv >= 2 || item.name.includes('冒險者之劍'))) {
-                                app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a2-2.png', 'rgba(34, 197, 94, 0.9)');
+                                app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a2-3.png', 'rgba(34, 197, 94, 0.9)');
                             } else {
                                 // 否則觸發基礎特效
                                 app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%A3%AE%E4%B9%8B%E5%BE%8B%E5%8B%95a2.png', 'rgba(132, 204, 22, 0.8)');
@@ -13838,10 +14047,10 @@ for (const slot of slots) {
                             // 條件：LV2以上(或裝備冒險者之劍) 且 連續使用2個以上的除號 -> 觸發進階特效
                             if (countDiv >= 2 && (lv >= 2 || item.name.includes('冒險者之劍'))) {
                                 // 深淵暗紫色陰影
-                                app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0a2.png', 'rgba(88, 28, 135, 0.9)'); 
+                                app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0a2-1.png', 'rgba(88, 28, 135, 0.9)'); 
                             } else {
                                 // 淺紫色基礎陰影
-                                app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0a1.png', 'rgba(168, 85, 247, 0.8)');
+                                app.triggerEquipmentEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%B7%B1%E6%B7%B5%E4%B9%8B%E5%8D%B0a1-1.png', 'rgba(168, 85, 247, 0.8)');
                             }
                         }, comboDelay);
                     }
