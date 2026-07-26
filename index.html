@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.2.7.6 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.2.7.7 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -714,7 +714,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.7.6 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.7.7 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -3536,17 +3536,27 @@
                     
                     // [新增 v4.8.9.7.7] 預先載入快取的戰役通關紀錄，讓玩家一進來就能秒進戰役
                     app.state.campaignProgress = cData.campaignProgress || {};
-                    // 5. 裝備預覽
+                 // 5. 裝備預覽 (含寵物支援)
                     const equipContainer = app.el('lobby-auth-equip-list');
                     if(equipContainer && cData.equipped && app.state.globalSettings?.blackMarketList) {
                         let equipHtml = '';
                         const globalList = app.state.globalSettings.blackMarketList;
                         Object.values(cData.equipped).forEach(itemId => {
-                            const item = globalList[itemId];
-                            if(item) {
-                                const targetLv = item.currentEditLv || 1;
-                                const img = item[`img${targetLv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-                                equipHtml += `<img src="${img}" class="w-6 h-6 rounded bg-slate-900 border border-amber-500/50 object-contain p-0.5" title="${item.name}">`;
+                            if (String(itemId).startsWith('pet_')) {
+                                const petIdx = itemId.replace('pet_', '');
+                                const petExp = cData.pets ? (cData.pets[petIdx]?.exp || 0) : 0;
+                                const petState = app.getPetCurrentState(petIdx, petExp);
+                                if (petState) {
+                                    const img = petState.imgUrl || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
+                                    equipHtml += `<div class="relative w-6 h-6 rounded-full bg-fuchsia-900/50 border border-fuchsia-400 p-0.5 flex items-center justify-center shadow-sm cursor-help" title="🐾 ${petState.formName} (LV${petState.level})"><img src="${img}" class="w-full h-full object-contain drop-shadow-md scale-125 rounded-full"></div>`;
+                                }
+                            } else {
+                                const item = globalList[itemId];
+                                if(item) {
+                                    const targetLv = item.currentEditLv || 1;
+                                    const img = item[`img${targetLv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+                                    equipHtml += `<img src="${img}" class="w-6 h-6 rounded bg-slate-900 border border-amber-500/50 object-contain p-0.5 cursor-help" title="${item.name} (LV${targetLv})">`;
+                                }
                             }
                         });
                         equipContainer.innerHTML = equipHtml;
@@ -3598,18 +3608,28 @@
                     app.el('lobby-auth-exp-text').textContent = `${Math.floor(currentProgress)} / ${levelRange}`;
                 }
 
-                // 更新大廳裝備小圖 (v4.7.8.1 修正：確保卸下時清空)
+               // 更新大廳裝備小圖 (含寵物同步顯示)
                 const equipContainer = app.el('lobby-auth-equip-list');
                 if(equipContainer) {
                     let equipHtml = '';
                     if (data.equipped) {
                         const globalList = app.state.globalSettings?.blackMarketList || [];
                         Object.values(data.equipped).forEach(itemId => {
-                            const item = globalList[itemId];
-                            if(item) {
-                                const targetLv = item.currentEditLv || 1;
-                                const img = item[`img${targetLv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-                                equipHtml += `<img src="${img}" class="w-6 h-6 rounded bg-slate-900 border border-amber-500/50 object-contain p-0.5" title="${item.name}">`;
+                            if (String(itemId).startsWith('pet_')) {
+                                const petIdx = itemId.replace('pet_', '');
+                                const petExp = data.pets ? (data.pets[petIdx]?.exp || 0) : 0;
+                                const petState = app.getPetCurrentState(petIdx, petExp);
+                                if (petState) {
+                                    const img = petState.imgUrl || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
+                                    equipHtml += `<div class="relative w-6 h-6 rounded-full bg-fuchsia-900/50 border border-fuchsia-400 p-0.5 flex items-center justify-center shadow-sm cursor-help" title="🐾 ${petState.formName} (LV${petState.level})"><img src="${img}" class="w-full h-full object-contain drop-shadow-md scale-125 rounded-full"></div>`;
+                                }
+                            } else {
+                                const item = globalList[itemId];
+                                if(item) {
+                                    const targetLv = item.currentEditLv || 1;
+                                    const img = item[`img${targetLv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+                                    equipHtml += `<img src="${img}" class="w-6 h-6 rounded bg-slate-900 border border-amber-500/50 object-contain p-0.5 cursor-help" title="${item.name} (LV${targetLv})">`;
+                                }
                             }
                         });
                     }
@@ -15243,7 +15263,7 @@ for (const slot of slots) {
                 const lv = app.getAccountLevel(exp);
                 
                 // 條件：>= 10 級才顯示
-                if (lv >= 10) {
+              if (lv >= 10) {
                     players.push({
                         uid: uid,
                         name: data.displayName || '冒險者',
@@ -15251,6 +15271,7 @@ for (const slot of slots) {
                         exp: exp,
                         lv: lv,
                         equipped: data.equipped || {},
+                        pets: data.pets || {},
                         isHidden: data.isHidden || false
                     });
                 }
@@ -15283,24 +15304,32 @@ for (const slot of slots) {
                     cardBg = 'bg-orange-50 border-orange-200 shadow-md';
                 }
 
-                // 產生裝備圖示 (無空白節點壓縮)
+                // 產生裝備圖示 (包含寵物，無空白節點壓縮)
                 let equipHtml = '';
                 if (p.equipped && Object.keys(p.equipped).length > 0) {
                     Object.values(p.equipped).forEach(itemId => {
-                        const item = globalList[itemId];
-                        if (item) {
-                            const targetLv = item.currentEditLv || 1;
-                            const maxLv = item.maxLv || 1;
-                            const img = item[`img${targetLv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
-                            
-                            // [新增設計] 判斷若該裝備有升級空間(maxLv > 1)，則顯示 LV 標籤
-                            const lvTag = maxLv > 1 ? `<span class="absolute -bottom-1 -right-1 bg-black/90 text-amber-300 text-[0.45rem] px-0.5 rounded border border-amber-500/80 shadow-md font-bold leading-none z-10">LV${targetLv}</span>` : '';
-                            
-                            // [UI優化] 移除 overflow-hidden 改用 relative，加大為 w-7 h-7，增加 hover:z-20 防止放大被遮擋，嚴格遵守無空白字串
-                            equipHtml += `<div class="relative w-7 h-7 bg-slate-800 rounded border border-amber-500/50 shadow-sm flex items-center justify-center hover:scale-125 hover:z-20 transition-all cursor-help" title="${item.name} (LV${targetLv})"><img src="${img}" class="w-full h-full object-contain p-0.5 rounded">${lvTag}</div>`;
+                        if (String(itemId).startsWith('pet_')) {
+                            // 渲染寵物圖示
+                            const petIdx = itemId.replace('pet_', '');
+                            const petExp = p.pets ? (p.pets[petIdx]?.exp || 0) : 0;
+                            const petState = app.getPetCurrentState(petIdx, petExp);
+                            if (petState) {
+                                const img = petState.imgUrl || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
+                                const petTooltip = `🐾 寵物: ${petState.formName} (LV${petState.level})`;
+                                equipHtml += `<div class="relative w-7 h-7 bg-fuchsia-900/50 rounded-full border border-fuchsia-400 shadow-sm flex items-center justify-center hover:scale-125 hover:z-20 transition-all cursor-help" title="${petTooltip}"><img src="${img}" class="w-full h-full object-contain drop-shadow-md rounded-full scale-125"></div>`;
+                            }
+                        } else {
+                            // 渲染一般裝備圖示
+                            const item = globalList[itemId];
+                            if (item) {
+                                const targetLv = item.currentEditLv || 1;
+                                const maxLv = item.maxLv || 1;
+                                const img = item[`img${targetLv}`] || item.img1 || 'https://cdn-icons-png.flaticon.com/512/272/272527.png';
+                                const lvTag = maxLv > 1 ? `<span class="absolute -bottom-1 -right-1 bg-black/90 text-amber-300 text-[0.45rem] px-0.5 rounded border border-amber-500/80 shadow-md font-bold leading-none z-10">LV${targetLv}</span>` : '';
+                                equipHtml += `<div class="relative w-7 h-7 bg-slate-800 rounded border border-amber-500/50 shadow-sm flex items-center justify-center hover:scale-125 hover:z-20 transition-all cursor-help" title="${item.name} (LV${targetLv})"><img src="${img}" class="w-full h-full object-contain p-0.5 rounded">${lvTag}</div>`;
+                            }
                         }
                     });
-                    // [防破版優化] 加上 flex-wrap 並微調 gap，避免神裝太多時版面撐破
                     equipHtml = `<div class="flex flex-wrap gap-1.5 ml-1 mt-1">${equipHtml}</div>`;
                 } else {
                     equipHtml = `<div class="mt-1 ml-1 text-[0.55rem] text-slate-400 border border-dashed border-slate-300 px-1.5 py-0.5 rounded inline-block bg-white/50">尚未裝備神物</div>`;
