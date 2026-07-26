@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.2.7.4 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.2.7.6 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -714,7 +714,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.7.4 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.7.6 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -3126,7 +3126,7 @@
         </div>
     </div>
     <!-- [新增] 寵物樂園詳細資料視窗 -->
-    <div id="pet-paradise-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-backdrop backdrop-blur-md"><div class="bg-slate-900 rounded-2xl w-full max-w-6xl mx-4 shadow-[0_0_30px_rgba(217,70,239,0.5)] border-4 border-fuchsia-700 flex flex-col md:flex-row overflow-hidden relative animate-[popIn_0.3s_ease-out] max-h-[90vh]"><button onclick="app.closePetParadise()" class="absolute top-3 right-3 z-50 bg-red-800 text-white w-8 h-8 rounded-lg font-black shadow-lg hover:bg-red-700 hover:scale-105 active:scale-95 transition-all border-2 border-red-900 flex items-center justify-center">&#x2715;</button><div class="w-full md:w-5/12 bg-slate-800 border-b-4 md:border-b-0 md:border-r-4 border-fuchsia-900 flex flex-col p-4 md:p-6 overflow-y-auto custom-scrollbar relative"><div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30 pointer-events-none"></div><div class="relative z-10 flex flex-col h-full"><div class="flex items-center gap-4 mb-4 border-b-2 border-fuchsia-500/50 pb-4"><div class="w-20 h-20 bg-black rounded-lg border-2 border-fuchsia-400 p-1 flex-shrink-0 shadow-[0_0_15px_rgba(217,70,239,0.5)] flex items-center justify-center"><img id="paradise-pet-icon" src="" class="max-w-full max-h-full object-contain"></div><div class="flex flex-col justify-center"><div class="text-xs text-fuchsia-300 font-mono bg-fuchsia-900/50 px-2 py-0.5 rounded border border-fuchsia-500/50 w-fit mb-1" id="paradise-pet-family">族系名稱</div><h3 id="paradise-pet-name" class="text-2xl font-black text-white tracking-wider drop-shadow-md">寵物名稱</h3></div></div><div class="bg-black/60 rounded-lg p-3 border border-slate-600 mb-4 shadow-inner"><div class="flex justify-between items-center mb-1"><span class="text-fuchsia-400 font-black text-sm">LEVEL <span id="paradise-pet-lv" class="text-xl">1</span></span><span class="text-xs text-slate-400 font-mono" id="paradise-pet-exp-text">0/0</span></div><div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700"><div id="paradise-pet-exp-bar" class="bg-gradient-to-r from-fuchsia-600 to-purple-400 h-full transition-all duration-500" style="width:0%"></div></div></div><div class="flex-1 bg-slate-900/80 rounded-lg p-3 border border-slate-700 shadow-inner mb-4 overflow-y-auto custom-scrollbar"><h4 class="text-sm font-black text-slate-300 border-b border-slate-600 pb-1 mb-2 flex items-center gap-2"><span class="text-fuchsia-400">📊</span> 幻獸數據</h4><div class="grid grid-cols-2 gap-2 mb-3"><div class="bg-orange-900/30 border border-orange-700/50 p-2 rounded flex flex-col justify-center"><div class="text-[0.65rem] text-orange-400 font-bold mb-0.5">基礎攻擊 (觸發率 <span id="paradise-atk-prob">0</span>%)</div><div id="paradise-atk-name" class="text-sm font-black text-white truncate">攻擊名稱</div><div class="text-[0.65rem] text-orange-300 mt-0.5">附加傷害: <span id="paradise-atk-dmg" class="text-orange-400 font-mono font-bold">+0</span></div></div><div class="bg-purple-900/30 border border-purple-700/50 p-2 rounded flex flex-col justify-center"><div class="text-[0.65rem] text-purple-400 font-bold mb-0.5">暴擊技能 (暴擊率 <span id="paradise-skill-prob">0</span>%)</div><div id="paradise-skill-name" class="text-sm font-black text-white truncate">技能名稱</div><div class="text-[0.65rem] text-purple-300 mt-0.5">附加傷害: <span id="paradise-skill-dmg" class="text-purple-400 font-mono font-bold">+0</span></div></div></div><h4 class="text-sm font-black text-slate-300 border-b border-slate-600 pb-1 mb-2 flex items-center gap-2 mt-4"><span class="text-blue-400">📝</span> 幻獸檔案</h4><div id="paradise-pet-desc" class="text-xs text-slate-400 leading-relaxed font-medium">寵物說明...</div></div><div class="grid grid-cols-2 gap-3 mt-auto shrink-0"><button id="btn-pet-feed" onclick="app.interactWithPet('feed')" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-2 rounded-lg border-b-4 border-slate-800 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-2">🥖 餵食</button><button id="btn-pet-bathe" onclick="app.interactWithPet('bathe')" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-2 rounded-lg border-b-4 border-slate-800 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-2">🛁 水浴</button></div></div></div><div class="w-full md:w-7/12 flex flex-col relative bg-black"><div class="p-2 bg-slate-900 border-b border-slate-700 flex justify-between items-center z-10 shrink-0 shadow-md"><span class="text-fuchsia-400 font-black flex items-center gap-2"><span class="text-lg">🏕️</span> 互動樂園</span><span class="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-600">點擊空地指揮移動</span></div><div class="flex-1 relative overflow-hidden bg-slate-800 flex items-center justify-center" id="paradise-stage-wrapper"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%AF%B5%E7%89%A9%E6%A8%82%E5%9C%92%E8%83%8C%E6%99%AF%E5%9C%96.jpeg" class="absolute inset-0 w-full h-full object-cover opacity-80 select-none" draggable="false"><canvas id="paradise-canvas" class="absolute inset-0 w-full h-full cursor-pointer z-10" style="image-rendering: pixelated;" onmousedown="app.clickPetParadise(event)" ontouchstart="app.clickPetParadise(event)"></canvas></div></div></div></div>
+    <div id="pet-paradise-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-backdrop backdrop-blur-md"><div class="bg-slate-900 rounded-2xl w-full max-w-6xl mx-4 shadow-[0_0_30px_rgba(217,70,239,0.5)] border-4 border-fuchsia-700 flex flex-col md:flex-row overflow-hidden relative animate-[popIn_0.3s_ease-out] max-h-[90vh]"><button onclick="app.closePetParadise()" class="absolute top-3 right-3 z-50 bg-red-800 text-white w-8 h-8 rounded-lg font-black shadow-lg hover:bg-red-700 hover:scale-105 active:scale-95 transition-all border-2 border-red-900 flex items-center justify-center">&#x2715;</button><div class="w-full md:w-5/12 bg-slate-800 border-b-4 md:border-b-0 md:border-r-4 border-fuchsia-900 flex flex-col p-4 md:p-6 overflow-y-auto custom-scrollbar relative"><div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30 pointer-events-none"></div><div class="relative z-10 flex flex-col h-full"><div class="flex items-center gap-4 mb-4 border-b-2 border-fuchsia-500/50 pb-4"><div class="w-20 h-20 bg-black rounded-lg border-2 border-fuchsia-400 p-1 flex-shrink-0 shadow-[0_0_15px_rgba(217,70,239,0.5)] flex items-center justify-center"><img id="paradise-pet-icon" src="" class="max-w-full max-h-full object-contain"></div><div class="flex flex-col justify-center"><div class="text-xs text-fuchsia-300 font-mono bg-fuchsia-900/50 px-2 py-0.5 rounded border border-fuchsia-500/50 w-fit mb-1" id="paradise-pet-family">族系名稱</div><h3 id="paradise-pet-name" class="text-2xl font-black text-white tracking-wider drop-shadow-md">寵物名稱</h3></div></div><div class="bg-black/60 rounded-lg p-3 border border-slate-600 mb-4 shadow-inner"><div class="flex justify-between items-center mb-1"><span class="text-fuchsia-400 font-black text-sm">LEVEL <span id="paradise-pet-lv" class="text-xl">1</span></span><span class="text-xs text-slate-400 font-mono" id="paradise-pet-exp-text">0/0</span></div><div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700"><div id="paradise-pet-exp-bar" class="bg-gradient-to-r from-fuchsia-600 to-purple-400 h-full transition-all duration-500" style="width:0%"></div></div></div><div class="flex-1 bg-slate-900/80 rounded-lg p-3 border border-slate-700 shadow-inner mb-4 overflow-y-auto custom-scrollbar"><h4 class="text-sm font-black text-slate-300 border-b border-slate-600 pb-1 mb-2 flex items-center gap-2"><span class="text-fuchsia-400">📊</span> 幻獸數據</h4><div class="grid grid-cols-2 gap-2 mb-3"><div class="bg-orange-900/30 border border-orange-700/50 p-2 rounded flex flex-col justify-center"><div class="text-[0.65rem] text-orange-400 font-bold mb-0.5">基礎攻擊 (觸發率 <span id="paradise-atk-prob">0</span>%)</div><div id="paradise-atk-name" class="text-sm font-black text-white truncate">攻擊名稱</div><div class="text-[0.65rem] text-orange-300 mt-0.5">附加傷害: <span id="paradise-atk-dmg" class="text-orange-400 font-mono font-bold">+0</span></div></div><div class="bg-purple-900/30 border border-purple-700/50 p-2 rounded flex flex-col justify-center"><div class="text-[0.65rem] text-purple-400 font-bold mb-0.5">暴擊技能 (暴擊率 <span id="paradise-skill-prob">0</span>%)</div><div id="paradise-skill-name" class="text-sm font-black text-white truncate">技能名稱</div><div class="text-[0.65rem] text-purple-300 mt-0.5">附加傷害: <span id="paradise-skill-dmg" class="text-purple-400 font-mono font-bold">+0</span></div></div></div><h4 class="text-sm font-black text-slate-300 border-b border-slate-600 pb-1 mb-2 flex items-center gap-2 mt-4"><span class="text-blue-400">📝</span> 幻獸檔案</h4><div id="paradise-pet-desc" class="text-xs text-slate-400 leading-relaxed font-medium">寵物說明...</div></div><div class="grid grid-cols-4 gap-1 mt-auto shrink-0 mb-2"><button onclick="app.interactWithPet('action_happy')" class="bg-pink-700 hover:bg-pink-600 text-white font-bold py-1 rounded text-xs shadow border-b-2 border-pink-900 active:border-b-0 active:translate-y-0.5 transition-all">🥰 開心</button><button onclick="app.interactWithPet('action_flower')" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-1 rounded text-xs shadow border-b-2 border-purple-900 active:border-b-0 active:translate-y-0.5 transition-all">🌸 灑花</button><button onclick="app.interactWithPet('action_hurt')" class="bg-red-700 hover:bg-red-600 text-white font-bold py-1 rounded text-xs shadow border-b-2 border-red-900 active:border-b-0 active:translate-y-0.5 transition-all">🤕 受傷</button><button onclick="app.interactWithPet('action_attack')" class="bg-orange-700 hover:bg-orange-600 text-white font-bold py-1 rounded text-xs shadow border-b-2 border-orange-900 active:border-b-0 active:translate-y-0.5 transition-all">⚔️ 攻擊</button></div><div class="grid grid-cols-2 gap-3 shrink-0"><button id="btn-pet-feed" onclick="app.interactWithPet('feed')" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-2 rounded-lg border-b-4 border-slate-800 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-2">🥖 餵食</button><button id="btn-pet-bathe" onclick="app.interactWithPet('bathe')" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-2 rounded-lg border-b-4 border-slate-800 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-2">🛁 水浴</button></div></div></div><div class="w-full md:w-7/12 flex flex-col relative bg-black"><div class="p-2 bg-slate-900 border-b border-slate-700 flex justify-between items-center z-10 shrink-0 shadow-md"><span class="text-fuchsia-400 font-black flex items-center gap-2"><span class="text-lg">🏕️</span> 互動樂園</span><span class="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-600">點擊空地指揮移動</span></div><div class="flex-1 relative overflow-hidden bg-slate-800 flex items-center justify-center" id="paradise-stage-wrapper"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%AF%B5%E7%89%A9%E6%A8%82%E5%9C%92%E8%83%8C%E6%99%AF%E5%9C%96.jpeg" class="absolute inset-0 w-full h-full object-cover opacity-80 select-none" draggable="false"><canvas id="paradise-canvas" class="absolute inset-0 w-full h-full cursor-pointer z-10" style="image-rendering: pixelated;" onmousedown="app.clickPetParadise(event)" ontouchstart="app.clickPetParadise(event)"></canvas></div></div></div></div>
 	<script>
     // --- Firebase 配置 ---
     const firebaseConfig = {
@@ -6648,7 +6648,7 @@
                     else if(entity.dir === 2) row = 1; // 右
                     else if(entity.dir === 3) row = 4; // 上
                     
-                    col = entity.state === 'idle' ? 0 : entity.frame % cols;
+                    col = entity.frame % cols;
                     if (entity.state === 'idle') row = 0; // 待機
                 }
 
@@ -7818,7 +7818,7 @@
                 gridY = app.state.tempGridConfig?.gridY;
                 totalCols = parseInt(app.el('edit-sprite-cols').value) || 4;
                 
-                col = sc.state === 'idle' ? 0 : sc.frame % totalCols;
+                col = sc.frame % totalCols;
                 if(sc.dir === 0) row = 2;
                 else if(sc.dir === 1) row = 3;
                 else if(sc.dir === 2) row = 1;
@@ -17140,7 +17140,71 @@ for (const slot of slots) {
                 pet.lastBathed = now; // 記錄時間
                 app.updatePetInteractionUI();
                 app.triggerBatheAnimation(petIdx);
+            } else if (type.startsWith('action_')) {
+                const actType = type.split('_')[1];
+                app.triggerPetParadiseAction(actType);
             }
+        },
+
+        triggerPetParadiseAction: (actType) => {
+            const sc = app.state.paradisePet; 
+            if (!sc) return;
+            app.state.isPetInteracting = true;
+            
+            sc.state = 'action';
+            sc.actionType = actType;
+            sc.frame = 0;
+            sc.vx = 0;
+            sc.vy = 0;
+            
+            const spriteConfig = sc.config || {};
+            const cols = spriteConfig.actionCols || 4;
+            const framesCount = (actType === 'attack') ? cols * 2 : cols;
+            // 計算動畫播放完畢所需時間，150ms 是一幀，最後一幀停留 1000ms
+            const duration = framesCount * 150 + 1000;
+            
+            sc.nextAiTime = Date.now() + duration + 500;
+            
+            const canvas = app.el('paradise-canvas');
+            if (canvas) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = rect.width / canvas.width;
+                const scaleY = rect.height / canvas.height;
+                const targetX = rect.left + sc.x * scaleX;
+                const targetY = rect.top + sc.y * scaleY;
+
+               // 根據對應的動作加上視覺特效 (Emoji 粒子) 與音效
+                const particleY = targetY - 100; // [修改] 將Y軸往上推，在寵物頭頂產生，不遮擋身體動作
+                
+                if (actType === 'happy') {
+                    app.playSe('hit1');
+                    app.spawnParticles(targetX, particleY, '❤️', 5);
+                } else if (actType === 'flower') {
+                    app.playSe('hit1');
+                    app.spawnParticles(targetX, particleY, '🌸', 8);
+                } else if (actType === 'hurt') {
+                    app.playSe('shieldBreak');
+                    // [修改] 將 💢(生氣) 改為 💔(受傷/心碎)，更符合受傷情境
+                    app.spawnParticles(targetX, particleY, '💔', 4);
+                    if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+                } else if (actType === 'attack') {
+                    app.playSe('slash');
+                    app.spawnParticles(targetX, particleY, '🔥', 5);
+                    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                }
+            }
+
+            // [修復] 恢復原本的判斷方式，直接檢查樂園自己載入的 actionCanvas
+            if (!sc.actionCanvas) {
+                app.toast('⚠️ 尚未設定專屬動作圖，暫以基礎移動圖代替顯示', 1);
+            }
+            
+            setTimeout(() => {
+                if (sc && sc.state === 'action') {
+                    sc.state = 'idle';
+                }
+                app.state.isPetInteracting = false;
+            }, duration);
         },
 
         // --- 互動動畫與特效引擎 ---
@@ -17265,8 +17329,8 @@ for (const slot of slots) {
                 sc.actionType = 'flower';
                 sc.frame = 0;
 
-                // 產生上升泡泡
-                app.spawnParticles(targetX, targetY, '💧', 8, -100);
+               // 產生上升泡泡
+                app.spawnParticles(targetX, targetY - 100, '💧', 8, -100);
                 
                 if (navigator.vibrate) navigator.vibrate([30, 30, 30, 30]);
 
@@ -17274,8 +17338,8 @@ for (const slot of slots) {
                     cloud.style.opacity = '0';
                     setTimeout(() => cloud.remove(), 500);
 
-                    // 閃亮結尾
-                    app.spawnParticles(targetX, targetY, '✨', 4);
+                  // 閃亮結尾
+                    app.spawnParticles(targetX, targetY - 100, '✨', 4);
                     
                     // 根據使用者在需求裡的 2.洗澡時，幫我利用變乾淨音效
                     const seAudio = new Audio('https://taira-komori.net/sound_os2/anime01/bright_bell1.mp3');
@@ -17382,7 +17446,8 @@ for (const slot of slots) {
                     frame: 0,
                     lastFrameTime: Date.now(),
                     nextAiTime: Date.now() + 2000,
-                    imgCanvas: null,
+                    imgCanvas: null,   // [恢復] 樂園專用的基礎圖載入容器
+                    actionCanvas: null,// [恢復] 樂園專用的動作圖載入容器
                     config: null,
                     clickEffect: null
                 };
@@ -17393,17 +17458,28 @@ for (const slot of slots) {
                 const spriteData = spriteList[spriteIdx];
                 if (spriteData && spriteData.url) {
                     app.state.paradisePet.config = spriteData;
-                    const img = new Image();
-                    img.crossOrigin = 'Anonymous';
-                    img.onload = () => {
-                        const off = document.createElement('canvas');
-                        off.width = img.width;
-                        off.height = img.height;
-                        const ctx2 = off.getContext('2d', { willReadFrequently: true });
-                        ctx2.drawImage(img, 0, 0);
-                        if (app.state.paradisePet) app.state.paradisePet.imgCanvas = off;
-                    };
-                    img.src = spriteData.url;
+                    
+                    // [修復] 恢復樂園自己獨立的載入引擎，不跟戰鬥系統借快取，隨開即用！
+                    const loadImg = (url) => new Promise((resolve) => {
+                        if (!url) return resolve(null);
+                        const img = new Image();
+                        img.crossOrigin = 'Anonymous';
+                        img.onload = () => {
+                            const off = document.createElement('canvas');
+                            off.width = img.width; off.height = img.height;
+                            off.getContext('2d', { willReadFrequently: true }).drawImage(img, 0, 0);
+                            resolve(off);
+                        };
+                        img.onerror = () => resolve(null);
+                        img.src = url;
+                    });
+                    
+                    Promise.all([loadImg(spriteData.url), loadImg(spriteData.actionUrl)]).then(([base, act]) => {
+                        if (app.state.paradisePet) {
+                            app.state.paradisePet.imgCanvas = base;
+                            app.state.paradisePet.actionCanvas = act;
+                        }
+                    });
                 }
 
                 app.petParadiseLoop();
@@ -17422,21 +17498,31 @@ for (const slot of slots) {
             const targetX = (clientX - rect.left) * (canvas.width / rect.width);
             const targetY = (clientY - rect.top) * (canvas.height / rect.height);
 
-            pet.clickEffect = { x: targetX, y: targetY, time: Date.now() };
-            pet.targetX = targetX;
-            pet.targetY = targetY;
             const dx = targetX - pet.x;
             const dy = targetY - pet.y;
             const dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist > 5) {
-                pet.vx = (dx / dist) * pet.speed;
-                pet.vy = (dy / dist) * pet.speed;
-                pet.state = 'walk';
-                if (Math.abs(dx) > Math.abs(dy)) { pet.dir = dx > 0 ? 2 : 1; }
-                else { pet.dir = dy > 0 ? 0 : 3; }
+
+            // 距離 < 45 代表點中寵物本身
+            if (dist < 45) {
+                if (!app.state.isPetInteracting) {
+                    const actions = ['happy', 'flower', 'hurt', 'attack'];
+                    const randAct = actions[Math.floor(Math.random() * actions.length)];
+                    app.interactWithPet('action_' + randAct);
+                }
+            } else {
+                pet.clickEffect = { x: targetX, y: targetY, time: Date.now() };
+                pet.targetX = targetX;
+                pet.targetY = targetY;
+                if (dist > 5) {
+                    pet.vx = (dx / dist) * pet.speed;
+                    pet.vy = (dy / dist) * pet.speed;
+                    pet.state = 'walk';
+                    if (Math.abs(dx) > Math.abs(dy)) { pet.dir = dx > 0 ? 2 : 1; }
+                    else { pet.dir = dy > 0 ? 0 : 3; }
+                }
+                pet.nextAiTime = Date.now() + 5000;
+                app.playSe('charge');
             }
-            pet.nextAiTime = Date.now() + 5000;
-            app.playSe('charge');
         },
 
         petParadiseLoop: () => {
@@ -17469,7 +17555,7 @@ for (const slot of slots) {
                 }
             }
 
-            // 移動與銀界
+            // 移動與邊界
             if (pet.state === 'walk') {
                 pet.x += pet.vx;
                 pet.y += pet.vy;
@@ -17480,6 +17566,7 @@ for (const slot of slots) {
                         pet.x = pet.targetX; pet.y = pet.targetY;
                         pet.targetX = null; pet.targetY = null;
                         pet.state = 'idle'; pet.vx = 0; pet.vy = 0; pet.dir = 0;
+                        pet.nextAiTime = now + 1500; // 停駐看個風景再走
                     }
                 }
                 const margin = 40;
@@ -17494,8 +17581,22 @@ for (const slot of slots) {
             }
 
             // 動画幀更新
-            if (now - pet.lastFrameTime > 200) {
-                pet.frame++;
+            let frameDelay = 180;
+            if (pet.state === 'action') {
+                const totalCols = pet.config?.actionCols || 4;
+                const frameCount = (pet.actionType === 'attack') ? totalCols * 2 : totalCols;
+                if (pet.frame % frameCount === frameCount - 1) frameDelay = 1200;
+                else frameDelay = 150;
+            }
+
+            if (now - pet.lastFrameTime > frameDelay) {
+                if (pet.state === 'action') {
+                    const totalCols = pet.config?.actionCols || 4;
+                    const frameCount = (pet.actionType === 'attack') ? totalCols * 2 : totalCols;
+                    if (pet.frame < frameCount - 1) pet.frame++;
+                } else {
+                    pet.frame++;
+                }
                 pet.lastFrameTime = now;
             }
 
@@ -17517,7 +17618,6 @@ for (const slot of slots) {
                     ctx.strokeStyle = `rgba(217, 70, 239, ${alpha})`;
                     ctx.lineWidth = 3;
                     ctx.stroke();
-                    // 第二圈
                     ctx.beginPath();
                     ctx.arc(pet.clickEffect.x, pet.clickEffect.y, elapsed / 16, 0, Math.PI * 2);
                     ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
@@ -17528,9 +17628,8 @@ for (const slot of slots) {
                 }
             }
 
-            // 畫寵物圖示
+            // 畫寵物圖示 (確保圖檔真的載入完成才畫)
             if (!pet.imgCanvas || !pet.config) {
-                // 載入中顯示 emoji 占位符
                 ctx.font = 'bold 48px serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
@@ -17542,21 +17641,47 @@ for (const slot of slots) {
             }
 
             const config = pet.config;
-            const gridX = Array.isArray(config.gridX) && config.gridX.length > 0 ? config.gridX : [0.25, 0.5, 0.75];
-            const gridY = Array.isArray(config.gridY) && config.gridY.length > 0 ? config.gridY : [0.2, 0.4, 0.6, 0.8];
-            const cols = config.cols || 4;
+            let srcCanvas = null;
+            let gridX, gridY, cols;
+            let row = 0, col = 0;
 
-            let row = 0;
-            if (pet.state === 'idle') row = 0;
-            else if (pet.dir === 0) row = 2;
-            else if (pet.dir === 1) row = 3;
-            else if (pet.dir === 2) row = 1;
-            else if (pet.dir === 3) row = 4;
+            if (pet.state === 'action') {
+                srcCanvas = pet.actionCanvas || pet.imgCanvas; // 若動作圖沒讀到先借用原圖
+                gridX = Array.isArray(config.actionGridX) && config.actionGridX.length > 0 ? config.actionGridX : [0.25, 0.5, 0.75];
+                gridY = Array.isArray(config.actionGridY) && config.actionGridY.length > 0 ? config.actionGridY : [0.2, 0.4, 0.6, 0.8];
+                cols = config.actionCols || 4;
 
-            const col = pet.state === 'idle' ? 0 : (pet.frame % cols);
+                col = pet.frame % cols;
+                if (pet.actionType === 'happy') row = 0;
+                else if (pet.actionType === 'flower') row = 1;
+                else if (pet.actionType === 'hurt') row = 2;
+                else if (pet.actionType === 'attack') {
+                    const attackFrame = pet.frame % (cols * 2);
+                    row = 3 + Math.floor(attackFrame / cols);
+                    col = attackFrame % cols;
+                }
+            } else {
+                srcCanvas = pet.imgCanvas; // 讀取基礎移動圖
+                gridX = Array.isArray(config.gridX) && config.gridX.length > 0 ? config.gridX : [0.25, 0.5, 0.75];
+                gridY = Array.isArray(config.gridY) && config.gridY.length > 0 ? config.gridY : [0.2, 0.4, 0.6, 0.8];
+                cols = config.cols || 4;
 
-            const pointsY = [0, ...[...gridY].sort((a,b) => a-b), 1].map(v => Math.floor(v * pet.imgCanvas.height));
-            const pointsX = [0, ...[...gridX].sort((a,b) => a-b), 1].map(v => Math.floor(v * pet.imgCanvas.width));
+                col = pet.frame % cols;
+                if (pet.state === 'idle') row = 0;
+                else if (pet.dir === 0) row = 2;
+                else if (pet.dir === 1) row = 3;
+                else if (pet.dir === 2) row = 1;
+                else if (pet.dir === 3) row = 4;
+            }
+
+            if (!srcCanvas) return;
+
+            // 【真正的錯誤點修復】
+            // 原本寫錯的地方：使用 pet.imgCanvas.height / width 算網格長寬
+            // 現在改為：使用 srcCanvas.height / width，解決兩張圖大小不同導致裁切錯誤的致命傷！
+            const pointsY = [0, ...[...gridY].sort((a,b) => a-b), 1].map(v => Math.floor(v * srcCanvas.height));
+            const pointsX = [0, ...[...gridX].sort((a,b) => a-b), 1].map(v => Math.floor(v * srcCanvas.width));
+            
             const safeRow = Math.min(row, pointsY.length - 2);
             const safeCol = Math.min(col, pointsX.length - 2);
             const x1 = pointsX[safeCol], x2 = pointsX[safeCol + 1];
@@ -17577,7 +17702,10 @@ for (const slot of slots) {
                 ctx.ellipse(pet.x, pet.y, drawW / 2.2, drawH / 9, 0, 0, Math.PI * 2);
                 ctx.fill();
 
-                ctx.drawImage(pet.imgCanvas, x1, y1, cellW, cellH, drawX, drawY, drawW, drawH);
+                // 【真正的錯誤點修復 2】
+                // 原本寫錯的地方：ctx.drawImage(pet.imgCanvas...)，強迫不管什麼狀態都畫基礎圖
+                // 現在改為：ctx.drawImage(srcCanvas...)，正確畫出動作圖
+                ctx.drawImage(srcCanvas, x1, y1, cellW, cellH, drawX, drawY, drawW, drawH);
             }
         },
 
