@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.2.7.7 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.2.7.8 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -714,7 +714,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.7.7 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.7.8 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -5491,8 +5491,7 @@
                 ]
             });
             const newIdx = app.state.tempPetList.length - 1;
-            if(!app.state.adminPetOpen) app.state.adminPetOpen = {};
-            app.state.adminPetOpen[newIdx] = true;
+            localStorage.setItem(`pharaoh_pet_fold_${newIdx}`, 'false'); // 新增族系預設展開
             app.renderPetListUI();
             setTimeout(() => {
                 const c = app.el('pet-system-container');
@@ -5501,12 +5500,14 @@
         },
 
         toggleAdminPetFamily: (fIdx) => {
-            if(!app.state.adminPetOpen) app.state.adminPetOpen = {};
-            app.state.adminPetOpen[fIdx] = !app.state.adminPetOpen[fIdx];
+            const isFolded = localStorage.getItem(`pharaoh_pet_fold_${fIdx}`) === 'true';
+            const newFoldedState = !isFolded;
+            localStorage.setItem(`pharaoh_pet_fold_${fIdx}`, newFoldedState ? 'true' : 'false');
+
             const body = document.getElementById(`admin-pet-family-body-${fIdx}`);
             const icon = document.getElementById(`admin-pet-fold-icon-${fIdx}`);
             if(body) {
-                if(app.state.adminPetOpen[fIdx]) {
+                if(!newFoldedState) {
                     body.classList.remove('hidden');
                     body.classList.add('flex');
                     if(icon) icon.textContent = '▲';
@@ -5572,8 +5573,6 @@
             const bmList = app.state.globalSettings?.blackMarketList || [];
             const spriteList = app.state.globalSettings?.spriteList || [];
 
-            if(!app.state.adminPetOpen) app.state.adminPetOpen = {};
-
             let bmOptsBase = '<option value="">--選擇黑市商品圖(做為寵物蛋/頭像)--</option>';
             bmList.forEach((bm, i) => { if (bm && !bm.isDeleted) bmOptsBase += `<option value="${i}">${bm.name}</option>`; });
 
@@ -5628,7 +5627,8 @@
             let html = '';
             list.forEach((family, fIdx) => {
                 const isEnabledChecked = family.isEnabled !== false ? 'checked' : '';
-                const isOpen = app.state.adminPetOpen[fIdx] !== false; 
+                const isFolded = localStorage.getItem(`pharaoh_pet_fold_${fIdx}`) === 'true';
+                const isOpen = !isFolded;
                 const bodyClass = isOpen ? 'flex' : 'hidden';
                 const foldIcon = isOpen ? '▲' : '▼';
 
@@ -16323,18 +16323,18 @@ for (const slot of slots) {
                 }
             });
 
-            // [新增] 渲染寵物
+           // [新增] 渲染寵物 (不論是否裝備均顯示在背包中，裝備中會在右上角顯示 E 標籤)
             if (data.pets) {
                 Object.keys(data.pets).forEach(petIdx => {
                     const isEquipped = Object.values(data.equipped).includes(`pet_${petIdx}`);
-                    if (!isEquipped) {
-                        hasItem = true;
-                        const petExp = data.pets[petIdx].exp || 0;
-                        const petState = app.getPetCurrentState(petIdx, petExp);
-                        if (petState) {
-                            const img = petState.imgUrl || 'https://placehold.co/40x40?text=?';
-                            gridHtml += `<div onclick="app.selectBackpackItem('pet_${petIdx}')" class="relative group cursor-pointer rounded-lg hover:scale-105 transition-transform aspect-square shadow-md flex flex-col items-center justify-center bg-fuchsia-900/20 hover:bg-fuchsia-900/40 border border-fuchsia-500/30" style="background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png'); background-size: cover; background-repeat: no-repeat;"><div class="absolute top-1 left-1 bg-fuchsia-600 text-white text-[0.55rem] font-black px-1.5 py-0.5 rounded border border-white/50 shadow-sm z-10 leading-none">LV${petState.level}</div><div class="w-full h-full p-3 flex items-center justify-center"><img src="${img}" class="max-w-full max-h-full object-contain filter drop-shadow-[0_0_8px_rgba(217,70,239,0.6)] group-hover:scale-110 transition-transform"></div><div class="absolute bottom-1.5 w-[90%] bg-fuchsia-900/80 text-fuchsia-100 text-[0.6rem] font-bold truncate text-center rounded border border-fuchsia-500/50 backdrop-blur-[1px] py-0.5 shadow-sm pointer-events-none">${petState.formName}</div></div>`;
-                        }
+                    hasItem = true;
+                    const petExp = data.pets[petIdx].exp || 0;
+                    const petState = app.getPetCurrentState(petIdx, petExp);
+                    if (petState) {
+                        const img = petState.imgUrl || 'https://placehold.co/40x40?text=?';
+                        const equippedBadge = isEquipped ? `<div class="absolute top-1 right-1 bg-amber-500 text-black text-[0.6rem] font-black px-1.5 py-0.5 rounded border border-amber-300 shadow-md z-10 leading-none" title="裝備中">E</div>` : '';
+                        const cardStyle = isEquipped ? 'border-2 border-amber-400 bg-fuchsia-900/40 shadow-[0_0_12px_rgba(251,191,36,0.5)]' : 'border border-fuchsia-500/30 bg-fuchsia-900/20 hover:bg-fuchsia-900/40';
+                        gridHtml += `<div onclick="app.selectBackpackItem('pet_${petIdx}')" class="relative group cursor-pointer rounded-lg hover:scale-105 transition-transform aspect-square shadow-md flex flex-col items-center justify-center ${cardStyle}" style="background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E8%A3%9D%E5%82%99%E6%A0%BC%E5%AD%90%E8%83%8C%E6%99%AF%E5%9C%96.png'); background-size: cover; background-repeat: no-repeat;"><div class="absolute top-1 left-1 bg-fuchsia-600 text-white text-[0.55rem] font-black px-1.5 py-0.5 rounded border border-white/50 shadow-sm z-10 leading-none">LV${petState.level}</div>${equippedBadge}<div class="w-full h-full p-3 flex items-center justify-center"><img src="${img}" class="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(217,70,239,0.6)] group-hover:scale-110 transition-transform"></div><div class="absolute bottom-1.5 w-[90%] bg-fuchsia-900/80 text-fuchsia-100 text-[0.6rem] font-bold truncate text-center rounded border border-fuchsia-500/50 backdrop-blur-[1px] py-0.5 shadow-sm pointer-events-none">${petState.formName}</div></div>`;
                     }
                 });
             }
@@ -16360,6 +16360,7 @@ for (const slot of slots) {
 
                 const img = petState.imgUrl;
                 const exp = petState.expInfo;
+                const isEquipped = Object.values(app.state.currentBackpackData.equipped).includes(itemId);
 
                 app.el('bp-panel-name').textContent = `${petState.name} - ${petState.formName} (LV${petState.level})`;
                 
@@ -16369,17 +16370,24 @@ for (const slot of slots) {
                 app.el('bp-panel-icon').innerHTML = `<img src="${img}" class="w-full h-full object-contain filter drop-shadow-[0_0_5px_rgba(217,70,239,0.6)]">`;
 
                 btnEquip.classList.remove('hidden'); btnEquip.classList.add('flex');
-                btnUse.classList.add('hidden'); btnUse.classList.remove('flex');
                 
+                if (isEquipped) {
+                    btnEquip.innerHTML = '<span>🛡️</span> 卸下';
+                    btnEquip.className = "flex-1 bg-gradient-to-r from-amber-700 to-orange-800 text-white font-bold py-2 rounded-lg shadow-md hover:from-amber-600 hover:to-orange-700 active:scale-95 transition-transform flex justify-center items-center gap-2";
+                    btnEquip.onclick = () => app.handleUnequipItem(7); // 7號欄位為專屬寵物欄
+                } else {
+                    btnEquip.innerHTML = '<span>⚔️</span> 裝備';
+                    btnEquip.className = "flex-1 bg-gradient-to-r from-amber-600 to-amber-700 text-white font-bold py-2 rounded-lg shadow-md active:scale-95 transition-transform flex justify-center items-center gap-2";
+                    btnEquip.onclick = () => app.handleEquipItem(itemId);
+                }
+
                 // 開放放生按鈕
                 btnDiscard.classList.remove('hidden'); btnDiscard.classList.add('flex');
                 btnDiscard.innerHTML = '<span>👋</span> 放生';
                 btnDiscard.className = "flex-1 bg-slate-300 text-slate-700 font-bold py-2 rounded-lg shadow-md hover:bg-slate-400 active:scale-95 transition-colors flex justify-center items-center gap-2";
-                
-                btnEquip.onclick = () => app.handleEquipItem(itemId);
                 btnDiscard.onclick = () => app.handleReleasePet(petIdx);
 
-                // [新增] 將 btnUse 變成『🪐️ 樂園』按鈕
+                // 將 btnUse 變成『🪐️ 互動』按鈕 (無論是否裝備皆可點擊進入樂園)
                 btnUse.classList.remove('hidden'); btnUse.classList.add('flex');
                 btnUse.innerHTML = '<span>🪐️</span> 互動';
                 btnUse.className = "flex-1 bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white font-bold py-2 rounded-lg shadow-md hover:from-fuchsia-500 hover:to-purple-500 active:scale-95 transition-transform flex justify-center items-center gap-2";
