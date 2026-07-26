@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.2.7.8 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.2.7.9 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -714,7 +714,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.7.8 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.7.9 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -845,10 +845,11 @@
                     </div>
                 </div>
 
-                <!-- 中間：冒險大廳與房間列表 -->
+               <!-- 中間：冒險大廳與房間列表 -->
                 <div id="lobby-center-panel" class="lg:col-span-6 md:col-span-7 flex flex-col transition-all duration-500">
-                    <div class="lobby-card p-6 min-h-[500px] flex flex-col flex-1">
-                        <div class="flex flex-wrap justify-between items-center mb-6 border-b border-amber-200 pb-4 gap-2">
+                    <!-- 💡【可修改】冒險大廳視窗高度：修改下方的 height: 650px 來自訂高度 (建議與世界頻道設定相同數字) -->
+                    <div class="lobby-card p-6 flex flex-col w-full" style="height: 820px;">
+                        <div class="flex flex-wrap justify-between items-center mb-6 border-b border-amber-200 pb-4 gap-2 shrink-0">
                           <div class="flex items-center gap-3">
                                 <h2 class="text-2xl font-black text-amber-900">🗺️ 冒險大廳</h2>
                                 <!-- [新增] 傳奇殿堂排行榜按鈕 -->
@@ -880,18 +881,19 @@
                             </div>
                         </div>
                         <!-- 冒險資訊公告欄開始 -->
-                        <div class="bg-amber-50 rounded-xl border border-amber-300 shadow-sm mb-4 overflow-hidden flex flex-col max-h-[220px]">
+                        <div class="bg-amber-50 rounded-xl border border-amber-300 shadow-sm mb-4 overflow-hidden flex flex-col max-h-[150px] md:max-h-[220px] shrink-0">
                             <div class="bg-amber-200/50 px-4 py-2 border-b border-amber-300 flex justify-between items-center shrink-0">
                                 <span class="font-black text-amber-900 text-sm flex items-center gap-2">📢 冒險資訊公告</span>
                                 <span class="text-[0.65rem] text-amber-700 font-bold">點擊標題查看詳情</span>
                             </div>
-                            <div id="lobby-bulletin-board" class="flex-1 overflow-y-auto p-2 custom-scrollbar space-y-1 bg-white">
+                            <div id="lobby-bulletin-board" class="flex-1 overflow-y-auto p-2 custom-scrollbar space-y-1 bg-white min-h-0">
                                 <!-- JS 動態生成公告 -->
                                 <div class="text-center text-xs text-gray-400 py-4">讀取中...</div>
                             </div>
                         </div>
                         <!-- 冒險資訊公告欄結束 -->
-                        <div id="lobby-room-list" class="space-y-3 flex-1 overflow-y-auto pr-2">
+                        <!-- 注意：加入 min-h-0 確保過長時內部會捲動，不會撐破固定的高度 -->
+                        <div id="lobby-room-list" class="space-y-3 flex-1 overflow-y-auto pr-2 min-h-0">
                             <div class="text-center text-gray-400 py-10">
                                 <div class="text-4xl mb-2">🍃</div>
                                 <p>目前沒有活躍的冒險...</p>
@@ -902,35 +904,37 @@
                 </div>
 
                 <!-- 右側：世界頻道聊天室開始 -->
-<div id="lobby-right-chat-panel" class="lg:col-span-3 md:col-span-12 flex flex-col h-[600px] lg:h-auto mt-4 lg:mt-0 transition-all duration-500">
-    <div class="lobby-card p-4 flex flex-col flex-1 bg-white/95 backdrop-blur-sm border-2 border-amber-400 relative overflow-hidden">
-        <div class="flex justify-between items-center border-b-2 border-amber-200 pb-2 mb-3 shrink-0">
-            <div class="flex items-center gap-2">
-                <span class="text-2xl drop-shadow filter animate-pulse">🌍</span>
-                <div>
-                    <h2 class="text-xl font-black text-amber-900 leading-tight">世界頻道</h2>
-                    <p class="text-[0.65rem] text-amber-700 font-bold tracking-widest">冒險者的交流集散地</p>
+                <!-- 💡【可修改】世界頻道視窗高度：修改下方的 height: 800px 來自訂高度 (目前與您的冒險大廳 800px 一致) -->
+                <div id="lobby-right-chat-panel" class="lg:col-span-3 md:col-span-12 flex flex-col mt-4 lg:mt-0 transition-all duration-500" style="height: 820px;">
+                    <div class="lobby-card p-4 flex flex-col flex-1 min-h-0 bg-white/95 backdrop-blur-sm border-2 border-amber-400 relative overflow-hidden">
+                        <div class="flex justify-between items-center border-b-2 border-amber-200 pb-2 mb-3 shrink-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl drop-shadow filter animate-pulse">🌍</span>
+                                <div>
+                                    <h2 class="text-xl font-black text-amber-900 leading-tight">世界頻道</h2>
+                                    <p class="text-[0.65rem] text-amber-700 font-bold tracking-widest">冒險者的交流集散地</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold text-white bg-green-500 px-2 py-0.5 rounded-full animate-pulse shadow-sm">在線</span>
+                        </div>
+                        
+                        <!-- 輸入區 (移至最上方) -->
+                        <div class="p-2 bg-slate-100 border border-amber-300 rounded-t-xl shrink-0 flex gap-2 items-center shadow-inner z-10">
+                            <input type="text" id="lobby-chat-input" onkeypress="if(event.key==='Enter') app.sendLobbyChatMessage()" class="flex-1 bg-white text-slate-800 text-sm px-3 py-2 rounded-lg border border-amber-300 focus:outline-none focus:border-amber-500 font-bold placeholder-gray-400" placeholder="在此輸入訊息...">
+                            <button onclick="app.sendLobbyChatMessage()" class="bg-amber-600 text-white text-sm px-4 py-2 rounded-lg font-black hover:bg-amber-700 transition-colors shrink-0 shadow-md active:scale-95">發送</button>
+                        </div>
+
+                        <!-- 原生 Firebase 聊天室顯示區 -->
+                        <div class="flex-1 w-full bg-slate-50 rounded-b-xl overflow-hidden border-b border-l border-r border-amber-300 shadow-inner relative flex flex-col min-h-0">
+                            <!-- 注意：加入 min-h-0 確保對話過長時內部會捲動，不會撐破固定的高度 -->
+                            <div id="lobby-chat-container" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] flex flex-col min-h-0">
+                                <!-- 訊息會動態生成在這裡 -->
+                                <div class="text-center text-xs text-gray-400 mt-4">連線世界頻道中...</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <span class="text-xs font-bold text-white bg-green-500 px-2 py-0.5 rounded-full animate-pulse shadow-sm">在線</span>
-        </div>
-        
-        <!-- 原生 Firebase 聊天室顯示區 -->
-        <div class="flex-1 w-full bg-slate-50 rounded-t-xl overflow-hidden border-t border-l border-r border-amber-300 shadow-inner relative flex flex-col">
-            <div id="lobby-chat-container" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]">
-                <!-- 訊息會動態生成在這裡 -->
-                <div class="text-center text-xs text-gray-400 mt-4">連線世界頻道中...</div>
-            </div>
-        </div>
-        
-        <!-- 輸入區 -->
-        <div class="p-2 bg-slate-100 border border-amber-300 rounded-b-xl shrink-0 flex gap-2 items-center shadow-inner">
-            <input type="text" id="lobby-chat-input" onkeypress="if(event.key==='Enter') app.sendLobbyChatMessage()" class="flex-1 bg-white text-slate-800 text-sm px-3 py-2 rounded-lg border border-amber-300 focus:outline-none focus:border-amber-500 font-bold placeholder-gray-400" placeholder="在此輸入訊息...">
-            <button onclick="app.sendLobbyChatMessage()" class="bg-amber-600 text-white text-sm px-4 py-2 rounded-lg font-black hover:bg-amber-700 transition-colors shrink-0 shadow-md active:scale-95">發送</button>
-        </div>
-    </div>
-</div>
-<!-- 右側：世界頻道聊天室結束 -->
+                <!-- 右側：世界頻道聊天室結束 -->
 
             </div>
         </div>
@@ -2743,15 +2747,12 @@
         <div id="game-board" class="hidden fade-in relative">
             
             <!-- 戰鬥通訊模組開始 -->
-            <!-- [修改] 懸浮開啟按鈕 (移除 onclick，加入滑鼠與觸控的拖曳事件) -->
             <button id="btn-toggle-chat" onmousedown="app.dragChatBtn(event)" ontouchstart="app.dragChatBtn(event)" class="fixed top-4 right-4 z-[85] bg-slate-800 text-amber-400 w-12 h-12 rounded-full shadow-lg border-2 border-amber-600 hover:bg-slate-700 transition-colors flex items-center justify-center cursor-move touch-none">
                 <span class="text-xl pointer-events-none">💬</span>
                 <span id="chat-unread-badge" class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-[0.6rem] font-black w-5 h-5 flex items-center justify-center rounded-full border border-white animate-bounce pointer-events-none">N</span>
             </button>
 
-            <!-- [修改] 聊天與日誌視窗 (改為 w-full 佔滿寬度，並放在頁面排版中) -->
             <div id="chat-module-window" class="hidden w-full bg-slate-900/95 border-2 border-amber-600 rounded-xl chat-module-container flex-col animate-[fadeIn_0.2s_ease-out] backdrop-blur-md mb-4" style="height: 250px;">
-                <!-- 標頭 -->
                 <div class="flex justify-between items-center bg-gradient-to-r from-slate-800 to-slate-900 border-b border-amber-600/50 p-2 shrink-0">
                     <span class="text-amber-400 font-black text-xs md:text-sm tracking-widest flex items-center gap-2">📜 戰鬥日誌 & 通訊 <span class="text-gray-500 font-normal hidden md:inline">(可上下拖拉調整高度)</span></span>
                     <div class="flex gap-2">
@@ -2760,26 +2761,24 @@
                     </div>
                 </div>
                 
-                <!-- 雙欄內容區 -->
-                <div class="flex flex-1 overflow-hidden">
+                <div class="flex flex-1 overflow-hidden min-h-0">
                     <!-- 左欄：戰鬥日誌 -->
                     <div class="w-1/2 border-r border-slate-700 flex flex-col bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')]">
                         <div class="text-center text-[0.6rem] text-slate-400 bg-black/40 py-1 font-bold shrink-0">⚔️ 戰鬥日誌</div>
-                        <div id="combat-log-container" class="flex-1 overflow-y-auto p-2 space-y-1 chat-scroll-area">
-                            <!-- JS 動態生成 -->
+                        <div id="combat-log-container" class="flex-1 overflow-y-auto p-2 space-y-1 chat-scroll-area flex flex-col">
                             <div class="text-center text-xs text-slate-600 mt-2">日誌載入中...</div>
                         </div>
                     </div>
                     <!-- 右欄：聊天室 -->
                     <div class="w-1/2 flex flex-col bg-slate-800/50">
                         <div class="text-center text-[0.6rem] text-slate-400 bg-black/40 py-1 font-bold shrink-0">💬 冒險者頻道</div>
-                        <div id="chat-msg-container" class="flex-1 overflow-y-auto p-2 space-y-2 chat-scroll-area">
-                            <!-- JS 動態生成 -->
-                        </div>
-                        <!-- 輸入框 -->
-                        <div class="p-1.5 bg-slate-900 border-t border-slate-700 shrink-0 flex gap-1">
+                        <!-- 輸入框 (移至上方) -->
+                        <div class="p-1.5 bg-slate-900 border-b border-slate-700 shrink-0 flex gap-1 z-10">
                             <input type="text" id="chat-input-box" onkeypress="if(event.key==='Enter') app.sendChatMessage()" class="flex-1 bg-slate-800 text-amber-100 text-xs px-2 py-1.5 rounded border border-slate-600 focus:outline-none focus:border-amber-500 placeholder-slate-500" placeholder="輸入訊息...">
                             <button onclick="app.sendChatMessage()" class="bg-amber-700 text-white text-xs px-2 rounded font-bold hover:bg-amber-600 transition-colors shrink-0">送出</button>
+                        </div>
+                        <div id="chat-msg-container" class="flex-1 overflow-y-auto p-2 space-y-2 chat-scroll-area flex flex-col">
+                            <!-- JS 動態生成 -->
                         </div>
                     </div>
                 </div>
@@ -4008,7 +4007,6 @@
             const logRef = db.ref(`classes/${app.state.classId}/combatLogs`);
             const chatRef = db.ref(`classes/${app.state.classId}/chatMsgs`);
 
-            // [新增] 先註銷舊監聽，避免重複綁定與記憶體洩漏
             logRef.off();
             chatRef.off();
 
@@ -4017,15 +4015,14 @@
                 const data = snap.val();
                 const container = app.el('combat-log-container');
                 if (!container) return;
-                // 移除"載入中"
                 if (container.innerHTML.includes('日誌載入中')) container.innerHTML = '';
                 
                 const timeStr = new Date(data.timestamp).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                // 無空白壓縮 HTML
                 const icon = data.type === 'attack' ? '⚔️' : '🎒';
                 const color = data.type === 'attack' ? 'text-red-400' : 'text-green-400';
-                container.insertAdjacentHTML('beforeend', `<div class="log-entry text-[0.65rem] leading-tight border-b border-slate-700/50 pb-1"><span class="text-slate-500 mr-1">[${timeStr}]</span><span class="${color} font-bold mr-1">${icon}</span><span class="text-slate-300">${data.msg}</span></div>`);
-                container.scrollTop = container.scrollHeight;
+                // [修改] 改為 afterbegin，最新在最上面
+                container.insertAdjacentHTML('afterbegin', `<div class="log-entry text-[0.65rem] leading-tight border-b border-slate-700/50 pb-1 mb-1"><span class="text-slate-500 mr-1">[${timeStr}]</span><span class="${color} font-bold mr-1">${icon}</span><span class="text-slate-300">${data.msg}</span></div>`);
+                container.scrollTop = 0; // 捲軸維持頂部
             });
 
             // 監聽聊天
@@ -4039,11 +4036,10 @@
                 const alignCls = isMe ? 'items-end' : 'items-start';
                 const bgCls = isMe ? 'bg-amber-700 text-amber-50' : 'bg-slate-700 text-slate-200';
                 
-                // 無空白壓縮 HTML
-                container.insertAdjacentHTML('beforeend', `<div class="flex flex-col ${alignCls} w-full mb-2"><div class="flex items-baseline gap-1 mb-0.5"><span class="text-[0.6rem] font-bold text-slate-400">${data.name}</span><span class="text-[0.5rem] text-slate-500">${timeStr}</span></div><div class="px-2 py-1 rounded-lg text-xs shadow-sm max-w-[90%] break-words ${bgCls}">${data.msg}</div></div>`);
-                container.scrollTop = container.scrollHeight;
+                // [修改] 改為 afterbegin，最新在最上面
+                container.insertAdjacentHTML('afterbegin', `<div class="flex flex-col ${alignCls} w-full mb-2"><div class="flex items-baseline gap-1 mb-0.5"><span class="text-[0.6rem] font-bold text-slate-400">${data.name}</span><span class="text-[0.5rem] text-slate-500">${timeStr}</span></div><div class="px-2 py-1 rounded-lg text-xs shadow-sm max-w-[90%] break-words ${bgCls}">${data.msg}</div></div>`);
+                container.scrollTop = 0;
 
-                // 若視窗未開，顯示紅點
                 const win = app.el('chat-module-window');
                 if (win && win.classList.contains('hidden')) {
                     app.el('chat-unread-badge').classList.remove('hidden');
@@ -4166,21 +4162,17 @@
             const container = app.el('lobby-chat-container');
             if (!container) return;
 
-            // [新增] 先註銷舊監聽，避免重複綁定與記憶體洩漏
             chatRef.off();
 
             const isAdmin = localStorage.getItem('pharaoh_admin_token') === 'valid' || localStorage.getItem('campaign_admin_token') === 'valid';
 
-            // 監聽大廳頻道訊息新增
             chatRef.limitToLast(50).on('child_added', snap => {
                 const data = snap.val();
                 const msgKey = snap.key;
                 if (!data) return;
                 
-                // 移除"連線中"文字
                 if (container.innerHTML.includes('連線世界頻道中...')) container.innerHTML = '';
                 
-                // 判斷是否為自己發送的
                 const myName = app.state.myName || localStorage.getItem('pharaoh_player_name') || '神秘客';
                 const isMe = data.name === myName;
                 
@@ -4189,17 +4181,15 @@
                 const bgCls = isMe ? 'bg-amber-600 text-amber-50' : 'bg-white border border-slate-200 text-slate-700 shadow-sm';
                 const nameColor = isMe ? 'text-amber-700' : 'text-slate-500';
                 
-                // [新增] 如果是管理員，加入刪除按鈕
                 const deleteBtn = isAdmin ? `<button onclick="app.adminDeleteWorldChatMessage('${msgKey}')" class="ml-2 text-red-400 hover:text-red-600 text-[0.6rem] font-bold px-1 rounded hover:bg-red-50 transition-colors" title="刪除此訊息 (UID: ${data.uid || '未知'})">🗑️刪除</button>` : '';
                 
-                // 嚴格無空白節點的 HTML 組合，加入 id 以便後續刪除操作
-                const msgHtml = `<div id="world-msg-${msgKey}" class="flex flex-col ${alignCls} w-full animate-[fadeIn_0.2s_ease-out]"><div class="flex items-baseline gap-1 mb-0.5"><span class="text-[0.65rem] font-bold ${nameColor}">${data.name}</span><span class="text-[0.55rem] text-slate-400">${timeStr}</span>${deleteBtn}</div><div class="px-3 py-1.5 rounded-xl text-sm font-bold max-w-[90%] break-words ${bgCls}">${data.msg}</div></div>`;
+                // [修改] 改為 afterbegin，最新在最上面
+                const msgHtml = `<div id="world-msg-${msgKey}" class="flex flex-col ${alignCls} w-full animate-[fadeIn_0.2s_ease-out] mb-2"><div class="flex items-baseline gap-1 mb-0.5"><span class="text-[0.65rem] font-bold ${nameColor}">${data.name}</span><span class="text-[0.55rem] text-slate-400">${timeStr}</span>${deleteBtn}</div><div class="px-3 py-1.5 rounded-xl text-sm font-bold max-w-[90%] break-words ${bgCls}">${data.msg}</div></div>`;
                 
-                container.insertAdjacentHTML('beforeend', msgHtml);
-                container.scrollTop = container.scrollHeight;
+                container.insertAdjacentHTML('afterbegin', msgHtml);
+                container.scrollTop = 0;
             });
 
-            // [新增] 監聽大廳頻道訊息被刪除 (管理員刪除時，所有人的畫面即時消失)
             chatRef.limitToLast(50).on('child_removed', snap => {
                 const el = document.getElementById(`world-msg-${snap.key}`);
                 if (el) {
@@ -17177,10 +17167,229 @@ for (const slot of slots) {
                 pet.lastBathed = now; // 記錄時間
                 app.updatePetInteractionUI();
                 app.triggerBatheAnimation(petIdx);
+            } else if (type === 'action_attack') {
+                app.triggerParadiseAttackDemo(petIdx);
             } else if (type.startsWith('action_')) {
                 const actType = type.split('_')[1];
                 app.triggerPetParadiseAction(actType);
             }
+        },
+
+       // --- [新增] 寵物樂園攻擊演示引擎 (包含稻草人生成與打擊動畫) ---
+        triggerParadiseAttackDemo: (petIdx) => {
+            const canvas = app.el('paradise-canvas');
+            const sc = app.state.paradisePet; 
+            if (!canvas || !sc) return;
+
+            // 1. 鎖定樂園所有互動
+            app.state.isPetInteracting = true;
+            app.updatePetInteractionUI();
+
+            // 2. 決定攻擊模式 (50% 機率基礎攻擊，50% 寵物技能)
+            const isSkillAttack = Math.random() >= 0.5;
+            
+            // 取得寵物狀態數值
+            const data = app.state.currentBackpackData;
+            const petExp = data.pets[petIdx]?.exp || 0;
+            const petState = app.getPetCurrentState(petIdx, petExp);
+
+            const attackName = isSkillAttack ? petState.skillName : petState.atkName;
+            const attackDmg = isSkillAttack ? petState.skillDmg : petState.atkDmg;
+            const dmgColor = isSkillAttack ? '#c026d3' : '#ea580c'; // 紫色(技能) / 橘色(普攻)
+            
+            app.toast(`🐾 ${petState.formName} 使出了【${attackName}】！`, 1);
+
+            // 3. 隱藏 Canvas 上的寵物，準備用 DOM 替身演出
+            sc.state = 'hidden'; 
+            
+            // ==========================================
+            // 🛠️ [可修改] 寵物攻擊展示位置設定區
+            // ==========================================
+            const rect = canvas.getBoundingClientRect();
+            
+            let startX, startY, dummyX, dummyY;
+
+            if (isSkillAttack) {
+                // 【寵物技能：左右射擊】
+                startX = rect.left + 120;                  // 寵物X座標 (靠左)
+                startY = rect.top + rect.height / 2 + 30;  // 寵物Y座標 (垂直置中偏下)
+                dummyX = rect.right - 120;                 // 稻草人X座標 (靠右)
+                dummyY = rect.top + rect.height / 2 + 30;  // 稻草人Y座標 (與寵物同高)
+            } else {
+                // 【基礎攻擊：上下衝刺】
+                startX = rect.left + rect.width / 2;       // 寵物X座標 (水平置中)
+                startY = rect.bottom - 50;                 // 寵物Y座標 (靠下方)
+                dummyX = rect.left + rect.width / 2;       // 稻草人X座標 (水平置中)
+                dummyY = rect.top + 100;                   // 稻草人Y座標 (靠上方)
+            }
+            // ==========================================
+
+            // --- A. 生成演示用稻草人 ---
+            const dummy = document.createElement('div');
+            dummy.style.cssText = `
+                position: fixed; left: ${dummyX}px; top: ${dummyY - 200}px; width: 100px; height: 100px;
+                background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%BC%94%E7%A4%BA%E7%94%A8%E7%A8%BB%E8%8D%89%E4%BA%BA.png');
+                background-size: contain; background-position: center; background-repeat: no-repeat;
+                z-index: 9998; opacity: 0; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+                transform: translate(-50%, -50%);
+                transition: top 0.4s cubic-bezier(0.5, 0, 1, 1), opacity 0.4s ease-out;
+            `;
+            document.body.appendChild(dummy);
+
+            // 稻草人掉落動畫
+            void dummy.offsetWidth;
+            dummy.style.top = `${dummyY}px`;
+            dummy.style.opacity = '1';
+
+            // --- B. 生成寵物替身 ---
+            // 修正：不再強制設定 width: 80px，改為 120px 讓寵物維持正常大小視覺
+            const petClone = document.createElement('div');
+            petClone.style.cssText = `
+                position: fixed; left: ${startX}px; top: ${startY}px; width: 120px; height: 120px;
+                transform: translate(-50%, -50%); z-index: 9999;
+                will-change: transform, left, top;
+            `;
+            const petImg = document.createElement('img');
+            petImg.src = petState.imgUrl;
+            // 修正：預設為 scale(1.0) 不縮水
+            petImg.style.cssText = `width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 8px rgba(217,70,239,0.7)); transform: scale(1.0); transition: transform 0.3s;`;
+            petClone.appendChild(petImg);
+            document.body.appendChild(petClone);
+
+            // 等待稻草人落地後開始攻擊
+            setTimeout(() => {
+                
+                // === [技能攻擊] (右側魔法陣射擊) ===
+                if (isSkillAttack) {
+                    // 寵物先往左退一點集氣
+                    petClone.style.transition = 'left 0.3s ease-out';
+                    petClone.style.left = `${startX - 30}px`;
+                    petImg.style.transform = 'scale(1.1)'; // 集氣微放大
+                    
+                    app.playSe('charge');
+
+                    // 畫魔法陣
+                    const magicCircle = document.createElement('img');
+                    magicCircle.src = "https://class.kh.edu.tw/sites/30033/upload_file/6/%E9%AD%94%E6%B3%95%E9%99%A3.png";
+                    magicCircle.style.cssText = `
+                        position: absolute; width: 180px; height: 180px; top: 50%; left: 50%;
+                        transform: translate(-50%, -50%) rotateX(70deg);
+                        animation: spin 5s linear infinite; z-index: -1; opacity: 0;
+                        transition: opacity 0.3s;
+                    `;
+                    petClone.insertBefore(magicCircle, petImg);
+                    setTimeout(() => magicCircle.style.opacity = '0.8', 50);
+
+                    // 發射特效
+                    setTimeout(() => {
+                        const fxUrl = petState.skillEffect || 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%88%86%E7%82%8E%E5%88%BB%E5%8D%B0a1.png';
+                        
+                        // 判定等級，套用對應的特效函數
+                        if (petState.level >= 45) {
+                            app.shootPetSkillFx_LV3(startX - 30, startY, dummyX, dummyY, fxUrl);
+                        } else if (petState.level >= 25) {
+                            app.shootPetSkillFx_LV2(startX - 30, startY, dummyX, dummyY, fxUrl);
+                        } else {
+                            app.shootPetSkillFx_LV1(startX - 30, startY, dummyX, dummyY, fxUrl);
+                        }
+
+                        // 擊中稻草人
+                        setTimeout(() => {
+                            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                            app.playSe('slash');
+                            app.showDamageText(attackDmg, dmgColor, null, dummyX, dummyY - 30);
+                            
+                            // 稻草人搖晃與受擊發紅
+                            dummy.style.transition = 'transform 0.1s, filter 0.1s';
+                            dummy.style.filter = 'drop-shadow(0 0 10px rgba(0,0,0,0.5)) sepia(1) hue-rotate(-50deg) saturate(5) translate(-50%, -50%)';
+                            dummy.style.transform = 'translate(calc(-50% + 10px), calc(-50% - 5px))';
+                            setTimeout(() => dummy.style.transform = 'translate(calc(-50% - 10px), calc(-50% + 5px))', 50);
+                            setTimeout(() => dummy.style.transform = 'translate(calc(-50% + 5px), calc(-50% - 5px))', 100);
+                            setTimeout(() => { 
+                                dummy.style.transform = 'translate(-50%, -50%)'; 
+                                dummy.style.filter = 'drop-shadow(0 0 10px rgba(0,0,0,0.5))';
+                            }, 150);
+
+                            // 收尾清理
+                            setTimeout(() => {
+                                dummy.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                                dummy.style.opacity = '0';
+                                dummy.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                                
+                                petClone.style.transition = 'opacity 0.3s';
+                                petClone.style.opacity = '0';
+                                
+                                setTimeout(() => {
+                                    dummy.remove();
+                                    petClone.remove();
+                                    sc.state = 'idle'; // 恢復 Canvas 寵物
+                                    sc.nextAiTime = Date.now() + 1000;
+                                    app.state.isPetInteracting = false;
+                                    app.updatePetInteractionUI();
+                                }, 500);
+                            }, 800);
+
+                        }, 600); // 配合飛彈特效時間
+                    }, 800); // 集氣時間
+                } 
+                
+                // === [基礎攻擊] (上方衝刺撞擊) ===
+                else {
+                    // 1. 寵物往下退 (蓄力)
+                    petClone.style.transition = 'top 0.4s ease-in';
+                    petClone.style.top = `${startY + 30}px`;
+                    petImg.style.transform = 'scale(0.95)'; // 微縮蓄力
+                    
+                    app.playSe('charge');
+
+                    setTimeout(() => {
+                        // 2. 往上極速衝刺
+                        petClone.style.transition = 'top 0.2s cubic-bezier(0.5, 0, 1, 1), transform 0.2s';
+                        petClone.style.top = `${dummyY + 40}px`;
+                        petClone.style.transform = 'translate(-50%, -50%) scale(1.1)';
+
+                        setTimeout(() => {
+                            // 3. 擊中稻草人
+                            if (navigator.vibrate) navigator.vibrate([100, 50, 50]);
+                            app.playSe('hit1');
+                            app.showDamageText(attackDmg, dmgColor, null, dummyX, dummyY - 30);
+                            app.spawnParticles(dummyX, dummyY, '💥', 3, 0);
+
+                            // 稻草人搖晃
+                            dummy.style.transition = 'transform 0.1s';
+                            dummy.style.transform = 'translate(calc(-50% - 10px), calc(-50% - 5px)) rotate(-15deg)';
+                            setTimeout(() => dummy.style.transform = 'translate(calc(-50% + 10px), calc(-50% + 5px)) rotate(10deg)', 50);
+                            setTimeout(() => dummy.style.transform = 'translate(calc(-50% - 5px), calc(-50% - 5px)) rotate(-5deg)', 100);
+                            setTimeout(() => dummy.style.transform = 'translate(-50%, -50%) rotate(0deg)', 150);
+
+                            // 4. 寵物彈回原位
+                            petClone.style.transition = 'top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                            petClone.style.top = `${startY}px`;
+                            petImg.style.transform = 'scale(1.0)';
+
+                            // 5. 收尾清理
+                            setTimeout(() => {
+                                dummy.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                                dummy.style.opacity = '0';
+                                dummy.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                                
+                                petClone.style.transition = 'opacity 0.3s';
+                                petClone.style.opacity = '0';
+
+                                setTimeout(() => {
+                                    dummy.remove();
+                                    petClone.remove();
+                                    sc.state = 'idle'; // 恢復 Canvas 寵物
+                                    sc.nextAiTime = Date.now() + 1000;
+                                    app.state.isPetInteracting = false;
+                                    app.updatePetInteractionUI();
+                                }, 500);
+                            }, 800);
+
+                        }, 200); // 衝刺時間
+                    }, 400); // 蓄力時間
+                }
+            }, 400); // 稻草人掉落時間
         },
 
         triggerPetParadiseAction: (actType) => {
@@ -17664,6 +17873,9 @@ for (const slot of slots) {
                     pet.clickEffect = null;
                 }
             }
+
+            // 演示動畫進行中，隱藏 Canvas 本尊
+            if (pet.state === 'hidden') return;
 
             // 畫寵物圖示 (確保圖檔真的載入完成才畫)
             if (!pet.imgCanvas || !pet.config) {
