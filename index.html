@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.2.8.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.2.8.1 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -714,7 +714,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.8.0 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.8.1 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -2457,6 +2457,8 @@
                                 <div id="campaign-play-nodes-layer" class="absolute inset-0 z-10 w-full h-full">
                                     <!-- 遊玩節點由 JS 生成 -->
                                 </div>
+                                <!-- [新增] 戰役地圖人物專用畫布 (z-20, pointer-events-none 確保不阻擋節點點擊) -->
+                                <canvas id="campaign-map-canvas" class="absolute inset-0 w-full h-full z-20 pointer-events-none" style="image-rendering: pixelated;"></canvas>
                             </div>
                         </div>
                         
@@ -8779,6 +8781,11 @@
                 // [新增] 同步更新 RPG 舞台上的玩家角色
                 if (data.status === 'playing' || data.status === 'waiting') {
                     app.updateRpgCharacters(data.players);
+                    
+                    // [新增] 若為戰役模式，同時更新戰役地圖上的玩家座標 (Firebase 多人同步)
+                    if (data.isCampaign) {
+                        app.updateCampaignCharacters(data.players);
+                    }
                 }
             });
         },
@@ -19020,7 +19027,8 @@ addRewardItem: () => {
                 if (isCleared && !isAdmin) {
                     // 已通關 (綠色)
                     iconUrl = 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%B6%A0%E8%89%B2%E9%80%9A%E9%97%9C.png';
-                    clickAction = `app.showNodeDetail(${chapIdx}, ${sIdx}, ${i})`;
+                    // [修改] 改為呼叫移動引導函數，人物走到節點後才彈出視窗
+                    clickAction = `app.clickCampaignNode(${chapIdx}, ${sIdx}, ${i}, false)`;
                     pulseClass = 'cursor-pointer hover:scale-110';
                     labelColor = 'text-green-400 border-green-600/50';
                     
@@ -19032,15 +19040,17 @@ addRewardItem: () => {
                     starUI += `</div>`;
                     
                 } else if (isUnlocked) {
-                    // 下一關 / 可挑戰 (紅色)
+                    // 下一關 / 可挑戰 (紅色閃動)
                     iconUrl = 'https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%B4%85%E8%89%B2%E6%9C%AA%E9%80%9A%E9%97%9C.png';
-                    clickAction = `app.showNodeDetail(${chapIdx}, ${sIdx}, ${i})`;
+                    // [修改] 改為呼叫移動引導函數
+                    clickAction = `app.clickCampaignNode(${chapIdx}, ${sIdx}, ${i}, false)`;
                     pulseClass = 'animate-pulse cursor-pointer hover:scale-125';
                     labelColor = 'text-amber-400 border-amber-600/50';
                 } else {
-                    // 尚未解鎖 (迷霧)
+                    // 尚未解鎖 (迷霧鎖定)
                     iconUrl = 'https://class.kh.edu.tw/sites/30033/album_file/1/%E8%BF%B7%E9%9C%A71.png';
-                    clickAction = `app.toast('🔒 戰線尚未推進至此！請先完成前面的任務。', 1)`;
+                    // [修改] 傳入 isLocked=true，在函數內部統一顯示提示
+                    clickAction = `app.clickCampaignNode(${chapIdx}, ${sIdx}, ${i}, true)`;
                     pulseClass = 'opacity-80 cursor-not-allowed grayscale-[50%]';
                     labelColor = 'text-slate-400 border-slate-600/50';
                 }
@@ -19051,6 +19061,412 @@ addRewardItem: () => {
                 html += `<div onclick="${clickAction}" class="absolute w-12 h-12 transition-transform z-20 flex flex-col items-center justify-center group ${pulseClass}" style="left:${pos.x}%; top:${pos.y}%; transform: translate(-50%, -50%);">${starUI}<img src="${iconUrl}" class="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]"><div class="absolute -bottom-6 bg-black/90 ${labelColor} text-[0.7rem] px-2 py-0.5 rounded shadow-lg font-black whitespace-nowrap border">${sIdx+1}-${i}</div></div>`;
             }
             nodesLayer.innerHTML = html;
+            
+            // [新增] 啟動戰役地圖人物渲染引擎 (初始化 Canvas + 啟動動畫迴圈)
+            app.initCampaignMapStage();
+        },
+
+        // ==========================================
+        // --- [新增] 戰役地圖 X-Y 雙軸移動引擎 ---
+        // ==========================================
+
+        /**
+         * 初始化戰役地圖 Canvas 畫布與角色狀態
+         * 呼叫時機：每次進入 renderCampaignNodesMap 後自動觸發
+         */
+        initCampaignMapStage: () => {
+            const canvas = app.el('campaign-map-canvas');
+            if (!canvas) return;
+            const parent = canvas.parentElement;
+            canvas.width = parent.clientWidth;
+            canvas.height = parent.clientHeight;
+
+            // 初始化角色容器（保留舊資料，避免頻繁清空）
+            app.state.campaignChars = app.state.campaignChars || {};
+            app.state.avatarImageCache = app.state.avatarImageCache || {};
+
+            // 確保 RPG Sprite 系統已載入（共用戰鬥舞台的 Sprite 資源）
+            app.state.rpgSprites = app.state.rpgSprites || { cache: {} };
+            const spriteList = app.state.globalSettings?.spriteList || [];
+            let maleConfig = spriteList.find(s => s.name && s.name.includes('男')) || spriteList[0];
+            let femaleConfig = spriteList.find(s => s.name && s.name.includes('女')) || maleConfig;
+
+            if (maleConfig && maleConfig.url && !app.state.rpgSprites['male']) {
+                app.processRpgSprite(maleConfig, 'male');
+            }
+            if (femaleConfig && femaleConfig.url && !app.state.rpgSprites['female']) {
+                app.processRpgSprite(femaleConfig, 'female');
+            }
+
+            // 初始化自己的角色（若尚未存在）
+            if (app.state.myName && !app.state.campaignChars[app.state.myName]) {
+                const myGender = app.state.gender || 'male';
+                const myPhoto = (app.state.user && app.state.user.photoURL) || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                app.loadAvatarImage(myPhoto, app.state.myName);
+                app.state.campaignChars[app.state.myName] = {
+                    name: app.state.myName,
+                    gender: myGender,
+                    photo: myPhoto,
+                    isMe: true,
+                    cx: 10,   // 初始 X 百分比 (靠左登場)
+                    cy: 80,   // 初始 Y 百分比 (偏下方)
+                    target: null,
+                    lastTargetTs: 0,
+                    state: 'idle',
+                    dir: 0,
+                    frame: 0,
+                    lastFrameTime: Date.now(),
+                    speed: 1.2   // 百分比/幀，稍快讓移動感更流暢
+                };
+            }
+
+            // 停止舊迴圈，重新啟動
+            if (app.state.campaignRAF) cancelAnimationFrame(app.state.campaignRAF);
+            app.state.campaignRAF = null;
+            app.campaignMapLoop();
+        },
+
+        /**
+         * 玩家點擊戰役節點：鎖定則提示，否則廣播移動目標至 Firebase
+         * @param {number} chapIdx - 章節索引
+         * @param {number} sIdx - 關卡索引  
+         * @param {number} subIdx - 小節點索引
+         * @param {boolean} isLocked - 是否已鎖定
+         */
+        clickCampaignNode: (chapIdx, sIdx, subIdx, isLocked) => {
+            if (isLocked) {
+                app.toast('🔒 此關卡尚未解鎖！請先通關前置關卡。', 1);
+                return;
+            }
+            if (!app.state.campaigns || !app.state.campaigns[chapIdx]) return;
+
+            const stage = app.state.campaigns[chapIdx].stages[sIdx];
+            if (!stage || !stage.mapNodes) return;
+
+            const pos = stage.mapNodes[subIdx] || { x: 50, y: 50 };
+
+            // 儲存目標節點資訊，等人物到達後再開啟視窗
+            app.state.pendingCampaignNode = { chapIdx, sIdx, subIdx };
+
+            // 廣播移動目標位置至 Firebase（以百分比儲存，RWD 相容）
+            const targetData = { x: pos.x, y: pos.y, timestamp: Date.now() };
+            
+            if (app.state.classId && app.state.myTeam && app.state.myName) {
+                db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}/campTarget`)
+                  .set(targetData)
+                  .catch(err => console.warn('⚠️ 戰役移動同步失敗:', err));
+            }
+
+            // 本地立即反應（不等 Firebase round-trip）
+            if (app.state.myName && app.state.campaignChars[app.state.myName]) {
+                const char = app.state.campaignChars[app.state.myName];
+                char.target = { ...targetData };
+                char.lastTargetTs = targetData.timestamp;
+                char.state = 'walk';
+            } else if (app.state.myName) {
+                // 若角色不存在（初次進入）也要建立
+                app.initCampaignMapStage();
+                if (app.state.campaignChars[app.state.myName]) {
+                    app.state.campaignChars[app.state.myName].target = { ...targetData };
+                    app.state.campaignChars[app.state.myName].state = 'walk';
+                }
+            }
+
+            // 腳步音效回饋
+            if (typeof app.playSe === 'function') app.playSe('hit1');
+        },
+
+        /**
+         * 接收 Firebase 玩家資料，同步更新地圖上所有角色座標
+         * @param {Object} playersObj - Firebase players 物件
+         */
+        updateCampaignCharacters: (playersObj) => {
+            if (!playersObj) return;
+            const currentPlayers = {};
+            
+            Object.keys(playersObj).forEach(teamKey => {
+                const team = playersObj[teamKey];
+                if (!team) return;
+                Object.keys(team).forEach(pName => {
+                    const p = team[pName];
+                    if (!p || !p.name) return;
+                    const uid = p.name;
+                    currentPlayers[uid] = true;
+
+                    if (!app.state.campaignChars[uid]) {
+                        // 新玩家：初始化在畫面下方
+                        const isMe = (uid === app.state.myName);
+                        const gender = isMe ? (app.state.gender || 'male') : (p.gender || 'male');
+                        const photoUrl = p.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                        app.loadAvatarImage(photoUrl, uid);
+
+                        app.state.campaignChars[uid] = {
+                            name: uid,
+                            gender: gender,
+                            photo: photoUrl,
+                            isMe: isMe,
+                            cx: 10 + Math.random() * 10, // 稍微隨機錯開，避免重疊
+                            cy: 75 + Math.random() * 10,
+                            target: null,
+                            lastTargetTs: 0,
+                            state: 'idle',
+                            dir: 0,
+                            frame: 0,
+                            lastFrameTime: Date.now(),
+                            speed: 1.2
+                        };
+                    } else {
+                        const char = app.state.campaignChars[uid];
+
+                        // 頭像更新
+                        if (p.photo && p.photo !== char.photo) {
+                            char.photo = p.photo;
+                            app.loadAvatarImage(p.photo, uid, true);
+                        }
+
+                        // 接收他人移動指令（透過 campTarget 廣播）
+                        if (uid !== app.state.myName &&
+                            p.campTarget && p.campTarget.timestamp > char.lastTargetTs) {
+                            char.target = { x: p.campTarget.x, y: p.campTarget.y, timestamp: p.campTarget.timestamp };
+                            char.lastTargetTs = p.campTarget.timestamp;
+                            char.state = 'walk';
+                        }
+                    }
+                });
+            });
+
+            // 移除已離線玩家
+            Object.keys(app.state.campaignChars).forEach(uid => {
+                if (!currentPlayers[uid]) delete app.state.campaignChars[uid];
+            });
+        },
+
+        /**
+         * 戰役地圖主動畫迴圈：處理 2D X-Y 軸移動、方向判定、動畫幀更新
+         */
+        campaignMapLoop: () => {
+            const canvas = app.el('campaign-map-canvas');
+
+            // 若頁面已隱藏（玩家離開戰役頁），暫停迴圈以省效能
+            const campaignPage = app.el('page-campaign');
+            if (!canvas || !campaignPage || campaignPage.classList.contains('hidden')) {
+                app.state.campaignRAF = requestAnimationFrame(app.campaignMapLoop);
+                return;
+            }
+
+            // 動態調整 Canvas 解析度（應對視窗縮放）
+            const parent = canvas.parentElement;
+            if (parent && (canvas.width !== parent.clientWidth || canvas.height !== parent.clientHeight)) {
+                canvas.width = parent.clientWidth;
+                canvas.height = parent.clientHeight;
+            }
+
+            const now = Date.now();
+            const chars = Object.values(app.state.campaignChars || {});
+
+            chars.forEach(char => {
+                // ── 1. 移動邏輯（X-Y 雙軸向量移動）──
+                if (char.state === 'walk' && char.target) {
+                    const dx = char.target.x - char.cx;
+                    const dy = char.target.y - char.cy;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < char.speed) {
+                        // 抵達目標點
+                        char.cx = char.target.x;
+                        char.cy = char.target.y;
+                        char.target = null;
+                        char.state = 'action';       // 抵達播放開心動作
+                        char.actionEndTime = now + 1800; // 1.8 秒開心動畫
+                        char.dir = 0;               // 面向正面
+
+                        // 自己抵達才觸發戰前準備視窗
+                        if (char.isMe && app.state.pendingCampaignNode) {
+                            const { chapIdx, sIdx, subIdx } = app.state.pendingCampaignNode;
+                            app.state.pendingCampaignNode = null;
+                            // 延遲 600ms 讓開心動畫先播一下
+                            setTimeout(() => {
+                                if (typeof app.showNodeDetail === 'function') {
+                                    app.showNodeDetail(chapIdx, sIdx, subIdx);
+                                }
+                            }, 600);
+                            if (typeof app.playSe === 'function') app.playSe('levelUp');
+                        }
+                    } else {
+                        // 繼續移動：計算標準化向量
+                        char.cx += (dx / dist) * char.speed;
+                        char.cy += (dy / dist) * char.speed;
+
+                        // 根據移動向量決定朝向（X 軸優先，避免斜走時抖動）
+                        if (Math.abs(dx) > Math.abs(dy) * 0.6) {
+                            char.dir = dx > 0 ? 2 : 1; // 2=右, 1=左
+                        } else {
+                            char.dir = dy > 0 ? 0 : 3; // 0=下(正面), 3=上(背面)
+                        }
+                    }
+                }
+
+                // ── 2. 開心動作結束後恢復待機 ──
+                if (char.state === 'action' && now > char.actionEndTime) {
+                    char.state = 'idle';
+                    char.dir = 0;
+                }
+
+                // ── 3. 幀動畫計時（每 150ms 換一格）──
+                if (now - char.lastFrameTime > 150) {
+                    char.frame++;
+                    char.lastFrameTime = now;
+                }
+            });
+
+            // ── 4. 繪製所有角色 ──
+            app.drawCampaignChars(canvas, chars);
+            app.state.campaignRAF = requestAnimationFrame(app.campaignMapLoop);
+        },
+
+        /**
+         * 繪製戰役地圖上的所有角色（含精靈圖、陰影、頭像、名牌）
+         * @param {HTMLCanvasElement} canvas
+         * @param {Array} chars - 角色陣列
+         */
+        drawCampaignChars: (canvas, chars) => {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (!chars || chars.length === 0) return;
+
+            // 依 Y 軸排序（y 越大 = 越靠前景），製造正確遮擋關係
+            const sortedChars = [...chars].sort((a, b) => a.cy - b.cy);
+
+            sortedChars.forEach(entity => {
+                const spriteData = (app.state.rpgSprites && app.state.rpgSprites[entity.gender])
+                    || (app.state.rpgSprites && app.state.rpgSprites['male']);
+                if (!spriteData) return;
+
+                const config = spriteData.config;
+                let srcCanvas = null;
+                let cols = 4, row = 0, col = 0;
+                let gridX, gridY;
+
+                if (entity.state === 'action') {
+                    // 開心/抵達動作
+                    srcCanvas = spriteData.actionCanvas;
+                    cols = config.actionCols || 4;
+                    gridX = Array.isArray(config.actionGridX) && config.actionGridX.length > 0
+                        ? config.actionGridX : [0.25, 0.5, 0.75];
+                    gridY = Array.isArray(config.actionGridY) && config.actionGridY.length > 0
+                        ? config.actionGridY : [0.2, 0.4, 0.6, 0.8];
+                    row = 0; // 第一排 = 開心動作
+                    col = entity.frame % cols;
+                } else {
+                    // 走路 / 待機
+                    srcCanvas = spriteData.baseCanvas;
+                    cols = config.cols || 4;
+                    gridX = Array.isArray(config.gridX) && config.gridX.length > 0
+                        ? config.gridX : [0.25, 0.5, 0.75];
+                    gridY = Array.isArray(config.gridY) && config.gridY.length > 0
+                        ? config.gridY : [0.2, 0.4, 0.6, 0.8];
+
+                    if (entity.state === 'idle') {
+                        row = 0; col = 0; // 待機：固定第一格
+                    } else {
+                        col = entity.frame % cols;
+                        if      (entity.dir === 0) row = 2; // 下（正面走路）
+                        else if (entity.dir === 1) row = 3; // 左
+                        else if (entity.dir === 2) row = 1; // 右
+                        else if (entity.dir === 3) row = 4; // 上（背面）
+                    }
+                }
+
+                if (!srcCanvas) return;
+
+                // 計算格子邊界（使用 gridX / gridY 參考點）
+                const pointsY = [0, ...[...gridY].sort((a, b) => a - b), 1]
+                    .map(v => Math.floor(v * srcCanvas.height));
+                const pointsX = [0, ...[...gridX].sort((a, b) => a - b), 1]
+                    .map(v => Math.floor(v * srcCanvas.width));
+
+                const safeRow = Math.min(row, pointsY.length - 2);
+                const safeCol = Math.min(col, pointsX.length - 2);
+
+                const x1 = pointsX[safeCol], x2 = pointsX[safeCol + 1];
+                const y1 = pointsY[safeRow], y2 = pointsY[safeRow + 1];
+                const cellW = x2 - x1, cellH = y2 - y1;
+
+                if (cellW <= 0 || cellH <= 0) return;
+
+                // 地圖上角色大小（稍微縮小讓節點不被遮太多）
+                const targetSize = 52;
+                const scale = Math.min(targetSize / cellW, targetSize / cellH);
+                const drawW = cellW * scale;
+                const drawH = cellH * scale;
+
+                // 百分比座標 → 像素
+                const pixelX = (entity.cx / 100) * canvas.width;
+                const pixelY = (entity.cy / 100) * canvas.height;
+
+                const drawX = pixelX - drawW / 2;
+                const drawY = pixelY - drawH; // 腳底對齊中心點
+
+                // ── a. 腳底橢圓陰影 ──
+                ctx.save();
+                ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                ctx.beginPath();
+                ctx.ellipse(pixelX, pixelY, drawW / 2.2, drawH / 9, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // ── b. 繪製人物精靈圖 ──
+                ctx.drawImage(srcCanvas, x1, y1, cellW, cellH, drawX, drawY, drawW, drawH);
+
+                // ── c. 頭像圓圈（Google 大頭貼）──
+                const avatarImg = app.state.avatarImageCache && app.state.avatarImageCache[entity.name];
+                const avatarR = 10;
+                const avatarCY = drawY - avatarR - 3;
+
+                if (avatarImg && avatarImg.complete && avatarImg.naturalWidth > 0) {
+                    ctx.save();
+                    // 自己用綠色光環，他人用金色
+                    const glowColor = entity.isMe ? '#4ade80' : '#fbbf24';
+                    ctx.shadowColor = glowColor;
+                    ctx.shadowBlur = 8;
+                    // 外圈光環
+                    ctx.beginPath();
+                    ctx.arc(pixelX, avatarCY, avatarR + 2.5, 0, Math.PI * 2);
+                    ctx.fillStyle = glowColor;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    // 裁切頭像
+                    ctx.beginPath();
+                    ctx.arc(pixelX, avatarCY, avatarR, 0, Math.PI * 2);
+                    ctx.clip();
+                    ctx.drawImage(avatarImg, pixelX - avatarR, avatarCY - avatarR, avatarR * 2, avatarR * 2);
+                    ctx.restore();
+                }
+
+                // ── d. 玩家名稱標籤 ──
+                const nameY = avatarCY - avatarR - 5;
+                ctx.save();
+                ctx.font = "bold 9px 'Noto Sans TC', sans-serif";
+                ctx.textAlign = 'center';
+                ctx.lineWidth = 3.5;
+                ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+                ctx.strokeText(entity.name, pixelX, nameY);
+                ctx.fillStyle = entity.isMe ? '#4ade80' : '#ffffff';
+                ctx.fillText(entity.name, pixelX, nameY);
+                ctx.restore();
+
+                // ── e. 移動中顯示小箭頭指示方向 ──
+                if (entity.state === 'walk' && entity.target) {
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(251, 191, 36, 0.85)';
+                    ctx.font = '12px serif';
+                    ctx.textAlign = 'center';
+                    const arrowMap = { 0: '▼', 1: '◀', 2: '▶', 3: '▲' };
+                    ctx.fillText(arrowMap[entity.dir] || '●', pixelX, drawY - 1);
+                    ctx.restore();
+                }
+            });
         },
 
         // [新增] 返回章節選擇
