@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.2.7.9 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.2.8.0 - 冒險模式版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
@@ -714,7 +714,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.7.9 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.2.8.0 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -3414,10 +3414,23 @@
                 "https://class.kh.edu.tw/sites/30033/upload_file/6/6%E9%BB%83%E5%85%89%E8%83%8C%E6%99%AF%E7%89%B9%E6%95%88.png",
                 "https://class.kh.edu.tw/sites/30033/upload_file/6/7%E9%BB%83%E5%85%89%E7%82%B8%E8%A3%82%E7%89%B9%E6%95%88.png",
                 // --- 預設小怪代表圖 ---
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/sb1-1.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/sb1-2.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/1-1.png",
-                "https://class.kh.edu.tw/sites/30033/upload_file/6/1-3.png",
+                "https://class.kh.edu.tw/sites/30033/upload_file/6/sb1-4.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/sb1-3.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/sb2-3.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/sb2-4.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/sb3-3.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/sb3-4.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/sb4-3.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/sb4-4.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/sb5-3.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/sb5-4.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/sb6-3.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/sb6-4.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/sb7-2.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/sb7-1.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/1%E6%83%A1%E9%AD%94%E5%B0%8F%E4%B8%91.png",
+"https://class.kh.edu.tw/sites/30033/upload_file/6/1%E6%83%A1%E9%AD%94%E5%B0%8F%E4%B8%91a.png",
+				"https://class.kh.edu.tw/sites/30033/upload_file/6/%E6%BC%94%E7%A4%BA%E7%94%A8%E7%A8%BB%E8%8D%89%E4%BA%BA.png",  // 演示用稻草人
                 
                 // --- 寵物蛋與召喚特效 ---
                 "https://class.kh.edu.tw/sites/30033/upload_file/12/%E5%AF%B5%E7%89%A9%E8%9B%8B%E6%97%8B%E8%BD%89%E5%BD%B1%E7%89%87(%E5%8E%BB%E8%83%8C)GIF.gif"
@@ -17175,7 +17188,7 @@ for (const slot of slots) {
             }
         },
 
-       // --- [新增] 寵物樂園攻擊演示引擎 (包含稻草人生成與打擊動畫) ---
+      // --- [新增] 寵物樂園攻擊演示引擎 (包含稻草人生成與打擊動畫) ---
         triggerParadiseAttackDemo: (petIdx) => {
             const canvas = app.el('paradise-canvas');
             const sc = app.state.paradisePet; 
@@ -17241,19 +17254,114 @@ for (const slot of slots) {
             dummy.style.top = `${dummyY}px`;
             dummy.style.opacity = '1';
 
-            // --- B. 生成寵物替身 ---
-            // 修正：不再強制設定 width: 80px，改為 120px 讓寵物維持正常大小視覺
+            // --- B. 生成寵物替身 (加入 Canvas 精靈圖畫格切換支援) ---
             const petClone = document.createElement('div');
             petClone.style.cssText = `
                 position: fixed; left: ${startX}px; top: ${startY}px; width: 120px; height: 120px;
                 transform: translate(-50%, -50%); z-index: 9999;
                 will-change: transform, left, top;
+                display: flex; align-items: center; justify-content: center;
             `;
-            const petImg = document.createElement('img');
-            petImg.src = petState.imgUrl;
-            // 修正：預設為 scale(1.0) 不縮水
-            petImg.style.cssText = `width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 8px rgba(217,70,239,0.7)); transform: scale(1.0); transition: transform 0.3s;`;
-            petClone.appendChild(petImg);
+
+            // 取得精靈圖資料
+            let spriteData = null;
+            let petImgSrc = petState.imgUrl || 'https://cdn-icons-png.flaticon.com/512/1548/1548680.png';
+            if (petState.spriteIdx !== undefined) {
+                const spriteList = app.state.globalSettings?.spriteList || [];
+                const config = spriteList[petState.spriteIdx];
+                if (config) {
+                    spriteData = {
+                        config: config,
+                        baseCanvas: sc.imgCanvas, // 借用樂園已經載入好的 Canvas
+                        actionCanvas: sc.actionCanvas
+                    };
+                }
+            }
+
+            let useSprite = !!(spriteData && spriteData.baseCanvas);
+            const petContent = useSprite ? document.createElement('canvas') : document.createElement('img');
+            
+            let animFrame = 0;
+            let animRow = isSkillAttack ? 1 : 4; // 技能面右(1)，普攻面上(4)
+            let animCols = spriteData ? (spriteData.config.cols || 4) : 4;
+            let animType = isSkillAttack ? 'action' : 'base';
+            let actionType = isSkillAttack ? 'attack' : null;
+            let isAnimRunning = true;
+            let lastDrawTime = Date.now();
+            
+            if (useSprite) {
+                petContent.width = 120;
+                petContent.height = 120;
+                petContent.style.cssText = `width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 8px rgba(217,70,239,0.7)); transform: scale(1.0); transition: transform 0.3s;`;
+                
+                const ctx = petContent.getContext('2d');
+                const drawOverlayPet = () => {
+                    if (!isAnimRunning) return;
+                    const now = Date.now();
+                    
+                    let maxF = animCols;
+                    if (animType === 'action' && actionType === 'attack') {
+                        if (spriteData.config) maxF = (spriteData.config.actionCols || 4) * 2;
+                    } else if (animType === 'action') {
+                        if (spriteData.config) maxF = spriteData.config.actionCols || 4;
+                    } else {
+                        if (spriteData.config) maxF = spriteData.config.cols || 4;
+                    }
+                    
+                    if (now - lastDrawTime > 150) {
+                        animFrame = (animFrame + 1) % maxF;
+                        lastDrawTime = now;
+                    }
+                    ctx.clearRect(0, 0, petContent.width, petContent.height);
+                    
+                    const sCanvas = animType === 'action' ? spriteData.actionCanvas : spriteData.baseCanvas;
+                    if (sCanvas) {
+                        const config = spriteData.config;
+                        const gX = (animType === 'action' ? config.actionGridX : config.gridX) || [0.25, 0.5, 0.75];
+                        const gY = (animType === 'action' ? config.actionGridY : config.gridY) || [0.2, 0.4, 0.6, 0.8];
+                        const pX = [0, ...[...gX].sort((a,b)=>a-b), 1].map(v => Math.floor(v * sCanvas.width));
+                        const pY = [0, ...[...gY].sort((a,b)=>a-b), 1].map(v => Math.floor(v * sCanvas.height));
+                        
+                        let cRow = animRow;
+                        let cCol = animFrame;
+                        
+                        // 支援 8 格攻擊動作
+                        if (animType === 'action') {
+                            if (actionType === 'happy') cRow = 0;
+                            else if (actionType === 'flower') cRow = 1;
+                            else if (actionType === 'hurt') cRow = 2;
+                            else if (actionType === 'attack') {
+                                const ac = config.actionCols || 4;
+                                cRow = 3 + Math.floor(animFrame / ac);
+                                cCol = animFrame % ac;
+                            }
+                        } else {
+                            cCol = animFrame;
+                        }
+                        
+                        const safeRow = Math.min(cRow, pY.length - 2);
+                        const safeCol = Math.min(cCol, pX.length - 2);
+                        const x1 = pX[safeCol], x2 = pX[safeCol+1];
+                        const y1 = pY[safeRow], y2 = pY[safeRow+1];
+                        const w = x2 - x1, h = y2 - y1;
+                        
+                        if (w > 0 && h > 0) {
+                            const scale = Math.min(petContent.width / w, petContent.height / h);
+                            const dw = w * scale, dh = h * scale;
+                            const dx = (petContent.width - dw) / 2;
+                            const dy = petContent.height - dh;
+                            ctx.drawImage(sCanvas, x1, y1, w, h, dx, dy, dw, dh);
+                        }
+                    }
+                    requestAnimationFrame(drawOverlayPet);
+                };
+                requestAnimationFrame(drawOverlayPet);
+            } else {
+                petContent.src = petImgSrc;
+                petContent.style.cssText = `width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s ease; filter: drop-shadow(0 0 8px rgba(217,70,239,0.7)); transform: scale(1.0);`;
+            }
+
+            petClone.appendChild(petContent);
             document.body.appendChild(petClone);
 
             // 等待稻草人落地後開始攻擊
@@ -17261,10 +17369,9 @@ for (const slot of slots) {
                 
                 // === [技能攻擊] (右側魔法陣射擊) ===
                 if (isSkillAttack) {
-                    // 寵物先往左退一點集氣
                     petClone.style.transition = 'left 0.3s ease-out';
                     petClone.style.left = `${startX - 30}px`;
-                    petImg.style.transform = 'scale(1.1)'; // 集氣微放大
+                    petContent.style.transform = 'scale(1.1)'; // 集氣微放大
                     
                     app.playSe('charge');
 
@@ -17277,7 +17384,7 @@ for (const slot of slots) {
                         animation: spin 5s linear infinite; z-index: -1; opacity: 0;
                         transition: opacity 0.3s;
                     `;
-                    petClone.insertBefore(magicCircle, petImg);
+                    petClone.insertBefore(magicCircle, petContent);
                     setTimeout(() => magicCircle.style.opacity = '0.8', 50);
 
                     // 發射特效
@@ -17321,6 +17428,7 @@ for (const slot of slots) {
                                 
                                 setTimeout(() => {
                                     dummy.remove();
+                                    isAnimRunning = false;
                                     petClone.remove();
                                     sc.state = 'idle'; // 恢復 Canvas 寵物
                                     sc.nextAiTime = Date.now() + 1000;
@@ -17335,18 +17443,55 @@ for (const slot of slots) {
                 
                 // === [基礎攻擊] (上方衝刺撞擊) ===
                 else {
+                    // 狀態改為基礎圖，視角朝上(4)
+                    animType = 'base';
+                    animRow = 4;
+                    animFrame = 0;
+
                     // 1. 寵物往下退 (蓄力)
-                    petClone.style.transition = 'top 0.4s ease-in';
+                    petClone.style.transition = 'top 0.4s ease-in, left 0.4s ease-in';
                     petClone.style.top = `${startY + 30}px`;
-                    petImg.style.transform = 'scale(0.95)'; // 微縮蓄力
+                    
+                    // 黃光炸裂特效 (集氣脈衝)
+                    const chargeFx = document.createElement('div');
+                    chargeFx.style.cssText = `
+                        position: absolute; width: 150px; height: 150px;
+                        background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/7%E9%BB%83%E5%85%89%E7%82%B8%E8%A3%82%E7%89%B9%E6%95%88.png');
+                        background-size: contain; background-position: center; background-repeat: no-repeat;
+                        z-index: -1; animation: petChargePulse 0.25s infinite alternate;
+                    `;
+                    petClone.insertBefore(chargeFx, petContent);
                     
                     app.playSe('charge');
 
                     setTimeout(() => {
+                        chargeFx.remove();
                         // 2. 往上極速衝刺
                         petClone.style.transition = 'top 0.2s cubic-bezier(0.5, 0, 1, 1), transform 0.2s';
                         petClone.style.top = `${dummyY + 40}px`;
                         petClone.style.transform = 'translate(-50%, -50%) scale(1.1)';
+
+                        // 沿途產生虛影
+                        let shadowCount = 0;
+                        const shadowInterval = setInterval(() => {
+                            if (shadowCount > 6) { clearInterval(shadowInterval); return; }
+                            const shadow = useSprite ? document.createElement('canvas') : document.createElement('img');
+                            if (useSprite) {
+                                shadow.width = petContent.width; shadow.height = petContent.height;
+                                shadow.getContext('2d').drawImage(petContent, 0, 0);
+                            } else shadow.src = petContent.src;
+
+                            const rect = petClone.getBoundingClientRect();
+                            shadow.style.cssText = `
+                                position: fixed; left: ${rect.left}px; top: ${rect.top}px;
+                                width: ${rect.width}px; height: ${rect.height}px; object-fit: contain;
+                                opacity: 0.6; pointer-events: none; z-index: 9998; transition: opacity 0.2s; filter: drop-shadow(0 0 5px rgba(255,100,0,0.8));
+                            `;
+                            document.body.appendChild(shadow);
+                            setTimeout(() => { shadow.style.opacity = '0'; }, 50);
+                            setTimeout(() => shadow.remove(), 250);
+                            shadowCount++;
+                        }, 25);
 
                         setTimeout(() => {
                             // 3. 擊中稻草人
@@ -17362,29 +17507,42 @@ for (const slot of slots) {
                             setTimeout(() => dummy.style.transform = 'translate(calc(-50% - 5px), calc(-50% - 5px)) rotate(-5deg)', 100);
                             setTimeout(() => dummy.style.transform = 'translate(-50%, -50%) rotate(0deg)', 150);
 
-                            // 4. 寵物彈回原位
-                            petClone.style.transition = 'top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                            // 4. 往左彈跳 (使用慢動作 cubic-bezier(0.34, 1.56, 0.64, 1))
+                            // 視角朝右: animRow = 1
+                            animType = 'base';
+                            animRow = 1;
+                            
+                            petClone.style.transition = 'top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.6s ease';
                             petClone.style.top = `${startY}px`;
-                            petImg.style.transform = 'scale(1.0)';
+                            petClone.style.left = `${startX - 60}px`; // 往左彈
+                            petClone.style.transform = 'translate(-50%, -50%) scale(1.2)';
 
-                            // 5. 收尾清理
+                            // 5. 定格後播放開心動畫
                             setTimeout(() => {
-                                dummy.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
-                                dummy.style.opacity = '0';
-                                dummy.style.transform = 'translate(-50%, -50%) scale(1.2)';
-                                
-                                petClone.style.transition = 'opacity 0.3s';
-                                petClone.style.opacity = '0';
+                                animType = 'action';
+                                actionType = 'happy';
+                                animRow = 0;
+                                animFrame = 0;
 
                                 setTimeout(() => {
-                                    dummy.remove();
-                                    petClone.remove();
-                                    sc.state = 'idle'; // 恢復 Canvas 寵物
-                                    sc.nextAiTime = Date.now() + 1000;
-                                    app.state.isPetInteracting = false;
-                                    app.updatePetInteractionUI();
-                                }, 500);
-                            }, 800);
+                                    dummy.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                                    dummy.style.opacity = '0';
+                                    dummy.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                                    
+                                    petClone.style.transition = 'opacity 0.3s';
+                                    petClone.style.opacity = '0';
+
+                                    setTimeout(() => {
+                                        dummy.remove();
+                                        isAnimRunning = false;
+                                        petClone.remove();
+                                        sc.state = 'idle'; // 恢復 Canvas 寵物
+                                        sc.nextAiTime = Date.now() + 1000;
+                                        app.state.isPetInteracting = false;
+                                        app.updatePetInteractionUI();
+                                    }, 500);
+                                }, 1500); // 開心動作播放時間
+                            }, 600); // 慢動作彈回的時間
 
                         }, 200); // 衝刺時間
                     }, 400); // 蓄力時間
