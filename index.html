@@ -9800,6 +9800,11 @@
                 app.state.freezeTimerInterval = null;
             }
 
+            // 🌟 [新增修復] 金字塔渲染防抖機制：若狀態沒變則不重建 HTML，防止吃點擊
+            const stateHash = JSON.stringify(pyramidData) + "_" + app.state.selectedCardIndex + "_" + app.state.isMarkingMode + "_" + frozenRemaining;
+            if (app.state.lastPyramidHash === stateHash) return;
+            app.state.lastPyramidHash = stateHash;
+
             // --- 2. 建構卡片 HTML ---
             const cardSizeClass = "w-20 h-24 md:w-24 md:h-28 flex-shrink-0";
             const rows = [[0], [1,2], [3,4,5], [6,7,8,9]];
@@ -10145,6 +10150,10 @@
           try {
               app.el('game-over-modal').classList.add('hidden');
               app.state.isResetting = true; // 標記自己，避免畫面閃爍
+              
+              // 🌟 [新增修復] 強制清空防抖 Hash
+              app.state.lastPyramidHash = null;
+              app.state.lastInventoryHash = null;
 
               // 1. 產生新的遊戲初始資料
               const initialData = app.generateInitialGameData();
@@ -10175,6 +10184,10 @@
      },
         
       forceNextRound: () => {
+            // 🌟 [新增修復] 強制清空防抖 Hash，確保新回合必定重新渲染
+            app.state.lastPyramidHash = null;
+            app.state.lastInventoryHash = null;
+
             // [v4.7.5.9 安全鎖] 防止時之沙導致的重複觸發
             // 如果安全鎖上鎖中，直接阻擋執行，防止扣血/扣回合邏輯跑兩次
             if (app.state.roundProcessingLock) {
@@ -14215,6 +14228,12 @@ for (const slot of slots) {
             if (!app.state.myTeam || !app.state.myName || !players) return;
             
             const myData = players[app.state.myTeam]?.[app.state.myName];
+
+            // 🌟 [新增修復] 背包與技能渲染防抖機制：若狀態沒變則不重建 HTML，防止吃點擊
+            const stateHash = JSON.stringify(myData || {}) + "_" + app.state.activeItem + "_" + app.state.isMarkingMode;
+            if (app.state.lastInventoryHash === stateHash) return;
+            app.state.lastInventoryHash = stateHash;
+
             const isDead = (myData && myData.hp <= 0); // [新增] 判斷玩家是否死亡
             const items = myData?.items || {};
             const invEl = app.el('student-inventory');
@@ -14911,11 +14930,12 @@ for (const slot of slots) {
                 // 2. rounded-lg : 按鈕的圓角程度，想更圓可改 rounded-xl 或 rounded-full。
                 const btnClass = "cursor-control-btn bg-green-400 hover:bg-green-500 text-black border-b-4 border-green-700 active:border-b-0 active:translate-y-1 rounded-lg font-black text-2xl shadow h-full w-full aspect-square flex items-center justify-center transition-all";
                 
-                // 絕對無空白節點寫法
-                area.innerHTML = `<button onclick="app.inputChar('1')" class="${btnClass}">1</button><button onclick="app.inputChar('2')" class="${btnClass}">2</button><button onclick="app.inputChar('3')" class="${btnClass}">3</button>`;
+                // 🌟 [新增修復] 如果按鈕已存在就不重建，防止手機瀏覽器消除 Hover/Click 狀態
+                if (area.children.length === 0) {
+                    area.innerHTML = `<button onclick="app.inputChar('1')" class="${btnClass}">1</button><button onclick="app.inputChar('2')" class="${btnClass}">2</button><button onclick="app.inputChar('3')" class="${btnClass}">3</button>`;
+                }
             } else {
-                area.innerHTML = '';
-                // 隱藏時重置回預設狀態 (避免 class 殘留影響後續佈局)
+                // 🌟 [新增修復] 隱藏時不清空 innerHTML，保留實體以確保事件順利觸發
                 area.className = "order-1 md:order-2 hidden grid-cols-3 gap-2 shrink-0 md:min-w-[160px]";
             }
         },
