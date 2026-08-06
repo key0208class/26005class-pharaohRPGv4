@@ -3361,10 +3361,10 @@
                 summonSuccess: 'https://taira-komori.net/sound_os2/game01/powerup10.mp3', // 召喚成功獲得 (已補上逗號)
                 // 🎰 [新增] 寵物樂園與小瑪麗專屬音效
                 tabSwitch: 'https://taira-komori.net/sound_os2/game01/coin02.mp3', // 切換頁籤
-                slotBet: 'https://taira-komori.net/sound_os2/game01/button03.mp3', // 押分短電子音
-                slotTick: 'https://taira-komori.net/sound_os2/game01/pi1.mp3', // 跑燈滴答聲
-                slotWin: 'https://taira-komori.net/sound_os2/game01/powerup10.mp3', // 中獎
-                slotLose: 'https://taira-komori.net/sound_os2/game01/down1.mp3' // 沒中
+                slotBet: 'https://taira-komori.net/sound_os2/game01/coin03.mp3', // 押分短電子音
+                slotTick: 'https://taira-komori.net/sound_os2/game01/pickup02.mp3', // 跑燈滴答聲
+                slotWin: 'https://taira-komori.net/sound_os2/game01/powerup04.mp3', // 中獎
+                slotLose: 'https://taira-komori.net/sound_os2/game01/powerdown03.mp3' // 沒中
             },
             seVolumes: {
                 shieldBreak: 0.1,
@@ -18424,7 +18424,7 @@ for (const slot of slots) {
             app.slotConfig.totalBet = 0;
             Object.keys(app.slotConfig.bets).forEach(k => app.slotConfig.bets[k] = 0);
             app.updateSlotGoldUI();
-            app.playSe('knock'); // assuming standard clear has some generic sound
+            app.playSe('chest'); // assuming standard clear has some generic sound
         },
 
         // --- 啟動與跑燈動畫 ---
