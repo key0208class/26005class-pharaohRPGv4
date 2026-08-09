@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.3.2.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.3.2.1 - 冒險模式版</title>
     <!-- [新增] 解決 favicon 404 錯誤，使用 SVG Emoji 作為分頁小圖示 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏺</text></svg>">
     <!-- 攔截 Tailwind CDN 的生產環境警告 -->
@@ -12718,6 +12718,17 @@ for (const slot of slots) {
                 console.warn(`🔊 音效 "${seName}" 未定義`);
                 return;
             }
+
+            // --- [效能優化] 音效節流 (Audio Throttling) 解決 Safari 卡頓 ---
+            app.state.lastSePlayTime = app.state.lastSePlayTime || {};
+            const now = Date.now();
+            // 針對極高頻率的音效 (如小瑪麗跑燈) 限制最快 60ms 只能播一次，避免 iOS Safari 音效疊加導致主執行緒崩潰
+            if (seName === 'slotTick') {
+                if (now - (app.state.lastSePlayTime[seName] || 0) < 60) return;
+            }
+            app.state.lastSePlayTime[seName] = now;
+            // -----------------------------------------------------------
+
             try {
                 const audio = new Audio(url);
                 audio.volume = app.state.seVolumes[seName] !== undefined ? app.state.seVolumes[seName] : 0.1;
@@ -18240,7 +18251,7 @@ for (const slot of slots) {
             const btnContainer = app.el('slot-bet-buttons');
             if (!gridContainer || !btnContainer) return;
 
-            // 1. 生成 24 個跑燈格子
+         // 1. 生成 24 個跑燈格子
             let gridHtml = '';
             app.slotConfig.track.forEach((symId, idx) => {
                 const sym = app.slotConfig.symbols[symId];
@@ -18248,23 +18259,17 @@ for (const slot of slots) {
                 const isSpecial = sym.isSpecial;
                 const bgClass = isSpecial ? 'bg-indigo-900/80 border-indigo-400' : 'bg-black/60 border-slate-600';
                 
-                // [修改] 消除空白節點，放大水果(4xl/5xl)，特殊格改為字上圖下排版
+                // [修改] 消除空白節點，放大水果
                 let innerContent = isSpecial 
                     ? `<div class="text-yellow-300 font-black text-[0.65rem] md:text-xs z-10 drop-shadow-md leading-tight">${sym.label}</div><div class="text-3xl md:text-4xl filter drop-shadow-md leading-none mt-0.5">${sym.icon}</div>` 
                     : `<div class="text-4xl md:text-5xl filter drop-shadow-md leading-none">${sym.icon}</div>`;
                 
-                gridHtml += `<div id="slot-cell-${idx}" style="grid-row-start:${pos.r + 1};grid-column-start:${pos.c + 1};" class="relative flex flex-col items-center justify-center rounded-lg border-2 transition-all duration-75 overflow-hidden ${bgClass} shadow-inner p-1">${innerContent}</div>`;
+                // [效能優化] 移除預設的 transition 與 shadow-inner，加上 transform-gpu 與 will-change-transform 啟用顯示卡硬體加速
+                gridHtml += `<div id="slot-cell-${idx}" style="grid-row-start:${pos.r + 1};grid-column-start:${pos.c + 1};" class="relative flex flex-col items-center justify-center rounded-lg border-2 overflow-hidden ${bgClass} p-1 transform-gpu will-change-transform">${innerContent}</div>`;
             });
 
-            // 【新增 v4.9.x】在 7x7 網格正中央 (第2~7列, 第2~7行) 放置狀態電子看板
-            gridHtml += `
-            <div style="grid-row: 2 / 7; grid-column: 2 / 7;" class="bg-slate-900/95 border-4 border-slate-700 rounded-2xl shadow-[inset_0_0_30px_rgba(0,0,0,0.8)] flex flex-col items-center justify-center p-2 md:p-4 text-center z-0 relative overflow-hidden m-1">
-                <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: repeating-linear-gradient(45deg, #1e293b 0px, #1e293b 2px, transparent 2px, transparent 10px);"></div>
-                <div id="slot-center-msg" class="text-slate-300 font-bold text-sm md:text-lg animate-pulse relative z-10 flex flex-col items-center justify-center w-full h-full">
-                    <span class="text-3xl mb-2">🐾</span>
-                    <span>歡迎來到小瑪麗<br>請在右側下注後開始</span>
-                </div>
-            </div>`;
+            // 【新增 v4.9.x】在 7x7 網格正中央 (第2~7列, 第2~7行) 放置狀態電子看板 (無空白壓縮字串)
+            gridHtml += `<div style="grid-row: 2 / 7; grid-column: 2 / 7;" class="bg-slate-900/95 border-4 border-slate-700 rounded-2xl shadow-[inset_0_0_30px_rgba(0,0,0,0.8)] flex flex-col items-center justify-center p-2 md:p-4 text-center z-0 relative overflow-hidden m-1"><div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: repeating-linear-gradient(45deg, #1e293b 0px, #1e293b 2px, transparent 2px, transparent 10px);"></div><div id="slot-center-msg" class="text-slate-300 font-bold text-sm md:text-lg animate-pulse relative z-10 flex flex-col items-center justify-center w-full h-full"><span class="text-3xl mb-2">🐾</span><span>歡迎來到小瑪麗<br>請在右側下注後開始</span></div></div>`;
 
             gridContainer.innerHTML = gridHtml;
 
@@ -19159,10 +19164,8 @@ for (const slot of slots) {
             let targetSymbol = 'LYCHEE'; 
 
             if (app.slotConfig.isTrainMode && app.slotConfig.trainQueue.length > 0) {
-                // 火車模式：強制從佇列中取出下一個必中目標 (不含機會/命運格)
                 targetSymbol = app.slotConfig.trainQueue.shift();
             } else {
-                // 一般模式與 Fever 模式：加權隨機
                 let totalWeight = 0;
                 Object.values(app.slotConfig.symbols).forEach(s => totalWeight += s.weight);
                 let rand = Math.random() * totalWeight;
@@ -19178,18 +19181,18 @@ for (const slot of slots) {
 
             // 3. 設定跑燈參數
             app.slotConfig.targetIdx = targetIdx;
-            // 火車模式只跑 1 圈（節奏快），Fever 模式跑 2 圈（稍快），一般模式跑 3 圈
             const loops = app.slotConfig.isTrainMode ? 1 : (app.slotConfig.isFeverMode ? 2 : 3);
             app.slotConfig.stepsRemaining = (24 * loops) + ((targetIdx - app.slotConfig.currentIdx + 24) % 24);
             app.slotConfig.totalSteps = app.slotConfig.stepsRemaining;
             
-            // 恢復格底顏色
-            document.querySelectorAll('[id^="slot-cell-"]').forEach(el => el.classList.remove('bg-white', 'border-yellow-400', 'shadow-[0_0_20px_rgba(250,204,21,1)]', 'z-10', 'scale-110'));
+            // [效能優化] 恢復格底顏色，一併移除所有的漸變動畫類別
+            document.querySelectorAll('[id^="slot-cell-"]').forEach(el => {
+                el.classList.remove('bg-white', 'border-yellow-400', 'shadow-[0_0_20px_rgba(250,204,21,1)]', 'z-10', 'scale-110', 'transition-all', 'duration-75');
+            });
 
             const pet = app.state.paradisePet;
             if (pet) {
                 pet.state = 'walk';
-                // 火車模式給更高初速，增加衝刺感
                 pet.speed = app.slotConfig.isTrainMode ? 15 : 5;
                 app.movePetToSlotCell(app.slotConfig.currentIdx);
             }
@@ -19216,9 +19219,23 @@ for (const slot of slots) {
                 
                 app.playSe('slotTick');
                 
+                // --- [效能優化] 動態降載 CSS 渲染 ---
+                // 當小瑪麗處於高速狂奔狀態時，拔除耗效能的發光陰影(box-shadow)、縮放與漸變(transition)
+                const isHighSpeed = sc.stepsRemaining > 15 || sc.isTrainMode || sc.isFeverMode;
+
                 const prevCell = app.el(`slot-cell-${(sc.currentIdx - 1 + 24) % 24}`);
-                if(prevCell) prevCell.classList.remove('bg-white', 'border-yellow-400', 'shadow-[0_0_20px_rgba(250,204,21,1)]', 'z-10', 'scale-110');
-                cell.classList.add('bg-white', 'border-yellow-400', 'shadow-[0_0_20px_rgba(250,204,21,1)]', 'z-10', 'scale-110');
+                if(prevCell) {
+                    prevCell.classList.remove('bg-white', 'border-yellow-400', 'shadow-[0_0_20px_rgba(250,204,21,1)]', 'z-10', 'scale-110', 'transition-all', 'duration-75');
+                }
+                
+                // 基礎高亮 (低耗能)
+                cell.classList.add('bg-white', 'border-yellow-400', 'z-10');
+                
+                // 只有在速度降下來(快停了)的時候，才加上華麗的發光與縮放特效
+                if (!isHighSpeed) {
+                    cell.classList.add('shadow-[0_0_20px_rgba(250,204,21,1)]', 'scale-110', 'transition-all', 'duration-75');
+                }
+                // ------------------------------------
                 
                 if (sc.stepsRemaining <= 0) {
                     // --- 到達終點 ---
@@ -19226,7 +19243,6 @@ for (const slot of slots) {
                     pet.state = 'idle';
                     sc.isRunning = false;
                     
-                    // [防呆] 特殊模式連發期間不解鎖按鈕，讓狀態機接管
                     if (!sc.isFeverMode && !sc.isTrainMode) {
                         app.el('btn-slot-start').disabled = false;
                         app.el('btn-slot-start').classList.replace('bg-slate-700', 'bg-green-600');
@@ -19242,7 +19258,7 @@ for (const slot of slots) {
                     if (stepsTaken < 10) {
                         pet.speed = sc.isTrainMode ? 15 + (stepsTaken * 3) : 5 + (stepsTaken * 3);
                     } else if (sc.stepsRemaining > 15) {
-                        pet.speed = sc.isTrainMode ? 55 : 40; // 火車模式飆更快
+                        pet.speed = sc.isTrainMode ? 55 : 40; 
                     } else {
                         if (sc.stepsRemaining === 15) pet.speed = 30;
                         else if (sc.stepsRemaining === 10) pet.speed = 20;
