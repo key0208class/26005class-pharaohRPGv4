@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.4.0.3 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.4.0.7 - 冒險模式版</title>
     <!-- [新增] 解決 favicon 404 錯誤，使用 SVG Emoji 作為分頁小圖示 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏺</text></svg>">
     <!-- 攔截 Tailwind CDN 的生產環境警告 -->
@@ -562,6 +562,41 @@
         .log-entry { 
             animation: fadeIn 0.3s ease-out; 
         }
+
+/* --- [新增] 術士：烈焰焚身卡牌特效 (已優化辨識度與去除干擾) --- */
+        .immolate-ring {
+            position: absolute;
+            /* 將 inset 拆分為: 上 右 下 左。 
+               上方 -20px (往上推), 下方 -5px (底部收縮), 左右維持 -10px */
+            inset: -20px -10px -5px -10px;  
+            background-image: url('https://i.ibb.co/GvkJTgKN/5-wp.webp');
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 5; /* 提升層級確保在卡牌背景上，但在文字下 */
+            pointer-events: none; /* 絕對不阻擋點擊 */
+            opacity: 0.9;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); /* 加入陰影增加立體感 */
+            animation: pulse-fire 1.5s infinite alternate;
+        }
+        @keyframes pulse-fire {
+            0% { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)) brightness(1); transform: scale(0.98); }
+            100% { filter: drop-shadow(0 4px 10px rgba(239, 68, 68, 0.8)) brightness(1.2); transform: scale(1.02); }
+        }
+        /* 取消全頻閃紅光干擾，改為溫和的紅色陰影，且只有在懸停時加強 */
+        .immolate-mode-active { 
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); 
+            border-color: #ef4444; 
+            transition: all 0.2s;
+        }
+        .immolate-mode-active:hover { 
+            box-shadow: 0 0 25px rgba(239, 68, 68, 1); 
+            transform: scale(1.05); 
+        }
+        /* 冥想視窗震動動畫 */
+        @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+
 /* --- [新增] 資訊公告跑馬燈與公告欄樣式 --- */
         .marquee-container { width: 100%; max-width: 600px; margin: 0 auto; overflow: hidden; white-space: nowrap; position: relative; background: rgba(251, 191, 36, 0.2); border-radius: 99px; padding: 4px 15px; border: 1px solid rgba(217, 119, 6, 0.4); box-shadow: inset 0 0 10px rgba(0,0,0,0.05); }
         .marquee-content { display: inline-block; padding-left: 100%; animation: marquee-scroll 25s linear infinite; font-weight: bold; color: #b45309; font-size: 0.9rem; cursor: pointer;}
@@ -638,8 +673,11 @@
         /* 氣泡箭頭指向左邊的頭像 */
         .mark-intent-bubble::after { content: ''; position: absolute; top: 50%; right: 100%; transform: translateY(-50%); border-width: 4px; border-style: solid; border-color: transparent #38bdf8 transparent transparent; }
         
-        .marking-mode-active { box-shadow: 0 0 15px rgba(14, 165, 233, 0.8); border-color: #0ea5e9; animation: pulse-blue-mark 1.5s infinite; }
+      .marking-mode-active { box-shadow: 0 0 15px rgba(14, 165, 233, 0.8); border-color: #0ea5e9; animation: pulse-blue-mark 1.5s infinite; }
         @keyframes pulse-blue-mark { 0%, 100% { filter: drop-shadow(0 0 5px rgba(14, 165, 233, 0.6)); } 50% { filter: drop-shadow(0 0 15px rgba(14, 165, 233, 1)); } }
+        
+        .sunder-mode-active { box-shadow: 0 0 15px rgba(14, 165, 233, 0.8); border-color: #0ea5e9; animation: pulse-ocean-sunder 1.5s infinite; }
+        @keyframes pulse-ocean-sunder { 0%, 100% { filter: drop-shadow(0 0 5px rgba(14, 165, 233, 0.6)); } 50% { filter: drop-shadow(0 0 15px rgba(14, 165, 233, 1)); } }
 		/* ====== [新增] 寵物召喚祭壇專屬特效 (史詩升級版) ====== */
         /* 魔法陣與星星水平旋轉 */
         @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -737,7 +775,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.4.0.3 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.4.0.7 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -3412,9 +3450,10 @@
                 chest: 'https://taira-komori.net/sound_os2/game01/coin02.mp3', // 寶箱
                 coin: 'https://taira-komori.net/sound_os2/game01/coin01.mp3', // 獲得金幣
                 knock: 'https://taira-komori.net/sound_os2/daily01/knocking_a_wooden_door1.mp3', // 敲門/門鈴
-                levelUp: 'https://taira-komori.net/sound_os2/game01/powerup10.mp3', // 角色升級
+              levelUp: 'https://taira-komori.net/sound_os2/game01/powerup10.mp3', // 角色升級
                 hit1: 'https://taira-komori.net/sound_os2/game01/poka01.mp3', // 打擊1
                 hit2: 'https://taira-komori.net/sound_os2/game01/poka02.mp3', // 打擊2
+                meditationSuccess: 'https://taira-komori.net/sound_os2/game01/coin03.mp3', // 冥想成功得分聲
                 
                 // [可修改] 寵物召喚專屬音效 (可將引號內的網址替換成你的音效)
                 summonCharge: 'https://taira-komori.net/sound_os2/game01/button01b.mp3', // 寵物祭壇開啟/蓄力
@@ -3429,28 +3468,29 @@
                 slotLose: 'https://taira-komori.net/sound_os2/game01/powerdown03.mp3' // 沒中
             },
             seVolumes: {
-                shieldBreak: 0.1,
+                shieldBreak: 0.05,
                 bossWarning: 0.05,
-                charge: 0.1,
-                slash: 0.2,
-                chest: 0.1,
-                coin: 0.1,
-                knock: 0.1,
-                levelUp: 0.1,
-                hit1: 0.1,
-                hit2: 0.1,
+                charge: 0.05,
+                slash: 0.05,
+                chest: 0.05,
+                coin: 0.05,
+                knock: 0.05,
+              levelUp: 0.05,
+                hit1: 0.05,
+                hit2: 0.05,
+                meditationSuccess: 0.15, // [可修改] 冥想成功音量，0.0~1.0
                 
                 // [可修改] 寵物召喚專屬音量 (0.0 ~ 1.0)
-                summonCharge: 0.1,
+                summonCharge: 0.05,
                 summonBeam: 0.08,
-                summonExplode: 0.2,
-                summonSuccess: 0.1,
+                summonExplode: 0.05,
+                summonSuccess: 0.05,
                 // 🎰 [新增] 寵物樂園與小瑪麗專屬音量
-                tabSwitch: 0.1,
-                slotBet: 0.1,
-                slotTick: 0.1,
-                slotWin: 0.1,
-                slotLose: 0.1
+                tabSwitch: 0.05,
+                slotBet: 0.05,
+                slotTick: 0.05,
+                slotWin: 0.05,
+                slotLose: 0.05
             },
             // --- [新增] 寵物樂園狀態 ---
             paradisePet: null,   // 樂園中的寵物物件 (含座標、動畫幀等)
@@ -4259,11 +4299,12 @@
                 if (!container) return;
                 if (container.innerHTML.includes('日誌載入中')) container.innerHTML = '';
                 
-                const timeStr = new Date(data.timestamp).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                const icon = data.type === 'attack' ? '⚔️' : '🎒';
+             const timeStr = new Date(data.timestamp).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                let icon = data.type === 'attack' ? '⚔️' : ''; // 移除預設的背包圖示，讓內文自帶的emoji自然呈現
                 const color = data.type === 'attack' ? 'text-red-400' : 'text-green-400';
+                
                 // [修改] 戰鬥日誌改為 beforeend，最新在最下面
-                container.insertAdjacentHTML('beforeend', `<div class="log-entry text-[0.65rem] leading-tight border-b border-slate-700/50 pb-1 mb-1"><span class="text-slate-500 mr-1">[${timeStr}]</span><span class="${color} font-bold mr-1">${icon}</span><span class="text-slate-300">${data.msg}</span></div>`);
+                container.insertAdjacentHTML('beforeend', `<div class="log-entry text-[0.65rem] leading-tight border-b border-slate-700/50 pb-1 mb-1"><span class="text-slate-500 mr-1">[${timeStr}]</span>${icon ? `<span class="${color} font-bold mr-1">${icon}</span>` : ''}<span class="text-slate-300">${data.msg}</span></div>`);
                 container.scrollTop = container.scrollHeight; // 捲軸推到最底
             });
 
@@ -4831,6 +4872,8 @@
                         gender: app.state.gender || 'male', // [新增] 將性別寫入房間，解決隊友看到隨機性別的問題
                         hp: (exists && pData.hp !== undefined) ? pData.hp : initMaxHp,
                         maxHp: (exists && pData.maxHp !== undefined) ? Math.max(pData.maxHp, initMaxHp) : initMaxHp,
+                        mp: (exists && pData.mp !== undefined) ? pData.mp : 100, // [新增] MP保留/初始化
+                        maxMp: (exists && pData.maxMp !== undefined) ? Math.max(pData.maxMp, 100) : 100, // [新增]
                         equipped: myEquipped, 
                         pets: myPets, // [新增] 將寵物資料寫入房間，供戰鬥與隊友面板使用
                         lastActive: firebase.database.ServerValue.TIMESTAMP
@@ -4960,6 +5003,8 @@
 
              const hpBonus = app.getHpBonus(myEquipped);
              const initMaxHp = 100 + hpBonus;
+             // [新增] 初始化 MP 系統（術士/牧師職業使用，其他職業不影響）
+             const initMaxMp = 100;
 
              const initialData = app.generateInitialGameData();
              
@@ -5001,6 +5046,8 @@
                      sessionGold: 0,
                      hp: initMaxHp,    
                      maxHp: initMaxHp,
+                     mp: initMaxMp, // [新增] MP系統初始化
+                     maxMp: initMaxMp, // [新增] MP上限初始化
                      items: startItems, 
                      equipped: myEquipped, 
                      pets: myPets, // [新增] 將寵物資料寫入房間，供戰鬥與隊友面板使用
@@ -9054,6 +9101,17 @@
                         });
                     });
                 }
+                // [新增] 防呆：換局或遊戲結束時自動關閉冥想視窗
+                const prevRound = app.state.gameData?.round || 0;
+                if (data.status === 'ended' || data.status === 'dead_end' || (data.round && prevRound && data.round > prevRound)) {
+                    if (app.el('meditation-modal') && !app.el('meditation-modal').classList.contains('hidden')) {
+                        app.closeMeditation(false); // 換局不觸發冷卻
+                    }
+                    // 換局時重置烈焰焚身施放模式
+                    if (app.state.isImmolateMode) {
+                        app.state.isImmolateMode = false;
+                    }
+                }
                 app.state.gameData = data;
                 app.updateUI(data);
                 
@@ -10026,7 +10084,7 @@
             const myData = app.state.gameData.players?.[app.state.myTeam]?.[app.state.myName];
             const isMusouActive = myData?.musouRounds && myData.musouRounds > 0;
             const diceHash = app.state.gameData.dice ? `${app.state.gameData.dice.d8}${app.state.gameData.dice.d10}${app.state.gameData.dice.d12}` : '';
-            const stateHash = JSON.stringify(pyramidData) + "_" + app.state.selectedCardIndex + "_" + app.state.isMarkingMode + "_" + app.state.isSunderMode + "_" + frozenRemaining + "_" + isMusouActive + "_" + diceHash;
+           const stateHash = JSON.stringify(pyramidData) + "_" + app.state.selectedCardIndex + "_" + app.state.isMarkingMode + "_" + app.state.isSunderMode + "_" + app.state.isImmolateMode + "_" + frozenRemaining + "_" + isMusouActive + "_" + diceHash;
             if (app.state.lastPyramidHash === stateHash) return;
             app.state.lastPyramidHash = stateHash;
 
@@ -10126,6 +10184,20 @@
                             // [修改] 移除 absolute 定位，將其變為普通的區塊，交由外層容器統一排版
                             sunderHtml = `<div class="flex flex-col items-center pointer-events-auto" title="${card.sunderMark.owner} 的破甲鎖定"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%A0%B4%E7%94%B2%E7%8B%80%E6%85%8B.png" class="w-8 h-8 filter drop-shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse">${cancelBtn}</div>`;
                         }
+let sunderGlowClass = '';
+                        if (app.state.isSunderMode && !card.isTaken && !isSelected) {
+                            sunderGlowClass = 'sunder-mode-active z-10'; // 破甲模式專屬發光
+                        }
+                        // --- [新增] 術士烈焰焚身標記 UI ---
+                        let immolateHtml = '';
+                        let immolateGlowClass = '';
+                        if (card.immolate && !card.isTaken) {
+                            // 卡牌已被附加烈焰：顯示燃燒火焰圈特效
+                            immolateHtml = `<div class="immolate-ring"></div>`;
+                        } else if (app.state.isImmolateMode && !card.isTaken && !isSelected) {
+                            // 正在施放模式中：所有可點卡牌閃爍紅光提示
+                            immolateGlowClass = 'immolate-mode-active';
+                        }
 
                         // --- [合併] 建立左下角自動堆疊容器 ---
                         let bottomLeftStackHtml = '';
@@ -10137,8 +10209,8 @@
                         }
                         // ----------------------------------
 
-                        // [修改] 整合 bottomLeftStackHtml 到卡牌結構中 (取代原本分散的 sunderHtml 與 markHtml)
-                        html += `<div id="pyramid-card-${idx}" onclick="app.studentSelectCard(${idx})" class="${cardSizeClass} rounded-xl shadow-lg cursor-pointer transition-all duration-200 ${colorClass} ${ringClass} ${musouGlowClass} ${visibilityClass} ${markGlowClass} flex items-center justify-center font-black relative border-2 border-white/20">${lockHtml}${curseHtml}${bottomLeftStackHtml}<div class="absolute top-1 right-2 text-sm opacity-60 font-bold">${card.points}</div><span class="pyramid-num-lg drop-shadow-md">${card.number}</span></div>`;
+                        // [修改] 整合 immolateHtml、bottomLeftStackHtml 到卡牌結構 (z-10 確保數字文字在火焰圈上層)
+                        html += `<div id="pyramid-card-${idx}" onclick="app.studentSelectCard(${idx})" class="${cardSizeClass} rounded-xl shadow-lg cursor-pointer transition-all duration-200 ${colorClass} ${ringClass} ${musouGlowClass} ${immolateGlowClass} ${sunderGlowClass} ${visibilityClass} ${markGlowClass} flex items-center justify-center font-black relative border-2 border-white/20">${immolateHtml}${lockHtml}${curseHtml}${bottomLeftStackHtml}<div class="absolute top-1 right-2 text-sm opacity-60 font-bold z-10">${card.points}</div><span class="pyramid-num-lg drop-shadow-md z-10">${card.number}</span></div>`;
                     }
                 });
                 html += '</div>';
@@ -10190,6 +10262,35 @@
                 }
 
                 app.applySunderMark(index);
+                return;
+            }
+
+            // --- [新增] 攔截：術士烈焰焚身系統 ---
+            if (app.state.isImmolateMode) {
+                if (card.immolate) {
+                    // 已被標記過，不能重複
+                    app.state.isImmolateMode = false;
+                    app.renderStudentInventory(app.state.gameData.players);
+                    return app.toast('⚠️ 此卡已被附加烈焰，無法重複標記！', 1);
+                }
+                if (card.isTaken) {
+                    app.state.isImmolateMode = false;
+                    app.renderStudentInventory(app.state.gameData.players);
+                    return app.toast('⚠️ 此卡已被取走，無法標記！', 1);
+                }
+                
+                // 檢查場上火焰卡數量 (上限5張)
+                let immoCount = 0;
+                app.state.gameData.pyramid.forEach(c => {
+                    if (c && !c.isTaken && c.immolate) immoCount++;
+                });
+                if (immoCount >= 5) {
+                    app.state.isImmolateMode = false;
+                    app.renderStudentInventory(app.state.gameData.players);
+                    return app.toast(`🔥 場上火焰卡牌已達上限 (5張)！`, 1);
+                }
+                
+                app.applyImmolateMark(index);
                 return;
             }
 
@@ -10964,10 +11065,11 @@ for (const slot of slots) {
 
                 const nextRound = (gameData.round || 1) + 1;
                 
-                // --- [新增] 回合重置：清除金字塔上所有的玩家標記與破甲標記 ---
+                // --- [新增] 回合重置：清除金字塔上所有的玩家標記、破甲與火焰標記 ---
                 newPyramid.forEach(card => {
                     if (card && card.marks) delete card.marks;
-                    if (card && card.sunderMark) delete card.sunderMark; // 新增清除破甲標記
+                    if (card && card.sunderMark) delete card.sunderMark; // 清除破甲標記
+                    if (card && card.immolate) delete card.immolate; // [新增] 清除術士烈焰焚身標記
                 });
                 
                // 準備更新物件
@@ -11706,14 +11808,31 @@ for (const slot of slots) {
                         const oldLv = app.getInGameLevelInfo(currentExp).lv;
                         const newLv = app.getInGameLevelInfo(newExp).lv;
                         if(newLv > oldLv) {
-                            app.toast(`🆙 升級！現在是 Lv.${newLv} (生命上限+5)`, 1);
-                            app.showDamageText("LEVEL UP!", "#fbbf24"); 
-                            
+                            let upMsg = `🆙 升級！現在是 Lv.${newLv} (生命上限+5)`;
                             const curHp = (myPlayerDataObj?.hp !== undefined) ? myPlayerDataObj.hp : 100;
                             const curMaxHp = (myPlayerDataObj?.maxHp !== undefined) ? myPlayerDataObj.maxHp : 100;
-
                             updates[`players/${app.state.myTeam}/${app.state.myName}/hp`] = curHp + 5;
                             updates[`players/${app.state.myTeam}/${app.state.myName}/maxHp`] = curMaxHp + 5;
+
+                            // [新增] 術士/牧師 MP 升級加成 (+10 MP上限, +10 MP)
+                            let hasMagicClass = false;
+                            if (myPlayerDataObj?.equipped) {
+                                Object.values(myPlayerDataObj.equipped).forEach(itemId => {
+                                    const eqItem = app.state.globalSettings?.blackMarketList?.[itemId];
+                                    if (eqItem && (eqItem.name.includes('術士職業書') || eqItem.name.includes('牧師職業書'))) hasMagicClass = true;
+                                });
+                            }
+                            if (hasMagicClass) {
+                                const curMp = (myPlayerDataObj?.mp !== undefined) ? myPlayerDataObj.mp : 100;
+                                const curMaxMp = (myPlayerDataObj?.maxMp !== undefined) ? myPlayerDataObj.maxMp : 100;
+                                const newMaxMp = curMaxMp + 10;
+                                updates[`players/${app.state.myTeam}/${app.state.myName}/maxMp`] = newMaxMp;
+                                updates[`players/${app.state.myTeam}/${app.state.myName}/mp`] = Math.min(newMaxMp, curMp + 10);
+                                upMsg += `, 🔮 魔力上限+10`;
+                            }
+                            
+                            app.toast(upMsg, 1);
+                            app.showDamageText("LEVEL UP!", "#fbbf24"); 
                         }
 
                        // 史萊姆的王冠：吸血效果
@@ -11991,9 +12110,29 @@ for (const slot of slots) {
                             }
                         }
 
+                        // [新增] 術士烈焰焚身觸發判定 (所有人解開火焰卡皆可觸發)
+                        let immolateTriggered = false;
+                        if (card && card.immolate) {
+                            immolateTriggered = true;
+                        }
+
                         // 結算裝備總攻擊力 (基礎加成 + 深淵永久加成 + 爆炎持續加成 + 標記加成) * 翻倍倍率
                         const totalEquipAtk = (atkBonus + newAbyssBonus + activeFlameBonus + markBonusAtk);
-                        const finalEquipAtk = Math.floor(totalEquipAtk * flameMultiplier); // 加上無條件捨去確保不出現小數點
+                        let finalEquipAtk = Math.floor(totalEquipAtk * flameMultiplier); // 加上無條件捨去確保不出現小數點
+                        
+                        // 🛠️ [Bug修復] 提前宣告與初始化 equipParts 陣列，解決 Cannot access before initialization 錯誤
+                        let equipParts = [];
+                        if (atkBonusLogs && atkBonusLogs.length > 0) equipParts = equipParts.concat(atkBonusLogs);
+                        if (typeof newAbyssBonus !== 'undefined' && newAbyssBonus > 0) equipParts.push(`[深淵]+${newAbyssBonus}`);
+                        if (typeof activeFlameBonus !== 'undefined' && activeFlameBonus > 0) equipParts.push(`[爆炎]+${activeFlameBonus}`);
+                        if (typeof markBonusAtk !== 'undefined' && markBonusAtk > 0) equipParts.push(`[${markLogText}]+${markBonusAtk}`); 
+
+                        // [新增] 術士火焰卡牌 +4 固定傷害 (計入裝備傷害池，享受翻倍效益)
+                        if (immolateTriggered) {
+                            finalEquipAtk += 4;
+                            equipParts.push(`[烈焰焚身]+4`);
+                            app.addCombatLog('item', `🔥 【${app.state.myName}】觸發術士烈焰焚身！裝備傷害額外增加 4 點！`);
+                        }
 
                         if (flameTriggered) {
                             app.addCombatLog('item', `【${app.state.myName}】的"${flameSwordName}"發動"烈焰風暴"，裝備攻擊力提升${flameMultiplier}倍。`);
@@ -12003,8 +12142,6 @@ for (const slot of slots) {
                                 app.triggerFlameCritEffect('https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%83%88%E7%84%B0%E9%A2%A8%E6%9A%B42.png');
                             }, 150);
                         }
-
-
 
                         // --- [修正 5] 最終傷害 = 四捨五入處理 ---
                         let rawCardDamage = basePoints * 10 * itemMult;
@@ -12248,7 +12385,14 @@ for (const slot of slots) {
                         
                         if (!shieldAbsorbed) {
                             app.showDamageText(playerDamage);
-                            if (petDamage > 0) {
+                            
+                            // [新增] 術士烈焰爆發特效
+                        if (immolateTriggered) {
+                            // 呼叫全新的三階段燃燒特效引擎，並傳入當前卡牌的索引
+                            app.triggerImmolateExplosion(idx);
+                        }
+
+                        if (petDamage > 0) {
                                 setTimeout(() => {
                                     const color = petIsCrit ? '#c026d3' : '#ea580c'; 
                                     app.showDamageText(petDamage, color);
@@ -12292,12 +12436,6 @@ for (const slot of slots) {
                         let baseDmgStr = `${basePoints * 10}`;
                         if (itemMult > 1) baseDmgStr += `×${itemMult}`;
                         
-                        let equipParts = [];
-                        if (atkBonusLogs && atkBonusLogs.length > 0) equipParts = equipParts.concat(atkBonusLogs);
-                        if (typeof newAbyssBonus !== 'undefined' && newAbyssBonus > 0) equipParts.push(`[深淵]+${newAbyssBonus}`);
-                        if (typeof activeFlameBonus !== 'undefined' && activeFlameBonus > 0) equipParts.push(`[爆炎]+${activeFlameBonus}`);
-                        if (typeof markBonusAtk !== 'undefined' && markBonusAtk > 0) equipParts.push(`[${markLogText}]+${markBonusAtk}`); 
-
                         let equipDmgStr = "";
                         if (equipParts.length > 0) {
                             let rawEquipStr = equipParts.join('+');
@@ -13661,7 +13799,131 @@ for (const slot of slots) {
 
             }, gatherTime);
         },
+// --- [升級版] 術士專屬：烈焰焚身特效引擎 (卡牌燃燒 -> 火球追蹤 -> 擊中爆發) ---
+        triggerImmolateExplosion: (cardIdx) => {
+            // ==========================================
+            // 🛠️ [可微調] 烈焰焚身特效參數
+            // ==========================================
+            const burnTime = 1200;       // 1. 卡牌碳化並從底部燒成灰燼的時間 (毫秒)
+            const flightTime = 600;     // 2. 燒完後，火球飛向怪物的時間 (毫秒)
+            const explodeTime = 800;    // 3. 火球擊中怪物後爆發淡出的時間 (毫秒)
+            // ==========================================
 
+            // 1. 抓取卡牌的當前位置與外觀 (在它被系統隱藏前)
+            const cardEl = document.getElementById(`pyramid-card-${cardIdx}`);
+            let startX = window.innerWidth / 2;
+            let startY = window.innerHeight / 2;
+            let cardHtml = '';
+            let cardClass = '';
+
+            if (cardEl) {
+                const rect = cardEl.getBoundingClientRect();
+                startX = rect.left + rect.width / 2;
+                startY = rect.top + rect.height / 2;
+                cardHtml = cardEl.innerHTML;
+                cardClass = cardEl.className;
+            }
+
+            // 2. 抓取怪物的目標位置
+            const targetEl = document.getElementById('active-monster-card');
+            let targetX = window.innerWidth / 2;
+            let targetY = window.innerHeight / 4;
+
+            if (targetEl) {
+                const rect = targetEl.getBoundingClientRect();
+                targetX = rect.left + rect.width / 2;
+                targetY = rect.top + rect.height / 2;
+            }
+
+            // 【階段一：建立卡牌替身 (Clone)】
+            // 讓玩家以為卡牌還在場上，並由我們控制它的燃燒動畫
+            const clone = document.createElement('div');
+            clone.className = cardClass;
+            clone.classList.remove('cursor-pointer', 'ring-4', 'immolate-mode-active'); // 拔除互動屬性
+            clone.style.cssText = `
+                position: fixed;
+                left: ${startX}px;
+                top: ${startY}px;
+                transform: translate(-50%, -50%);
+                z-index: 9998;
+                pointer-events: none;
+                margin: 0;
+                transition: clip-path ${burnTime}ms ease-in, filter ${burnTime}ms ease-in;
+            `;
+            clone.innerHTML = cardHtml;
+            
+            // 隱藏原本附加在替身上的火焰圈環 (避免穿幫)
+            const ring = clone.querySelector('.immolate-ring');
+            if(ring) ring.style.display = 'none';
+            document.body.appendChild(clone);
+
+            // 【階段二：建立底部火焰炸地特效】
+            const fireBlast = document.createElement('div');
+            fireBlast.style.cssText = `
+                position: fixed;
+                left: ${startX}px;
+                top: ${startY}px;
+                width: 200px;
+                height: 200px;
+                transform: translate(-50%, -50%) scale(0.5);
+                background-image: url('https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%81%AB%E7%84%B0%E7%82%B8%E5%9C%B0(%E5%8E%BB%E8%83%8C).png');
+                background-size: contain;
+                background-position: center;
+                background-repeat: no-repeat;
+                pointer-events: none;
+                z-index: 9999;
+                opacity: 0;
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.8)) brightness(1.5);
+            `;
+            document.body.appendChild(fireBlast);
+
+            // 強制重繪讓過渡動畫生效
+            void clone.offsetWidth;
+            void fireBlast.offsetWidth;
+
+            // 播放起火音效
+            app.playSe('charge');
+
+            // 執行火焰出現與卡牌碳化燃燒 (由下往上裁切)
+            fireBlast.style.opacity = '1';
+            fireBlast.style.transform = 'translate(-50%, -50%) scale(1.2)';
+
+            clone.style.filter = 'brightness(0.3) sepia(1) hue-rotate(-50deg) saturate(5)';
+            clone.style.clipPath = 'inset(0 0 100% 0)'; // Bottom to Top 裁切消失
+
+            // 【階段三：燃燒結束，火球追蹤飛向怪物】
+            setTimeout(() => {
+                clone.remove(); // 徹底移除替身
+
+                // 設定火球飛行軌跡
+                fireBlast.style.transition = `left ${flightTime}ms ease-in, top ${flightTime}ms ease-in, transform ${flightTime}ms ease-in`;
+                fireBlast.style.left = `${targetX}px`;
+                fireBlast.style.top = `${targetY}px`;
+                fireBlast.style.transform = 'translate(-50%, -50%) scale(0.6)';
+                
+                app.playSe('slash'); // 飛射音效
+
+                // 【階段四：擊中怪物並跳出傷害】
+                setTimeout(() => {
+                    fireBlast.style.transition = `transform ${explodeTime}ms ease-out, opacity ${explodeTime}ms ease-out`;
+                    fireBlast.style.transform = 'translate(-50%, -50%) scale(2.5)';
+                    fireBlast.style.opacity = '0';
+                    fireBlast.style.filter = 'drop-shadow(0 0 30px rgba(255, 100, 0, 1)) brightness(2)';
+                    
+                    app.playSe('hit1');
+                    if (navigator.vibrate) navigator.vibrate([80, 50, 80]); // 強烈打擊感
+
+                    // 延遲到擊中的這一刻才跳出傷害數字與提示！
+                    app.showDamageText('🔥+4 烈焰焚身', '#ea580c', null, targetX, targetY - 30);
+                    app.toast(`🔥 烈焰爆發！卡牌燃燒殆盡，附加 4 點火焰傷害！`, 1);
+
+                    // 動畫結束清理 DOM
+                    setTimeout(() => fireBlast.remove(), explodeTime);
+
+                }, flightTime); 
+            }, burnTime); 
+        },
         // [新增] 血祭專屬特效：血花炸開由下往上浮出並放大
         triggerBloodSacrificeEffect: (imgUrl) => {
             // ==========================================
@@ -14610,7 +14872,7 @@ for (const slot of slots) {
             });
 
             // 🌟 [新增修復] 背包與技能渲染防抖機制：加入 usedMarks 判定，防止標記次數卡死
-            const stateHash = JSON.stringify(myData || {}) + "_" + app.state.activeItem + "_" + app.state.isMarkingMode + "_" + app.state.isSunderMode + "_" + usedMarks;
+            const stateHash = JSON.stringify(myData || {}) + "_" + app.state.activeItem + "_" + app.state.isMarkingMode + "_" + app.state.isSunderMode + "_" + app.state.isImmolateMode + "_" + usedMarks;
             if (app.state.lastInventoryHash === stateHash) return;
             app.state.lastInventoryHash = stateHash;
 
@@ -14743,7 +15005,8 @@ for (const slot of slots) {
                 const marksLeft = marksMax - usedMarks;
                 const canMark = marksLeft > 0 || app.state.isMarkingMode; 
                 
-                const markContainerClass = app.state.isMarkingMode ? 'marking-mode-active scale-110' : (canMark ? 'hover:scale-110 drop-shadow-md' : 'grayscale opacity-60 cursor-not-allowed');
+                let markContainerClass = canMark ? 'hover:scale-110 drop-shadow-md' : 'grayscale opacity-60 cursor-not-allowed';
+                if (app.state.isMarkingMode) markContainerClass = 'scale-110 ring-2 ring-red-500 rounded-lg drop-shadow-[0_0_15px_rgba(239,68,68,1)] animate-pulse z-10'; // 統一為紅色呼吸框鎖定樣式
                 const markCountColor = marksLeft > 0 ? 'text-green-400' : 'text-red-400';
                 
                 // 標記按鈕 HTML (無空白節點壓縮)
@@ -14752,7 +15015,8 @@ for (const slot of slots) {
                 // 2. 職業技能 (職業書)
                 let hasNoviceBook = false;
                 let hasWarriorBook = false;
-                let hasArcherBook = false; // [新增射手]
+                let hasArcherBook = false;
+                let hasWarlockBook = false; // [新增] 術士職業書
                 const globalList = app.state.globalSettings?.blackMarketList || [];
                 if (myData.equipped) {
                     Object.values(myData.equipped).forEach(itemId => {
@@ -14761,12 +15025,13 @@ for (const slot of slots) {
                             if (item.name.includes('初心者職業書')) hasNoviceBook = true;
                             if (item.name.includes('戰士職業書')) hasWarriorBook = true;
                             if (item.name.includes('射手職業書')) hasArcherBook = true;
+                            if (item.name.includes('術士職業書')) hasWarlockBook = true; // [新增]
                         }
                     });
                 }
 
-                // [修改] 射手職業同時擁有療傷與破甲，所以只要有初心者、戰士或射手，都顯示療傷按鈕
-                if (hasNoviceBook || hasWarriorBook || hasArcherBook) {
+                // [修改] 所有職業都有基礎療傷（術士職業書繼承療傷技能）
+                if (hasNoviceBook || hasWarriorBook || hasArcherBook || hasWarlockBook) {
                     const maxCharge = 8;
                     const charge = myData.skillCharge !== undefined ? myData.skillCharge : maxCharge;
                     const pct = Math.min(100, (charge / maxCharge) * 100);
@@ -14813,6 +15078,49 @@ for (const slot of slots) {
                     const badgeHtml = isSunderReady ? `<div class="absolute -bottom-1 -right-1 bg-red-700 text-white text-[0.6rem] px-1.5 rounded-full border border-red-400 shadow z-10 leading-none">${sunderUsesLeft}</div>` : '';
 
                     html += `<div onclick="${sunderClickAction}" class="relative w-12 h-12 bg-transparent transition-all group ${sunderContainerClass} mr-2" title="破甲：標記卡牌，解答後擊破護盾、無視防禦並傷害1.3倍 (剩餘${sunderUsesLeft}次，歸零後需解題聚氣6次)"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%A0%B4%E7%94%B2%E6%8A%80%E8%83%BD.png" class="absolute inset-0 w-full h-full object-contain grayscale opacity-40"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%A0%B4%E7%94%B2%E6%8A%80%E8%83%BD.png" class="absolute inset-0 w-full h-full object-contain ${sunderFilterClass}" style="clip-path: inset(${sunderMaskHeight}% 0 0 0); transition: clip-path 0.4s ease-out;">${badgeHtml}</div>`;
+                }
+
+                // [新增] 術士職業：冥想 + 烈焰焚身按鈕
+                if (hasWarlockBook) {
+                    const curMp = myData.mp !== undefined ? myData.mp : 100;
+                    const curMaxMp = myData.maxMp !== undefined ? myData.maxMp : 100;
+
+                    // --- 冥想按鈕 ---
+                    const isMedCooldown = app.state.meditationCooldown && app.state.meditationCooldown > Date.now();
+                    const medCooldownSec = isMedCooldown ? Math.ceil((app.state.meditationCooldown - Date.now()) / 1000) : 0;
+                    let medClass = (isDead || isMedCooldown) ? 'cursor-not-allowed opacity-50 grayscale' : 'cursor-pointer hover:scale-110 drop-shadow-[0_0_12px_rgba(167,139,250,0.8)]';
+                    let medClick = isDead
+                        ? `app.toast('💀 重傷無法冥想！', 1)`
+                        : (isMedCooldown ? `app.toast('⏳ 冥想冷卻中...剩餘${medCooldownSec}秒', 1)` : `app.openMeditation()`);
+                    
+                    // 💡 [優化] 當 MP 達到上限時，給予強烈的金色發光邊框提示
+                    if (curMp >= curMaxMp && !isDead) {
+                        medClick = `app.toast('✨ 魔力已滿！魔法吟唱完畢！', 1)`;
+                        medClass = 'cursor-pointer hover:scale-110 drop-shadow-[0_0_15px_rgba(250,204,21,1)] ring-2 ring-yellow-400 rounded-lg animate-pulse';
+                    }
+                    
+                    // 💡 [修正] 替換為正確的冥想圖示 URL (p-1.5 增加內距，讓圓形圖案更好看)
+                    html += `<div onclick="${medClick}" class="relative w-12 h-12 bg-transparent transition-all group ${medClass} mr-2" title="冥想：開啟數學挑戰，答對回復 15 MP (失敗冷卻3秒)"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E5%86%A5%E6%83%B3%E5%9C%96%E7%A4%BA.png" class="absolute inset-0 w-full h-full object-contain filter drop-shadow-md p-1.5"><div class="absolute -bottom-2 w-full text-center bg-black/80 text-purple-300 text-[0.5rem] rounded border border-purple-500/50 shadow-md leading-tight px-0.5">${isMedCooldown ? `❄️${medCooldownSec}s` : '冥想'}</div></div>`;
+
+                    // --- 烈焰焚身按鈕 ---
+                    const canImmolate = curMp >= 50 && !isDead;
+                    let immoContainerClass = canImmolate
+                        ? 'cursor-pointer hover:scale-110 drop-shadow-[0_0_12px_rgba(239,68,68,0.8)]'
+                        : 'cursor-not-allowed opacity-80 grayscale-[40%]';
+                    if (app.state.isImmolateMode) immoContainerClass = 'scale-110 ring-2 ring-red-500 rounded-lg drop-shadow-[0_0_15px_rgba(239,68,68,1)] animate-pulse z-10';
+                    let immoClickAction = canImmolate ? 'app.toggleImmolateMode()' : `app.toast('💧 魔力不足 (需50MP)', 1)`;
+                    if (isDead) {
+                        immoContainerClass = 'cursor-not-allowed opacity-50 grayscale';
+                        immoClickAction = `app.toast('💀 重傷無法施放技能！', 1)`;
+                    }
+                    const mpPct = Math.min(100, (curMp / curMaxMp) * 100);
+                    const mpBarColor = canImmolate ? 'from-fuchsia-500 to-red-500' : 'from-indigo-600 to-blue-700';
+                    
+                    // 💡 [可微調] MP 顯示區：
+                    // -bottom-2: 往下推多少 (數字越大越往下)。 
+                    // w-14: 寬度 (比圖示寬一點) / h-4: 進度條的高度(改為4讓數字放得下)。
+                    // text-[0.6rem]: 字體大小，如果想再大可改為 text-xs
+                    html += `<div onclick="${immoClickAction}" class="relative w-12 h-12 bg-transparent transition-all group ${immoContainerClass} mr-2 mb-2" title="烈焰焚身 (消耗50MP)：為卡牌附加燃燒印記，解開後附加4點火焰傷害"><img src="https://class.kh.edu.tw/sites/30033/upload_file/6/%E7%83%88%E7%84%B0%E7%84%9A%E8%BA%AB.png" class="absolute inset-0 w-full h-full object-contain filter drop-shadow-md"><div class="absolute -bottom-2 -ml-1 w-14 bg-slate-900 border border-slate-500 rounded-full h-4 overflow-hidden shadow-lg"><div class="absolute left-0 top-0 h-full bg-gradient-to-r ${mpBarColor} transition-all duration-300" style="width:${mpPct}%"></div><span class="absolute inset-0 flex items-center justify-center text-[0.6rem] font-mono text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,1)] tracking-tighter">${curMp}/${curMaxMp}</span></div></div>`;
                 }
 
                 // 戰士無雙按鈕
@@ -15230,146 +15538,60 @@ for (const slot of slots) {
             });
         },
 
-        // --- [新增] 玩家標記系統邏輯 ---
-                toggleMarkingMode: () => {
+       // --- [新增] 玩家標記系統邏輯 ---
+        toggleMarkingMode: () => {
             app.state.isMarkingMode = !app.state.isMarkingMode;
+            app.playSe('tabSwitch'); // 切換音效
             if (app.state.isMarkingMode) {
+                app.state.isSunderMode = false; // 互斥關閉
+                app.state.isImmolateMode = false; // 互斥關閉
                 app.toast('📍 標記模式已開啟！請點選金字塔上要標記的數字。', 1);
                 
                 // [新增] 讓角色原地轉向朝上(背對鏡頭)，擺出準備衝刺的姿勢
                 if (app.state.myName && app.state.rpgChars[app.state.myName]) {
                     const myChar = app.state.rpgChars[app.state.myName];
                     myChar.state = 'idle';
-                    myChar.dir = 3; // 3 代表朝上
+                    myChar.dir = 3; 
                     myChar.vx = 0;
                     myChar.vy = 0;
-                    myChar.nextActionTime = Date.now() + 10000; // 暫停 AI 10秒，等待玩家點擊卡牌
+                    myChar.nextActionTime = Date.now() + 10000; 
                 }
             } else {
                 app.toast('已取消標記模式', 1);
-                // 恢復 AI
                 if (app.state.myName && app.state.rpgChars[app.state.myName]) {
                     app.state.rpgChars[app.state.myName].nextActionTime = Date.now();
                 }
             }
-            app.renderStudentInventory(app.state.gameData.players); // 更新按鈕高亮狀態
+            app.renderStudentInventory(app.state.gameData.players);
+            app.renderPyramid(app.state.gameData.pyramid); // 強制更新卡牌顏色
         },
 
-        showMarkIntentPopup: (index) => {
-            app.el('mark-target-index').value = index;
-            const modal = app.el('mark-intent-modal');
-            const box = app.el('mark-intent-box');
-            const arrow = app.el('mark-intent-arrow');
-            const cardEl = document.getElementById(`pyramid-card-${index}`);
-            
-            if (!cardEl || !box || !modal) return;
-            
-            modal.classList.remove('hidden');
-            
-            // UX 音效回饋：敲擊聲
-            if(typeof app.playSe === 'function') app.playSe('hit1');
-
-            const rect = cardEl.getBoundingClientRect();
-            const boxW = 192; // 對應 HTML 內的 w-48 (12rem = 192px)
-            const boxH = 170; // 預估的高度
-            
-            let top = 0;
-            let left = 0;
-
-            // 智慧空間判斷：優先放右側，不行放左側，再不行放上下
-            if (rect.right + boxW + 15 < window.innerWidth) {
-                // 放右側
-                left = rect.right + 10;
-                top = rect.top + (rect.height / 2) - (boxH / 2);
-                arrow.className = 'absolute w-4 h-4 bg-[#f5e6c8] border-l-4 border-b-4 border-amber-600 transform rotate-45';
-                arrow.style.cssText = 'left: -10px; top: calc(50% - 8px); right: auto; bottom: auto;';
-            } else if (rect.left - boxW - 15 > 0) {
-                // 放左側
-                left = rect.left - boxW - 10;
-                top = rect.top + (rect.height / 2) - (boxH / 2);
-                arrow.className = 'absolute w-4 h-4 bg-[#f5e6c8] border-r-4 border-t-4 border-amber-600 transform rotate-45';
-                arrow.style.cssText = 'right: -10px; top: calc(50% - 8px); left: auto; bottom: auto;';
-            } else if (rect.bottom + boxH + 15 < window.innerHeight) {
-                // 空間狹小(如手機)：放下方
-                left = rect.left + (rect.width / 2) - (boxW / 2);
-                top = rect.bottom + 10;
-                arrow.className = 'absolute w-4 h-4 bg-[#f5e6c8] border-l-4 border-t-4 border-amber-600 transform rotate-45';
-                arrow.style.cssText = 'top: -10px; left: calc(50% - 8px); right: auto; bottom: auto;';
-            } else {
-                // 放上方
-                left = rect.left + (rect.width / 2) - (boxW / 2);
-                top = rect.top - boxH - 10;
-                arrow.className = 'absolute w-4 h-4 bg-[#f5e6c8] border-r-4 border-b-4 border-amber-600 transform rotate-45';
-                arrow.style.cssText = 'bottom: -10px; left: calc(50% - 8px); top: auto; right: auto;';
-            }
-
-            // 安全防呆：防止彈出視窗超出螢幕邊界
-            left = Math.max(10, Math.min(left, window.innerWidth - boxW - 10));
-            top = Math.max(10, Math.min(top, window.innerHeight - boxH - 10));
-
-            // 若為上下排列，重新校準箭頭位置，確保始終對準卡片中心
-            if (arrow.style.top === '-10px' || arrow.style.bottom === '-10px') {
-                const cardCenter = rect.left + (rect.width / 2);
-                let arrowOffset = cardCenter - left - 8; // 8 是箭頭寬度一半
-                arrowOffset = Math.max(15, Math.min(arrowOffset, boxW - 25)); // 避免箭頭凸出邊框圓角
-                arrow.style.left = `${arrowOffset}px`;
-            }
-
-            box.style.left = `${left}px`;
-            box.style.top = `${top}px`;
-        },
-
-        applyMark: (intent) => {
-            const idx = app.el('mark-target-index').value;
-            if (!idx) return;
-
-            const myPhoto = app.state.user ? app.state.user.photoURL : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-            const markRef = db.ref(`classes/${app.state.classId}/pyramid/${idx}/marks/${app.state.myName}`);
-            
-            // [新增] 準備廣播「標記衝刺」動作給所有玩家
-            const actionTypes = ['happy', 'flower'];
-            const actType = actionTypes[Math.floor(Math.random() * actionTypes.length)];
-            const actionData = {
-                type: 'mark_dash',
-                cardIdx: idx,
-                actType: actType,
-                timestamp: Date.now()
-            };
-
-            // 寫入 Firebase
-            markRef.set({
-                intent: intent,
-                photo: myPhoto
-            }).then(() => {
-                // 同步廣播衝刺動作
-                db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}/manualAction`).set(actionData);
-
-                app.state.isMarkingMode = false;
-                app.el('mark-intent-modal').classList.add('hidden');
-                app.renderStudentInventory(app.state.gameData.players);
-                app.toast('📍 標記成功！隊友現在可以看到你的提示了。', 1);
-                // UX 音效回饋：標記完成
-                if (typeof app.playSe === 'function') app.playSe('charge');
-            });
-        },
-
-        cancelMark: (index) => {
-            const markRef = db.ref(`classes/${app.state.classId}/pyramid/${index}/marks/${app.state.myName}`);
-            markRef.remove().then(() => {
-                app.toast('❌ 已收回標記', 1);
-            });
-        },
-
-        // --- [新增] 射手破甲系統邏輯 ---
         toggleSunderMode: () => {
             app.state.isSunderMode = !app.state.isSunderMode;
+            app.playSe('tabSwitch'); // 切換音效
             if (app.state.isSunderMode) {
-                app.state.isMarkingMode = false; // 互斥
+                app.state.isMarkingMode = false; // 互斥關閉
+                app.state.isImmolateMode = false; // 互斥關閉
                 app.toast('🏹 破甲瞄準中！請點選金字塔上的數字。', 1);
             } else {
                 app.toast('已取消破甲瞄準', 1);
             }
             app.renderStudentInventory(app.state.gameData.players);
+            app.renderPyramid(app.state.gameData.pyramid); // 強制更新卡牌顏色
+        },
+        
+        toggleImmolateMode: () => {
+            app.state.isImmolateMode = !app.state.isImmolateMode;
+            app.playSe('tabSwitch'); // 切換音效
+            if (app.state.isImmolateMode) {
+                app.state.isMarkingMode = false; // 互斥關閉
+                app.state.isSunderMode = false; // 互斥關閉
+                app.toast('🔥 烈焰焚身準備！請點選要燃燒的數字卡牌。', 1);
+            } else {
+                app.toast('🔥 已取消施放烈焰焚身', 1);
+            }
+            app.renderStudentInventory(app.state.gameData.players);
+            app.renderPyramid(app.state.gameData.pyramid); // 強制更新卡牌顏色
         },
 
         applySunderMark: (index) => {
@@ -22381,9 +22603,10 @@ if (entity.state === 'walk' && entity.target) {
 
            const initialData = app.generateInitialGameData();
             
-            // 計算血量加成
+           // 計算血量加成
             const hpBonus = app.getHpBonus(myEquipped);
             const initMaxHp = 100 + hpBonus;
+            const initMaxMp = 100; // [修正] 新增初始化 MP 上限
 
             // 3. 寫入 Firebase
             db.ref(`classes/${roomId}`).set({
@@ -22410,6 +22633,7 @@ if (entity.state === 'walk' && entity.target) {
                 db.ref(`classes/${roomId}/players/team1/${name}`).set({
                     name: name,
                     score: 0, gold: 0, sessionGold: 0, hp: initMaxHp, maxHp: initMaxHp,
+                    mp: initMaxMp, maxMp: initMaxMp, // [修正] 補上戰役房間玩家的 MP 欄位
                     items: startItems, equipped: myEquipped, pets: myPets, // [修正] 將 pets 寫入房間中，讓戰鬥能抓到正確經驗與型態
                     lastActive: firebase.database.ServerValue.TIMESTAMP
                 });
@@ -22668,6 +22892,464 @@ if (entity.state === 'walk' && entity.target) {
                 console.error("自動清理聊天紀錄失敗:", error);
             }
         },
+        // ==========================================
+        // --- [新增 v4.9.5] 術士系統與冥想引擎 ---
+        // ==========================================
+
+        /**
+         * 切換烈焰焚身施放模式
+         * 進入施放模式後，點擊卡牌即可標記；再次點擊按鈕則取消
+         */
+       
+
+        /**
+         * 對指定卡牌施放烈焰焚身
+         * 透過 Firebase Transaction 安全扣除 50 MP，防止並發問題
+         */
+     applyImmolateMark: (index) => {
+            const myData = app.state.gameData?.players?.[app.state.myTeam]?.[app.state.myName];
+            // [修正] 統一容錯邏輯：如果資料庫沒有 mp 屬性(undefined)，預設給予 100 滿魔
+            const uiCurMp = myData ? (myData.mp !== undefined ? myData.mp : 100) : 0;
+            
+            if (!myData || uiCurMp < 50) {
+                app.state.isImmolateMode = false;
+                app.renderStudentInventory(app.state.gameData?.players);
+                app.renderPyramid(app.state.gameData?.pyramid); // [修正] 強制刷新移除紅框
+                return app.toast('💧 魔力不足！無法施放烈焰焚身 (需50MP)', 1);
+            }
+
+            const playerRef = db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}`);
+            playerRef.transaction(p => {
+                if (p) {
+                    // [修正] 在交易內同樣執行容錯判斷，保護舊資料庫結構
+                    const dbCurMp = p.mp !== undefined ? p.mp : 100;
+                    if (dbCurMp >= 50) {
+                        p.mp = dbCurMp - 50;
+                        return p;
+                    }
+                }
+                return; // MP 不足，中斷 Transaction
+            }, (error, committed) => {
+                if (committed) {
+                    // MP 扣除成功，寫入 immolate 標記到卡牌
+                    db.ref(`classes/${app.state.classId}/pyramid/${index}/immolate`).set(true).then(() => {
+                        app.state.isImmolateMode = false;
+                        app.renderStudentInventory(app.state.gameData?.players);
+                        app.renderPyramid(app.state.gameData?.pyramid); // [修正] 強制刷新移除紅框
+                        app.toast('🔥 烈焰焚身！卡牌燃燒中，任何解開此題的冒險者將獲得火焰傷害加成！', 1);
+                        app.playSe('charge');
+                    }).catch(err => {
+                        console.error('烈焰焚身寫入失敗:', err);
+                        app.toast('❌ 網路異常，標記失敗！', 1);
+                        app.state.isImmolateMode = false;
+                        app.renderPyramid(app.state.gameData?.pyramid);
+                    });
+                } else {
+                    app.toast('❌ 魔力不足或網路異常！', 1);
+                    app.state.isImmolateMode = false;
+                    app.renderStudentInventory(app.state.gameData?.players);
+                    app.renderPyramid(app.state.gameData?.pyramid);
+                }
+            });
+        },
+
+        // --- [修復補回] 玩家標記系統核心函式 ---
+      showMarkIntentPopup: (index) => {
+            app.el('mark-target-index').value = index;
+            const modal = app.el('mark-intent-modal');
+            const box = app.el('mark-intent-box');
+            const arrow = app.el('mark-intent-arrow');
+            const cardEl = document.getElementById(`pyramid-card-${index}`);
+            
+            if (!cardEl || !box || !modal) return;
+            
+            modal.classList.remove('hidden');
+            
+            // UX 音效回饋：敲擊聲
+            if(typeof app.playSe === 'function') app.playSe('hit1');
+
+            const rect = cardEl.getBoundingClientRect();
+            const boxW = 192; // 對應 HTML 內的 w-48 (12rem = 192px)
+            const boxH = 170; // 預估的高度
+            
+            let top = 0;
+            let left = 0;
+
+            // 智慧空間判斷：優先放右側，不行放左側，再不行放上下
+            if (rect.right + boxW + 15 < window.innerWidth) {
+                // 放右側
+                left = rect.right + 10;
+                top = rect.top + (rect.height / 2) - (boxH / 2);
+                arrow.className = 'absolute w-4 h-4 bg-[#f5e6c8] border-l-4 border-b-4 border-amber-600 transform rotate-45';
+                arrow.style.cssText = 'left: -10px; top: calc(50% - 8px); right: auto; bottom: auto;';
+            } else if (rect.left - boxW - 15 > 0) {
+                // 放左側
+                left = rect.left - boxW - 10;
+                top = rect.top + (rect.height / 2) - (boxH / 2);
+                arrow.className = 'absolute w-4 h-4 bg-[#f5e6c8] border-r-4 border-t-4 border-amber-600 transform rotate-45';
+                arrow.style.cssText = 'right: -10px; top: calc(50% - 8px); left: auto; bottom: auto;';
+            } else if (rect.bottom + boxH + 15 < window.innerHeight) {
+                // 空間狹小(如手機)：放下方
+                left = rect.left + (rect.width / 2) - (boxW / 2);
+                top = rect.bottom + 10;
+                arrow.className = 'absolute w-4 h-4 bg-[#f5e6c8] border-l-4 border-t-4 border-amber-600 transform rotate-45';
+                arrow.style.cssText = 'top: -10px; left: calc(50% - 8px); right: auto; bottom: auto;';
+            } else {
+                // 放上方
+                left = rect.left + (rect.width / 2) - (boxW / 2);
+                top = rect.top - boxH - 10;
+                arrow.className = 'absolute w-4 h-4 bg-[#f5e6c8] border-r-4 border-b-4 border-amber-600 transform rotate-45';
+                arrow.style.cssText = 'bottom: -10px; left: calc(50% - 8px); top: auto; right: auto;';
+            }
+
+            // 安全防呆：防止彈出視窗超出螢幕邊界
+            left = Math.max(10, Math.min(left, window.innerWidth - boxW - 10));
+            top = Math.max(10, Math.min(top, window.innerHeight - boxH - 10));
+
+            // 若為上下排列，重新校準箭頭位置，確保始終對準卡片中心
+            if (arrow.style.top === '-10px' || arrow.style.bottom === '-10px') {
+                const cardCenter = rect.left + (rect.width / 2);
+                let arrowOffset = cardCenter - left - 8; // 8 是箭頭寬度一半
+                arrowOffset = Math.max(15, Math.min(arrowOffset, boxW - 25)); // 避免箭頭凸出邊框圓角
+                arrow.style.left = `${arrowOffset}px`;
+            }
+
+            box.style.left = `${left}px`;
+            box.style.top = `${top}px`;
+        },
+
+      applyMark: (intent) => {
+            const idx = app.el('mark-target-index').value;
+            if (!idx) return;
+
+            const myPhoto = app.state.user ? app.state.user.photoURL : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+            const markRef = db.ref(`classes/${app.state.classId}/pyramid/${idx}/marks/${app.state.myName}`);
+            
+            // [新增] 準備廣播「標記衝刺」動作給所有玩家
+            const actionTypes = ['happy', 'flower'];
+            const actType = actionTypes[Math.floor(Math.random() * actionTypes.length)];
+            const actionData = {
+                type: 'mark_dash',
+                cardIdx: idx,
+                actType: actType,
+                timestamp: Date.now()
+            };
+
+            // 寫入 Firebase
+            markRef.set({
+                intent: intent,
+                photo: myPhoto
+            }).then(() => {
+                // 同步廣播衝刺動作
+                db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}/manualAction`).set(actionData);
+
+                app.state.isMarkingMode = false;
+                app.el('mark-intent-modal').classList.add('hidden');
+                app.renderStudentInventory(app.state.gameData.players);
+                app.toast('📍 標記成功！隊友現在可以看到你的提示了。', 1);
+                // UX 音效回饋：標記完成
+                if (typeof app.playSe === 'function') app.playSe('charge');
+            });
+        },
+
+        cancelMark: (index) => {
+            const markRef = db.ref(`classes/${app.state.classId}/pyramid/${index}/marks/${app.state.myName}`);
+            markRef.remove().then(() => {
+                app.toast('🔄 已收回標記', 1);
+                app.renderStudentInventory(app.state.gameData.players);
+            });
+        },
+        // ------------------------------------
+
+        /**
+         * 開啟冥想小遊戲視窗
+         */
+        openMeditation: () => {
+            const myData = app.state.gameData?.players?.[app.state.myTeam]?.[app.state.myName];
+            if (!myData) return app.toast('❌ 無法取得玩家資料', 1);
+            if ((myData.hp || 0) <= 0) return app.toast('💀 重傷無法冥想！', 1);
+            
+            const curMp = myData.mp !== undefined ? myData.mp : 100;
+            const curMaxMp = myData.maxMp !== undefined ? myData.maxMp : 100;
+            if (curMp >= curMaxMp) return app.toast('✨ 魔力已滿！不需要冥想。', 1);
+            
+            // 顯示當前 MP
+            const mpDisplay = app.el('meditation-mp-display');
+            if (mpDisplay) mpDisplay.textContent = `⚡ ${curMp}/${curMaxMp} MP`;
+
+            const modal = app.el('meditation-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            app.playSe('tabSwitch');
+            app.generateMeditationQuestion();
+        },
+
+        /**
+         * 關閉冥想視窗
+         * @param {boolean} isFailure - 是否因失敗而關閉（觸發3秒冷卻）
+         */
+        closeMeditation: (isFailure = false) => {
+            const modal = app.el('meditation-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            
+            if (app.state.meditationTimerInterval) {
+                clearInterval(app.state.meditationTimerInterval);
+                app.state.meditationTimerInterval = null;
+            }
+            
+            if (isFailure) {
+                // 答錯或超時，施加 3 秒冷卻懲罰
+                app.state.meditationCooldown = Date.now() + 3000;
+                // 3 秒後重新渲染，移除冷卻顯示
+                setTimeout(() => {
+                    app.state.meditationCooldown = 0;
+                    app.renderStudentInventory(app.state.gameData?.players);
+                }, 3000);
+                app.renderStudentInventory(app.state.gameData?.players);
+            }
+        },
+
+        /**
+         * 生成冥想數學題目
+         * 題目來源：48個金字塔合法答案庫
+         * 骰子：d8(1-8) + d10(1-10) + d12(1-12)
+         * 規則：答案必須為整數且在答案庫中
+         */
+        generateMeditationQuestion: () => {
+            if (app.state.meditationTimerInterval) {
+                clearInterval(app.state.meditationTimerInterval);
+                app.state.meditationTimerInterval = null;
+            }
+
+            // 48 個金字塔合法答案庫
+            const validAnswers = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,30,32,33,35,36,40,42,44,45,48,49,50,54,56,60,63,64,70,72,80,84,90];
+            
+            // 四則運算模板
+            const templates = [
+                (a, b, c, op1, op2) => `(${a} ${op1} ${b}) ${op2} ${c}`,
+                (a, b, c, op1, op2) => `${a} ${op1} (${b} ${op2} ${c})`,
+                (a, b, c, op1, op2) => `${a} ${op1} ${b} ${op2} ${c}`,
+            ];
+            const ops = ['+', '-', '×', '÷'];
+
+            let d1, d2, d3, expr, ans, isValid = false;
+            let attempts = 0;
+            const MAX_ATTEMPTS = 5000; // 防止無窮迴圈
+
+            // 毫秒級高速抽題引擎
+            while (!isValid && attempts < MAX_ATTEMPTS) {
+                attempts++;
+                d1 = Math.floor(Math.random() * 8) + 1;   // d8: 1~8
+                d2 = Math.floor(Math.random() * 10) + 1;  // d10: 1~10
+                d3 = Math.floor(Math.random() * 12) + 1;  // d12: 1~12
+                
+                const nums = app.shuffle([d1, d2, d3]);
+                const op1 = ops[Math.floor(Math.random() * 4)];
+                const op2 = ops[Math.floor(Math.random() * 4)];
+                const tmpl = templates[Math.floor(Math.random() * templates.length)];
+                expr = tmpl(nums[0], nums[1], nums[2], op1, op2);
+
+                try {
+                    const evalExpr = expr.replace(/×/g, '*').replace(/÷/g, '/');
+                    const result = new Function(`return ${evalExpr}`)();
+                    if (Number.isFinite(result) && Number.isInteger(result) && result > 0 && validAnswers.includes(result)) {
+                        ans = result;
+                        isValid = true;
+                    }
+                } catch(e) {
+                    // 忽略計算錯誤，繼續抽題
+                }
+            }
+
+            if (!isValid) {
+                // 極端情況：抽題失敗，使用備用題目
+                expr = '(6 × 4) + 0';
+                ans = 24;
+            }
+
+            // 生成 3 個誤導選項（使用常見計算錯誤和鄰近數字）
+            let options = [ans];
+            let fakeAttempts = 0;
+            while (options.length < 4 && fakeAttempts < 200) {
+                fakeAttempts++;
+                let fake;
+                const strategy = Math.random();
+                if (strategy < 0.5) {
+                    // 策略1：答案 ±1~4（最常見計算錯誤）
+                    fake = ans + (Math.floor(Math.random() * 9) - 4);
+                } else if (strategy < 0.75) {
+                    // 策略2：從答案庫取鄰近值（增加混淆力）
+                    const nearby = validAnswers.filter(v => Math.abs(v - ans) <= 10 && v !== ans);
+                    if (nearby.length > 0) fake = nearby[Math.floor(Math.random() * nearby.length)];
+                    else fake = ans + Math.floor(Math.random() * 6) - 3;
+                } else {
+                    // 策略3：常見運算錯置（乘加混淆）
+                    fake = ans + (Math.random() > 0.5 ? Math.floor(ans * 0.1) : -Math.floor(ans * 0.1));
+                }
+                if (fake !== ans && !options.includes(fake) && fake > 0) {
+                    options.push(fake);
+                }
+            }
+            // 確保選項剛好4個
+            while (options.length < 4) options.push(ans + options.length * 3);
+            options = app.shuffle(options);
+
+            app.state.meditationAns = ans;
+            
+            const qEl = app.el('meditation-question');
+            if (qEl) qEl.innerHTML = `${expr} <span class="text-gray-400">= ?</span>`;
+
+            let optsHtml = '';
+            options.forEach(opt => {
+                optsHtml += `<button onclick="app.submitMeditationAnswer(${opt})" class="bg-slate-700 hover:bg-orange-700 active:bg-orange-900 text-white font-black text-2xl py-4 rounded-xl border-b-4 border-slate-900 active:border-b-0 active:translate-y-1 transition-all shadow-md">${opt}</button>`;
+            });
+            const optsEl = app.el('meditation-options');
+            if (optsEl) optsEl.innerHTML = optsHtml;
+
+            // 啟動 30 秒倒數計時條
+            let timeLeft = 30000;
+            const bar = app.el('meditation-timer-bar');
+            const timerText = app.el('meditation-timer-text');
+            
+            app.state.meditationTimerInterval = setInterval(() => {
+                timeLeft -= 50;
+                if (timeLeft <= 0) {
+                    clearInterval(app.state.meditationTimerInterval);
+                    app.state.meditationTimerInterval = null;
+                    app.playSe('slotLose');
+                    app.toast('⌛ 冥想超時！精神渙散 (冷卻3秒)', 1);
+                    app.closeMeditation(true);
+                } else {
+                    if (bar) bar.style.width = `${(timeLeft / 30000) * 100}%`;
+                    if (timerText) {
+                        const sec = Math.ceil(timeLeft / 1000);
+                        timerText.textContent = `⏳ ${sec}秒`;
+                        if (sec <= 5) timerText.style.color = '#ef4444';
+                        else timerText.style.color = '';
+                    }
+                }
+            }, 50);
+        },
+
+       /**
+         * 處理冥想視窗的拖曳 (支援滑鼠與觸控)
+         */
+        dragMeditation: (e) => {
+            if(e.cancelable) e.preventDefault();
+            const modal = app.el('meditation-modal-inner');
+            const isTouch = e.type === 'touchstart';
+            const startX = isTouch ? e.touches[0].clientX : e.clientX;
+            const startY = isTouch ? e.touches[0].clientY : e.clientY;
+
+            const rect = modal.getBoundingClientRect();
+            // 如果視窗還有 CSS 的 translate 置中效果，先將其拔除，並轉換為絕對像素坐標，確保拖曳順暢
+            if (modal.style.transform.includes('translate')) {
+                modal.style.transform = 'none';
+                modal.style.left = rect.left + 'px';
+                modal.style.top = rect.top + 'px';
+            }
+
+            const startLeft = parseFloat(modal.style.left) || rect.left;
+            const startTop = parseFloat(modal.style.top) || rect.top;
+
+            const moveHandler = (moveEvent) => {
+                const curX = isTouch ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                const curY = isTouch ? moveEvent.touches[0].clientY : moveEvent.clientY;
+                let newLeft = startLeft + (curX - startX);
+                let newTop = startTop + (curY - startY);
+
+                // 邊界限制，防止拖出畫面
+                newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - rect.width));
+                newTop = Math.max(0, Math.min(newTop, window.innerHeight - rect.height));
+
+                modal.style.left = newLeft + 'px';
+                modal.style.top = newTop + 'px';
+            };
+
+            const upHandler = () => {
+                document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler);
+                document.removeEventListener(isTouch ? 'touchend' : 'mouseup', upHandler);
+            };
+
+            document.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler, { passive: false });
+            document.addEventListener(isTouch ? 'touchend' : 'mouseup', upHandler);
+        },
+
+        /**
+         * 提交冥想答案
+         * 答對：+15 MP（不超過上限）；若已滿，自動關閉
+         * 答錯：震動動畫，3 秒冷卻
+         */
+        submitMeditationAnswer: (selectedAns) => {
+            // [防連點鎖定] 如果正在處理答案中，拒絕後續點擊
+            if (app.state.meditationProcessing) return;
+            app.state.meditationProcessing = true;
+
+            if (app.state.meditationTimerInterval) {
+                clearInterval(app.state.meditationTimerInterval);
+                app.state.meditationTimerInterval = null;
+            }
+
+            if (selectedAns === app.state.meditationAns) {
+                // 答對！增加 15 MP
+               app.playSe('meditationSuccess');
+                const playerRef = db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}`);
+                
+                playerRef.transaction(p => {
+                    if (p) {
+                        const maxMp = p.maxMp || 100;
+                        const curMp = p.mp || 0;
+                        p.mp = Math.min(maxMp, curMp + 15);
+                        p._tempMpFull = (p.mp >= maxMp);
+                    }
+                    return p;
+                }, (error, committed, snapshot) => {
+                    app.state.meditationProcessing = false; // 解開防連點鎖
+
+                    if (committed && snapshot) {
+                        const newData = snapshot.val();
+                        const isFull = newData?._tempMpFull || false;
+                        const curMp = newData?.mp || 0;
+                        const maxMp = newData?.maxMp || 100;
+                        
+                        const mpDisplay = app.el('meditation-mp-display');
+                        if (mpDisplay) mpDisplay.textContent = `⚡ ${curMp}/${maxMp} MP`;
+                        app.renderStudentInventory(app.state.gameData?.players);
+
+                        if (isFull) {
+                            app.toast('✨ 冥想完成！魔力已滿！可以施放烈焰焚身了！', 1);
+                            app.closeMeditation(false);
+                        } else {
+                            app.toast(`⚡ 答對！魔力激增 +15 MP (${curMp}/${maxMp})`, 1);
+                            // 魔力未滿，無縫出下一題
+                            setTimeout(() => app.generateMeditationQuestion(), 100);
+                        }
+                    } else if (error) {
+                        app.toast('❌ 網路異常，魔力更新失敗', 1);
+                        app.closeMeditation(false);
+                    }
+                });
+            } else {
+                // 答錯！震動動畫 + 3 秒冷卻
+                app.playSe('hit2');
+                app.toast('❌ 計算錯誤！冥想中斷 (冷卻3秒)', 1);
+                const modalInner = app.el('meditation-modal-inner');
+                if (modalInner) {
+                    modalInner.classList.add('animate-shake');
+                    setTimeout(() => {
+                        modalInner.classList.remove('animate-shake');
+                        app.closeMeditation(true);
+                        app.state.meditationProcessing = false; // 解開防連點鎖
+                    }, 400);
+                } else {
+                    app.closeMeditation(true);
+                    app.state.meditationProcessing = false;
+                }
+            }
+        },
+
         // 前台大廳：渲染跑馬燈
         renderMarquee: () => {
             const marqueeEl = app.el('lobby-marquee-content');
@@ -22762,6 +23444,35 @@ if (entity.state === 'walk' && entity.target) {
         <!-- 底部提示 -->
         <div class="bg-slate-900/80 border-t border-slate-700 px-4 py-2 text-center text-slate-500 text-xs shrink-0">
             🧮 答題賺金幣，Combo 越高名次越前面！
+        </div>
+    </div>
+</div>
+
+<!-- [修改] 術士冥想數學小遊戲 Modal (去背景模糊、懸浮可拖曳) -->
+<div id="meditation-modal" class="fixed inset-0 z-[120] hidden pointer-events-none">
+    <!-- 加入 absolute 定位，並在頂部加入 mousedown 拖曳事件 -->
+    <div id="meditation-modal-inner" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-900 rounded-3xl w-full max-w-sm mx-4 shadow-[0_15px_50px_rgba(0,0,0,0.8)] border-4 border-red-700 flex flex-col overflow-hidden pointer-events-auto" style="animation: popIn 0.3s ease-out;">
+        <div onmousedown="app.dragMeditation(event)" ontouchstart="app.dragMeditation(event)" class="bg-gradient-to-r from-red-900 to-orange-800 p-2 md:p-3 flex justify-between items-center border-b-2 border-red-500 shadow-md cursor-move select-none">
+            <div class="flex items-center gap-2">
+                <span class="text-white text-xs opacity-50 bg-black/30 px-1.5 py-0.5 rounded border border-white/20">☷ 拖曳</span>
+                <h3 class="text-lg md:text-xl font-black text-amber-200 drop-shadow-md pointer-events-none">🔮 魔力冥想</h3>
+            </div>
+            <div class="flex items-center gap-2">
+                <div id="meditation-mp-display" class="text-xs font-bold text-orange-300 bg-black/40 px-2 py-1 rounded-lg border border-orange-500/30">⚡ --/-- MP</div>
+                <button onclick="app.closeMeditation(false)" class="text-red-200 hover:text-white font-black text-xl px-2 cursor-pointer" title="關閉視窗（不觸發冷卻）">✕</button>
+            </div>
+        </div>
+        <div class="p-4 flex flex-col items-center relative pb-6">
+            <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image:url('https://i.ibb.co/GvkJTgKN/5-wp.webp');background-size:contain;background-position:center;background-repeat:no-repeat;animation:spin 15s linear infinite;"></div>
+            <!-- 倒數計時條 -->
+            <div class="w-full bg-slate-800 rounded-full h-3 mb-2 overflow-hidden border border-slate-600">
+                <div id="meditation-timer-bar" class="bg-gradient-to-r from-orange-500 to-red-500 h-full w-full" style="transition: width 0.1s linear;"></div>
+            </div>
+            <div id="meditation-timer-text" class="text-xs text-slate-400 mb-1 z-10 font-bold">⏳ 30秒</div>
+            <div id="meditation-question" class="text-3xl font-black text-white font-mono bg-black/60 px-4 py-2 rounded-xl border-2 border-red-900/50 shadow-inner z-10 mb-4 tracking-widest text-center min-w-[200px]">--</div>
+            <div id="meditation-options" class="grid grid-cols-2 gap-3 w-full z-10">
+                <!-- 選項動態生成 -->
+            </div>
         </div>
     </div>
 </div>
