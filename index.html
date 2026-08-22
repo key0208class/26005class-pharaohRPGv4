@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.4.1.0 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.4.1.4 - 冒險模式版</title>
     <!-- [新增] 解決 favicon 404 錯誤，使用 SVG Emoji 作為分頁小圖示 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏺</text></svg>">
     <!-- 攔截 Tailwind CDN 的生產環境警告 -->
@@ -775,7 +775,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.4.1.0 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.4.1.4 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -825,6 +825,10 @@
                                 <div id="lobby-auth-equip-list" class="flex justify-center gap-1 min-h-[1.5rem]">
                                     <!-- JS 動態生成裝備小圖 -->
                                 </div>
+                                <!-- [新增] 轉生按鈕區塊 (預設隱藏) -->
+                                <button id="btn-rebirth" onclick="app.openRebirthModal()" class="hidden w-full mt-3 bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 text-amber-900 font-black py-2 rounded-lg shadow-[0_0_15px_rgba(251,191,36,0.6)] animate-pulse border-2 border-yellow-200 hover:scale-[1.02] active:scale-95 transition-all items-center justify-center gap-2">
+                                    <span class="text-lg filter drop-shadow-md">✨</span> 靈魂轉生 <span class="text-lg filter drop-shadow-md">✨</span>
+                                </button>
                              </div>
                              
                              <div class="grid grid-cols-2 gap-3 w-full mb-4">
@@ -3760,7 +3764,7 @@
                 });
         },
 
-       // v4.1.5: 處理登入後的 UI 與資料同步 (v4.7.8.0 更新: 加入經驗條與裝備顯示)
+              // v4.1.5: 處理登入後的 UI 與資料同步 (v4.7.8.0 更新: 加入經驗條與裝備顯示)
         handleAuthUser: (user) => {
             app.state.user = user;
             // 預設先用 Google 名稱，稍後資料庫監聽器會覆蓋
@@ -3786,14 +3790,31 @@
             if (cachedDataStr) {
                 try {
                     const cData = JSON.parse(cachedDataStr);
-                    // 1. 名字與等級
+                    // 1. 名字與等級 (加入轉生讀取)
                     const cFinalName = cData.displayName || user.displayName;
                     app.state.myName = cFinalName;
                     const cExp = cData.totalExp || 0;
                     const cAccLv = app.getAccountLevel(cExp);
-                    app.el('user-display-name').innerHTML = `${cFinalName} <span class="text-sm bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">Lv.${cAccLv}</span>`;
+                    const cRebirthCount = cData.rebirthCount || 0;
+                    
+                    let cNameHtml = cFinalName;
+                    if (cRebirthCount > 0) cNameHtml += ` <span class="text-[0.65rem] text-yellow-500 font-black drop-shadow-md bg-black/60 px-1 rounded-sm ml-1 border border-yellow-500/50">🌟x${cRebirthCount}</span>`;
+
+                    app.el('user-display-name').innerHTML = `${cNameHtml} <span class="text-sm bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">Lv.${cAccLv}</span>`;
                     app.el('lobby-player-name').value = cFinalName;
                     
+                    // [修改 v4.9.4.2] 轉生按鈕顯示邏輯 (解除次數隱藏限制，讓滿轉生玩家仍能看到榮耀祭壇)
+                    const btnRebirthCached = app.el('btn-rebirth');
+                    if (btnRebirthCached) {
+                        if (cAccLv >= 99) {
+                            btnRebirthCached.classList.remove('hidden');
+                            btnRebirthCached.classList.add('flex');
+                        } else {
+                            btnRebirthCached.classList.add('hidden');
+                            btnRebirthCached.classList.remove('flex');
+                        }
+                    }
+
                     // 2. 經驗條
                     const cBase = app.getAccumulatedExp(cAccLv);
                     const cNext = app.getAccumulatedExp(cAccLv + 1);
@@ -3811,7 +3832,7 @@
                     
                     // [新增 v4.8.9.7.7] 預先載入快取的戰役通關紀錄，讓玩家一進來就能秒進戰役
                     app.state.campaignProgress = cData.campaignProgress || {};
-                 // 5. 裝備預覽 (含寵物支援)
+                    // 5. 裝備預覽 (含寵物支援)
                     const equipContainer = app.el('lobby-auth-equip-list');
                     if(equipContainer && cData.equipped && app.state.globalSettings?.blackMarketList) {
                         let equipHtml = '';
@@ -3848,7 +3869,7 @@
 
               // [新增 v4.8.9.7.6] 資料抵達，解除同步鎖，並儲存最新快取供下次使用
                 app.state.isDataSyncing = false;
-                app.updateSyncLockUI(false); // [新增 v4.8.9.7.7] 雲端資料對齊完畢，點亮背包與黑市按鈕
+                app.updateSyncLockUI(false); 
                 localStorage.setItem(`pharaoh_cache_${user.uid}`, JSON.stringify(data));
                 
             // [新增] 讀取性別與更新UI
@@ -3858,9 +3879,13 @@
             // [新增] 讀取戰役通關紀錄
                 app.state.campaignProgress = data.campaignProgress || {};
                 
-                // 1. 處理名稱與等級
+                // 1. 處理名稱與等級 (加入轉生資料讀取)
                 const finalName = data.displayName || user.displayName;
                 app.state.myName = finalName;
+                
+                app.state.rebirthCount = data.rebirthCount || 0;
+                app.state.rebirthAtk = data.rebirthAtk || 0;
+                app.state.rebirthHp = data.rebirthHp || 0;
                 
                 // 計算永久等級與經驗值
                 const totalExp = data.totalExp || 0;
@@ -3873,10 +3898,24 @@
                 const currentProgress = totalExp - currentLevelExpBase;
                 const percent = Math.min(100, Math.max(0, (currentProgress / levelRange) * 100));
 
-                // 更新大廳 UI
-                app.el('user-display-name').innerHTML = `${finalName} <span class="text-sm bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">Lv.${accountLv}</span>`;
+                // 更新大廳 UI (加入轉生標記)
+                let nameHtml = finalName;
+                if (app.state.rebirthCount > 0) nameHtml += ` <span class="text-[0.65rem] text-yellow-500 font-black drop-shadow-md bg-black/60 px-1 rounded-sm ml-1 border border-yellow-500/50">🌟x${app.state.rebirthCount}</span>`;
+                app.el('user-display-name').innerHTML = `${nameHtml} <span class="text-sm bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">Lv.${accountLv}</span>`;
                 app.el('lobby-player-name').value = finalName;
                 
+                // [修改 v4.9.4.2] 轉生按鈕顯示邏輯 (解除次數隱藏限制，讓滿轉生玩家仍能看到榮耀祭壇)
+                const btnRebirthReal = app.el('btn-rebirth');
+                if (btnRebirthReal) {
+                    if (accountLv >= 99) {
+                        btnRebirthReal.classList.remove('hidden');
+                        btnRebirthReal.classList.add('flex');
+                    } else {
+                        btnRebirthReal.classList.add('hidden');
+                        btnRebirthReal.classList.remove('flex');
+                    }
+                }
+
                 // 更新大廳經驗條 (v4.7.8.0)
                 if(app.el('lobby-auth-exp-fill')) {
                     app.el('lobby-auth-exp-fill').style.width = `${percent}%`;
@@ -3996,7 +4035,7 @@
             app.state.gender = gender;
             app.updateGenderUI();
             
-            if (app.state.user) {
+                        if (app.state.user) {
                 // 若已登入 Google，同步存入 Firebase
                 db.ref(`users/${app.state.user.uid}`).update({ gender: gender });
             } else {
@@ -4005,7 +4044,125 @@
             }
             app.toast(`✨ 已切換為${gender === 'female' ? '女性' : '男性'}冒險者`, 1);
         },
-        // -------------------------------------
+        
+        // ==========================================
+        // --- [新增] 靈魂轉生系統核心邏輯 ---
+        // ==========================================
+        openRebirthModal: () => {
+            if (!app.state.user) return app.toast('❌ 訪客無法進行轉生，請登入 Google 帳號！', 1);
+
+            const uid = app.state.user.uid;
+            db.ref(`users/${uid}`).once('value', snap => {
+                const data = snap.val() || {};
+                const totalExp = data.totalExp || 0;
+                const lv = app.getAccountLevel(totalExp);
+                
+                if (lv < 99) return app.toast('⚠️ 修為不足！必須達到 Lv.99 才能進行靈魂轉生。', 1);
+                
+                const rebirthCount = data.rebirthCount || 0;
+                const rebirthAtk = data.rebirthAtk || 0;
+                const rebirthHp = data.rebirthHp || 0;
+                
+                if (rebirthCount >= 10) return app.toast('🏆 你已達到轉生次數的巔峰，無法再轉生了！', 1);
+
+                // 計算到達 99 級的總經驗值需求 (作為轉生的代價)
+                const costExp = app.getAccumulatedExp(99); 
+                
+                // 更新 UI 數據
+                app.el('rebirth-cost-exp').textContent = `- ${costExp} EXP`;
+                app.el('rebirth-total-count').textContent = `總轉生: ${rebirthCount}/10 次`;
+                
+                const atkCount = rebirthAtk / 2;
+                const hpCount = rebirthHp / 20;
+                
+                app.el('rebirth-atk-limit').textContent = `已選: ${atkCount}/5`;
+                app.el('rebirth-hp-limit').textContent = `已選: ${hpCount}/5`;
+                
+                // 處理攻擊力選項狀態
+                const btnAtk = app.el('btn-rebirth-atk');
+                if (atkCount >= 5) {
+                    btnAtk.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+                    btnAtk.onclick = () => app.toast('⚔️ 此恩賜已達上限！', 1);
+                } else {
+                    btnAtk.classList.remove('opacity-50', 'grayscale', 'cursor-not-allowed');
+                    btnAtk.onclick = () => app.confirmRebirth('atk', costExp);
+                }
+                
+                // 處理生命值選項狀態
+                const btnHp = app.el('btn-rebirth-hp');
+                if (hpCount >= 5) {
+                    btnHp.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+                    btnHp.onclick = () => app.toast('❤️ 此恩賜已達上限！', 1);
+                } else {
+                    btnHp.classList.remove('opacity-50', 'grayscale', 'cursor-not-allowed');
+                    btnHp.onclick = () => app.confirmRebirth('hp', costExp);
+                }
+                
+                app.playSe('summonCharge'); // 播放開起祭壇的音效
+                app.el('rebirth-modal').classList.remove('hidden');
+                app.el('rebirth-modal').classList.add('flex');
+            });
+        },
+
+        closeRebirthModal: () => {
+            app.el('rebirth-modal').classList.add('hidden');
+            app.el('rebirth-modal').classList.remove('flex');
+        },
+
+        confirmRebirth: (type, costExp) => {
+            const rewardText = type === 'atk' ? '【攻擊力 +2】' : '【生命值 +20】';
+            if (!confirm(`✨ 確定要消耗 ${costExp} 經驗值，換取 ${rewardText} 嗎？\n\n(溢出的經驗將會被保留，讓你轉生後能快速回到高等級！)`)) return;
+            
+            const uid = app.state.user.uid;
+            const userRef = db.ref(`users/${uid}`);
+            
+            // 使用 Transaction 確保扣經驗與加數值同時完成，防止網路異常出錯
+          userRef.transaction(userData => {
+                if (userData) {
+                    if ((userData.totalExp || 0) < costExp) return userData; // 經驗不足防呆
+                    if ((userData.rebirthCount || 0) >= 10) return userData; // [安全防護 v4.9.4.2] 轉生總次數上限防外掛
+                    if (type === 'atk' && (userData.rebirthAtk || 0) >= 10) return userData; // [安全防護 v4.9.4.2] 攻擊力轉生疊加上限防外掛
+                    if (type === 'hp' && (userData.rebirthHp || 0) >= 100) return userData;  // [安全防護 v4.9.4.2] 生命值轉生疊加上限防外掛
+                    
+                    // 扣除滿級經驗 (溢出完美保留)
+                    userData.totalExp -= costExp;
+                    userData.rebirthCount = (userData.rebirthCount || 0) + 1;
+                    
+                    if (type === 'atk') {
+                        userData.rebirthAtk = (userData.rebirthAtk || 0) + 2;
+                    } else if (type === 'hp') {
+                        userData.rebirthHp = (userData.rebirthHp || 0) + 20;
+                    }
+                }
+                return userData;
+            }, (error, committed, snapshot) => {
+                if (committed) {
+                    app.closeRebirthModal();
+                    app.toast('🎉 靈魂轉生成功！全新的力量已注入你的體內！');
+                    app.playSe('levelUp'); 
+                    if (navigator.vibrate) navigator.vibrate([100, 100, 400]);
+                    
+                    // 華麗的螢幕特效
+                    const cx = window.innerWidth / 2;
+                    const cy = window.innerHeight / 2;
+                    app.spawnParticles(cx, cy, '✨', 15);
+                    app.spawnParticles(cx, cy, '🌟', 10);
+                    
+                    if (type === 'atk') {
+                        app.spawnParticles(cx, cy + 50, '⚔️', 5);
+                        app.showDamageText('攻擊力 +2', '#f59e0b');
+                    } else {
+                        app.spawnParticles(cx, cy + 50, '❤️', 5);
+                        app.showDamageText('最大生命 +20', '#22c55e');
+                    }
+                    
+                    // [注意] 由於我們在 handleAuthUser 裡面有監聽 users/${uid} 的變化，
+                    // 所以只要資料庫更新，大廳的等級、經驗條、名稱旁邊的 🌟 都會自動瞬間刷新！
+                } else {
+                    app.toast('❌ 轉生失敗，請檢查網路狀態');
+                }
+            });
+        },
 
        // v4.1.5: 處理登出 (包含 Firebase 與 本地)
         logout: () => {
@@ -5073,6 +5230,15 @@
             app.el('game-board').classList.remove('hidden');
             app.el('admin-gear-btn').classList.add('hidden');
 
+            // [新增] 進入房間時，廣播自己的轉生數據給所有玩家
+            if (app.state.classId && app.state.myTeam && app.state.myName) {
+                db.ref(`classes/${app.state.classId}/players/${app.state.myTeam}/${app.state.myName}`).update({
+                    rebirthCount: app.state.rebirthCount || 0,
+                    rebirthAtk: app.state.rebirthAtk || 0,
+                    rebirthHp: app.state.rebirthHp || 0
+                }).catch(()=>{});
+            }
+
             // [新增] 進入房間時註銷大廳相關監聽，降低背景流量消耗與重複監聽
             try {
                 db.ref('classes').off('value');
@@ -5184,7 +5350,7 @@
                 app.el('admin-settings-modal').classList.remove('hidden');
                 app.toast('🔓 管理員驗證成功');
 
-                // [新增] 如果沒有登入 Google (是訪客狀態)，才載入 GM 專屬神級帳號
+                                // [新增] 如果沒有登入 Google (是訪客狀態)，才載入 GM 專屬神級帳號
                 if (!app.state.user) {
                     const gmUid = 'gm_admin_master_999';
                     const gmUser = {
@@ -5201,13 +5367,16 @@
                         gmRef.update({
                             displayName: gmUser.displayName,
                             photoURL: gmUser.photoURL,
-                            totalExp: data.totalExp ? Math.max(data.totalExp, lv99Exp) : lv99Exp,
+                            totalExp: lv99Exp,  // [修改] 強制重置為剛好 99 級，確保每次測試環境一致
                             totalGold: 3000000, // [修改] 固定 300萬金幣
-                            isHidden: true, // 防呆：後台自動標記為隱藏
+                            isHidden: true, 
+                            rebirthCount: 0,    // [新增] 每次登入 GM，強制歸零轉生次數
+                            rebirthAtk: 0,      // [新增] 強制歸零轉生攻擊力
+                            rebirthHp: 0,       // [新增] 強制歸零轉生血量
                             lastActive: firebase.database.ServerValue.TIMESTAMP
                         }).then(() => {
                             app.handleAuthUser(gmUser); // 將其當作登入者載入系統
-                            app.toast('✨ 已切換至【GM 創世神】專屬測試帳號！', 1);
+                            app.toast('✨ 已切換至【GM 創世神】專屬測試帳號！轉生紀錄已重置。', 1);
                         });
                     });
                 } else {
@@ -6511,6 +6680,7 @@
 
                         app.state.rpgChars[uid] = {
                             name: p.name,
+                            rebirthCount: p.rebirthCount || 0, // [新增] 轉生次數
                             gender: gender,
                             photo: photoUrl,
                             isMe: isMe,
@@ -6535,6 +6705,7 @@
                         // 更新舊玩家狀態
                         const char = app.state.rpgChars[uid];
                         char.y = fixedY; // 每次 Firebase 更新時確保 Y 軸正確
+                        char.rebirthCount = p.rebirthCount || 0; // [新增] 同步轉生次數
 
                         // [修正] 即時同步性別 (不論是不是自己，只要資料庫有就更新，解決隨機性別問題)
                         if (p.gender && p.gender !== char.gender) {
@@ -7074,9 +7245,13 @@
                         ctx.textAlign = "center";
                         ctx.lineWidth = 3;
                         ctx.strokeStyle = "rgba(0,0,0,0.85)";
-                        ctx.strokeText(entity.name, entity.x, nameY);
+                        
+                        // [新增] 轉生標記顯示
+                        const displayName = entity.rebirthCount > 0 ? `${entity.name} 🌟x${entity.rebirthCount}` : entity.name;
+                        
+                        ctx.strokeText(displayName, entity.x, nameY);
                         ctx.fillStyle = entity.isMe ? "#4ade80" : "#ffffff";
-                        ctx.fillText(entity.name, entity.x, nameY);
+                        ctx.fillText(displayName, entity.x, nameY);
                     }
                 }
             };
@@ -9598,8 +9773,14 @@
                             equippedHtml = `<div class="flex items-center gap-0.5 ml-1 bg-black/10 p-0.5 rounded">${equippedHtml}</div>`;
                         }
 
-                        // [修改] 將 petAvatarHtml 移到 userPhoto 的 <img> 後面，並統一無空白字串渲染
-                        listHtml += `<div class="flex flex-col p-2 ${highlightClass} ${damageEffectClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01] relative overflow-hidden"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-1 overflow-hidden"><img src="${userPhoto}" class="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-amber-300 object-cover shadow-sm flex-shrink-0">${petAvatarHtml}<span class="text-xs font-black text-white bg-slate-600 px-1 rounded transform scale-90">Lv.${expInfo.lv}</span><div class="flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 rounded border border-red-100 shadow-sm"><span class="text-[0.6rem] ${hpColorClass}">❤️</span><span class="text-[0.65rem] font-black text-slate-700 leading-none">${currentHp}/${maxHp}</span></div>${equippedHtml}<span class="font-bold ${nameClass} text-sm truncate max-w-[60px] md:max-w-[100px]">${p.name}</span></div><div class="flex items-center gap-1 text-xs font-bold text-yellow-700 bg-yellow-100 px-1.5 rounded-full border border-yellow-200"><span>💰</span><span>${gold}</span></div></div><div class="flex items-center justify-between w-full gap-2"><div class="flex-1 flex flex-col justify-center h-full"><div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden border border-black/10"><div class="${barColor} h-full transition-all duration-500" style="width:${expInfo.percent}%"></div></div></div><div class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden flex-shrink-0 text-right min-w-[20px]">${itemsBadge}</div><div class="font-black text-amber-700 text-lg leading-none">${p.score}</div></div>${deadOverlayHtml}</div>`;
+                        // [新增] 轉生標記 UI
+                        let rebirthTag = '';
+                        if (p.rebirthCount > 0) {
+                            rebirthTag = `<span class="text-[0.6rem] text-yellow-500 font-black drop-shadow-md bg-black/60 px-1 rounded-sm ml-1 border border-yellow-500/50 whitespace-nowrap">🌟x${p.rebirthCount}</span>`;
+                        }
+
+                        // [修改] 將 petAvatarHtml 移到 userPhoto 的 <img> 後面，並統一無空白字串渲染，加入 rebirthTag
+                        listHtml += `<div class="flex flex-col p-2 ${highlightClass} ${damageEffectClass} rounded-lg border mb-1 shadow-sm transition-all hover:scale-[1.01] relative overflow-hidden"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-1 overflow-hidden"><img src="${userPhoto}" class="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-amber-300 object-cover shadow-sm flex-shrink-0">${petAvatarHtml}<span class="text-xs font-black text-white bg-slate-600 px-1 rounded transform scale-90">Lv.${expInfo.lv}</span><div class="flex items-center gap-0.5 px-1.5 py-0.5 bg-red-50 rounded border border-red-100 shadow-sm"><span class="text-[0.6rem] ${hpColorClass}">❤️</span><span class="text-[0.65rem] font-black text-slate-700 leading-none">${currentHp}/${maxHp}</span></div>${equippedHtml}<span class="font-bold ${nameClass} text-sm truncate max-w-[60px] md:max-w-[100px]">${p.name}</span>${rebirthTag}</div><div class="flex items-center gap-1 text-xs font-bold text-yellow-700 bg-yellow-100 px-1.5 rounded-full border border-yellow-200"><span>💰</span><span>${gold}</span></div></div><div class="flex items-center justify-between w-full gap-2"><div class="flex-1 flex flex-col justify-center h-full"><div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden border border-black/10"><div class="${barColor} h-full transition-all duration-500" style="width:${expInfo.percent}%"></div></div></div><div class="text-[0.65rem] text-gray-500 tracking-tighter h-4 overflow-hidden flex-shrink-0 text-right min-w-[20px]">${itemsBadge}</div><div class="font-black text-amber-700 text-lg leading-none">${p.score}</div></div>${deadOverlayHtml}</div>`;
                     });
                 }
                 return listHtml;
@@ -9778,7 +9959,12 @@
              allPlayers.forEach((p, i) => {
                  const rankClass = i===0 ? 'rank-1' : (i===1 ? 'rank-2' : (i===2 ? 'rank-3' : 'rank-other'));
                  const rowBg = i < 3 ? 'bg-white' : 'bg-slate-50';
-                 playerHtml += `<div class="flex items-center justify-between p-2 rounded-lg border border-amber-100 ${rowBg} shadow-sm mb-1"><div class="flex items-center gap-2"><span class="rank-badge ${rankClass} text-sm shadow-sm w-6 h-6">${i+1}</span><span class="font-bold text-slate-700 text-sm truncate max-w-[100px]">${p.name}</span></div><span class="font-black text-amber-700 text-base">${p.score || 0}</span></div>`;
+                 // [修改 v4.9.4.2] 補上轉生標記，讓結算排行榜與大廳 UI 顯示一致
+                 let rebirthTag = '';
+                 if ((p.rebirthCount || 0) > 0) {
+                     rebirthTag = `<span class="text-[0.6rem] text-yellow-500 font-black drop-shadow-md bg-black/60 px-1 rounded-sm ml-1 border border-yellow-500/50 whitespace-nowrap">🌟x${p.rebirthCount}</span>`;
+                 }
+                 playerHtml += `<div class="flex items-center justify-between p-2 rounded-lg border border-amber-100 ${rowBg} shadow-sm mb-1"><div class="flex items-center gap-2"><span class="rank-badge ${rankClass} text-sm shadow-sm w-6 h-6">${i+1}</span><span class="font-bold text-slate-700 text-sm truncate max-w-[100px] flex items-center">${p.name}${rebirthTag}</span></div><span class="font-black text-amber-700 text-base">${p.score || 0}</span></div>`;
              });
          } else {
              playerHtml = '<div class="text-center text-gray-400 py-4 text-sm">本次冒險無人得分</div>';
@@ -16150,7 +16336,8 @@ if (newLv > oldLv) {
 
                 // 伺服器端檢查
                 if (gold < conf.price) return app.toast("❌ 金幣不足！", 1);
-                if (lvInfo.lv < conf.minLv) return app.toast(`❌ 等級不足！需要 Lv.${conf.minLv}`, 1);
+                // [修改] 轉生特權：黑市購買防呆檢查無視等級
+                if (lvInfo.lv < conf.minLv && !(app.state.rebirthCount > 0)) return app.toast(`❌ 等級不足！需要 Lv.${conf.minLv}`, 1);
                 if (owned >= conf.limit) return app.toast("❌ 已達持有上限！", 1);
 
                 // 執行交易
@@ -16268,14 +16455,14 @@ if (newLv > oldLv) {
             app.el('leaderboard-modal').classList.add('hidden');
         },
 
-        renderLeaderboard: (usersData) => {
+                renderLeaderboard: (usersData) => {
             const container = app.el('leaderboard-list-container');
             const globalList = app.state.globalSettings?.blackMarketList || [];
             
             // 判斷是否為管理員
             const isAdmin = localStorage.getItem('pharaoh_admin_token') === 'valid' || localStorage.getItem('campaign_admin_token') === 'valid';
 
-          let players = [];
+            let players = [];
             Object.keys(usersData).forEach(uid => {
                 // [新增] 絕對排除 GM 創世神帳號，不顯示在排行榜上
                 if (uid === 'gm_admin_master_999') return;
@@ -16287,15 +16474,17 @@ if (newLv > oldLv) {
 
                 const exp = data.totalExp || 0;
                 const lv = app.getAccountLevel(exp);
+                const rebirthCount = data.rebirthCount || 0; // [新增] 讀取轉生次數
                 
-                // 條件：>= 10 級才顯示
-              if (lv >= 10) {
+                // 條件：>= 10 級才顯示 (若已轉生，就算降回 1 級也無條件霸榜顯示)
+                if (lv >= 10 || rebirthCount > 0) {
                     players.push({
                         uid: uid,
                         name: data.displayName || '冒險者',
                         photo: data.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
                         exp: exp,
                         lv: lv,
+                        rebirthCount: rebirthCount, // [新增] 紀錄轉生次數
                         equipped: data.equipped || {},
                         pets: data.pets || {},
                         isHidden: data.isHidden || false
@@ -16303,8 +16492,11 @@ if (newLv > oldLv) {
                 }
             });
 
-            // 依據經驗值(等級)由高到低排序
-            players.sort((a, b) => b.exp - a.exp);
+            // [修改] 排序：轉生次數優先，若轉生次數相同，再比經驗值 (選項B)
+            players.sort((a, b) => {
+                if (b.rebirthCount !== a.rebirthCount) return b.rebirthCount - a.rebirthCount;
+                return b.exp - a.exp;
+            });
 
             if (players.length === 0) {
                 container.innerHTML = '<div class="text-center text-gray-500 py-10"><span class="text-4xl mb-2 inline-block">🍃</span><br>目前尚無達到 Lv.10 的傳奇冒險者...</div>';
@@ -16371,9 +16563,15 @@ if (newLv > oldLv) {
 
                 // 被隱藏玩家的半透明特效
                 const hiddenClass = p.isHidden ? 'opacity-50 grayscale' : '';
+                
+                // [新增] 轉生次數標記 UI
+                let rebirthTag = '';
+                if (p.rebirthCount > 0) {
+                    rebirthTag = `<span class="text-[0.6rem] text-yellow-500 font-black drop-shadow-md bg-black/60 px-1 rounded-sm ml-1 border border-yellow-500/50 whitespace-nowrap">🌟x${p.rebirthCount}</span>`;
+                }
 
                 // 卡片本體 HTML (高強度壓縮，無空白節點)
-                html += `<div class="flex items-center gap-3 p-3 mb-2 rounded-xl border ${hiddenClass} ${cardBg} transition-transform hover:scale-[1.01]"><div class="flex items-center justify-center w-8 h-8 rounded-full border-2 font-black text-sm shrink-0 ${rankClass}">${rankIcon}</div><img src="${p.photo}" class="w-10 h-10 rounded-full border-2 border-amber-400 shadow-sm object-cover shrink-0"><div class="flex flex-col min-w-0 flex-1"><div class="flex items-center gap-2"><span class="font-black text-amber-900 truncate max-w-[100px] md:max-w-[200px]">${p.name}</span><span class="text-[0.6rem] font-black text-white bg-slate-800 px-1.5 py-0.5 rounded shadow-sm shrink-0">LV.${p.lv}</span></div>${equipHtml}</div>${adminBtns}</div>`;
+                html += `<div class="flex items-center gap-3 p-3 mb-2 rounded-xl border ${hiddenClass} ${cardBg} transition-transform hover:scale-[1.01]"><div class="flex items-center justify-center w-8 h-8 rounded-full border-2 font-black text-sm shrink-0 ${rankClass}">${rankIcon}</div><img src="${p.photo}" class="w-10 h-10 rounded-full border-2 border-amber-400 shadow-sm object-cover shrink-0"><div class="flex flex-col min-w-0 flex-1"><div class="flex items-center gap-2"><span class="font-black text-amber-900 truncate max-w-[100px] md:max-w-[200px]">${p.name}</span>${rebirthTag}<span class="text-[0.6rem] font-black text-white bg-slate-800 px-1.5 py-0.5 rounded shadow-sm shrink-0 ml-1">LV.${p.lv}</span></div>${equipHtml}</div>${adminBtns}</div>`;
             });
 
             container.innerHTML = html;
@@ -16554,7 +16752,8 @@ if (newLv > oldLv) {
 
                 const price = data.price;
                 const canAfford = userGold >= price;
-                const lvEnough = userLv >= limitLv;
+                // [修改] 轉生特權：只要有轉生過，黑市購買無視等級！
+                const lvEnough = userLv >= limitLv || app.state.rebirthCount > 0;
 
                 let cardClass = "bg-slate-800 border-slate-600 hover:border-amber-500 hover:shadow-[0_0_15px_rgba(217,119,6,0.2)]";
                 let imgOpacity = "opacity-100";
@@ -17144,6 +17343,13 @@ if (newLv > oldLv) {
         getAttackBonus: (equippedMap, formula = '') => {
             let bonus = 0;
             let logs = []; // [新增] 用於紀錄傷害加成細節
+            
+            // [新增] 轉生攻擊力加成
+            if (app.state.rebirthAtk > 0) {
+                bonus += app.state.rebirthAtk;
+                logs.push(`[轉生]+${app.state.rebirthAtk}`);
+            }
+
             const globalList = app.state.globalSettings?.blackMarketList || [];
             
             // 計算公式中各符號出現的次數
@@ -17287,7 +17493,7 @@ if (newLv > oldLv) {
 
        // 4. 計算最大血量加成 (狩獵證明 & 史萊姆的王冠) [新增]
         getHpBonus: (equippedMap) => {
-            let bonus = 0;
+            let bonus = app.state.rebirthHp || 0; // [新增] 轉生血量加成
             const globalList = app.state.globalSettings?.blackMarketList || [];
             if (equippedMap) {
                 Object.values(equippedMap).forEach(itemId => {
@@ -17418,7 +17624,8 @@ if (newLv > oldLv) {
                 if (!slotEl) continue; 
 
                 const equippedItemId = data.equipped[i];
-                const isLocked = limitEnabled && (accLv < unlockLevels[i]); 
+                // [修改] 轉生特權：只要有轉生過，無視裝備欄位的等級限制！
+                const isLocked = limitEnabled && (accLv < unlockLevels[i]) && !(app.state.rebirthCount > 0); 
 
                 const baseClasses = slotEl.className.split(' ').filter(c => 
                     c.startsWith('absolute') || c.startsWith('top') || c.startsWith('bottom') || c.startsWith('left') || c.startsWith('right') || 
@@ -18567,8 +18774,8 @@ if (newLv > oldLv) {
                 if (!data.equipped[7]) emptySlot = 7;
                 else return app.toast('❌ 寵物格已滿！請先卸下目前的寵物夥伴。', 1);
             } else {
-                for (let i = 0; i < 6; i++) {
-                    const isUnlocked = !limitEnabled || (accLv >= unlockLevels[i]);
+              for (let i = 0; i < 6; i++) {
+                    const isUnlocked = !limitEnabled || (accLv >= unlockLevels[i]) || (app.state.rebirthCount > 0);
                     if (isUnlocked) {
                         if (!data.equipped[i]) {
                             emptySlot = i;
@@ -18577,7 +18784,7 @@ if (newLv > oldLv) {
                     }
                 }
                 if (emptySlot === -1) {
-                    const hasLockedSlot = limitEnabled && unlockLevels.some(lv => accLv < lv);
+                    const hasLockedSlot = limitEnabled && unlockLevels.some(lv => accLv < lv) && !(app.state.rebirthCount > 0);
                     if (hasLockedSlot) return app.toast('❌ 無可用欄位！(一般裝備欄需升級解鎖)', 1);
                     else return app.toast('❌ 一般裝備欄已滿！請先卸下舊裝備。', 1);
                 }
@@ -22117,6 +22324,7 @@ addRewardItem: () => {
 
                         app.state.campaignChars[uid] = {
                             name: uid,
+                            rebirthCount: p.rebirthCount || 0, // [新增] 轉生次數
                             gender: gender,
                             photo: photoUrl,
                             isMe: isMe,
@@ -22132,6 +22340,7 @@ addRewardItem: () => {
                         };
                     } else {
                         const char = app.state.campaignChars[uid];
+                        char.rebirthCount = p.rebirthCount || 0; // [新增] 同步轉生次數
 
                         // 頭像更新
                         if (p.photo && p.photo !== char.photo) {
@@ -22366,9 +22575,13 @@ addRewardItem: () => {
                 ctx.textAlign = 'center';
                 ctx.lineWidth = 3.5;
                 ctx.strokeStyle = 'rgba(0,0,0,0.9)';
-                ctx.strokeText(entity.name, pixelX, nameY);
+                
+                // [新增] 轉生標記
+                const displayName = entity.rebirthCount > 0 ? `${entity.name} 🌟x${entity.rebirthCount}` : entity.name;
+                
+                ctx.strokeText(displayName, pixelX, nameY);
                 ctx.fillStyle = entity.isMe ? '#4ade80' : '#ffffff';
-                ctx.fillText(entity.name, pixelX, nameY);
+                ctx.fillText(displayName, pixelX, nameY);
                 ctx.restore();
 
                 // ── e. 移動中顯示小箭頭指示方向 ──
@@ -23513,6 +23726,59 @@ if (entity.state === 'walk' && entity.target) {
         </div>
     </div>
 </div>
+
+<!-- [新增] 靈魂轉生祭壇 Modal 開始 -->
+<div id="rebirth-modal" class="fixed inset-0 z-[130] hidden items-center justify-center modal-backdrop backdrop-blur-md">
+    <div class="bg-slate-900 rounded-3xl w-full max-w-lg mx-4 shadow-[0_0_40px_rgba(251,191,36,0.5)] border-4 border-amber-400 flex flex-col overflow-hidden animate-[popIn_0.3s_ease-out] relative">
+        <!-- 閃爍星空背景 -->
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 pointer-events-none animate-twinkle"></div>
+        
+        <div class="bg-gradient-to-r from-amber-600 to-yellow-500 p-4 flex justify-between items-center border-b-2 border-amber-200 shadow-md relative z-10">
+            <h3 class="text-2xl font-black text-white drop-shadow-md tracking-widest flex items-center gap-2"><span class="text-3xl">✨</span>靈魂轉生祭壇</h3>
+            <button onclick="app.closeRebirthModal()" class="text-white hover:text-red-200 font-black text-2xl px-2 transition-colors">✕</button>
+        </div>
+        
+        <div class="p-6 relative z-10 flex flex-col items-center">
+            <div class="text-6xl mb-2 animate-[urgentFloat_2s_ease-in-out_infinite]">👼</div>
+            <p class="text-amber-100 font-bold text-center mb-4 text-sm md:text-base leading-relaxed bg-black/40 p-3 rounded-lg border border-amber-500/30">
+                你的修為已達凡人巔峰。<br>
+                進行靈魂轉生將<span class="text-red-400">重置你的等級</span>，但會<span class="text-green-400">保留所有財富與裝備</span>！<br>
+                <span class="text-yellow-300 font-black mt-1 block">🏆 特權：轉生後將永久「無視任何裝備的等級限制」！</span>
+            </p>
+            
+            <div class="w-full bg-slate-800 border-2 border-slate-600 rounded-xl p-3 mb-6 text-center shadow-inner relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                <div class="text-xs text-slate-400 mb-1 font-bold">本次轉生需消耗的經驗值</div>
+                <div id="rebirth-cost-exp" class="text-2xl md:text-3xl font-black text-amber-400 font-mono drop-shadow-md">0 EXP</div>
+                <div class="text-[0.65rem] text-green-400 mt-1 font-bold">※ 溢出的經驗將完美繼承，不會浪費！</div>
+            </div>
+            
+            <div class="w-full flex items-center justify-between mb-2 px-1">
+                <span class="text-sm font-black text-white">請選擇轉生恩賜 (二選一)：</span>
+                <span id="rebirth-total-count" class="text-xs bg-amber-500 text-black px-2 py-0.5 rounded-full font-bold shadow">總轉生: 0/10 次</span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 w-full">
+                <!-- 攻擊力選項 -->
+                <button id="btn-rebirth-atk" onclick="app.confirmRebirth('atk')" class="relative flex flex-col items-center justify-center bg-gradient-to-b from-orange-600 to-red-700 hover:from-orange-500 hover:to-red-600 text-white p-4 rounded-xl border-2 border-orange-400 shadow-[0_0_15px_rgba(234,88,12,0.4)] transition-transform active:scale-95 group overflow-hidden">
+                    <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                    <span class="text-4xl mb-2 group-hover:scale-110 transition-transform filter drop-shadow">⚔️</span>
+                    <span class="font-black text-lg tracking-widest">攻擊力 +2</span>
+                    <span id="rebirth-atk-limit" class="text-[0.65rem] text-orange-200 font-bold mt-1 bg-black/40 px-2 py-0.5 rounded-full border border-orange-500/50">已選: 0/5</span>
+                </button>
+                
+                <!-- 生命值選項 -->
+                <button id="btn-rebirth-hp" onclick="app.confirmRebirth('hp')" class="relative flex flex-col items-center justify-center bg-gradient-to-b from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600 text-white p-4 rounded-xl border-2 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-transform active:scale-95 group overflow-hidden">
+                    <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                    <span class="text-4xl mb-2 group-hover:scale-110 transition-transform filter drop-shadow">❤️</span>
+                    <span class="font-black text-lg tracking-widest">生命值 +20</span>
+                    <span id="rebirth-hp-limit" class="text-[0.65rem] text-emerald-200 font-bold mt-1 bg-black/40 px-2 py-0.5 rounded-full border border-emerald-500/50">已選: 0/5</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [新增] 靈魂轉生祭壇 Modal 結束 -->
 
 </body>
 </html>
