@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.4.3.6 - 冒險模式版</title>
+    <title>神殿試煉 v4.9.4.3.7 - 冒險模式版</title>
     <!-- [新增] 解決 favicon 404 錯誤，使用 SVG Emoji 作為分頁小圖示 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏺</text></svg>">
     <!-- 攔截 Tailwind CDN 的生產環境警告 -->
@@ -775,7 +775,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.4.3.6 - 冒險模式版</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.4.3.7 - 冒險模式版</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -4231,44 +4231,27 @@
             }
         },
 
-        triggerAutoRollQueue: (retryCount = 0) => {
-            // 確保 retryCount 是數字 (防呆：避免被 setTimeout 預設傳入的事件物件干擾)
-            let retries = typeof retryCount === 'number' ? retryCount : 0;
-            
+        triggerAutoRollQueue: () => {
             // 🛑 防護 1：如果遊戲準備結束或已結束，絕對不排程自動擲骰
             if (app.state.isGameOverPending || app.state.gameData?.status === 'ended') return;
             
-            // 🛑 防護 2：如果狀態不是 'waiting'，代表玩家可能正在解題(playing/鎖定中)，絕對不排程！
+            // 🛑 防護 2：如果不符合擲骰條件，絕對不排程！
             if (!app.state.autoRollEnabled || app.state.gameData?.status !== 'waiting') return;
             
             // 清除舊的計時器，避免重複堆疊
             if (app.state.autoRollTimerId) clearTimeout(app.state.autoRollTimerId);
 
-            // 🛡️ 防卡死機制：最多等待 15 次 (約 3 秒)，避免瀏覽器語音 API 卡死導致遊戲中斷
-            if (window.speechSynthesis && window.speechSynthesis.speaking && retries < 15) {
-                // 儲存 TimerID，並將重試次數 +1 傳遞下去
-                app.state.autoRollTimerId = setTimeout(() => app.triggerAutoRollQueue(retries + 1), 200); 
-            } else {
-                // 進入擲骰排程
-                app.state.autoRollTimerId = setTimeout(() => {
-                    // 🛑 防護 3 (終極雙重檢查)：準備擲骰的這一瞬間，再次確認遊戲狀態是否安全
-                    const isStillWaiting = app.state.gameData?.status === 'waiting';
-                    const isNotChest = app.state.gameData?.activeMonster?.type !== 'chest'; // 不能是寶箱狀態
-                    
-                    if (app.state.autoRollEnabled && isStillWaiting && isNotChest && !app.state.isGameOverPending) {
-                        
-                        // 若是因為語音卡死而強制放行的，記錄並嘗試重置語音引擎
-                        if (retries >= 15) {
-                            console.warn("⚠️ 偵測到瀏覽器語音 API 卡死，啟動強制擲骰保護機制！");
-                            if (window.speechSynthesis && window.speechSynthesis.cancel) {
-                                window.speechSynthesis.cancel(); // 清空卡住的語音佇列
-                            }
-                        }
-                        
-                        app.teacherRollDice();
-                    }
-                }, 200);
-            }
+            // 🛡️ 修正核心：徹底移除語音 API 的阻塞機制 (不再檢查 window.speechSynthesis.speaking)
+            // 改為固定的 500ms 延遲，確保 Firebase 資料同步完畢，同時讓遊戲節奏流暢不卡頓
+            app.state.autoRollTimerId = setTimeout(() => {
+                // 🛑 防護 3 (終極雙重檢查)：準備擲骰的這一瞬間，再次確認遊戲狀態是否安全
+                const isStillWaiting = app.state.gameData?.status === 'waiting';
+                const isNotChest = app.state.gameData?.activeMonster?.type !== 'chest'; // 不能是寶箱狀態
+                
+                if (app.state.autoRollEnabled && isStillWaiting && isNotChest && !app.state.isGameOverPending) {
+                    app.teacherRollDice();
+                }
+            }, 500);
         },
 // [v4.3.0 新增] 檢查並恢復連線
         checkPreviousSession: () => {
@@ -11387,6 +11370,7 @@ for (const slot of slots) {
                     if (card && card.marks) delete card.marks;
                     if (card && card.sunderMark) delete card.sunderMark; // 清除破甲箭標記
                     if (card && card.immolate) delete card.immolate; // [新增] 清除術士烈焰焚身標記
+					    if (card && card.cureMark) delete card.cureMark;     // ⭐ [修正] 補上清除牧師的治癒印記，防止跨局保留
                 });
                 
                // 準備更新物件
