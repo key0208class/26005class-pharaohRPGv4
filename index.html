@@ -20785,10 +20785,16 @@ if (newLv > oldLv) {
                     return;
                 }
 
-                // 2. 靜默寫入資料庫或 LocalStorage (不中斷玩家答題)
+               // 2. 靜默寫入資料庫或 LocalStorage (不中斷玩家答題)
                 if (app.state.user) {
                     const ref = db.ref(`users/${app.state.user.uid}/inventory/${targetItemId}`);
                     ref.transaction(count => (count || 0) + 1);
+                    
+                    // 【關鍵修復】必須同步更新本地記憶體，防止稍後與寵物互動存檔時把雲端資料覆蓋掉！
+                    if (app.state.currentBackpackData) {
+                        if (!app.state.currentBackpackData.inventory) app.state.currentBackpackData.inventory = {};
+                        app.state.currentBackpackData.inventory[targetItemId] = (app.state.currentBackpackData.inventory[targetItemId] || 0) + 1;
+                    }
                 } else {
                     const localInv = JSON.parse(localStorage.getItem('pharaoh_guest_inventory') || '{}');
                     localInv[targetItemId] = (localInv[targetItemId] || 0) + 1;
