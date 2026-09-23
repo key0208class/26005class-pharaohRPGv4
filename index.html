@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -1048,9 +1047,7 @@
                                     </label>
                                 </div>
                                 <!-- 音樂開關結束 -->
-                                <button onclick="app.refreshLobby()" class="text-amber-600 font-bold hover:text-amber-800 text-sm flex items-center gap-1 bg-white px-3 py-1 rounded-lg border border-amber-200 hover:bg-amber-50 transition-colors shadow-sm">
-                                    <span>🔄</span> <span class="hidden md:inline">整理</span>
-                                </button>
+                                <button id="btn-refresh-lobby" onclick="app.refreshLobby(true)" class="text-amber-600 font-bold hover:text-amber-800 text-sm flex items-center gap-1 bg-white px-3 py-1 rounded-lg border border-amber-200 hover:bg-amber-50 transition-colors shadow-sm"><span class="refresh-icon">🔄</span><span class="btn-text hidden md:inline">整理</span></button>
                             </div>
                         </div>
                         <!-- 冒險資訊公告欄開始 -->
@@ -1118,10 +1115,7 @@
 		<!-- [新增] 傳奇殿堂排行榜視窗開始 -->
         <div id="leaderboard-modal" class="fixed inset-0 z-[80] hidden flex items-center justify-center modal-backdrop backdrop-blur-sm">
             <div class="bg-white rounded-3xl w-full max-w-lg mx-4 shadow-2xl border-4 border-amber-500 flex flex-col overflow-hidden relative animate-[popIn_0.3s_ease-out] max-h-[85vh]">
-                <div class="bg-gradient-to-r from-amber-600 to-yellow-600 p-4 flex justify-between items-center border-b-2 border-amber-700 shadow-md z-10 shrink-0">
-                    <h3 class="text-2xl font-black text-white flex items-center gap-2 drop-shadow-md">🏆 傳奇殿堂 <span class="text-sm bg-black/30 px-2 py-0.5 rounded-full font-bold">LV.10+</span></h3>
-                    <button onclick="app.closeLeaderboard()" class="text-white hover:text-amber-200 font-black text-2xl px-2 transition-colors active:scale-90">✕</button>
-                </div>
+               <div class="bg-gradient-to-r from-amber-600 to-yellow-600 p-3 md:p-4 flex justify-between items-center border-b-2 border-amber-700 shadow-md z-10 shrink-0"><h3 class="text-xl md:text-2xl font-black text-white flex items-center gap-1 md:gap-2 drop-shadow-md">🏆傳奇殿堂<span class="text-[0.65rem] md:text-sm bg-black/30 px-1.5 py-0.5 rounded-full font-bold">LV.10+</span></h3><div class="flex items-center gap-2"><span id="leaderboard-update-time" class="text-[0.65rem] text-amber-100 font-bold hidden md:inline"></span><button id="btn-refresh-leaderboard" onclick="app.refreshLeaderboard()" class="bg-amber-800/50 hover:bg-amber-800 text-white text-[0.65rem] md:text-xs font-bold px-2 py-1 rounded border border-amber-500 transition-colors shadow-sm flex items-center gap-1">🔄 刷新</button><button onclick="app.closeLeaderboard()" class="text-white hover:text-amber-200 font-black text-xl md:text-2xl px-1 md:px-2 transition-colors active:scale-90 ml-1">✕</button></div></div>
                 <div class="flex-1 flex flex-col bg-slate-50 relative overflow-hidden">
                     <div class="bg-amber-100/50 p-2 text-center text-xs font-bold text-amber-800 border-b border-amber-200 shrink-0">
                         僅展示等級超越凡人的傳說級冒險者
@@ -5214,7 +5208,8 @@
         });
 
        // 讀取並顯示大廳房間與啟動世界頻道
-            app.refreshLobby();
+            app.startLobbyPolling(); // 啟動背景輪詢
+            app.refreshLobby(false);
             app.initLobbyChatListeners();
             
             // 預設載入大廳
@@ -5263,16 +5258,66 @@
         },
 
         // v4.0.2: 刷新大廳房間列表 (即時監聽 Firebase)
-        refreshLobby: () => {
+       // 啟動大廳定時輪詢 (每 15 秒抓一次，切斷每秒監聽的流量核彈)
+        startLobbyPolling: () => {
+            if (app.state.lobbyPollInterval) clearInterval(app.state.lobbyPollInterval);
+            app.state.lobbyPollInterval = setInterval(() => {
+                // 只有當玩家在大廳時，才在背景默默更新列表
+                const lobbyPage = app.el('page-lobby');
+                if (lobbyPage && !lobbyPage.classList.contains('hidden')) {
+                    app.refreshLobby(false); // false 代表背景自動更新，不觸發冷卻 UI
+                }
+            }, 15000);
+        },
+
+        // 停止大廳輪詢
+        stopLobbyPolling: () => {
+            if (app.state.lobbyPollInterval) {
+                clearInterval(app.state.lobbyPollInterval);
+                app.state.lobbyPollInterval = null;
+            }
+        },
+
+        // v4.0.2: 刷新大廳房間列表 (改為一次性抓取 + 冷卻防護)
+        refreshLobby: (isManualClick = false) => {
             const listEl = app.el('lobby-room-list');
+            const btn = app.el('btn-refresh-lobby');
             const myName = localStorage.getItem('pharaoh_player_name') || '未命名';
             app.el('lobby-high-score').textContent = localStorage.getItem('pharaoh_high_score') || '0';
 
-            // [新增] 先註銷舊監聽，防止多次點擊手動重新整理時累積監聽器
+            // 處理手動點擊的 5 秒冷卻機制
+            if (isManualClick) {
+                if (app.state.isLobbyRefreshing) return; // 冷卻中，阻擋連點
+                app.state.isLobbyRefreshing = true;
+
+                if (btn) {
+                    const icon = btn.querySelector('.refresh-icon');
+                    const text = btn.querySelector('.btn-text');
+                    btn.classList.add('bg-gray-200', 'text-gray-500', 'cursor-not-allowed', 'border-gray-300');
+                    btn.classList.remove('bg-white', 'text-amber-600', 'hover:text-amber-800', 'hover:bg-amber-50', 'border-amber-200');
+                    if (icon) icon.classList.add('animate-spin');
+                    if (text) text.textContent = '整理中';
+                }
+
+                // 5 秒後解除冷卻
+                setTimeout(() => {
+                    app.state.isLobbyRefreshing = false;
+                    if (btn) {
+                        const icon = btn.querySelector('.refresh-icon');
+                        const text = btn.querySelector('.btn-text');
+                        btn.classList.remove('bg-gray-200', 'text-gray-500', 'cursor-not-allowed', 'border-gray-300');
+                        btn.classList.add('bg-white', 'text-amber-600', 'hover:text-amber-800', 'hover:bg-amber-50', 'border-amber-200');
+                        if (icon) icon.classList.remove('animate-spin');
+                        if (text) text.textContent = '整理';
+                    }
+                }, 5000);
+            }
+
+            // 確保清除舊的持續監聽器 (保險措施)
             db.ref('classes').off('value');
 
-            // 監聽所有房間變化
-            db.ref('classes').on('value', snapshot => {
+            // [核心優化] 改為 .once() 一次性抓取，徹底解決流量暴增問題
+            db.ref('classes').once('value', snapshot => {
                 const rooms = snapshot.val();
                 if (!rooms) {
                     listEl.innerHTML = '<div class="text-center text-gray-400 py-10"><div class="text-4xl mb-2">🍃</div><p>目前沒有房間，你可以建立一個！</p></div>';
@@ -5282,41 +5327,53 @@
             });
         },
 
-        // v4.0.2: 渲染房間列表 (過濾 5 分鐘內活躍)
+        // v4.0.2: 渲染房間列表 (修正跳動 BUG)
         renderRoomList: (rooms) => {
             const listEl = app.el('lobby-room-list');
             const now = Date.now();
             let html = '';
             let activeCount = 0;
 
-            // 轉陣列並排序 (最新的在上面)
             const roomArr = Object.entries(rooms).map(([id, data]) => ({ id, ...data }));
-            roomArr.sort((a, b) => (b.lastActive || 0) - (a.lastActive || 0));
+            
+            // [BUG修正] 改變排序邏輯，解決列表瘋狂跳動問題
+            // 優先：狀態 (waiting 排前面，playing 排後面)
+            // 其次：房間建立時間或ID (最新的排前面)
+            roomArr.sort((a, b) => {
+                const statusWeight = { 'waiting': 2, 'playing': 1, 'ended': 0 };
+                const weightA = statusWeight[a.status] || 0;
+                const weightB = statusWeight[b.status] || 0;
+                
+                if (weightA !== weightB) {
+                    return weightB - weightA; // 狀態權重大的排前面
+                }
+                // 狀態相同時，依據建立時間(startTime) 或 id 降冪排序
+                const timeA = a.startTime || 0;
+                const timeB = b.startTime || 0;
+                if (timeA !== timeB) return timeB - timeA;
+                
+                return b.id.localeCompare(a.id);
+            });
 
             roomArr.forEach(room => {
-                // 篩選條件: 5分鐘內活躍 (5 * 60 * 1000 = 300000)
-                // [v4.3.1] 新增過濾條件：必須是活躍且「非結束」狀態的房間才顯示
+                // 篩選條件: 5分鐘內活躍且非結束狀態
                 const isAlive = (now - (room.lastActive || 0)) < 300000;
-                const isNotEnded = room.status !== 'ended'; // 確保冒險結束的房間不顯示
+                const isNotEnded = room.status !== 'ended'; 
                 
                 if (isAlive && isNotEnded) {
                     activeCount++;
-                    const isMyRoom = room.hostName === app.state.myName;
                     const statusText = room.status === 'waiting' ? '等待中' : '冒險進行中';
                     const statusClass = room.status === 'waiting' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
                     
-                    // [新增] 判斷房間類型，加入不同的標籤與圖示
                     const roomTypeTag = room.isCampaign 
                         ? `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded border border-red-300 text-[0.6rem] font-black shadow-sm mr-2">⚔️ 戰役模式</span>` 
                         : `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded border border-blue-300 text-[0.6rem] font-black shadow-sm mr-2">🎲 隨機討伐</span>`;
                     const roomIcon = room.isCampaign ? '🗺️' : '🏰';
                     
-                    // [新增] 計算當前人數與判斷是否上鎖
                     const currentPlayers = room.players && room.players.team1 ? Object.keys(room.players.team1).length : 0;
                     const maxPlayersText = (room.maxPlayers && room.maxPlayers > 0) ? `👥 ${currentPlayers}/${room.maxPlayers}` : `👥 ${currentPlayers}`;
                     const pwdTag = room.password ? `<span class="bg-slate-700 text-white px-1.5 py-0.5 rounded text-[0.6rem] ml-1 shadow-sm" title="需要密碼">🔒</span>` : '';
 
-                    // 壓縮 HTML 防止空白節點
                     html += `<div onclick="app.joinLobbyRoom('${room.id}')" class="room-item"><div class="flex items-center gap-3"><div class="text-2xl">${roomIcon}</div><div><div class="font-bold text-amber-900 flex items-center">${roomTypeTag}${room.roomName || '未命名隊伍'}</div><div class="text-xs text-gray-500 flex items-center gap-2 mt-1"><span>隊長: ${room.hostName}</span><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-[0.6rem] font-bold border border-amber-200">${maxPlayersText}</span><span class="${statusClass} px-2 py-0.5 rounded-full text-[0.6rem] font-bold">${statusText}</span>${pwdTag}</div></div></div><div class="text-amber-600 font-bold text-sm">點擊加入 ➜</div></div>`;
                 }
             });
@@ -5609,6 +5666,7 @@
        // v4.1.0: 進入遊戲介面 (修正主控者倒數計時與語音按鈕顯示)
         enterGameMode: () => {
             app.el('page-lobby').classList.add('hidden');
+			app.stopLobbyPolling();
             app.el('game-board').classList.remove('hidden');
             app.el('admin-gear-btn').classList.add('hidden');
 
@@ -17746,15 +17804,77 @@ if (newLv > oldLv) {
         },
 		// --- v4.7.6.4 黑市系統邏輯 ---
         // --- [新增 v4.8.6] 傳奇殿堂排行榜系統 ---
+       // --- [新增 v4.8.6] 傳奇殿堂排行榜系統 (加入快取與防狂點機制) ---
         openLeaderboard: () => {
             app.el('leaderboard-modal').classList.remove('hidden');
-            app.el('leaderboard-list-container').innerHTML = '<div class="text-center text-gray-400 py-10 font-bold">資料讀取中，請稍候...</div>';
+            const container = app.el('leaderboard-list-container');
             
-            // 從 Firebase 讀取所有玩家資料
+            const now = Date.now();
+            // 檢查快取：如果距離上次抓取小於 5 分鐘 (300000 毫秒)，且快取存在，直接讀取記憶體！
+            if (app.state.leaderboardCache && app.state.lastLeaderboardFetchTime && (now - app.state.lastLeaderboardFetchTime < 300000)) {
+                console.log("🏆 讀取排行榜快取資料，節省流量！");
+                app.renderLeaderboard(app.state.leaderboardCache);
+                return;
+            }
+
+            // 沒有快取，或快取過期，執行真實拉取
+            container.innerHTML = '<div class="text-center text-amber-600 py-10 font-bold animate-pulse"><span class="text-4xl block mb-2">⏳</span>卷軸展開中，請稍候...</div>';
+            app.fetchLeaderboardData();
+        },
+
+        fetchLeaderboardData: () => {
             db.ref('users').once('value', snapshot => {
                 const users = snapshot.val() || {};
+                // 更新快取與時間
+                app.state.leaderboardCache = users;
+                app.state.lastLeaderboardFetchTime = Date.now();
+                
+                // 更新介面上的上次更新時間
+                const timeEl = app.el('leaderboard-update-time');
+                if (timeEl) {
+                    const d = new Date();
+                    timeEl.textContent = `上次更新: ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                }
+                
                 app.renderLeaderboard(users);
             });
+        },
+
+        refreshLeaderboard: () => {
+            // 檢查 180 秒冷卻
+            const now = Date.now();
+            if (app.state.leaderboardCooldownUntil && now < app.state.leaderboardCooldownUntil) {
+                return; // 仍在冷卻中，阻擋點擊
+            }
+
+            // 設定 180 秒冷卻
+            app.state.leaderboardCooldownUntil = now + 180000;
+            app.updateLeaderboardBtnCooldown();
+
+            app.el('leaderboard-list-container').innerHTML = '<div class="text-center text-amber-600 py-10 font-bold animate-pulse"><span class="text-4xl block mb-2">🔄</span>最新傳奇資料載入中...</div>';
+            app.fetchLeaderboardData();
+        },
+
+        updateLeaderboardBtnCooldown: () => {
+            const btn = app.el('btn-refresh-leaderboard');
+            if (!btn) return;
+
+            const updateTimer = () => {
+                const now = Date.now();
+                if (app.state.leaderboardCooldownUntil && now < app.state.leaderboardCooldownUntil) {
+                    const remain = Math.ceil((app.state.leaderboardCooldownUntil - now) / 1000);
+                    btn.classList.add('bg-gray-400', 'text-gray-600', 'cursor-not-allowed', 'border-gray-500', 'grayscale');
+                    btn.classList.remove('bg-amber-800/50', 'hover:bg-amber-800', 'text-white', 'border-amber-500');
+                    btn.innerHTML = `⏳ 冷卻中(${remain}s)`;
+                    setTimeout(updateTimer, 1000);
+                } else {
+                    btn.classList.remove('bg-gray-400', 'text-gray-600', 'cursor-not-allowed', 'border-gray-500', 'grayscale');
+                    btn.classList.add('bg-amber-800/50', 'hover:bg-amber-800', 'text-white', 'border-amber-500');
+                    btn.innerHTML = `🔄 刷新`;
+                    app.state.leaderboardCooldownUntil = 0;
+                }
+            };
+            updateTimer();
         },
 
         closeLeaderboard: () => {
@@ -17915,6 +18035,7 @@ if (newLv > oldLv) {
             if (app.state.isDataSyncing) return app.toast('🔄 雲端資料同步中，為確保交易安全，請稍候一秒...', 1);
 
             app.el('page-lobby').classList.add('hidden');
+			app.stopLobbyPolling();
             app.el('black-market-interface').classList.remove('hidden');
             app.playBgm('lobby'); // [新增] 黑市內繼續播放輕音樂
             
@@ -18835,6 +18956,7 @@ if (newLv > oldLv) {
             if (app.state.isDataSyncing) return app.toast('🔄 雲端資料同步中，請稍候一秒再開啟背包...', 1);
 
             app.el('page-lobby').classList.add('hidden');
+			app.stopLobbyPolling();
             app.el('character-backpack-modal').classList.remove('hidden');
             app.closeBackpackPanel(); // [新增防護] 確保開啟背包時，下方道具面板是關閉的狀態
             
@@ -20505,9 +20627,6 @@ if (newLv > oldLv) {
             _isActive: false,  // 防止重複呼叫 start
             hintsLeft: 2,      // [新增] 提示次數
             isHintShowing: false, // [新增] 紀錄提示是否顯示中
-            isEvaluating: false,  // [防作弊] 是否正在結算動畫中(鎖定標籤)
-            actualSolves: 0,      // [防作弊] 實際真實解題數
-            cheatCount: 0,        // [防作弊] 違規連點次數
 
           // 【新增】對話框更新與提示核心邏輯
           updateSpeech: (text) => {
@@ -20672,8 +20791,6 @@ if (newLv > oldLv) {
                 app.g24._isActive = true;
                 app.g24.combo = 0;
                 app.g24.sessionGold = 0;
-                app.g24.actualSolves = 0; // [防作弊] 重置真實解題數
-                app.g24.cheatCount = 0;   // [防作弊] 重置作弊數
 
                 if (app.state.user) {
                     try {
@@ -20860,14 +20977,12 @@ if (newLv > oldLv) {
                 const currentCombo = app.g24.combo;
                 app.g24.hintsLeft = 2; // 【新增】結算後也重置為2次提示次數
 
-               // 更新最高紀錄
+                // 更新最高紀錄
                 if (currentCombo > app.g24.maxCombo) {
                     app.g24.maxCombo = currentCombo;
                     if (app.state.user) {
                         const uid = app.state.user.uid;
                         db.ref(`users/${uid}/game24MaxCombo`).set(app.g24.maxCombo);
-                        db.ref(`users/${uid}/game24ActualSolves`).set(app.g24.actualSolves); // [防作弊] 儲存真實數
-                        db.ref(`users/${uid}/game24CheatCount`).set(app.g24.cheatCount);     // [防作弊] 儲存作弊數
                         db.ref(`users/${uid}/displayName`).set(app.state.myName || '冒險者');
                         db.ref(`users/${uid}/photoURL`).set(app.state.user.photoURL || '');
                     } else {
@@ -20912,21 +21027,8 @@ if (newLv > oldLv) {
                     return app.g24.wrongAnswer(e.message);
                 }
 
-               if (result === 24) {
+                if (result === 24) {
                     // ===== 答對！=====
-                    
-                    // [防作弊 A方案] 判斷是否為連點作弊
-                    const isCheating = app.g24.isEvaluating;
-                    
-                    if (isCheating) {
-                        // 偷偷紀錄作弊，但繼續往下執行，讓分數膨脹
-                        app.g24.cheatCount++;
-                    } else {
-                        // 正常解題，上鎖並增加真實解題數
-                        app.g24.isEvaluating = true; 
-                        app.g24.actualSolves++; 
-                    }
-
                     app.g24.combo++;
                     
                     // 💡[可修改] 防通膨機制：最高 10 Combo，每 Combo 獎勵提升至 20 金幣 (最高單次得 200 金幣)
@@ -20941,14 +21043,12 @@ if (newLv > oldLv) {
                         app.grantPetExpAndCheckLevel(petIdx, 10);
                     }
 
-                    // 更新最高紀錄 (結算時也會更新一次，這裡是確保中途斷線也有紀錄)
+                    // 更新最高紀錄
                     if (app.g24.combo > app.g24.maxCombo) {
                         app.g24.maxCombo = app.g24.combo;
                         if (app.state.user) {
                             const uid = app.state.user.uid;
                             db.ref(`users/${uid}/game24MaxCombo`).set(app.g24.maxCombo);
-                            db.ref(`users/${uid}/game24ActualSolves`).set(app.g24.actualSolves);
-                            db.ref(`users/${uid}/game24CheatCount`).set(app.g24.cheatCount);
                             db.ref(`users/${uid}/displayName`).set(app.state.myName || '冒險者');
                             db.ref(`users/${uid}/photoURL`).set(app.state.user.photoURL || '');
                         } else {
@@ -20987,14 +21087,8 @@ if (newLv > oldLv) {
                         app.g24.triggerHolyLightTrialReward();
                     }
 
-                    // 1.2 秒後自動換牌 (【防作弊】只有非作弊的第一次點擊才觸發換牌與解鎖)
-                    if (!isCheating) {
-                        setTimeout(() => { 
-                            app.g24.setFeedback('', ''); 
-                            app.g24.isEvaluating = false; // 解鎖
-                            app.g24.drawCards(); 
-                        }, 1200);
-                    }
+                    // 1.2 秒後自動換牌
+                    setTimeout(() => { app.g24.setFeedback('', ''); app.g24.drawCards(); }, 1200);
 
                 } else {
                     app.g24.wrongAnswer(`結果是 ${result}，不是 24 喔！`);
@@ -21127,13 +21221,11 @@ if (newLv > oldLv) {
 
                         if (d.game24MaxCombo && d.game24MaxCombo > 0) {
                             players.push({
-                                uid: uid, 
+                                uid: uid, // [新增]
                                 name:  d.displayName || '冒險者',
                                 photo: d.photoURL    || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
                                 combo: d.game24MaxCombo,
-                                actualSolves: d.game24ActualSolves || 0, // [防作弊] 讀取真實數
-                                cheatCount: d.game24CheatCount || 0,     // [防作弊] 讀取作弊數
-                                isHidden: isHidden 
+                                isHidden: isHidden // [新增]
                             });
                         }
                     });
@@ -21158,19 +21250,19 @@ if (newLv > oldLv) {
                         else if (idx === 1) bgCls = 'bg-gradient-to-r from-slate-400 to-slate-300 border-slate-200 text-slate-900';
                         else if (idx === 2) bgCls = 'bg-gradient-to-r from-orange-700 to-orange-500 border-orange-400 text-white';
                         
-                        // [修改] 重新設計管理員按鈕，適配手機版面，採 2x2 網格
+                        // [新增] 管理員專屬功能按鈕 (無空白節點壓縮)
                         let adminBtns = '';
                         if (isAdmin) {
                             const hideLabel = p.isHidden ? '👁️ 顯示' : '👻 隱藏';
                             const hideBg = p.isHidden ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-orange-100 text-orange-700 hover:bg-orange-200';
-                            adminBtns = `<div class="grid grid-cols-2 gap-1 ml-2 shrink-0 w-[5.5rem]"><button onclick="app.g24.adminInspectPlayer('${p.name}', ${p.combo}, ${p.actualSolves}, ${p.cheatCount})" class="col-span-2 px-1 py-0.5 bg-fuchsia-100 text-fuchsia-700 rounded text-[0.65rem] font-black hover:bg-fuchsia-200 transition-colors shadow-sm">🔍檢驗</button><button onclick="app.g24.adminEditPlayer('${p.uid}', '${p.name}')" class="px-1 py-0.5 bg-blue-100 text-blue-700 rounded text-[0.6rem] font-bold hover:bg-blue-200 transition-colors shadow-sm">改名</button><button onclick="app.g24.adminToggleHidePlayer('${p.uid}', ${p.isHidden})" class="px-1 py-0.5 ${hideBg} rounded text-[0.6rem] font-bold transition-colors shadow-sm">${hideLabel}</button><button onclick="app.g24.adminResetCombo('${p.uid}', '${p.name}')" class="col-span-2 px-1 py-0.5 bg-red-100 text-red-700 rounded text-[0.65rem] font-black hover:bg-red-200 transition-colors shadow-sm">歸零處分</button></div>`;
+                            adminBtns = `<div class="flex flex-col gap-1 ml-2 shrink-0"><button onclick="app.g24.adminEditPlayer('${p.uid}', '${p.name}')" class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-[0.6rem] font-bold hover:bg-blue-200 transition-colors shadow-sm">改名</button><button onclick="app.g24.adminToggleHidePlayer('${p.uid}', ${p.isHidden})" class="px-2 py-0.5 ${hideBg} rounded text-[0.6rem] font-bold transition-colors shadow-sm">${hideLabel}</button><button onclick="app.g24.adminResetCombo('${p.uid}', '${p.name}')" class="px-2 py-0.5 bg-red-100 text-red-700 rounded text-[0.6rem] font-bold hover:bg-red-200 transition-colors shadow-sm">歸零</button></div>`;
                         }
 
                         // 被隱藏玩家的半透明特效
                         const hiddenClass = p.isHidden ? 'opacity-50 grayscale' : '';
 
                         // HTML 渲染 (無空白節點壓縮)
-                        html += `<div class="flex items-center gap-2 md:gap-3 p-2 md:p-3 mb-2 rounded-xl border ${bgCls} ${hiddenClass} transition-transform hover:scale-[1.01]"><div class="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-full border-2 border-white/30 font-black text-xs md:text-sm bg-black/20 shrink-0">${rank}</div><img src="${p.photo}" class="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-white/50 shadow object-cover shrink-0" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'"><div class="font-black text-sm md:text-base truncate flex-1">${p.name}</div><div class="font-mono text-xl md:text-2xl font-black shrink-0">${p.combo} <span class="text-[0.6rem] md:text-xs font-bold opacity-70">連對</span></div>${adminBtns}</div>`;
+                        html += `<div class="flex items-center gap-3 p-3 mb-2 rounded-xl border ${bgCls} ${hiddenClass} transition-transform hover:scale-[1.01]"><div class="w-8 h-8 flex items-center justify-center rounded-full border-2 border-white/30 font-black text-sm bg-black/20 shrink-0">${rank}</div><img src="${p.photo}" class="w-10 h-10 rounded-full border-2 border-white/50 shadow object-cover shrink-0" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'"><div class="font-black text-base truncate flex-1">${p.name}</div><div class="font-mono text-2xl font-black shrink-0">${p.combo} <span class="text-xs font-bold opacity-70">連對</span></div>${adminBtns}</div>`;
                     });
                     listEl.innerHTML = bannerHtml + html;
 
@@ -21180,10 +21272,6 @@ if (newLv > oldLv) {
             },
 
             // --- [新增] 巧算24 專屬管理員功能 ---
-            adminInspectPlayer: (name, combo, actual, cheat) => {
-                // 防作弊系統檢驗視窗
-                alert(`🔍 【反作弊檢驗系統】\n\n冒險者：${name}\n------------------------\n🏆 英雄榜顯示連對：${combo}\n\n🕵️ 實際解題數：${actual}\n🚨 違規連點操作：${cheat}\n------------------------\n※ 系統紀錄：若違規操作次數異常增高，代表該玩家利用送出答案時的延遲瘋狂連點刷分！\n(請執行【歸零處分】重新計算)`);
-            },
             adminEditPlayer: (uid, currentName) => {
                 const newName = prompt('🛡️ 管理員權限 - 請輸入新的玩家暱稱：', currentName);
                 if (newName && newName.trim() !== '') {
@@ -21208,13 +21296,11 @@ if (newLv > oldLv) {
                 }
             },
             adminResetCombo: (uid, name) => {
-                if (confirm(`🗑️ 警告：確定要將玩家【${name}】的巧算24分數【歸零處分】嗎？\n\n(此操作會一併清空他的作弊紀錄，讓他重新做人！)`)) {
+                if (confirm(`🗑️ 警告：確定要將玩家【${name}】的巧算24 Combo 歸零嗎？\n\n(此操作不可逆！通常用於懲罰異常刷分)`)) {
                     db.ref(`users/${uid}`).update({
-                        game24MaxCombo: 0,
-                        game24ActualSolves: 0, // [防作弊] 連同作弊紀錄一起歸零
-                        game24CheatCount: 0
+                        game24MaxCombo: 0
                     }).then(() => {
-                        app.toast(`🗑️ 已將【${name}】的紀錄歸零處分`, 1);
+                        app.toast(`🗑️ 已將【${name}】的紀錄歸零`, 1);
                         app.g24.showLeaderboard(); 
                     });
                 }
@@ -22804,6 +22890,7 @@ if (newLv > oldLv) {
 
             // --- 原本的進入戰役邏輯 ---
             app.el('page-lobby').classList.add('hidden');
+			app.stopLobbyPolling();
             app.el('page-campaign').classList.remove('hidden');
             app.el('black-market-interface').classList.add('hidden'); 
             
