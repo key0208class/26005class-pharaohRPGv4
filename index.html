@@ -11021,8 +11021,11 @@
                                 
                                 if (userData.claimedRooms[roomKey]) {
                                     // 🛑 【修復核心】：抓到了！重複請求！加上作弊標記，並且「立即阻斷」後續獎勵發放！
-                                    if (!userData.cheatData) userData.cheatData = { count: 0 };
+                                    // 🛑 【修復核心】：初始化擴充寶箱與結算的專屬計數器
+                                    if (!userData.cheatData) userData.cheatData = { count: 0, chestCount: 0, endGameCount: 0 };
                                     userData.cheatData.count += 1;
+                                    // 🛑 【修復核心】：結算作弊專屬次數 +1
+                                    userData.cheatData.endGameCount = (userData.cheatData.endGameCount || 0) + 1;
                                     userData.cheatData.lastTime = firebase.database.ServerValue.TIMESTAMP;
                                     // 🛑 【修復核心】：補上具體的作弊原因紀錄，方便管理員後台追蹤
                                     userData.cheatData.latestReason = "【結算漏洞】嘗試重複領取關卡最終獎勵"; 
@@ -18722,8 +18725,11 @@ if (newLv > oldLv) {
 
                     // 🛑 【檢查鎖】：如果這個寶箱 ID 已經在紀錄中，代表玩家用雙開視窗偷領！
                     if (userData.claimedChests[chestId]) {
-                        if (!userData.cheatData) userData.cheatData = { count: 0 };
+                        // 🛑 【修復核心】：初始化擴充寶箱與結算的專屬計數器
+                        if (!userData.cheatData) userData.cheatData = { count: 0, chestCount: 0, endGameCount: 0 };
                         userData.cheatData.count += 1;
+                        // 🛑 【修復核心】：寶箱作弊專屬次數 +1
+                        userData.cheatData.chestCount = (userData.cheatData.chestCount || 0) + 1;
                         userData.cheatData.lastTime = firebase.database.ServerValue.TIMESTAMP;
                         userData.cheatData.latestReason = "【寶箱漏洞】嘗試雙開重複領取三選一獎勵";
                         userData._txError = 'cheat_chest'; // 加上作弊標籤，通知回呼函式
@@ -19197,12 +19203,16 @@ if (newLv > oldLv) {
                     // 動態切換容器排版：如果有作弊資料，使用 2x2 的 grid 排列，避免橫向推擠
                     let containerClass = 'flex gap-1 ml-auto shrink-0 justify-end';
                     
-                   if (p.cheatData) {
+                if (p.cheatData) {
                         const timeStr = new Date(p.cheatData.lastTime || Date.now()).toLocaleString();
                         // 🛑 【修復核心】：讀取作弊原因，並處理單引號跳脫，避免 HTML 點擊事件報錯
                         const safeReason = (p.cheatData.latestReason || '未知原因').replace(/'/g, "\\'");
+                        // 🛑 【修復核心】：讀取並準備傳遞兩種專屬作弊次數（給舊資料預設值 0 防呆）
+                        const chestCount = p.cheatData.chestCount || 0;
+                        const endGameCount = p.cheatData.endGameCount || 0;
                         
-                        cheatBtns = `<button onclick="app.adminCheckCheat('${p.name}', ${p.cheatData.count}, '${timeStr}', '${safeReason}')" class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-[0.6rem] font-bold hover:bg-yellow-200 transition-colors shadow-sm whitespace-nowrap w-full">🔍 檢查</button><button onclick="app.adminClearCheat('${p.uid}', '${p.name}')" class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded text-[0.6rem] font-bold hover:bg-emerald-200 transition-colors shadow-sm whitespace-nowrap w-full">✅ 解除</button>`;
+                        // 🛑 【修復核心】：將 chestCount 與 endGameCount 加入傳遞參數中
+                        cheatBtns = `<button onclick="app.adminCheckCheat('${p.name}', ${p.cheatData.count}, '${timeStr}', '${safeReason}', ${chestCount}, ${endGameCount})" class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-[0.6rem] font-bold hover:bg-yellow-200 transition-colors shadow-sm whitespace-nowrap w-full">🔍 檢查</button><button onclick="app.adminClearCheat('${p.uid}', '${p.name}')" class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded text-[0.6rem] font-bold hover:bg-emerald-200 transition-colors shadow-sm whitespace-nowrap w-full">✅ 解除</button>`;
                         containerClass = 'grid grid-cols-2 gap-1 ml-auto shrink-0';
                     }
 
@@ -19268,13 +19278,14 @@ if (newLv > oldLv) {
             }
         },
 
-      // ==========================================
+     // ==========================================
         // --- [新增] 管理員防弊：檢驗異常按鈕邏輯 ---
         // ==========================================
-        // 🛑 【修復核心】：擴充 reason 參數，並顯示在彈窗中
-        adminCheckCheat: (name, count, timeStr, reason = '未知原因') => {
-            // 改用原生的 alert 彈窗，讓管理員能清楚看見多行情報，且不會像 toast 兩秒就消失
-            alert(`🚨 異常情報：【${name}】\n\n系統偵測到玩家利用系統漏洞嘗試作弊！\n\n🛑 攔截原因：${reason}\n目前已累計抓包：${count} 次\n最後作案時間：${timeStr}`);
+        // 🛑 【修復核心】：接收 chestCount 與 endGameCount，並改寫 Alert 呈現格式
+        adminCheckCheat: (name, count, timeStr, reason = '未知原因', chestCount = 0, endGameCount = 0) => {
+            // 改用原生的 alert 彈窗，以詳細的報表格式呈現，讓管理員一目了然
+            alert(`🚨 異常情報：【${name}】\n\n系統偵測到該玩家利用漏洞嘗試作弊！\n\n📊 【詳細作弊次數統計】\n📦 寶箱重複領取：${chestCount} 次\n🏁 結算重複領取：${endGameCount} 次\n⚠️ 總計抓包次數：${count} 次\n\n🛑 【最後一次作案手法】\n${reason}\n最後作案時間：${timeStr}`);
+            
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // 震動提示
         },
 
