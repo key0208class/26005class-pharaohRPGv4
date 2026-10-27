@@ -25428,18 +25428,20 @@ if (newLv > oldLv) {
                     localStorage.setItem('pharaoh_guest_g2048MaxScore', app.g2048.bestScore);
                 }
 
-                // 🛑 【修復核心】：實作 2048 通關掉落神石的邏輯
+                // 🛑 【修復核心】：實作 2048 通關掉落神石與強化卷軸的邏輯
                 let droppedItems = [];
                 if (isWin) {
                     const bmList = app.state.globalSettings?.blackMarketList || [];
                     let luckyStoneId = null;
                     let perfectStoneId = null;
+                    let protectScrollId = null; // 🛑 【新增】：庇護卷軸 ID
                     
                     // 動態掃描黑市，透過名稱尋找對應的 ID（確保不怕後台改變順序）
                     bmList.forEach((bm, bidx) => {
                         if (bm && bm.name) {
                             if (bm.name.includes('吉星石')) luckyStoneId = String(bidx);
                             if (bm.name.includes('完美石')) perfectStoneId = String(bidx);
+                            if (bm.name.includes('庇護卷軸')) protectScrollId = String(bidx); 
                         }
                     });
 
@@ -25449,6 +25451,13 @@ if (newLv > oldLv) {
                     }
                     if (perfectStoneId !== null && Math.random() < 0.20) {
                         droppedItems.push({ id: perfectStoneId, name: '完美石' });
+                    }
+                    
+                   
+                    // 💡 您可以自行修改下方 0.40 (40%) 與 0.15 (15%) 的數值來調整掉落機率！
+                   
+                    if (protectScrollId !== null && Math.random() < 0.15) {
+                        droppedItems.push({ id: protectScrollId, name: '庇護卷軸' });
                     }
                 }
 
