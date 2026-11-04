@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神殿試煉 v4.9.5.8.9 - 冒險模式</title>
+    <title>神殿試煉 v4.9.5.9.0 - 冒險模式</title>
     <!-- [新增] 解決 favicon 404 錯誤，使用 SVG Emoji 作為分頁小圖示 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏺</text></svg>">
     <!-- 攔截 Tailwind CDN 的生產環境警告 -->
@@ -1034,7 +1034,7 @@
     <div class="w-full px-4 py-8">
         <!-- [修改] 加上 id="main-title-area" 以便聊天室開啟時將其隱藏 -->
         <div id="main-title-area" class="text-center mb-6 relative transition-all duration-300">
-            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.5.8.9 - 冒險模式</h1>
+            <h1 class="text-3xl md:text-5xl font-black text-amber-800 mb-2 drop-shadow-sm tracking-wide">🏺 神殿試煉 v4.9.5.9.0 - 冒險模式</h1>
             <!-- 公告跑馬燈開始 -->
             <div class="marquee-container mt-1">
                 <div id="lobby-marquee-content" class="marquee-content">連線版 - 古埃及數學試煉 (資料讀取中...)</div>
@@ -3887,6 +3887,8 @@
                     <button id="btn-tab-g24" onclick="app.togglePetGameMode('game24')" class="px-4 py-1.5 rounded font-black text-sm transition-all bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-600 shrink-0">🧮 巧算24</button>
                     <!-- 🛑 【修復核心】：新增 2048 遊戲切換按鈕 -->
                     <button id="btn-tab-g2048" onclick="app.togglePetGameMode('game2048')" class="px-4 py-1.5 rounded font-black text-sm transition-all bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-600 shrink-0">🧩 2048</button>
+ <!-- 【新增】魔法氣泡分頁 -->
+ <button id="btn-tab-puyo" onclick="app.togglePetGameMode('puyo')" class="px-4 py-1.5 rounded font-black text-sm transition-all bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-600 shrink-0">🔮 魔法氣泡</button>
                 </div>
                 <div class="flex items-center gap-1 md:gap-2 bg-black/50 px-2 md:px-3 py-1 rounded-full border border-yellow-700/50 shrink-0">
                     <span class="text-sm">💰</span><span id="paradise-user-gold" class="text-yellow-400 font-mono font-bold text-base md:text-lg">0</span>
@@ -3908,7 +3910,10 @@
                     </div>
                     
                     <!-- 🛑 【修復核心 2】：2048 遊戲疊層容器 (無空白節點壓縮) 一屏化 RWD 專屬排版，完全不影響電腦與橫向平板 -->
-                    <div id="g2048-grid-overlay" class="absolute inset-0 z-[20] hidden flex-col lg:flex-row justify-start lg:justify-start pt-1 md:pt-2 lg:pt-6 pb-1 md:pb-2 transition-opacity duration-500 opacity-0 overflow-y-auto pointer-events-none custom-scrollbar"><div class="flex flex-col items-center w-full lg:w-7/12 pointer-events-auto shrink-0 lg:h-full justify-start lg:justify-center lg:border-r border-slate-600/50 pt-1 lg:pt-0"><div class="flex justify-between items-center w-[92vw] max-w-[280px] md:w-[95%] md:max-w-md mb-1.5 px-0.5"><div class="flex flex-col"><span class="text-amber-400 font-black text-base md:text-2xl drop-shadow-md leading-tight">神殿 2048</span><span class="text-[0.55rem] md:text-xs text-slate-400 leading-tight">合成 2048 即通關！</span></div><div class="flex flex-col items-end gap-1"><div class="flex items-center gap-1"><button onclick="app.g2048.showLeaderboard()" class="bg-gradient-to-r from-blue-600 to-blue-800 text-white font-bold text-[0.55rem] md:text-xs px-2 py-0.5 md:py-1 rounded border border-blue-400 shadow-sm hover:scale-105 active:scale-95 transition-transform">🏆 英雄榜</button><div class="text-slate-300 text-[0.55rem] md:text-[0.65rem] font-bold bg-black/80 px-1.5 py-0.5 rounded border border-slate-600 shadow-sm">最高:<span id="g2048-best" class="text-amber-400 font-mono ml-0.5">0</span></div></div><div class="bg-slate-800/90 border border-slate-600 rounded px-2 py-0.5 shadow-inner flex items-center gap-1"><span class="text-[0.55rem] text-slate-400 font-bold">目前:</span><span id="g2048-score" class="text-yellow-300 font-mono text-xs md:text-sm font-black">0</span></div></div></div><div class="w-[74vw] max-w-[280px] md:w-[95%] md:max-w-md aspect-square bg-slate-900/80 border-2 md:border-4 border-amber-900/50 rounded-xl p-1.5 md:p-3 relative shadow-[0_0_20px_rgba(0,0,0,0.8)] touch-none shrink-0" id="g2048-board-container" tabindex="0"></div><div class="hidden lg:flex justify-between w-[95%] max-w-md mt-2 md:mt-3 gap-2 shrink-0"><button onclick="app.g2048.undo()" class="flex-1 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-black text-xs md:text-sm py-2 rounded-lg border-b-4 border-indigo-900 active:border-b-0 active:translate-y-1 shadow-md transition-all flex items-center justify-center gap-1"><span>↩️</span> 悔步(50💰)</button><button onclick="app.g2048.restartWithConfirm()" class="flex-1 bg-gradient-to-r from-red-700 to-orange-700 hover:from-red-600 hover:to-orange-600 text-white font-black text-xs md:text-sm py-2 rounded-lg border-b-4 border-red-900 active:border-b-0 active:translate-y-1 shadow-md transition-all flex items-center justify-center gap-1"><span>🔄</span> 放棄重來</button></div></div><div class="flex flex-row items-center justify-between w-full lg:w-5/12 pointer-events-auto shrink-0 lg:h-full lg:flex-col lg:justify-start pt-2 lg:pt-0 pb-1 lg:pb-0 px-4 md:px-8 lg:px-4"><div class="flex flex-col gap-1.5 w-[130px] md:w-[150px] lg:hidden shrink-0"><button onclick="app.g2048.undo()" class="w-full bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-black text-[0.65rem] md:text-xs py-1.5 rounded-lg border-b-2 border-indigo-900 active:border-b-0 active:translate-y-0.5 shadow-sm transition-all flex items-center justify-center gap-1"><span>↩️</span> 悔步(50💰)</button><button onclick="app.g2048.restartWithConfirm()" class="w-full bg-gradient-to-r from-red-700 to-orange-700 hover:from-red-600 hover:to-orange-600 text-white font-black text-[0.65rem] md:text-xs py-1.5 rounded-lg border-b-2 border-red-900 active:border-b-0 active:translate-y-0.5 shadow-sm transition-all flex items-center justify-center gap-1"><span>🔄</span> 放棄重來</button></div><div class="flex-1 w-full pointer-events-none hidden lg:block"></div></div></div>
+                    <!-- 【新增】魔法氣泡疊層 -->
+<div id="puyo-grid-overlay" class="absolute inset-0 z-[20] hidden flex-col justify-start pt-2 pb-2 transition-opacity duration-500 opacity-0 overflow-y-auto custom-scrollbar"></div>
+
+<div id="g2048-grid-overlay" class="absolute inset-0 z-[20] hidden flex-col lg:flex-row justify-start lg:justify-start pt-1 md:pt-2 lg:pt-6 pb-1 md:pb-2 transition-opacity duration-500 opacity-0 overflow-y-auto pointer-events-none custom-scrollbar"><div class="flex flex-col items-center w-full lg:w-7/12 pointer-events-auto shrink-0 lg:h-full justify-start lg:justify-center lg:border-r border-slate-600/50 pt-1 lg:pt-0"><div class="flex justify-between items-center w-[92vw] max-w-[280px] md:w-[95%] md:max-w-md mb-1.5 px-0.5"><div class="flex flex-col"><span class="text-amber-400 font-black text-base md:text-2xl drop-shadow-md leading-tight">神殿 2048</span><span class="text-[0.55rem] md:text-xs text-slate-400 leading-tight">合成 2048 即通關！</span></div><div class="flex flex-col items-end gap-1"><div class="flex items-center gap-1"><button onclick="app.g2048.showLeaderboard()" class="bg-gradient-to-r from-blue-600 to-blue-800 text-white font-bold text-[0.55rem] md:text-xs px-2 py-0.5 md:py-1 rounded border border-blue-400 shadow-sm hover:scale-105 active:scale-95 transition-transform">🏆 英雄榜</button><div class="text-slate-300 text-[0.55rem] md:text-[0.65rem] font-bold bg-black/80 px-1.5 py-0.5 rounded border border-slate-600 shadow-sm">最高:<span id="g2048-best" class="text-amber-400 font-mono ml-0.5">0</span></div></div><div class="bg-slate-800/90 border border-slate-600 rounded px-2 py-0.5 shadow-inner flex items-center gap-1"><span class="text-[0.55rem] text-slate-400 font-bold">目前:</span><span id="g2048-score" class="text-yellow-300 font-mono text-xs md:text-sm font-black">0</span></div></div></div><div class="w-[74vw] max-w-[280px] md:w-[95%] md:max-w-md aspect-square bg-slate-900/80 border-2 md:border-4 border-amber-900/50 rounded-xl p-1.5 md:p-3 relative shadow-[0_0_20px_rgba(0,0,0,0.8)] touch-none shrink-0" id="g2048-board-container" tabindex="0"></div><div class="hidden lg:flex justify-between w-[95%] max-w-md mt-2 md:mt-3 gap-2 shrink-0"><button onclick="app.g2048.undo()" class="flex-1 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-black text-xs md:text-sm py-2 rounded-lg border-b-4 border-indigo-900 active:border-b-0 active:translate-y-1 shadow-md transition-all flex items-center justify-center gap-1"><span>↩️</span> 悔步(50💰)</button><button onclick="app.g2048.restartWithConfirm()" class="flex-1 bg-gradient-to-r from-red-700 to-orange-700 hover:from-red-600 hover:to-orange-600 text-white font-black text-xs md:text-sm py-2 rounded-lg border-b-4 border-red-900 active:border-b-0 active:translate-y-1 shadow-md transition-all flex items-center justify-center gap-1"><span>🔄</span> 放棄重來</button></div></div><div class="flex flex-row items-center justify-between w-full lg:w-5/12 pointer-events-auto shrink-0 lg:h-full lg:flex-col lg:justify-start pt-2 lg:pt-0 pb-1 lg:pb-0 px-4 md:px-8 lg:px-4"><div class="flex flex-col gap-1.5 w-[130px] md:w-[150px] lg:hidden shrink-0"><button onclick="app.g2048.undo()" class="w-full bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-black text-[0.65rem] md:text-xs py-1.5 rounded-lg border-b-2 border-indigo-900 active:border-b-0 active:translate-y-0.5 shadow-sm transition-all flex items-center justify-center gap-1"><span>↩️</span> 悔步(50💰)</button><button onclick="app.g2048.restartWithConfirm()" class="w-full bg-gradient-to-r from-red-700 to-orange-700 hover:from-red-600 hover:to-orange-600 text-white font-black text-[0.65rem] md:text-xs py-1.5 rounded-lg border-b-2 border-red-900 active:border-b-0 active:translate-y-0.5 shadow-sm transition-all flex items-center justify-center gap-1"><span>🔄</span> 放棄重來</button></div><div class="flex-1 w-full pointer-events-none hidden lg:block"></div></div></div>
                     
                     <!-- 小瑪麗軌道疊層 -->
                     <div id="slot-grid-overlay" class="absolute inset-0 z-[5] hidden flex-col items-center justify-center pt-10 md:pt-16 pb-2 transition-opacity duration-500 opacity-0">
@@ -28655,6 +28660,7 @@ if (newLv > oldLv) {
             const dy = targetY - pet.y;
             const dist = Math.sqrt(dx*dx + dy*dy);
 
+            if (app.state.petParadiseMode === 'puyo') return;   // 魔法氣泡：畫布已隱藏，忽略點擊
             // [新增] 巧算24 模式攔截 (不允許走動，點擊寵物給提示)
             if (app.state.petParadiseMode === 'game24') {
                 if (dist < 45) {
@@ -28712,7 +28718,7 @@ if (newLv > oldLv) {
             // --- [新增] 樂園遊戲模式 (Slot / Game24) AI 接管引擎 ---
             // ==========================================
             // 🛑 【修復核心】：將 game2048 也加入 AI 凍結的判斷名單中，防止寵物亂跑
-            if (app.state.petParadiseMode === 'slot' || app.state.petParadiseMode === 'game24' || app.state.petParadiseMode === 'game2048') {
+            if (app.state.petParadiseMode === 'slot' || app.state.petParadiseMode === 'game24' || app.state.petParadiseMode === 'game2048' || app.state.petParadiseMode === 'puyo') {
                 if (app.state.petParadiseMode === 'slot' && app.slotConfig && app.slotConfig.isRunning) {
                     app.processSlotRunEngine(pet);
                 }
@@ -31672,6 +31678,62 @@ if (entity.state === 'walk' && entity.target) {
     // 啟動
     window.addEventListener('DOMContentLoaded', app.init);
 </script>
+<script>
+/* ===== 【新增】魔法氣泡：執行期包住 togglePetGameMode，不改動原函式 ===== */
+(function () {
+  window.__ppApp = app;
+  var orig = app.togglePetGameMode;
+  function hideOverlay(id) {
+    var el = document.getElementById(id);
+    if (el) { el.classList.add('hidden'); el.classList.remove('flex'); el.classList.add('opacity-0'); }
+  }
+  function setVis(id, on) { var el = document.getElementById(id); if (el) el.style.visibility = on ? '' : 'hidden'; }
+  app.togglePetGameMode = function (mode) {
+    if (mode === 'puyo') {
+      if (app.slotConfig && app.slotConfig.isRunning) return app.toast('⚠️ 小瑪麗運轉中，無法切換模式！', 1);
+      try { if (app.g24 && app.g24.stop) app.g24.stop(); } catch (e) {}
+      try { if (app.g2048 && app.g2048.stop) app.g2048.stop(); } catch (e) {}
+      hideOverlay('slot-grid-overlay');
+      hideOverlay('game24-grid-overlay');
+      hideOverlay('g2048-grid-overlay');
+      hideOverlay('slot-control-panel');
+      hideOverlay('g24-pet-speech');
+      app.state.petParadiseMode = 'puyo';
+      // v2：隱藏寵物樂園背景與寵物畫布，寵物停在畫面外並凍結 AI
+      var pmodal = document.getElementById('pet-paradise-modal');
+      if (pmodal) pmodal.classList.add('pp-on');
+      setVis('paradise-bg-img', false);
+      setVis('paradise-canvas', false);
+      var ppet = app.state.paradisePet;
+      if (ppet) { ppet.state = 'hidden'; ppet.targetX = null; ppet.targetY = null; ppet.vx = 0; ppet.vy = 0; ppet.nextAiTime = 99999999999; }
+      var tabs = document.querySelectorAll('[id^="btn-tab-"]');
+      for (var i = 0; i < tabs.length; i++) {
+        if (tabs[i].id === 'btn-tab-puyo') continue;
+        tabs[i].className = tabs[i].className.replace(/bg-(fuchsia|amber|emerald|blue|indigo)-600/g, 'bg-slate-800');
+      }
+      var pb = document.getElementById('btn-tab-puyo');
+      if (pb) pb.className = 'px-4 py-1.5 rounded font-black text-sm transition-all bg-indigo-600 text-white shadow-sm border border-indigo-400 shrink-0';
+      if (window.PuyoGame) window.PuyoGame.enter();
+      return;
+    }
+    if (window.PuyoGame) window.PuyoGame.leave();
+    var pmodal2 = document.getElementById('pet-paradise-modal');
+    if (pmodal2) pmodal2.classList.remove('pp-on');
+    setVis('paradise-bg-img', true);
+    setVis('paradise-canvas', true);
+    var ppet2 = app.state.paradisePet;
+    if (ppet2 && ppet2.state === 'hidden') ppet2.state = 'idle';
+    var r = orig.apply(app, arguments);
+    var pb2 = document.getElementById('btn-tab-puyo');
+    if (pb2) pb2.className = 'px-4 py-1.5 rounded font-black text-sm transition-all bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-600 shrink-0';
+    return r;
+  };
+  window.addEventListener('load', function () {
+    if (window.PuyoGame && window.PuyoGame.registerWithParadise) window.PuyoGame.registerWithParadise();
+  });
+})();
+</script>
+
 
 <!-- [新增] 禮包開箱動畫與結果視窗 -->
 <div id="bundle-unboxing-modal" class="fixed inset-0 z-[110] hidden flex-col items-center justify-center bg-slate-900/95 backdrop-blur-md overflow-hidden">
@@ -31874,5 +31936,1385 @@ if (entity.state === 'walk' && entity.target) {
 <!-- 🛑 【修復核心】：新增複合技能詳情 Modal (無空白節點壓縮，防破版) -->
 <div id="composite-skill-modal" class="fixed inset-0 z-[150] hidden items-center justify-center modal-backdrop backdrop-blur-sm p-4"><div class="bg-slate-900 rounded-3xl w-full max-w-md shadow-[0_0_40px_rgba(0,0,0,0.8)] border-4 border-fuchsia-700 flex flex-col overflow-hidden animate-[popIn_0.3s_ease-out]"><div class="bg-gradient-to-r from-fuchsia-800 to-purple-900 p-3 md:p-4 flex justify-between items-start border-b-2 border-fuchsia-500 shadow-md shrink-0"><div class="flex flex-col"><h3 id="composite-skill-title" class="text-xl md:text-2xl font-black text-white drop-shadow-md">👑 技能名稱 LV.X</h3><span id="composite-skill-desc" class="text-fuchsia-200 text-xs md:text-sm font-bold mt-1">技能描述</span></div><button onclick="app.el('composite-skill-modal').classList.add('hidden'); app.el('composite-skill-modal').classList.remove('flex');" class="text-fuchsia-200 hover:text-white font-black text-2xl px-2 transition-colors active:scale-90">✕</button></div><div class="bg-slate-800 px-4 py-2 border-b border-slate-700 text-center shrink-0"><span class="text-xs font-black text-amber-400 tracking-widest">✨ 包含以下強大能力 ✨</span></div><div id="composite-skill-list" class="flex-1 overflow-y-auto max-h-[50vh] p-4 space-y-2 custom-scrollbar bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div></div></div>
 
+
+<script>
+/* ===== 【v2】PuyoCore 魔法氣泡核心（純函式＋動畫紀錄） ===== */
+/* 魔法氣泡 · 核心邏輯 v2（純函式，不依賴 DOM，可用 Node 測試）
+ * 與 v1 API 相容，並新增「移動紀錄」供前端播放平滑動畫：
+ *   lock() 回傳 cells；resolve() 回傳 initialFalls 與每段連鎖的 pops / falls；
+ *   addGarbage() 回傳 cells；rescueDetail() 回傳 pops / falls。
+ */
+(function (root) {
+  'use strict';
+  var COLS = 6, ROWS = 12, COLORS = 4, GRAY = 5;
+  var DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];      // 子球相對軸心：0上 1右 2下 3左
+  var KICKS = [[0, 0], [-1, 0], [1, 0], [0, 1], [0, -1]];
+  var NEIGH = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+  function createBoard() {
+    var b = [];
+    for (var y = 0; y < ROWS; y++) b.push(new Array(COLS).fill(0));
+    return b;
+  }
+  function copyBoard(b) { return b.map(function (r) { return r.slice(); }); }
+  function inside(x, y) { return x >= 0 && x < COLS && y >= 0 && y < ROWS; }
+  function randColor(rng) { return 1 + Math.floor(rng() * COLORS); }
+  function newPair(rng) { return { a: randColor(rng), b: randColor(rng) }; }
+  function spawn(pair) { return { x: 2, y: 1, rot: 0, a: pair.a, b: pair.b }; }
+  function cells(p) {
+    var d = DIRS[p.rot];
+    return [{ x: p.x, y: p.y, c: p.a }, { x: p.x + d[0], y: p.y + d[1], c: p.b }];
+  }
+  function fits(board, p) {
+    var cs = cells(p);
+    for (var i = 0; i < cs.length; i++) {
+      var x = cs[i].x, y = cs[i].y;
+      if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return false;
+      if (board[y][x] !== 0) return false;
+    }
+    return true;
+  }
+  function move(board, p, dx, dy) {
+    var q = { x: p.x + dx, y: p.y + dy, rot: p.rot, a: p.a, b: p.b };
+    return fits(board, q) ? q : null;
+  }
+  function rotate(board, p, dir) {
+    var nr = (p.rot + dir + 4) % 4;
+    for (var i = 0; i < KICKS.length; i++) {
+      var q = { x: p.x + KICKS[i][0], y: p.y + KICKS[i][1], rot: nr, a: p.a, b: p.b };
+      if (fits(board, q)) return q;
+    }
+    return null;
+  }
+  // 鎖定落塊：回傳 topOut 與實際寫入的格子（供落地彈跳動畫使用）
+  function lock(board, p) {
+    var cs = cells(p), topOut = false, out = [];
+    for (var i = 0; i < cs.length; i++) {
+      if (cs[i].y < 0) { topOut = true; continue; }
+      board[cs[i].y][cs[i].x] = cs[i].c;
+      out.push({ x: cs[i].x, y: cs[i].y, c: cs[i].c });
+    }
+    return { topOut: topOut, cells: out };
+  }
+  // 重力：若傳入 moves 陣列，會把每一顆實際移動的氣泡記錄成 {x, from, to, c}
+  function gravity(board, moves) {
+    for (var x = 0; x < COLS; x++) {
+      var w = ROWS - 1;
+      for (var y = ROWS - 1; y >= 0; y--) {
+        var v = board[y][x];
+        if (v !== 0) {
+          board[y][x] = 0;
+          board[w][x] = v;
+          if (moves && w !== y) moves.push({ x: x, from: y, to: w, c: v });
+          w--;
+        }
+      }
+    }
+    return moves || [];
+  }
+  function findGroups(board) {
+    var seen = [], groups = [], x, y;
+    for (y = 0; y < ROWS; y++) seen.push(new Array(COLS).fill(false));
+    for (y = 0; y < ROWS; y++) {
+      for (x = 0; x < COLS; x++) {
+        var c = board[y][x];
+        if (c < 1 || c > COLORS || seen[y][x]) continue;
+        var stack = [[x, y]], g = [];
+        seen[y][x] = true;
+        while (stack.length) {
+          var cur = stack.pop();
+          g.push(cur);
+          for (var k = 0; k < 4; k++) {
+            var nx = cur[0] + NEIGH[k][0], ny = cur[1] + NEIGH[k][1];
+            if (inside(nx, ny) && !seen[ny][nx] && board[ny][nx] === c) {
+              seen[ny][nx] = true;
+              stack.push([nx, ny]);
+            }
+          }
+        }
+        if (g.length >= 4) groups.push({ c: c, cells: g });
+      }
+    }
+    return groups;
+  }
+  function keyXY(k) { var x = k % COLS; return { x: x, y: (k - x) / COLS }; }
+  // 結算：重力 → 消除（含灰色鄰接波及）→ 重力 → 重複直到無新消除
+  function resolve(board) {
+    var chains = 0, cleared = 0, grayCleared = 0, steps = [];
+    var initialFalls = gravity(board, []);
+    for (;;) {
+      var groups = findGroups(board);
+      if (!groups.length) break;
+      chains++;
+      var clr = {}, colored = [];
+      groups.forEach(function (g) {
+        g.cells.forEach(function (p) {
+          var k = p[1] * COLS + p[0];
+          if (!clr[k]) { clr[k] = true; colored.push(k); }
+        });
+      });
+      var gray = [];
+      colored.forEach(function (k) {
+        var q = keyXY(k);
+        NEIGH.forEach(function (d) {
+          var nx = q.x + d[0], ny = q.y + d[1];
+          if (inside(nx, ny) && board[ny][nx] === GRAY) {
+            var kk = ny * COLS + nx;
+            if (!clr[kk]) { clr[kk] = true; gray.push(kk); }
+          }
+        });
+      });
+      var pops = [];
+      colored.forEach(function (k) { var q = keyXY(k); pops.push({ x: q.x, y: q.y, c: board[q.y][q.x], gray: false }); });
+      gray.forEach(function (k) { var q = keyXY(k); pops.push({ x: q.x, y: q.y, c: GRAY, gray: true }); });
+      pops.forEach(function (p) { board[p.y][p.x] = 0; });
+      cleared += colored.length;
+      grayCleared += gray.length;
+      var falls = gravity(board, []);
+      steps.push({ chain: chains, pops: pops, falls: falls });
+    }
+    return { chains: chains, cleared: cleared, grayCleared: grayCleared, steps: steps, initialFalls: initialFalls };
+  }
+  // 妨礙氣泡：隨機落到仍有空位的欄位（落在堆疊頂端）
+  function addGarbage(board, count, rng) {
+    var placed = 0, out = [];
+    for (var i = 0; i < count; i++) {
+      var cand = [];
+      for (var x = 0; x < COLS; x++) if (board[0][x] === 0) cand.push(x);
+      if (!cand.length) return { placed: placed, overflow: true, cells: out };
+      var cx = cand[Math.floor(rng() * cand.length)];
+      for (var y = ROWS - 1; y >= 0; y--) {
+        if (board[y][cx] === 0) {
+          board[y][cx] = GRAY;
+          out.push({ x: cx, y: y, c: GRAY });
+          break;
+        }
+      }
+      placed++;
+    }
+    return { placed: placed, overflow: false, cells: out };
+  }
+  function heightOf(board) {
+    for (var y = 0; y < ROWS; y++) {
+      for (var x = 0; x < COLS; x++) if (board[y][x]) return ROWS - y;
+    }
+    return 0;
+  }
+  // 寵物救援：清除最上方一列的灰色氣泡，並回傳動畫紀錄
+  function rescueDetail(board) {
+    var top = -1, y, x;
+    for (y = 0; y < ROWS; y++) {
+      for (x = 0; x < COLS; x++) if (board[y][x] === GRAY) { top = y; break; }
+      if (top >= 0) break;
+    }
+    if (top < 0) return { n: 0, pops: [], falls: [] };
+    var pops = [];
+    for (x = 0; x < COLS; x++) {
+      if (board[top][x] === GRAY) {
+        pops.push({ x: x, y: top, c: GRAY, gray: true });
+        board[top][x] = 0;
+      }
+    }
+    var falls = gravity(board, []);
+    return { n: pops.length, pops: pops, falls: falls };
+  }
+  function rescue(board) { return rescueDetail(board).n; }
+  // 連鎖傷害表：超出表格後每連鎖加 extra
+  function damageFor(chain, table, extra) {
+    if (chain <= 0) return 0;
+    if (chain <= table.length) return table[chain - 1];
+    return table[table.length - 1] + (chain - table.length) * extra;
+  }
+  var api = {
+    COLS: COLS, ROWS: ROWS, COLORS: COLORS, GRAY: GRAY,
+    createBoard: createBoard, copyBoard: copyBoard, newPair: newPair, spawn: spawn, cells: cells,
+    fits: fits, move: move, rotate: rotate, lock: lock, gravity: gravity,
+    findGroups: findGroups, resolve: resolve, addGarbage: addGarbage,
+    heightOf: heightOf, rescue: rescue, rescueDetail: rescueDetail, damageFor: damageFor
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  root.PuyoCore = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* ===== 【v2】PuyoGame 魔法氣泡前端（三版面＋平滑動畫＋道具圖示） ===== */
+/* 魔法氣泡 · 前端 UI v2
+ * 1) 寵物樂園切到魔法氣泡時，背景圖與寵物畫布隱藏，寵物 AI 凍結（由 HTML 包裝層處理）
+ * 2) 寵物改在右側卡片顯示，不再疊在盤面上
+ * 3) 三套獨立版面：land（電腦／橫向平板）、tab（平板直向）、phone（手機直向）
+ * 4) 平滑動畫：落塊插值、消除縮放＋粒子、連鎖與妨礙氣泡逐段下落、落地微彈
+ * 5) 道具圖示：氣泡可顯示元素圖示（🔥💧🌿⚡🪨），可隨時切換為純色
+ * 依賴：PuyoCore（puyo_core_v2.js）；由 HTML 注入 window.__ppApp
+ */
+(function () {
+  'use strict';
+  var C = window.PuyoCore;
+  if (!C) { console.error('[魔法氣泡] PuyoCore 未載入'); return; }
+
+  var THEME = { 1: '#ef4444', 2: '#3b82f6', 3: '#22c55e', 4: '#eab308', 5: '#9ca3af' };
+  var DEEP  = { 1: '#7f1d1d', 2: '#1e3a8a', 3: '#14532d', 4: '#713f12', 5: '#374151' };
+  var ICON  = { 1: '🔥', 2: '💧', 3: '🌿', 4: '⚡', 5: '🪨' };
+  var LOCAL_BEST = 'puyo_best_v1', ICON_KEY = 'puyo_icon_v2', TAG = '[魔法氣泡]';
+  var EMOJI = '"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif';
+  var ENCOURAGE = ['加油加油！', '好棒喔！', '今天也要贏！', '我相信你！'];
+  var PET_IMG = {}, FX_IMG = {};
+
+  // ---------- 預設後台參數（與 v1 相同，會被 petParadiseConfig.puyo 覆蓋） ----------
+  var DEFAULTS = {
+    enabled: true, bossEnabled: true, bossDailyLimit: 3,
+    rewardGoldMax: 1000, rewardExpMax: 500,
+    bossGoldRate: 50, bossExpRate: 50, defeatGold: 50,
+    timeAttackSec: 120, dropMs: 900,
+    comboTable: [10, 25, 45, 70], comboExtra: 30,
+    gaugeMul: 4, garbageDivisor: 10, garbageMax: 12,
+    rescueEnabled: true, rescueRow: 9, rescueChance: 50, rescuePerGame: 1,
+    petEnabled: true, happyChain: 2, flowerChain: 3, attackMinChain: 4, skillMinChain: 6,
+    attackCooldownMs: 2500, frameMs: 90, hurtStackRow: 9, hurtCooldownMs: 3000, glowEnabled: true
+  };
+
+  // ---------- 狀態 ----------
+  var state = {
+    cfg: null, ui: null, ctx: null, cell: 30, dpr: 1,
+    mode: 'free', board: null, piece: null, pv: null, next: null,
+    score: 0, maxChain: 0, running: false, dead: false,
+    dropAcc: 0, landWait: 0, softHold: false, hardAt: 0,
+    timeLeft: 0, timeAcc: 0,
+    boss: null, bossHp: 0, bossMaxHp: 0, bossImgUrl: '', gauge: 0,
+    rescueUsed: 0, pendingBonus: 0, pendingEnd: null,
+    petIdx: null, petState: null, petAnim: null, petCD: { attack: 0, hurt: 0 }, sayT: 0,
+    fx: null, floats: [], parts: [], landFx: [], chainShow: null,
+    tl: null, busy: false,
+    iconMode: localStorage.getItem(ICON_KEY) !== '0',
+    layout: '', nextKey: '', rewards: { gold: 0, exp: 0 }
+  };
+
+  function A() { return window.__ppApp || null; }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function easeInOut(t) { return -(Math.cos(Math.PI * t) - 1) / 2; }
+  function easeOut(t) { return 1 - Math.pow(1 - t, 2); }
+  function easeIn(t) { return t * t; }
+
+  // ---------- 設定 ----------
+  function cfgFromGlobal() {
+    var a = A();
+    var g = (a && a.state && a.state.globalSettings && a.state.globalSettings.petParadiseConfig) || {};
+    var p = g.puyo || {};
+    var out = {};
+    Object.keys(DEFAULTS).forEach(function (k) {
+      var d = DEFAULTS[k], v = p[k];
+      if (v === undefined || v === null || v === '') { out[k] = d; return; }
+      if (Array.isArray(d)) out[k] = Array.isArray(v) && v.length ? v.map(Number) : d;
+      else if (typeof d === 'boolean') out[k] = !!v;
+      else { var x = Number(v); out[k] = isFinite(x) ? x : d; }
+    });
+    return out;
+  }
+  function cfg() { return state.cfg || (state.cfg = cfgFromGlobal()); }
+
+  // ---------- BOSS 池：LV4 = 怪物 cardBack === 4 ----------
+  function bossPool() {
+    var a = A();
+    var list = (a && a.state && a.state.globalSettings && a.state.globalSettings.monsterList) || [];
+    return list.filter(function (m) { return m && Number(m.cardBack) === 4; });
+  }
+  function pickBoss() {
+    var pool = bossPool();
+    return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+  }
+
+  // ---------- 每日 BOSS 次數（本機記錄；正式結算以後端為準） ----------
+  function uidKey() {
+    var a = A();
+    return (a && a.state && a.state.user && a.state.user.uid) || 'local';
+  }
+  function todayKey() { return new Date().toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei' }); }
+  function dailyUsed() {
+    var rec = JSON.parse(localStorage.getItem('puyo_daily_' + uidKey()) || '{}');
+    return rec.day === todayKey() ? (rec.used || 0) : 0;
+  }
+  function dailyLeft() { return Math.max(0, cfg().bossDailyLimit - dailyUsed()); }
+  function consumeDaily() {
+    localStorage.setItem('puyo_daily_' + uidKey(), JSON.stringify({ day: todayKey(), used: dailyUsed() + 1 }));
+  }
+
+  // ---------- 寵物 ----------
+  function equippedPet() {
+    var a = A(); if (!a || !a.state) return null;
+    var pets = (a.state.currentBackpackData && a.state.currentBackpackData.pets) || [];
+    var idx = a.state.currentParadisePetIdx;
+    if (idx === null || idx === undefined || !pets[idx]) return null;
+    var st = a.getPetCurrentState(idx, pets[idx].exp || 0);
+    if (!st) return null;
+    var fam = ((a.state.globalSettings && a.state.globalSettings.petList) || [])[st.familyIdx];
+    var form = fam && fam.forms ? fam.forms.filter(function (f) { return f.name === st.formName; })[0] : null;
+    return { idx: idx, st: st, formLv: form ? (Number(form.lv) || 0) : 0 };
+  }
+  function buildPetView(p) {
+    var st = p.st, glow = null;
+    if (p.formLv >= 99) glow = 'rgba(250,204,21,0.95)';
+    else if (p.formLv >= 80) glow = 'rgba(255,255,255,0.95)';
+    var sprite = null;
+    var list = (A().state.globalSettings && A().state.globalSettings.spriteList) || [];
+    var s = list[Number(st.spriteIdx)];
+    if (s && s.actionUrl) sprite = { url: s.actionUrl, rows: Number(s.actionRows) || 5, cols: Number(s.actionCols) || 4 };
+    return {
+      formName: st.formName, skillName: st.skillName || '', skillEffect: st.skillEffect || '',
+      atkDmg: Number(st.atkDmg) || 0, skillDmg: Number(st.skillDmg) || 0,
+      sprite: sprite, glow: cfg().glowEnabled ? glow : null
+    };
+  }
+  function loadImg(cache, url) {
+    if (!url) return null;
+    if (!cache[url]) { var im = new Image(); im.crossOrigin = 'anonymous'; im.src = url; cache[url] = im; }
+    return cache[url];
+  }
+  // 連鎖 → 寵物動作（第 1 行 happy、第 2 行 flower、第 4–5 行 attack）
+  function actionFor(chain) {
+    var c = cfg();
+    if (chain >= c.attackMinChain) return { type: 'attack', row: 3, frames: 8 };
+    if (chain >= c.flowerChain) return { type: 'flower', row: 1, frames: 4 };
+    if (chain >= c.happyChain) return { type: 'happy', row: 0, frames: 4 };
+    return null;
+  }
+  function playPet(act) {
+    state.petAnim = { type: act.type, row: act.row, frames: act.frames, start: performance.now() };
+  }
+  function petCell(now) {
+    var a = state.petAnim, fm = cfg().frameMs;
+    var idle = { row: 0, col: Math.floor(now / 240) % 4 };
+    if (!a) return idle;
+    var step = Math.floor((now - a.start) / fm);
+    if (step >= a.frames) { state.petAnim = null; return idle; }
+    if (a.type === 'attack') return { row: 3 + Math.floor(step / 4), col: step % 4 };
+    return { row: a.row, col: step % 4 };
+  }
+
+  // ---------- 文字與特效 ----------
+  function floatText(text, color) { state.floats.push({ text: text, color: color, t: performance.now() }); }
+  function say(text, color) {
+    var el = state.ui && state.ui.say; if (!el) return;
+    el.textContent = text;
+    el.style.color = color || '#fef08a';
+    el.classList.add('show');
+    clearTimeout(state.sayT);
+    state.sayT = setTimeout(function () { el.classList.remove('show'); }, 1500);
+  }
+  function playFx(url) {
+    var im = loadImg(FX_IMG, url);
+    state.fx = { img: im, start: performance.now(), dur: 700 };
+  }
+  function petHurt() {
+    var c = cfg(), now = performance.now();
+    if (now < state.petCD.hurt) return;
+    state.petCD.hurt = now + c.hurtCooldownMs;
+    playPet({ type: 'hurt', row: 2, frames: 4 });
+    say('好危險！', '#fca5a5');
+  }
+  // 每次連鎖結算：寵物動作、技能文字與加算傷害
+  function onChainResolved(n) {
+    var c = cfg(), pet = state.petState;
+    if (!pet || !c.petEnabled) return;
+    var bonus = n >= c.attackMinChain ? (n >= c.skillMinChain ? pet.skillDmg : pet.atkDmg) : 0;
+    state.pendingBonus += (Number(bonus) || 0);
+    var act = actionFor(n);
+    if (!act) return;
+    var now = performance.now();
+    if (act.type === 'attack') {
+      if (now < state.petCD.attack) return;            // 冷卻中只略過動畫，傷害照算
+      state.petCD.attack = now + c.attackCooldownMs;
+      playPet(act);
+      if (n >= c.skillMinChain) {
+        setTimeout(function () {
+          floatText('🔥 ' + pet.skillName + '！', '#f0abfc');
+          say('🔥 魔法大爆發！太神啦！', '#f0abfc');
+          if (pet.skillEffect) playFx(pet.skillEffect);
+        }, c.frameMs * 8);
+      }
+    } else {
+      playPet(act);
+      say(act.type === 'happy' ? '不錯喔！繼續！' : '繼續加油！');
+    }
+  }
+
+  // ---------- 時間軸（動畫用） ----------
+  // 每段 phase：{kind:'fall'|'pop', before:盤面快照, items, dur}
+  // 盤面邏輯已在瞬間算完；動畫只負責把「前後差異」平滑播放出來。
+  function Builder(grid) { this.grid = C.copyBoard(grid); this.phases = []; }
+  Builder.prototype.fall = function (moves) {
+    if (!moves || !moves.length) return;
+    var g = this.grid, before = C.copyBoard(g), maxD = 0, i, m;
+    for (i = 0; i < moves.length; i++) { m = moves[i]; if (m.from >= 0) g[m.from][m.x] = 0; }
+    for (i = 0; i < moves.length; i++) { m = moves[i]; g[m.to][m.x] = m.c; maxD = Math.max(maxD, m.to - m.from); }
+    this.phases.push({ kind: 'fall', before: before, items: moves, dur: clamp(120 + maxD * 52, 160, 520), t0: null });
+  };
+  Builder.prototype.pop = function (pops) {
+    if (!pops || !pops.length) return;
+    var g = this.grid, before = C.copyBoard(g);
+    pops.forEach(function (p) { g[p.y][p.x] = 0; });
+    this.phases.push({ kind: 'pop', before: before, items: pops, dur: 260, t0: null });
+  };
+  function resolveInto(b, board) {
+    var res = C.resolve(board);
+    b.fall(res.initialFalls);
+    res.steps.forEach(function (st) { b.pop(st.pops); b.fall(st.falls); });
+    return res;
+  }
+  function playTimeline(phases, done) {
+    if (!phases.length) { done(); return; }
+    state.tl = { phases: phases, idx: 0, done: done };
+    state.busy = true;
+  }
+  function onPhaseStart(ph, now) {
+    if (ph.kind !== 'pop') return;
+    var cell = state.cell;
+    ph.items.forEach(function (p) {
+      var n = p.gray ? 3 : 6;
+      for (var i = 0; i < n; i++) {
+        var ang = Math.random() * Math.PI * 2, sp = cell * (1.5 + Math.random() * 2.5);
+        state.parts.push({
+          x: (p.x + .5) * cell, y: (p.y + .5) * cell,
+          vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - cell * 1.5,
+          c: p.c, gray: p.gray, t0: now, life: 420 + Math.random() * 180
+        });
+      }
+    });
+  }
+  function advanceTimeline(now) {
+    var tl = state.tl; if (!tl) return;
+    while (tl.idx < tl.phases.length) {
+      var ph = tl.phases[tl.idx];
+      if (ph.t0 == null) { ph.t0 = now; onPhaseStart(ph, now); }
+      if (now - ph.t0 < ph.dur) return;
+      if (ph.kind === 'fall') ph.items.forEach(function (m) { if (m.to >= 0) state.landFx.push({ x: m.x, y: m.to, t0: now }); });
+      tl.idx++;
+    }
+    state.tl = null; state.busy = false;
+    if (tl.done) tl.done();
+  }
+
+  // ---------- 版面與畫布 ----------
+  function isVisible() {
+    var u = state.ui;
+    return !!(u && u.host && !u.host.classList.contains('hidden') && u.host.clientWidth > 0);
+  }
+  function layoutBoard() {
+    var u = state.ui; if (!u) return;
+    var W = u.area.clientWidth, H = u.area.clientHeight;
+    if (W <= 0 || H <= 0) return;
+    var pad = 8;
+    var cell = Math.max(14, Math.floor(Math.min((W - pad * 2) / C.COLS, (H - pad * 2) / C.ROWS)));
+    var cw = cell * C.COLS, ch = cell * C.ROWS;
+    state.cell = cell;
+    state.dpr = Math.min(2.5, window.devicePixelRatio || 1);
+    var cv = u.canvas;
+    cv.style.width = cw + 'px'; cv.style.height = ch + 'px';
+    cv.width = Math.round(cw * state.dpr); cv.height = Math.round(ch * state.dpr);
+    u.box.style.width = cw + 'px'; u.box.style.height = ch + 'px';
+    u.box.style.left = Math.round((W - cw) / 2) + 'px';
+    u.box.style.top = Math.round((H - ch) / 2) + 'px';
+    u.ctrl.style.width = Math.min(W, Math.max(cw, 300)) + 'px';
+    state.ctx = cv.getContext('2d');
+  }
+  function relayout() {
+    var u = state.ui; if (!u) return;
+    var w = u.host.clientWidth, h = u.host.clientHeight;
+    if (w <= 0 || h <= 0) return;
+    var lay = w >= h ? 'land' : (w < 560 ? 'phone' : 'tab');
+    if (lay !== state.layout) {
+      u.root.className = 'pp-root pp-' + lay;
+      state.layout = lay;
+    }
+    layoutBoard();
+  }
+
+  // ---------- 繪圖 ----------
+  function bubble(g, cx, cy, c, r, alpha, cell) {
+    if (!c || r <= 0.5) return;
+    g.save();
+    if (alpha != null && alpha < 1) g.globalAlpha = Math.max(0, alpha);
+    g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2);
+    if (c === C.GRAY) {
+      var gg = g.createRadialGradient(cx - r * .3, cy - r * .3, r * .1, cx, cy, r);
+      gg.addColorStop(0, '#e5e7eb'); gg.addColorStop(.35, '#9ca3af'); gg.addColorStop(1, '#374151');
+      g.fillStyle = gg; g.fill();
+      g.lineWidth = Math.max(1, r * .08); g.strokeStyle = 'rgba(229,231,235,.8)'; g.stroke();
+    } else {
+      var grd = g.createRadialGradient(cx - r * .35, cy - r * .35, r * .08, cx, cy, r);
+      grd.addColorStop(0, '#ffffff'); grd.addColorStop(.22, THEME[c]); grd.addColorStop(1, DEEP[c]);
+      g.fillStyle = grd; g.fill();
+      g.beginPath(); g.ellipse(cx - r * .38, cy - r * .42, r * .26, r * .14, -0.5, 0, Math.PI * 2);
+      g.fillStyle = 'rgba(255,255,255,0.55)'; g.fill();
+    }
+    if (state.iconMode && r >= cell * 0.2) {
+      g.font = Math.round(r * 1.1) + 'px ' + EMOJI;
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(ICON[c], cx, cy + r * 0.06);
+    }
+    g.restore();
+  }
+  function drawBoard(now) {
+    var u = state.ui, g = state.ctx;
+    if (!u || !g || !state.cell || !state.board) return;
+    var cell = state.cell, dpr = state.dpr, cols = C.COLS, rows = C.ROWS;
+    var W = cell * cols, H = cell * rows, r = cell * 0.46;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    var bgG = g.createLinearGradient(0, 0, 0, H);
+    bgG.addColorStop(0, '#1e1b4b'); bgG.addColorStop(1, '#312e81');
+    g.fillStyle = bgG; g.fillRect(0, 0, W, H);
+    g.strokeStyle = 'rgba(255,255,255,0.06)'; g.lineWidth = 1;
+    g.beginPath();
+    for (var i = 0; i <= cols; i++) { g.moveTo(i * cell + .5, 0); g.lineTo(i * cell + .5, H); }
+    for (var j = 0; j <= rows; j++) { g.moveTo(0, j * cell + .5); g.lineTo(W, j * cell + .5); }
+    g.stroke();
+
+    // 靜態盤面：若在動畫中，使用該段的起始快照，並隱藏正在移動的氣泡
+    var ph = state.tl ? state.tl.phases[state.tl.idx] : null;
+    var grid = ph ? ph.before : state.board;
+    var skip = {}, t = 0;
+    if (ph) {
+      t = ph.t0 == null ? 0 : clamp((now - ph.t0) / ph.dur, 0, 1);
+      if (ph.kind === 'fall') ph.items.forEach(function (m) { if (m.from >= 0) skip[m.from * cols + m.x] = 1; });
+      else ph.items.forEach(function (p) { skip[p.y * cols + p.x] = 1; });
+    }
+    var land = {};
+    state.landFx = state.landFx.filter(function (f) { return now - f.t0 < 220; });
+    state.landFx.forEach(function (f) { land[f.y * cols + f.x] = f; });
+    for (var y = 0; y < rows; y++) {
+      for (var x = 0; x < cols; x++) {
+        var v = grid[y][x], k = y * cols + x;
+        if (!v || skip[k]) continue;
+        var s = 1, f = land[k];
+        if (f) s = 0.88 + 0.12 * easeOut((now - f.t0) / 220);   // 落地微彈
+        bubble(g, (x + .5) * cell, (y + .5) * cell, v, r * s, 1, cell);
+      }
+    }
+    // 動畫中的氣泡
+    if (ph && ph.t0 != null) {
+      if (ph.kind === 'pop') {
+        var e = easeIn(t);
+        ph.items.forEach(function (p) {
+          bubble(g, (p.x + .5) * cell, (p.y + .5) * cell, p.c, r * (1 - 0.8 * e), 1 - e, cell);
+        });
+      } else {
+        var e2 = easeInOut(t);
+        ph.items.forEach(function (m) {
+          var yy = m.from + (m.to - m.from) * e2;
+          bubble(g, (m.x + .5) * cell, (yy + .5) * cell, m.c, r, 1, cell);
+        });
+      }
+    }
+    // 落下中的雙球 + 影子預覽
+    if (state.piece && state.pv && state.running) {
+      var pc = state.piece, gh = { x: pc.x, y: pc.y, rot: pc.rot, a: pc.a, b: pc.b }, q;
+      while ((q = C.move(state.board, gh, 0, 1))) gh = q;
+      C.cells(gh).forEach(function (cc) {
+        if (cc.y < 0) return;
+        g.beginPath(); g.arc((cc.x + .5) * cell, (cc.y + .5) * cell, r * 0.9, 0, Math.PI * 2);
+        g.setLineDash([4, 4]); g.strokeStyle = 'rgba(255,255,255,0.3)'; g.lineWidth = 1.5; g.stroke(); g.setLineDash([]);
+      });
+      var pv = state.pv;
+      C.cells({ x: pv.x, y: pv.y, rot: pc.rot, a: pc.a, b: pc.b }).forEach(function (cc) {
+        bubble(g, (cc.x + .5) * cell, (cc.y + .5) * cell, cc.c, r, 1, cell);
+      });
+    }
+    // 危險線（救援觸發列）
+    var dangerY = (rows - cfg().rescueRow) * cell;
+    g.setLineDash([6, 6]); g.strokeStyle = 'rgba(248,113,113,0.5)'; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(0, dangerY); g.lineTo(W, dangerY); g.stroke(); g.setLineDash([]);
+
+    // 消除粒子
+    state.parts = state.parts.filter(function (p) { return now - p.t0 < p.life; });
+    state.parts.forEach(function (p) {
+      var age = (now - p.t0) / 1000, e3 = (now - p.t0) / p.life;
+      var px = p.x + p.vx * age, py = p.y + p.vy * age + 0.5 * cell * 9 * age * age;
+      g.globalAlpha = 1 - e3;
+      g.fillStyle = p.gray ? '#9ca3af' : THEME[p.c];
+      g.beginPath(); g.arc(px, py, cell * 0.12 * (1 - e3 * 0.5), 0, Math.PI * 2); g.fill();
+      g.globalAlpha = 1;
+    });
+
+    // 技能特效
+    if (state.fx) {
+      var kk = (now - state.fx.start) / state.fx.dur;
+      if (kk >= 1) state.fx = null;
+      else if (state.fx.img && state.fx.img.complete && state.fx.img.naturalWidth) {
+        var sz = cell * 4;
+        g.globalAlpha = 1 - kk;
+        g.drawImage(state.fx.img, W / 2 - sz / 2, H / 2 - sz / 2, sz, sz);
+        g.globalAlpha = 1;
+      }
+    }
+    // 浮動文字
+    state.floats = state.floats.filter(function (f) { return now - f.t < 1000; });
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    state.floats.forEach(function (f, idx) {
+      var k2 = (now - f.t) / 1000;
+      g.globalAlpha = Math.max(0, 1 - k2);
+      g.font = 'bold ' + Math.round(cell * 0.5) + 'px sans-serif';
+      g.fillStyle = f.color;
+      g.fillText(f.text, W / 2, H * 0.38 - k2 * cell * 1.2 - idx * cell * 0.6);
+      g.globalAlpha = 1;
+    });
+    // 連鎖數（縮放進場）
+    if (state.chainShow && now < state.chainShow.until) {
+      var age2 = (now - (state.chainShow.until - 1200)) / 200;
+      var sc = age2 < 1 ? 0.6 + 0.4 * easeOut(clamp(age2, 0, 1)) : 1;
+      g.save();
+      g.translate(cell * 0.3, cell * 0.9); g.scale(sc, sc);
+      g.font = 'bold ' + Math.round(cell * 0.62) + 'px sans-serif';
+      g.textAlign = 'left'; g.fillStyle = '#facc15';
+      g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 6;
+      g.fillText(state.chainShow.n + ' 連鎖！', 0, 0);
+      g.restore();
+    }
+    // 待機提示
+    var resultOn = u.result.classList.contains('on');
+    if (!state.running && !resultOn) {
+      g.fillStyle = 'rgba(255,255,255,0.9)';
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.font = 'bold ' + Math.round(cell * 0.5) + 'px sans-serif';
+      g.fillText('選擇玩法開始', W / 2, H / 2);
+      g.font = Math.round(cell * 0.32) + 'px sans-serif';
+      g.fillStyle = 'rgba(203,213,225,0.9)';
+      g.fillText('可用下方按鈕或鍵盤操作', W / 2, H / 2 + cell * 0.9);
+    }
+  }
+  function drawPet(now) {
+    var cv = state.ui && state.ui.petCanvas; if (!cv) return;
+    var w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return;
+    var dpr = state.dpr;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    }
+    var g = cv.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    g.fillStyle = 'rgba(0,0,0,0.25)';
+    g.beginPath(); g.ellipse(w / 2, h - 5, w * 0.26, 5, 0, 0, Math.PI * 2); g.fill();
+    var pet = state.petState;
+    if (!pet || !pet.sprite) {
+      g.font = Math.floor(h * 0.55) + 'px ' + EMOJI;
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText('🐾', w / 2, h * 0.5);
+      return;
+    }
+    var im = loadImg(PET_IMG, pet.sprite.url);
+    if (!im || !im.complete || !im.naturalWidth) return;
+    var fw = im.naturalWidth / pet.sprite.cols, fh = im.naturalHeight / pet.sprite.rows;
+    var f = petCell(now);
+    f.row = clamp(f.row, 0, pet.sprite.rows - 1);
+    f.col = clamp(f.col, 0, pet.sprite.cols - 1);
+    var s = Math.min((w * 0.92) / fw, (h * 0.9) / fh);
+    var dw = fw * s, dh = fh * s;
+    g.save();
+    if (pet.glow) { g.shadowBlur = 14; g.shadowColor = pet.glow; }
+    g.drawImage(im, f.col * fw, f.row * fh, fw, fh, (w - dw) / 2, h - dh - 4, dw, dh);
+    g.restore();
+  }
+
+  // ---------- 遊戲流程 ----------
+  function gaugeNeed() { return Math.max(1, Number(state.boss && state.boss.mode4) || 2) * cfg().gaugeMul; }
+  function canInput() {
+    return state.running && !!state.piece && !state.busy && !state.hardAt && isVisible();
+  }
+  function spawnNext() {
+    state.piece = C.spawn(state.next);
+    state.next = C.newPair(Math.random);
+    state.pv = { x: state.piece.x, y: state.piece.y };
+    state.dropAcc = 0; state.landWait = 0;
+    if (!C.fits(state.board, state.piece)) state.dead = true;
+  }
+  function newGame(mode) {
+    var c = cfg();
+    if (mode === 'boss') {
+      if (!c.bossEnabled) { toast('後台已關閉 BOSS 討伐'); return false; }
+      if (!bossPool().length) { toast('後台怪物中找不到 LV4 BOSS（cardBack = 4）'); return false; }
+      if (dailyLeft() <= 0) { toast('今日 BOSS 挑戰次數已用完'); return false; }
+      consumeDaily();
+    }
+    state.mode = mode;
+    state.board = C.createBoard();
+    state.score = 0; state.maxChain = 0; state.gauge = 0;
+    state.pendingBonus = 0; state.pendingEnd = null; state.rescueUsed = 0; state.dead = false;
+    state.piece = null; state.pv = null; state.tl = null; state.busy = false;
+    state.hardAt = 0; state.softHold = false; state.dropAcc = 0; state.landWait = 0; state.timeAcc = 0;
+    state.floats = []; state.parts = []; state.landFx = []; state.chainShow = null;
+    state.fx = null; state.petAnim = null; state.rewards = { gold: 0, exp: 0 };
+
+    var pet = equippedPet();
+    state.petIdx = pet ? pet.idx : null;
+    state.petState = pet ? buildPetView(pet) : null;
+
+    if (mode === 'boss') {
+      var b = pickBoss();
+      state.boss = b;
+      state.bossMaxHp = Number(b.maxHp || b.hp) || 500;
+      state.bossHp = Number(b.hp) || state.bossMaxHp;
+      state.bossImgUrl = b.img1 || '';
+      loadImg(PET_IMG, state.bossImgUrl);
+    } else {
+      state.boss = null;
+    }
+    state.timeLeft = mode === 'timed' ? c.timeAttackSec : 0;
+    state.next = C.newPair(Math.random);
+    state.running = true;
+    spawnNext();
+    renderHud();
+    return true;
+  }
+  function endGame(win, reason) {
+    if (!state.running) return;
+    state.running = false;
+    state.tl = null; state.busy = false; state.piece = null; state.pv = null;
+    state.hardAt = 0; state.pendingEnd = null; state.softHold = false;
+    var c = cfg(), gold = 0, exp = 0;
+    if (state.mode === 'boss') {
+      if (win) {
+        gold = Math.round((Number(state.boss.gold) || 0) * c.bossGoldRate / 100);
+        exp = Math.round((Number(state.boss.exp) || 0) * c.bossExpRate / 100);
+      } else {
+        gold = c.defeatGold;
+      }
+    } else if (state.mode === 'timed') {
+      gold = Math.floor(state.score / 10);
+      exp = state.maxChain * 5;
+    } else {
+      exp = Math.floor(state.score / 50);
+    }
+    gold = Math.min(gold, c.rewardGoldMax);
+    exp = Math.min(exp, c.rewardExpMax);
+    state.rewards = { gold: gold, exp: exp };
+    settle(win, reason, gold, exp);
+  }
+  function settle(win, reason, gold, exp) {
+    var a = A();
+    if (a && a.updateUserGold && gold > 0) a.updateUserGold(gold);
+    if (a && a.grantPetExpAndCheckLevel && exp > 0 && state.petIdx !== null) a.grantPetExpAndCheckLevel(state.petIdx, exp);
+    var best = JSON.parse(localStorage.getItem(LOCAL_BEST) || '{}');
+    if (!best.score || state.score > best.score) {
+      localStorage.setItem(LOCAL_BEST, JSON.stringify({ score: state.score, chain: state.maxChain }));
+    }
+    renderHud();
+    showResult(win, reason, gold, exp);
+  }
+  function showResult(win, reason, gold, exp) {
+    var u = state.ui; if (!u) return;
+    u.result.classList.add('on');
+    u.resultTitle.textContent = state.mode === 'boss' ? (win ? '🎉 討伐成功！' : '💫 挑戰失敗') : '🏁 遊戲結束';
+    var cellH = function (label, val, color) {
+      return '<div class="pp-res-cell"><small>' + label + '</small><b style="color:' + color + '">' + val + '</b></div>';
+    };
+    u.resultBody.innerHTML =
+      '<div style="text-align:center;font-size:12px;color:#cbd5e1;margin-bottom:8px">' + reason + '</div>' +
+      '<div class="pp-res-grid">' +
+        cellH('分數', state.score, '#ffffff') + cellH('最高連鎖', state.maxChain, '#fde047') +
+        cellH('獲得金幣', '+' + gold, '#fcd34d') + cellH('寵物經驗', '+' + exp, '#6ee7b7') +
+      '</div>';
+  }
+  function hideResult() { if (state.ui) state.ui.result.classList.remove('on'); }
+
+  function move(dx) {
+    if (!canInput()) return;
+    var q = C.move(state.board, state.piece, dx, 0);
+    if (q) { state.piece = q; state.landWait = 0; }
+  }
+  function rotate(dir) {
+    if (!canInput()) return;
+    var q = C.rotate(state.board, state.piece, dir);
+    if (q) { state.piece = q; state.landWait = 0; }
+  }
+  function hardDrop() {
+    if (!canInput()) return;
+    var q;
+    while ((q = C.move(state.board, state.piece, 0, 1))) state.piece = q;
+    state.hardAt = performance.now() + 70;   // 讓落塊滑到底再鎖定
+  }
+
+  function applyChains(res, now) {
+    if (res.chains <= 0) return;
+    state.maxChain = Math.max(state.maxChain, res.chains);
+    state.score += res.cleared * 10 * res.chains;
+    state.chainShow = { n: res.chains, until: now + 1200 };
+    if (res.chains >= 3) {
+      var box = state.ui && state.ui.box;
+      if (box) { box.classList.remove('pp-shake'); void box.offsetWidth; box.classList.add('pp-shake'); }
+    }
+    onChainResolved(res.chains);
+    if (state.mode === 'boss' && state.boss) bossTakeDamage(res.chains);
+  }
+  function bossTakeDamage(chains) {
+    var c = cfg();
+    var base = C.damageFor(chains, c.comboTable, c.comboExtra);
+    var total = base + state.pendingBonus;
+    state.pendingBonus = 0;
+    state.bossHp = Math.max(0, state.bossHp - total);
+    floatText('-' + total + ' HP', '#fca5a5');
+    if (state.bossHp <= 0 && !state.pendingEnd) {
+      state.pendingEnd = { win: true, reason: '擊敗 ' + (state.boss.name || 'BOSS') };
+    }
+  }
+  function bossCounterAttack(b) {
+    var c = cfg();
+    var n = Math.min(c.garbageMax, Math.floor((Number(state.boss.atk) || 0) / c.garbageDivisor));
+    if (n <= 0) return;
+    var r = C.addGarbage(state.board, n, Math.random);
+    var moves = r.cells.map(function (p, k) { return { x: p.x, from: -1 - k, to: p.y, c: p.c }; });
+    b.fall(moves);
+    floatText('BOSS 反擊！灰色氣泡 ×' + r.placed, '#fdba74');
+    if (r.overflow) state.dead = true;
+  }
+
+  // 落塊鎖定 → 消除 → 妨礙 → 救援 → 再消除；邏輯立即完成，動畫依序播放
+  function lockAndResolve() {
+    if (!state.running || !state.piece) return;
+    var now = performance.now(), c = cfg();
+    var lk = C.lock(state.board, state.piece);
+    state.piece = null; state.pv = null; state.landWait = 0; state.dropAcc = 0;
+    state.softHold = false; state.hardAt = 0;
+    lk.cells.forEach(function (p) { state.landFx.push({ x: p.x, y: p.y, t0: now }); });
+    if (lk.topOut) { endGame(false, '氣泡堆到頂端'); return; }
+
+    var b = new Builder(state.board);
+    var res = resolveInto(b, state.board);
+    applyChains(res, now);
+
+    if (state.mode === 'boss' && state.boss && state.bossHp > 0) {
+      state.gauge++;
+      if (state.gauge >= gaugeNeed()) { state.gauge = 0; bossCounterAttack(b); }
+    }
+
+    var h = C.heightOf(state.board);
+    if (h >= c.hurtStackRow) petHurt();
+    if (c.rescueEnabled && h >= c.rescueRow && state.rescueUsed < c.rescuePerGame && Math.random() * 100 < c.rescueChance) {
+      var rd = C.rescueDetail(state.board);
+      if (rd.n > 0) {
+        state.rescueUsed++;
+        b.pop(rd.pops); b.fall(rd.falls);
+        playPet({ type: 'attack', row: 3, frames: 8 });
+        floatText('寵物救援！清除 ' + rd.n + ' 顆', '#86efac');
+        applyChains(resolveInto(b, state.board), now);
+      }
+    }
+    playTimeline(b.phases, finishTurn);
+  }
+  function finishTurn() {
+    if (!state.running) return;
+    if (state.pendingEnd) { var pe = state.pendingEnd; state.pendingEnd = null; endGame(pe.win, pe.reason); return; }
+    if (state.dead) { endGame(false, '氣泡堆到頂端'); return; }
+    spawnNext();
+    if (state.dead) { endGame(false, '氣泡堆到頂端'); return; }
+    renderHud();
+  }
+
+  // 每幀更新：限時、時間軸、重力、落塊平滑插值
+  function update(now, dt) {
+    if (!state.running) return;
+    var c = cfg();
+    if (state.mode === 'timed') {
+      state.timeAcc += dt;
+      while (state.timeAcc >= 1000) {
+        state.timeAcc -= 1000; state.timeLeft--; if (state.ui) state.ui.timer.textContent = state.timeLeft;
+        if (state.timeLeft <= 0) { state.timeLeft = 0; endGame(false, '時間到'); return; }
+      }
+    }
+    if (state.tl) advanceTimeline(now);
+    if (!state.running) return;
+    if (state.hardAt && now >= state.hardAt) { state.hardAt = 0; lockAndResolve(); return; }
+    if (state.piece && !state.busy && !state.hardAt) {
+      var interval = state.softHold ? Math.max(40, c.dropMs / 9) : c.dropMs;
+      state.dropAcc += dt;
+      if (state.dropAcc >= interval) {
+        state.dropAcc = 0;
+        var q = C.move(state.board, state.piece, 0, 1);
+        if (q) { state.piece = q; state.landWait = 0; }
+      }
+      if (!C.move(state.board, state.piece, 0, 1)) {
+        state.landWait += dt;
+        if (state.landWait >= 160) { lockAndResolve(); return; }
+      } else {
+        state.landWait = 0;
+      }
+    }
+    if (state.piece) {
+      if (!state.pv) state.pv = { x: state.piece.x, y: state.piece.y };
+      var a = 1 - Math.exp(-dt / 45);
+      state.pv.x += (state.piece.x - state.pv.x) * a;
+      state.pv.y += (state.piece.y - state.pv.y) * a;
+    }
+  }
+
+  // ---------- 輸入：鍵盤與觸控 ----------
+  function isTyping(e) { return e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName); }
+  function onKey(e) {
+    if (!isVisible() || !state.running || isTyping(e)) return;
+    var k = e.key, handled = true;
+    if (k === 'ArrowLeft') move(-1);
+    else if (k === 'ArrowRight') move(1);
+    else if (k === 'ArrowUp' || k === 'x' || k === 'X') rotate(1);
+    else if (k === 'z' || k === 'Z') rotate(-1);
+    else if (k === 'ArrowDown') state.softHold = true;
+    else if (k === ' ') hardDrop();
+    else handled = false;
+    if (handled) e.preventDefault();
+  }
+  function onKeyUp(e) { if (e.key === 'ArrowDown') state.softHold = false; }
+
+  var T = null;
+  function onTouchStart(e) {
+    if (!state.running) return;
+    var t = e.touches[0];
+    T = { x: t.clientX, y: t.clientY, lx: t.clientX, t: performance.now(), moved: false };
+  }
+  function onTouchMove(e) {
+    if (!T) return;
+    e.preventDefault();
+    var t = e.touches[0], cell = state.cell || 30;
+    if (canInput()) {
+      var n = 0;
+      while (Math.abs(t.clientX - T.lx) >= cell * 0.7 && n < 4) {
+        var dir = t.clientX > T.lx ? 1 : -1;
+        move(dir); T.lx += dir * cell * 0.7; n++;
+      }
+      if (t.clientY - T.y > cell * 0.8) state.softHold = true;
+    }
+    if (Math.abs(t.clientX - T.x) > 8 || Math.abs(t.clientY - T.y) > 8) T.moved = true;
+  }
+  function onTouchEnd(e) {
+    if (!T) return;
+    var t = e.changedTouches[0], cell = state.cell || 30;
+    var dt = performance.now() - T.t, dy = t.clientY - T.y, dx = t.clientX - T.x;
+    state.softHold = false;
+    if (!T.moved && dt < 300) rotate(1);
+    else if (dy > cell * 2 && dt < 260 && Math.abs(dx) < cell) hardDrop();
+    T = null;
+  }
+  function holdRepeat(btn, fn) {
+    var t1 = null, t2 = null;
+    function stop() { clearTimeout(t1); clearInterval(t2); t1 = t2 = null; }
+    btn.addEventListener('pointerdown', function (e) {
+      e.preventDefault(); fn(); stop();
+      t1 = setTimeout(function () { t2 = setInterval(fn, 110); }, 220);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { btn.addEventListener(ev, stop); });
+  }
+
+  // ---------- 介面 ----------
+  function toast(msg) { var a = A(); if (a && a.toast) a.toast(msg, 1); }
+  function renderHud() {
+    var u = state.ui; if (!u) return;
+    var best = JSON.parse(localStorage.getItem(LOCAL_BEST) || '{}');
+    u.score.textContent = state.score;
+    u.maxChain.textContent = state.maxChain;
+    u.best.textContent = best.score || 0;
+    u.daily.textContent = dailyLeft();
+    u.mode.textContent = { free: '自由練習', timed: '限時挑戰', boss: 'BOSS 討伐' }[state.mode] || '';
+    u.timerWrap.style.display = state.mode === 'timed' ? '' : 'none';
+    u.timer.textContent = state.timeLeft;
+    var bossOn = state.mode === 'boss' && !!state.boss;
+    u.bossWrap.style.display = bossOn ? '' : 'none';
+    if (bossOn) {
+      u.bossName.textContent = state.boss.name || 'BOSS';
+      u.bossHpText.textContent = Math.max(0, state.bossHp) + ' / ' + state.bossMaxHp;
+      u.bossHpBar.style.width = (Math.max(0, state.bossHp) / state.bossMaxHp * 100) + '%';
+      u.gauge.style.width = Math.min(100, state.gauge / gaugeNeed() * 100) + '%';
+      if (state.bossImgUrl && u.bossImg.getAttribute('src') !== state.bossImgUrl) u.bossImg.src = state.bossImgUrl;
+    }
+    u.petName.textContent = state.petState ? state.petState.formName : '未裝備寵物';
+    u.petSkill.textContent = state.petState ? ('技能：' + (state.petState.skillName || '—')) : '到寵物樂園裝備寵物';
+    if (state.next) {
+      var key = state.next.a + ',' + state.next.b + ',' + state.iconMode;
+      if (key !== state.nextKey) {
+        state.nextKey = key;
+        u.next.innerHTML = '';
+        [state.next.a, state.next.b].forEach(function (c) {
+          var d = document.createElement('span');
+          d.className = 'pp-dot';
+          d.style.setProperty('--c', THEME[c]);
+          d.style.setProperty('--d', DEEP[c]);
+          d.textContent = state.iconMode ? ICON[c] : '';
+          u.next.appendChild(d);
+        });
+      }
+    }
+    u.iconBtn.textContent = state.iconMode ? '🎨 圖示' : '⚪ 純色';
+  }
+
+  var CSS = [
+    '#puyo-grid-overlay{padding:0!important;overflow:hidden!important;}',
+    '.pp-root{position:absolute;inset:0;display:grid;gap:8px;padding:8px;box-sizing:border-box;color:#e2e8f0;overflow:hidden;',
+    '  background:radial-gradient(circle at 15% 10%,rgba(139,92,246,.35),transparent 45%),radial-gradient(circle at 85% 90%,rgba(59,130,246,.3),transparent 50%),linear-gradient(160deg,#1e1b4b 0%,#0f172a 100%);',
+    '  font-family:"Noto Sans TC",system-ui,sans-serif;user-select:none;-webkit-user-select:none;}',
+    '.pp-root *{box-sizing:border-box;}',
+    '.pp-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;}',
+    '.pp-bg i{position:absolute;bottom:-120px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.5),rgba(255,255,255,.06) 55%,transparent 70%);animation:pp-rise linear infinite;}',
+    '@keyframes pp-rise{from{transform:translateY(0);opacity:0}10%{opacity:.45}to{transform:translateY(-110vh);opacity:0}}',
+    '.pp-root>:not(.pp-bg){position:relative;z-index:1;}',
+    '.pp-board-area{grid-area:board;min-width:0;min-height:0;touch-action:none;}',
+    '.pp-board-box{position:absolute;border-radius:12px;}',
+    '#puyo-canvas{display:block;border-radius:12px;box-shadow:0 0 0 2px #818cf8,0 0 0 6px rgba(129,140,248,.16),0 0 34px rgba(129,140,248,.4);}',
+    '.pp-shake{animation:pp-shake .25s linear;}',
+    '@keyframes pp-shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,2px)}50%{transform:translate(3px,-2px)}75%{transform:translate(-2px,-1px)}}',
+    '.pp-result{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,.72);border-radius:12px;padding:10px;z-index:5;}',
+    '.pp-result.on{display:flex;}',
+    '.pp-result-card{background:#0f172a;border:1px solid #818cf8;border-radius:14px;padding:14px;width:100%;max-width:300px;}',
+    '.pp-result-title{text-align:center;font-size:1.2rem;font-weight:900;color:#fff;margin-bottom:8px;}',
+    '.pp-res-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:center;}',
+    '.pp-res-cell{background:#1e293b;border-radius:8px;padding:6px;}',
+    '.pp-res-cell small{display:block;color:#94a3b8;font-size:11px;}',
+    '.pp-res-cell b{font-size:1.2rem;font-weight:900;}',
+    '.pp-res-btns{display:flex;gap:8px;margin-top:12px;}',
+    '.pp-btn{border:0;border-bottom:3px solid rgba(0,0,0,.35);border-radius:10px;padding:8px 10px;color:#fff;font-weight:900;font-size:.9rem;cursor:pointer;transition:transform .08s,filter .15s;white-space:nowrap;}',
+    '.pp-btn:hover{filter:brightness(1.1);}',
+    '.pp-btn:active{transform:translateY(2px);border-bottom-width:1px;}',
+    '.pp-btn-indigo{background:#4f46e5}.pp-btn-slate{background:#334155}.pp-btn-emerald{background:#059669}.pp-btn-amber{background:#d97706}.pp-btn-rose{background:#e11d48}',
+    '.pp-card{background:rgba(15,23,42,.72);border:1px solid rgba(148,163,184,.22);border-radius:14px;padding:10px;min-width:0;box-shadow:0 8px 24px rgba(0,0,0,.25);}',
+    '.pp-label{font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:.05em;}',
+    '.pp-hud-l,.pp-hud-r{grid-area:hl;display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0;overflow:auto;scrollbar-width:none;}',
+    '.pp-hud-r{grid-area:hr;}',
+    '.pp-hud-l::-webkit-scrollbar,.pp-hud-r::-webkit-scrollbar{display:none;}',
+    '.pp-ctrl{grid-area:ctrl;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;justify-self:center;}',
+    '.pp-ctrl .pp-btn{padding:10px 0;font-size:1.1rem;}',
+    '.pp-ctrl .pp-icon-btn{font-size:.8rem;}',
+    '.pp-stats-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;}',
+    '.pp-tag{background:#4338ca;color:#fff;font-weight:900;font-size:12px;border-radius:999px;padding:2px 10px;white-space:nowrap;}',
+    '.pp-timer{font-weight:900;color:#fcd34d;font-size:14px;white-space:nowrap;}',
+    '.pp-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}',
+    '.pp-stat-grid div{background:rgba(2,6,23,.5);border-radius:8px;padding:5px 8px;}',
+    '.pp-stat-grid small{display:block;color:#94a3b8;font-size:11px;}',
+    '.pp-stat-grid b{font-size:1.25rem;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;}',
+    '.pp-y{color:#fde047!important;}',
+    '.pp-next-row{display:flex;gap:6px;justify-content:center;align-items:center;padding:4px 0;}',
+    '.pp-dot{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:15px;background:radial-gradient(circle at 32% 30%,#fff 0 9%,var(--c) 38%,var(--d) 100%);box-shadow:inset -3px -4px 6px rgba(0,0,0,.3),0 2px 6px rgba(0,0,0,.4);}',
+    '.pp-boss-top{display:flex;gap:8px;align-items:center;}',
+    '.pp-boss-top img{width:48px;height:48px;object-fit:contain;border-radius:8px;background:#0f172a;}',
+    '.pp-boss-name{color:#fda4af;font-weight:900;}',
+    '.pp-bar{height:12px;background:#0f172a;border-radius:999px;overflow:hidden;margin-top:6px;}',
+    '.pp-bar i{display:block;height:100%;width:100%;transition:width .35s ease-out;border-radius:999px;}',
+    '.pp-bar .hp{background:linear-gradient(90deg,#fb7185,#e11d48);}',
+    '.pp-bar.thin{height:8px;}',
+    '.pp-bar .gauge{background:linear-gradient(90deg,#fdba74,#f97316);width:0;}',
+    '.pp-hp-text{font-size:12px;text-align:right;color:#cbd5e1;margin-top:3px;font-variant-numeric:tabular-nums;}',
+    '.pp-pet{display:flex;flex-direction:column;align-items:center;cursor:pointer;}',
+    '.pp-pet canvas{display:block;width:100%;height:100px;}',
+    '.pp-pet-name{font-weight:900;color:#f9a8d4;font-size:14px;text-align:center;}',
+    '.pp-pet-skill{font-size:12px;color:#cbd5e1;text-align:center;margin-top:2px;}',
+    '.pp-say{margin-top:6px;min-height:1.6em;font-size:12px;font-weight:900;color:#fef08a;text-align:center;opacity:0;transition:opacity .25s;}',
+    '.pp-say.show{opacity:1;}',
+    '.pp-modes{display:flex;flex-direction:column;gap:8px;}',
+    '.pp-modes .pp-btn{width:100%;}',
+    '.pp-tip{font-size:11px;color:#94a3b8;line-height:1.6;}',
+
+    /* ===== 版面一：land（電腦／橫向平板）：左右兩欄資訊、中間盤面最大化 ===== */
+    '.pp-land{grid-template-columns:minmax(150px,280px) minmax(0,1fr) minmax(150px,280px);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"hl board hr" "hl ctrl hr";}',
+    '.pp-land .pp-pet canvas{height:clamp(150px,30vh,260px);}',
+    '.pp-land .pp-pet-name{font-size:16px;}',
+    '.pp-land .pp-stat-grid b{font-size:1.5rem;}',
+    '.pp-land .pp-hud-l,.pp-land .pp-hud-r{font-size:14px;}',
+
+    /* ===== 版面二：tab（平板直向）：盤面佔滿高度，兩側為精簡資訊欄 ===== */
+    '.pp-tab{grid-template-columns:minmax(132px,150px) minmax(0,1fr) minmax(132px,150px);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"hl board hr" "hl ctrl hr";font-size:13px;}',
+    '.pp-tab .pp-pet canvas{height:120px;}',
+    '.pp-tab .pp-stat-grid b{font-size:1.05rem;}',
+    '.pp-tab .pp-tipcard{display:none;}',
+    '.pp-tab .pp-ctrl .pp-btn{padding:12px 0;}',
+
+    /* ===== 版面三：phone（手機直向）：頂部資訊列、盤面置中、右側寵物小欄 ===== */
+    '.pp-phone{grid-template-columns:minmax(0,1fr) 104px;grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"hl hl" "board hr" "ctrl ctrl";padding:6px;gap:6px;font-size:12px;}',
+    '.pp-phone .pp-hud-l{flex-direction:row;flex-wrap:wrap;overflow:visible;gap:6px;}',
+    '.pp-phone .pp-hud-l>.pp-card{flex:1 1 130px;padding:7px;}',
+    '.pp-phone .pp-hud-l>.pp-boss{flex:1 1 100%;}',
+    '.pp-phone .pp-stat-grid b{font-size:1rem;}',
+    '.pp-phone .pp-stats-head{margin-bottom:4px;}',
+    '.pp-phone .pp-next{flex:0 0 auto!important;}',
+    '.pp-phone .pp-hud-r{overflow:auto;}',
+    '.pp-phone .pp-pet canvas{height:88px;}',
+    '.pp-phone .pp-pet-name{font-size:12px;}',
+    '.pp-phone .pp-pet-skill,.pp-phone .pp-say{font-size:11px;}',
+    '.pp-phone .pp-hud-l>.pp-modes{flex:1 1 100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:7px;}',
+    '.pp-phone .pp-modes .pp-label{grid-column:1/-1;}',
+    '.pp-phone .pp-modes .pp-btn{font-size:.78rem;padding:7px 4px;}',
+    '.pp-phone .pp-tipcard{display:none;}',
+    '.pp-phone .pp-ctrl{width:100%!important;}',
+    '.pp-phone .pp-ctrl .pp-btn{padding:10px 0;}',
+
+    '@media (min-width:768px){#pet-paradise-modal.pp-on #pet-paradise-info-panel{display:none!important}#pet-paradise-modal.pp-on .md\\:w-9\\/12{width:100%!important}}',
+    '@media (max-height:520px){.pp-land .pp-tip{display:none}.pp-land .pp-pet canvas{height:90px}.pp-land .pp-hud-l,.pp-land .pp-hud-r{gap:6px}}'
+  ].join('\n');
+  function injectCSS() {
+    if (document.getElementById('puyo-v2-style')) return;
+    var s = document.createElement('style');
+    s.id = 'puyo-v2-style';
+    s.textContent = CSS;
+    document.head.appendChild(s);
+  }
+
+  function buildUI(host) {
+    injectCSS();
+    var bubbles = '';
+    for (var i = 0; i < 9; i++) {
+      var sz = 30 + Math.round(Math.random() * 70), left = Math.round(Math.random() * 100);
+      var dur = 14 + Math.round(Math.random() * 14), del = -Math.round(Math.random() * 20);
+      bubbles += '<i style="width:' + sz + 'px;height:' + sz + 'px;left:' + left + '%;animation-duration:' + dur + 's;animation-delay:' + del + 's"></i>';
+    }
+    host.innerHTML =
+      '<div class="pp-root pp-land" id="pp-root">' +
+        '<div class="pp-bg">' + bubbles + '</div>' +
+        '<div class="pp-board-area" id="pp-area">' +
+          '<div class="pp-board-box" id="pp-box">' +
+            '<canvas id="puyo-canvas"></canvas>' +
+            '<div class="pp-result" id="puyo-result"><div class="pp-result-card">' +
+              '<div class="pp-result-title" id="puyo-result-title"></div>' +
+              '<div id="puyo-result-body"></div>' +
+              '<div class="pp-res-btns">' +
+                '<button id="puyo-again" class="pp-btn pp-btn-indigo" style="flex:1">再玩一次</button>' +
+                '<button id="puyo-back" class="pp-btn pp-btn-slate" style="flex:1">回選單</button>' +
+              '</div>' +
+            '</div></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="pp-hud-l">' +
+          '<div class="pp-card pp-stats">' +
+            '<div class="pp-stats-head"><span class="pp-tag" id="puyo-mode"></span><span class="pp-timer" id="pp-timer-wrap">⏱ <span id="pp-timer">0</span> 秒</span></div>' +
+            '<div class="pp-stat-grid">' +
+              '<div><small>分數</small><b id="puyo-score">0</b></div>' +
+              '<div><small>最高連鎖</small><b id="puyo-maxchain" class="pp-y">0</b></div>' +
+              '<div><small>本機最高分</small><b id="puyo-best">0</b></div>' +
+              '<div><small>今日 BOSS 剩餘</small><b id="puyo-daily">0</b></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="pp-card pp-next"><div class="pp-label">NEXT 下一組</div><div class="pp-next-row" id="puyo-next"></div></div>' +
+          '<div class="pp-card pp-boss" id="pp-boss-wrap" style="display:none">' +
+            '<div class="pp-boss-top"><img id="pp-boss-img" alt=""><div><div class="pp-label">BOSS</div><b class="pp-boss-name" id="pp-boss-name"></b></div></div>' +
+            '<div class="pp-bar"><i class="hp" id="pp-boss-hp"></i></div>' +
+            '<div class="pp-hp-text" id="pp-boss-hp-text"></div>' +
+            '<div class="pp-label" style="margin-top:4px">反擊計量條</div>' +
+            '<div class="pp-bar thin"><i class="gauge" id="pp-gauge"></i></div>' +
+          '</div>' +
+          '<div class="pp-card pp-modes">' +
+            '<div class="pp-label">選擇玩法</div>' +
+            '<button id="puyo-start-free" class="pp-btn pp-btn-emerald">🧘 自由練習</button>' +
+            '<button id="puyo-start-timed" class="pp-btn pp-btn-amber">⏱️ 限時挑戰</button>' +
+            '<button id="puyo-start-boss" class="pp-btn pp-btn-rose">👹 BOSS 討伐</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="pp-hud-r">' +
+          '<div class="pp-card pp-pet" id="pp-pet-card" title="點一下為寵物加油">' +
+            '<div class="pp-label">出戰寵物</div>' +
+            '<canvas id="pp-pet-canvas"></canvas>' +
+            '<div class="pp-pet-name" id="puyo-pet">未裝備寵物</div>' +
+            '<div class="pp-pet-skill" id="puyo-pet-skill"></div>' +
+            '<div class="pp-say" id="pp-say"></div>' +
+          '</div>' +
+          '<div class="pp-card pp-tipcard">' +
+            '<div class="pp-label">操作說明</div>' +
+            '<div class="pp-tip">鍵盤：← → 移動 ｜ ↑/X 順轉 ｜ Z 逆轉 ｜ ↓ 加速 ｜ 空白直落<br>手機：左右滑移動、下滑加速、快速下甩直落、點一下旋轉<br>獎勵上限：金幣 1,000 ／ EXP 500（後台可調）</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="pp-ctrl" id="pp-ctrl">' +
+          '<button id="puyo-l" class="pp-btn pp-btn-slate">◀</button>' +
+          '<button id="puyo-rot" class="pp-btn pp-btn-indigo">⟳</button>' +
+          '<button id="puyo-r" class="pp-btn pp-btn-slate">▶</button>' +
+          '<button id="puyo-drop" class="pp-btn pp-btn-amber">⬇</button>' +
+          '<button id="puyo-icon" class="pp-btn pp-btn-slate pp-icon-btn">🎨 圖示</button>' +
+        '</div>' +
+      '</div>';
+
+    var q = function (id) { return host.querySelector('#' + id); };
+    state.ui = {
+      host: host, root: q('pp-root'), area: q('pp-area'), box: q('pp-box'), canvas: q('puyo-canvas'), ctrl: q('pp-ctrl'),
+      result: q('puyo-result'), resultTitle: q('puyo-result-title'), resultBody: q('puyo-result-body'),
+      score: q('puyo-score'), maxChain: q('puyo-maxchain'), best: q('puyo-best'), daily: q('puyo-daily'),
+      mode: q('puyo-mode'), timer: q('pp-timer'), timerWrap: q('pp-timer-wrap'),
+      bossWrap: q('pp-boss-wrap'), bossName: q('pp-boss-name'), bossHpBar: q('pp-boss-hp'),
+      bossHpText: q('pp-boss-hp-text'), bossImg: q('pp-boss-img'), gauge: q('pp-gauge'),
+      next: q('puyo-next'), petName: q('puyo-pet'), petSkill: q('puyo-pet-skill'),
+      petCanvas: q('pp-pet-canvas'), petCard: q('pp-pet-card'), say: q('pp-say'), iconBtn: q('puyo-icon')
+    };
+    state.ctx = state.ui.canvas.getContext('2d');
+
+    var u = state.ui;
+    u.canvas.addEventListener('touchstart', onTouchStart, { passive: true });
+    u.canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    u.canvas.addEventListener('touchend', onTouchEnd, { passive: true });
+    holdRepeat(q('puyo-l'), function () { move(-1); });
+    holdRepeat(q('puyo-r'), function () { move(1); });
+    q('puyo-rot').onclick = function () { rotate(1); };
+    q('puyo-drop').onclick = function () { hardDrop(); };
+    q('puyo-icon').onclick = function () {
+      state.iconMode = !state.iconMode;
+      localStorage.setItem(ICON_KEY, state.iconMode ? '1' : '0');
+      state.nextKey = '';
+      renderHud();
+    };
+    q('puyo-start-free').onclick = function () { start('free'); };
+    q('puyo-start-timed').onclick = function () { start('timed'); };
+    q('puyo-start-boss').onclick = function () { start('boss'); };
+    q('puyo-again').onclick = function () { start(state.mode); };
+    q('puyo-back').onclick = function () {
+      hideResult();
+      state.running = false; state.tl = null; state.busy = false; state.piece = null; state.pv = null;
+      state.board = C.createBoard();
+      renderHud();
+    };
+    u.petCard.onclick = function () {
+      if (!state.petState) { say('先到寵物樂園裝備寵物吧！'); return; }
+      playPet({ type: 'happy', row: 0, frames: 4 });
+      say(ENCOURAGE[Math.floor(Math.random() * ENCOURAGE.length)]);
+    };
+    state.board = C.createBoard();
+    state.next = C.newPair(Math.random);
+    state.mode = 'free';
+    renderHud();
+  }
+  function start(mode) {
+    hideResult();
+    newGame(mode);
+    renderHud();
+  }
+
+  // ---------- 掛載與離開 ----------
+  function ensureUI() {
+    var host = document.getElementById('puyo-grid-overlay');
+    if (!host) return null;
+    if (!state.ui || !host.contains(state.ui.canvas)) {
+      buildUI(host);
+      if (window.ResizeObserver) new ResizeObserver(relayout).observe(host);
+      window.addEventListener('resize', relayout);
+      document.addEventListener('keydown', onKey);
+      document.addEventListener('keyup', onKeyUp);
+    }
+    return host;
+  }
+  function enter() {
+    var host = ensureUI(); if (!host) return;
+    state.cfg = cfgFromGlobal();
+    host.classList.remove('hidden');
+    host.classList.add('flex');
+    host.style.padding = '0';
+    host.style.overflow = 'hidden';
+    setTimeout(function () { host.classList.remove('opacity-0'); }, 30);
+    relayout();
+    renderHud();
+  }
+  function leave() {
+    var host = document.getElementById('puyo-grid-overlay');
+    if (host) { host.classList.add('hidden'); host.classList.remove('flex'); host.classList.add('opacity-0'); }
+    state.running = false; state.tl = null; state.busy = false; state.piece = null; state.pv = null;
+  }
+
+  // ---------- 每幀迴圈 ----------
+  var lastNow = 0;
+  function loop(now) {
+    var dt = lastNow ? Math.min(64, now - lastNow) : 16;
+    lastNow = now;
+    if (isVisible()) {
+      update(now, dt);
+      drawBoard(now);
+      drawPet(now);
+    }
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- 後台表單（寵物樂園「設定」分頁，與 v1 相同） ----------
+  function field(label, id, val, min, max) {
+    return '<label class="flex flex-col text-xs font-bold text-slate-600">' + label +
+      '<input id="' + id + '" type="number" value="' + val + '" min="' + min + '" max="' + max + '" class="border rounded px-2 py-1 text-sm"></label>';
+  }
+  function check(label, id, val) {
+    return '<label class="flex items-center gap-2 text-xs font-bold text-slate-600"><input id="' + id + '" type="checkbox" ' + (val ? 'checked' : '') + '>' + label + '</label>';
+  }
+  function renderAdminForm(p) {
+    var v = function (k) { return (p[k] === undefined || p[k] === null || p[k] === '') ? DEFAULTS[k] : p[k]; };
+    var combo = (Array.isArray(p.comboTable) && p.comboTable.length ? p.comboTable : DEFAULTS.comboTable).join(',');
+    return '<div class="space-y-3">' +
+      '<div class="text-xs text-slate-500">寵物 attack 大招：4 連鎖起播放，6 連鎖起顯示技能名與特效；寵物傷害採<b>加算</b>。BOSS 池：後台怪物中 <b>cardBack = 4</b> 的全部 LV4。</div>' +
+      '<div class="grid grid-cols-2 md:grid-cols-4 gap-2">' +
+        check('啟用魔法氣泡', 'pp-puyo-enabled', v('enabled')) +
+        check('啟用 BOSS 討伐', 'pp-puyo-bossEnabled', v('bossEnabled')) +
+        check('寵物參與', 'pp-puyo-petEnabled', v('petEnabled')) +
+        check('寵物光暈 (80/99)', 'pp-puyo-glowEnabled', v('glowEnabled')) +
+        check('啟用寵物救援', 'pp-puyo-rescueEnabled', v('rescueEnabled')) +
+      '</div>' +
+      '<div class="grid grid-cols-2 md:grid-cols-4 gap-2">' +
+        field('單局金幣上限', 'pp-puyo-rewardGoldMax', v('rewardGoldMax'), 0, 1000000) +
+        field('單局 EXP 上限', 'pp-puyo-rewardExpMax', v('rewardExpMax'), 0, 1000000) +
+        field('每日 BOSS 次數', 'pp-puyo-bossDailyLimit', v('bossDailyLimit'), 0, 99) +
+        field('限時秒數', 'pp-puyo-timeAttackSec', v('timeAttackSec'), 10, 3600) +
+        field('BOSS 勝利金幣 %', 'pp-puyo-bossGoldRate', v('bossGoldRate'), 0, 300) +
+        field('BOSS 勝利 EXP %', 'pp-puyo-bossExpRate', v('bossExpRate'), 0, 300) +
+        field('BOSS 失敗金幣', 'pp-puyo-defeatGold', v('defeatGold'), 0, 100000) +
+        field('自動下落 ms', 'pp-puyo-dropMs', v('dropMs'), 200, 5000) +
+      '</div>' +
+      '<div class="grid grid-cols-2 md:grid-cols-4 gap-2">' +
+        field('計量倍數（BOSS mode4 ×）', 'pp-puyo-gaugeMul', v('gaugeMul'), 1, 50) +
+        field('反擊：ATK ÷ 幾', 'pp-puyo-garbageDivisor', v('garbageDivisor'), 1, 100) +
+        field('反擊上限顆數', 'pp-puyo-garbageMax', v('garbageMax'), 1, 60) +
+        field('救援觸發列', 'pp-puyo-rescueRow', v('rescueRow'), 1, 12) +
+        field('救援機率 %', 'pp-puyo-rescueChance', v('rescueChance'), 0, 100) +
+        field('每場救援次數', 'pp-puyo-rescuePerGame', v('rescuePerGame'), 0, 10) +
+        field('危險提示列', 'pp-puyo-hurtStackRow', v('hurtStackRow'), 1, 12) +
+        field('危險冷卻 ms', 'pp-puyo-hurtCooldownMs', v('hurtCooldownMs'), 0, 60000) +
+      '</div>' +
+      '<div class="grid grid-cols-2 md:grid-cols-4 gap-2">' +
+        field('寵物 happy 連鎖', 'pp-puyo-happyChain', v('happyChain'), 1, 99) +
+        field('寵物 flower 連鎖', 'pp-puyo-flowerChain', v('flowerChain'), 1, 99) +
+        field('寵物 attack 連鎖', 'pp-puyo-attackMinChain', v('attackMinChain'), 1, 99) +
+        field('技能名/特效連鎖', 'pp-puyo-skillMinChain', v('skillMinChain'), 1, 99) +
+        field('attack 冷卻 ms', 'pp-puyo-attackCooldownMs', v('attackCooldownMs'), 0, 60000) +
+        field('每格動畫 ms', 'pp-puyo-frameMs', v('frameMs'), 30, 500) +
+        field('超出後每連鎖加成', 'pp-puyo-comboExtra', v('comboExtra'), 0, 10000) +
+      '</div>' +
+      '<div class="space-y-1"><label class="text-xs font-bold text-slate-600">連鎖傷害表（逗號分隔，1 連鎖起）</label>' +
+        '<input id="pp-puyo-comboTable" value="' + combo + '" class="w-full border rounded px-2 py-1 text-sm"></div>' +
+    '</div>';
+  }
+  function readAdminForm() {
+    var g = function (id) { return document.getElementById(id); };
+    var num = function (id, def) { var el = g(id); if (!el) return def; var x = Number(el.value); return isFinite(x) ? x : def; };
+    var bool = function (id, def) { var el = g(id); return el ? !!el.checked : def; };
+    var tEl = g('pp-puyo-comboTable');
+    var table = (tEl ? tEl.value : '').split(/[,，\s]+/).map(Number).filter(function (n) { return isFinite(n) && n >= 0; });
+    if (!table.length) table = DEFAULTS.comboTable.slice();
+    var out = {
+      enabled: bool('pp-puyo-enabled', DEFAULTS.enabled),
+      bossEnabled: bool('pp-puyo-bossEnabled', DEFAULTS.bossEnabled),
+      petEnabled: bool('pp-puyo-petEnabled', DEFAULTS.petEnabled),
+      glowEnabled: bool('pp-puyo-glowEnabled', DEFAULTS.glowEnabled),
+      rescueEnabled: bool('pp-puyo-rescueEnabled', DEFAULTS.rescueEnabled),
+      comboTable: table
+    };
+    ['rewardGoldMax', 'rewardExpMax', 'bossDailyLimit', 'timeAttackSec', 'bossGoldRate', 'bossExpRate', 'defeatGold', 'dropMs',
+     'gaugeMul', 'garbageDivisor', 'garbageMax', 'rescueRow', 'rescueChance', 'rescuePerGame', 'hurtStackRow', 'hurtCooldownMs',
+     'happyChain', 'flowerChain', 'attackMinChain', 'skillMinChain', 'attackCooldownMs', 'frameMs', 'comboExtra'].forEach(function (k) {
+      out[k] = num('pp-puyo-' + k, DEFAULTS[k]);
+    });
+    return out;
+  }
+  function registerWithParadise() {
+    var a = A();
+    if (!a || typeof a.registerPPGame !== 'function') return false;
+    a.registerPPGame({
+      id: 'puyo', label: '魔法氣泡', icon: '🔮', title: '🔮 魔法氣泡', color: 'border-indigo-200',
+      render: function (cfgIn) { return renderAdminForm((cfgIn && cfgIn.puyo) || {}); },
+      read: function () { return readAdminForm(); }
+    });
+    return true;
+  }
+
+  requestAnimationFrame(loop);
+
+  window.PuyoGame = {
+    DEFAULTS: DEFAULTS,
+    registerWithParadise: registerWithParadise,
+    enter: enter, leave: leave, start: start,
+    _state: state,
+    _util: { cfgFromGlobal: cfgFromGlobal, bossPool: bossPool, dailyLeft: dailyLeft, onChainResolved: onChainResolved, actionFor: actionFor }
+  };
+  console.log(TAG, '模組已載入（v2：三版面＋平滑動畫）');
+})();
+
+</script>
 </body>
 </html>
