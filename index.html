@@ -32489,135 +32489,182 @@ if (entity.state === 'walk' && entity.target) {
     }
     g.restore();
   }
-  function drawBoard(now) {
-    var u = state.ui, g = state.ctx;
-    if (!u || !g || !state.cell || !state.board) return;
-    var cell = state.cell, dpr = state.dpr, cols = C.COLS, rows = C.ROWS;
-    var W = cell * cols, H = cell * rows, r = cell * 0.46;
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    g.clearRect(0, 0, W, H);
-    var bgG = g.createLinearGradient(0, 0, 0, H);
-    bgG.addColorStop(0, '#1e1b4b'); bgG.addColorStop(1, '#312e81');
-    g.fillStyle = bgG; g.fillRect(0, 0, W, H);
-    g.strokeStyle = 'rgba(255,255,255,0.06)'; g.lineWidth = 1;
-    g.beginPath();
-    for (var i = 0; i <= cols; i++) { g.moveTo(i * cell + .5, 0); g.lineTo(i * cell + .5, H); }
-    for (var j = 0; j <= rows; j++) { g.moveTo(0, j * cell + .5); g.lineTo(W, j * cell + .5); }
-    g.stroke();
+  /* ===== 【連結版】同色相鄰珠子以「橋」相連，視覺上合併成一團（像真的魔法氣泡） ===== */
+/* 規則：同色且上下左右相鄰的珠子會連在一起；消除判定仍為「同色連通 4 顆以上」 */
+var LINK_ON = true;   // 設為 false 可還原為獨立珠子的外觀
+function linkBridge(g, x1, y1, x2, y2, c, half, alpha) {
+  if (!LINK_ON || !c || c === C.GRAY || half <= 0.5) return;
+  var dx = x2 - x1, dy = y2 - y1, len = Math.sqrt(dx * dx + dy * dy);
+  if (len <= 0) return;
+  g.save();
+  if (alpha != null && alpha < 1) g.globalAlpha = Math.max(0, alpha);
+  g.translate((x1 + x2) / 2, (y1 + y2) / 2);
+  g.rotate(Math.atan2(dy, dx));
+  var lg = g.createLinearGradient(0, -half, 0, half);
+  lg.addColorStop(0, THEME[c]);
+  lg.addColorStop(0.45, THEME[c]);
+  lg.addColorStop(1, DEEP[c]);
+  g.fillStyle = lg;
+  g.fillRect(-len / 2, -half, len, half * 2);
+  g.restore();
+}
+function drawBoard(now) {
+  var u = state.ui, g = state.ctx;
+  if (!u || !g || !state.cell || !state.board) return;
+  var cell = state.cell, dpr = state.dpr, cols = C.COLS, rows = C.ROWS;
+  var W = cell * cols, H = cell * rows, r = cell * 0.47, half = r * 0.92;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+  var bgG = g.createLinearGradient(0, 0, 0, H);
+  bgG.addColorStop(0, '#1e1b4b'); bgG.addColorStop(1, '#312e81');
+  g.fillStyle = bgG; g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(255,255,255,0.06)'; g.lineWidth = 1;
+  g.beginPath();
+  for (var i = 0; i <= cols; i++) { g.moveTo(i * cell + .5, 0); g.lineTo(i * cell + .5, H); }
+  for (var j = 0; j <= rows; j++) { g.moveTo(0, j * cell + .5); g.lineTo(W, j * cell + .5); }
+  g.stroke();
 
-    // 靜態盤面：若在動畫中，使用該段的起始快照，並隱藏正在移動的氣泡
-    var ph = state.tl ? state.tl.phases[state.tl.idx] : null;
-    var grid = ph ? ph.before : state.board;
-    var skip = {}, t = 0;
-    if (ph) {
-      t = ph.t0 == null ? 0 : clamp((now - ph.t0) / ph.dur, 0, 1);
-      if (ph.kind === 'fall') ph.items.forEach(function (m) { if (m.from >= 0) skip[m.from * cols + m.x] = 1; });
-      else ph.items.forEach(function (p) { skip[p.y * cols + p.x] = 1; });
-    }
-    var land = {};
-    state.landFx = state.landFx.filter(function (f) { return now - f.t0 < 220; });
-    state.landFx.forEach(function (f) { land[f.y * cols + f.x] = f; });
-    for (var y = 0; y < rows; y++) {
-      for (var x = 0; x < cols; x++) {
-        var v = grid[y][x], k = y * cols + x;
-        if (!v || skip[k]) continue;
-        var s = 1, f = land[k];
-        if (f) s = 0.88 + 0.12 * easeOut((now - f.t0) / 220);   // 落地微彈
-        bubble(g, (x + .5) * cell, (y + .5) * cell, v, r * s, 1, cell);
-      }
-    }
-    // 動畫中的氣泡
-    if (ph && ph.t0 != null) {
-      if (ph.kind === 'pop') {
-        var e = easeIn(t);
-        ph.items.forEach(function (p) {
-          bubble(g, (p.x + .5) * cell, (p.y + .5) * cell, p.c, r * (1 - 0.8 * e), 1 - e, cell);
-        });
-      } else {
-        var e2 = easeInOut(t);
-        ph.items.forEach(function (m) {
-          var yy = m.from + (m.to - m.from) * e2;
-          bubble(g, (m.x + .5) * cell, (yy + .5) * cell, m.c, r, 1, cell);
-        });
-      }
-    }
-    // 落下中的雙球 + 影子預覽
-    if (state.piece && state.pv && state.running) {
-      var pc = state.piece, gh = { x: pc.x, y: pc.y, rot: pc.rot, a: pc.a, b: pc.b }, q;
-      while ((q = C.move(state.board, gh, 0, 1))) gh = q;
-      C.cells(gh).forEach(function (cc) {
-        if (cc.y < 0) return;
-        g.beginPath(); g.arc((cc.x + .5) * cell, (cc.y + .5) * cell, r * 0.9, 0, Math.PI * 2);
-        g.setLineDash([4, 4]); g.strokeStyle = 'rgba(255,255,255,0.3)'; g.lineWidth = 1.5; g.stroke(); g.setLineDash([]);
+  // 動畫段落：靜態盤面用段落起始快照；移動中的珠子另外畫
+  var ph = state.tl ? state.tl.phases[state.tl.idx] : null;
+  var grid = ph ? ph.before : state.board;
+  var skip = {}, moving = [], started = !!(ph && ph.t0 != null);
+  if (ph) {
+    if (ph.kind === 'fall') {
+      var t1 = started ? clamp((now - ph.t0) / ph.dur, 0, 1) : 0, e2 = easeInOut(t1);
+      ph.items.forEach(function (m) {
+        if (m.from >= 0) skip[m.from * cols + m.x] = 1;
+        if (started) moving.push({ x: m.x, y: m.from + (m.to - m.from) * e2, c: m.c, s: 1, a: 1 });
       });
-      var pv = state.pv;
-      C.cells({ x: pv.x, y: pv.y, rot: pc.rot, a: pc.a, b: pc.b }).forEach(function (cc) {
-        bubble(g, (cc.x + .5) * cell, (cc.y + .5) * cell, cc.c, r, 1, cell);
+    } else {
+      var t2 = started ? clamp((now - ph.t0) / ph.dur, 0, 1) : 0, e = easeIn(t2);
+      ph.items.forEach(function (p) {
+        skip[p.y * cols + p.x] = 1;
+        if (started) moving.push({ x: p.x, y: p.y, c: p.c, s: 1 - 0.8 * e, a: 1 - e, gray: p.gray });
       });
-    }
-    // 危險線（救援觸發列）
-    var dangerY = (rows - cfg().rescueRow) * cell;
-    g.setLineDash([6, 6]); g.strokeStyle = 'rgba(248,113,113,0.5)'; g.lineWidth = 1;
-    g.beginPath(); g.moveTo(0, dangerY); g.lineTo(W, dangerY); g.stroke(); g.setLineDash([]);
-
-    // 消除粒子
-    state.parts = state.parts.filter(function (p) { return now - p.t0 < p.life; });
-    state.parts.forEach(function (p) {
-      var age = (now - p.t0) / 1000, e3 = (now - p.t0) / p.life;
-      var px = p.x + p.vx * age, py = p.y + p.vy * age + 0.5 * cell * 9 * age * age;
-      g.globalAlpha = 1 - e3;
-      g.fillStyle = p.gray ? '#9ca3af' : THEME[p.c];
-      g.beginPath(); g.arc(px, py, cell * 0.12 * (1 - e3 * 0.5), 0, Math.PI * 2); g.fill();
-      g.globalAlpha = 1;
-    });
-
-    // 技能特效
-    if (state.fx) {
-      var kk = (now - state.fx.start) / state.fx.dur;
-      if (kk >= 1) state.fx = null;
-      else if (state.fx.img && state.fx.img.complete && state.fx.img.naturalWidth) {
-        var sz = cell * 4;
-        g.globalAlpha = 1 - kk;
-        g.drawImage(state.fx.img, W / 2 - sz / 2, H / 2 - sz / 2, sz, sz);
-        g.globalAlpha = 1;
-      }
-    }
-    // 浮動文字
-    state.floats = state.floats.filter(function (f) { return now - f.t < 1000; });
-    g.textAlign = 'center'; g.textBaseline = 'middle';
-    state.floats.forEach(function (f, idx) {
-      var k2 = (now - f.t) / 1000;
-      g.globalAlpha = Math.max(0, 1 - k2);
-      g.font = 'bold ' + Math.round(cell * 0.5) + 'px sans-serif';
-      g.fillStyle = f.color;
-      g.fillText(f.text, W / 2, H * 0.38 - k2 * cell * 1.2 - idx * cell * 0.6);
-      g.globalAlpha = 1;
-    });
-    // 連鎖數（縮放進場）
-    if (state.chainShow && now < state.chainShow.until) {
-      var age2 = (now - (state.chainShow.until - 1200)) / 200;
-      var sc = age2 < 1 ? 0.6 + 0.4 * easeOut(clamp(age2, 0, 1)) : 1;
-      g.save();
-      g.translate(cell * 0.3, cell * 0.9); g.scale(sc, sc);
-      g.font = 'bold ' + Math.round(cell * 0.62) + 'px sans-serif';
-      g.textAlign = 'left'; g.fillStyle = '#facc15';
-      g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 6;
-      g.fillText(state.chainShow.n + ' 連鎖！', 0, 0);
-      g.restore();
-    }
-    // 待機提示
-    var resultOn = u.result.classList.contains('on');
-    if (!state.running && !resultOn) {
-      g.fillStyle = 'rgba(255,255,255,0.9)';
-      g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.font = 'bold ' + Math.round(cell * 0.5) + 'px sans-serif';
-      g.fillText('選擇玩法開始', W / 2, H / 2);
-      g.font = Math.round(cell * 0.32) + 'px sans-serif';
-      g.fillStyle = 'rgba(203,213,225,0.9)';
-      g.fillText('可用下方按鈕或鍵盤操作', W / 2, H / 2 + cell * 0.9);
     }
   }
-  function drawPet(now) {
+
+  var land = {};
+  state.landFx = state.landFx.filter(function (f) { return now - f.t0 < 220; });
+  state.landFx.forEach(function (f) { land[f.y * cols + f.x] = f; });
+
+  var y, x, v, k;
+  // 1) 同色相鄰 → 先畫「橋」（連結感的關鍵）
+  for (y = 0; y < rows; y++) {
+    for (x = 0; x < cols; x++) {
+      v = grid[y][x]; k = y * cols + x;
+      if (!v || v === C.GRAY || skip[k]) continue;
+      var cx0 = (x + .5) * cell, cy0 = (y + .5) * cell;
+      if (x + 1 < cols && grid[y][x + 1] === v && !skip[k + 1]) linkBridge(g, cx0, cy0, cx0 + cell, cy0, v, half, 1);
+      if (y + 1 < rows && grid[y + 1][x] === v && !skip[k + cols]) linkBridge(g, cx0, cy0, cx0, cy0 + cell, v, half, 1);
+    }
+  }
+  // 2) 靜態珠子本體（落地微彈）
+  for (y = 0; y < rows; y++) {
+    for (x = 0; x < cols; x++) {
+      v = grid[y][x]; k = y * cols + x;
+      if (!v || skip[k]) continue;
+      var s = 1, f = land[k];
+      if (f) s = 0.88 + 0.12 * easeOut((now - f.t0) / 220);
+      bubble(g, (x + .5) * cell, (y + .5) * cell, v, r * s, 1, cell);
+    }
+  }
+  // 3) 移動／消除中的珠子：彼此相鄰且同色者也保留連結
+  if (moving.length) {
+    for (var a = 0; a < moving.length; a++) {
+      for (var b = a + 1; b < moving.length; b++) {
+        var p1 = moving[a], p2 = moving[b];
+        if (p1.c !== p2.c || p1.c === C.GRAY || p1.gray || p2.gray) continue;
+        var ddx = p2.x - p1.x, ddy = p2.y - p1.y;
+        if (Math.sqrt(ddx * ddx + ddy * ddy) > 1.02) continue;
+        linkBridge(g, (p1.x + .5) * cell, (p1.y + .5) * cell, (p2.x + .5) * cell, (p2.y + .5) * cell,
+          p1.c, half * Math.min(p1.s, p2.s), Math.min(p1.a, p2.a));
+      }
+    }
+    moving.forEach(function (p) { bubble(g, (p.x + .5) * cell, (p.y + .5) * cell, p.c, r * p.s, p.a, cell); });
+  }
+
+  // 落下中的雙球 + 影子預覽（同色雙球也會相連）
+  if (state.piece && state.pv && state.running) {
+    var pc = state.piece, gh = { x: pc.x, y: pc.y, rot: pc.rot, a: pc.a, b: pc.b }, q;
+    while ((q = C.move(state.board, gh, 0, 1))) gh = q;
+    C.cells(gh).forEach(function (cc) {
+      if (cc.y < 0) return;
+      g.beginPath(); g.arc((cc.x + .5) * cell, (cc.y + .5) * cell, r * 0.9, 0, Math.PI * 2);
+      g.setLineDash([4, 4]); g.strokeStyle = 'rgba(255,255,255,0.3)'; g.lineWidth = 1.5; g.stroke(); g.setLineDash([]);
+    });
+    var pv = state.pv;
+    var pcs = C.cells({ x: pv.x, y: pv.y, rot: pc.rot, a: pc.a, b: pc.b });
+    if (pcs.length === 2 && pcs[0].c === pcs[1].c && pcs[0].y >= 0 && pcs[1].y >= 0) {
+      linkBridge(g, (pcs[0].x + .5) * cell, (pcs[0].y + .5) * cell, (pcs[1].x + .5) * cell, (pcs[1].y + .5) * cell, pcs[0].c, half, 1);
+    }
+    pcs.forEach(function (cc) { bubble(g, (cc.x + .5) * cell, (cc.y + .5) * cell, cc.c, r, 1, cell); });
+  }
+
+  // 危險線（救援觸發列）
+  var dangerY = (rows - cfg().rescueRow) * cell;
+  g.setLineDash([6, 6]); g.strokeStyle = 'rgba(248,113,113,0.5)'; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(0, dangerY); g.lineTo(W, dangerY); g.stroke(); g.setLineDash([]);
+
+  // 消除粒子
+  state.parts = state.parts.filter(function (p) { return now - p.t0 < p.life; });
+  state.parts.forEach(function (p) {
+    var age = (now - p.t0) / 1000, e3 = (now - p.t0) / p.life;
+    var px = p.x + p.vx * age, py = p.y + p.vy * age + 0.5 * cell * 9 * age * age;
+    g.globalAlpha = 1 - e3;
+    g.fillStyle = p.gray ? '#9ca3af' : THEME[p.c];
+    g.beginPath(); g.arc(px, py, cell * 0.12 * (1 - e3 * 0.5), 0, Math.PI * 2); g.fill();
+    g.globalAlpha = 1;
+  });
+
+  // 技能特效
+  if (state.fx) {
+    var kk = (now - state.fx.start) / state.fx.dur;
+    if (kk >= 1) state.fx = null;
+    else if (state.fx.img && state.fx.img.complete && state.fx.img.naturalWidth) {
+      var sz = cell * 4;
+      g.globalAlpha = 1 - kk;
+      g.drawImage(state.fx.img, W / 2 - sz / 2, H / 2 - sz / 2, sz, sz);
+      g.globalAlpha = 1;
+    }
+  }
+  // 浮動文字
+  state.floats = state.floats.filter(function (f) { return now - f.t < 1000; });
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  state.floats.forEach(function (f, idx) {
+    var k2 = (now - f.t) / 1000;
+    g.globalAlpha = Math.max(0, 1 - k2);
+    g.font = 'bold ' + Math.round(cell * 0.5) + 'px sans-serif';
+    g.fillStyle = f.color;
+    g.fillText(f.text, W / 2, H * 0.38 - k2 * cell * 1.2 - idx * cell * 0.6);
+    g.globalAlpha = 1;
+  });
+  // 連鎖數（縮放進場）
+  if (state.chainShow && now < state.chainShow.until) {
+    var age2 = (now - (state.chainShow.until - 1200)) / 200;
+    var sc = age2 < 1 ? 0.6 + 0.4 * easeOut(clamp(age2, 0, 1)) : 1;
+    g.save();
+    g.translate(cell * 0.3, cell * 0.9); g.scale(sc, sc);
+    g.font = 'bold ' + Math.round(cell * 0.62) + 'px sans-serif';
+    g.textAlign = 'left'; g.fillStyle = '#facc15';
+    g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 6;
+    g.fillText(state.chainShow.n + ' 連鎖！', 0, 0);
+    g.restore();
+  }
+  // 待機提示
+  var resultOn = u.result.classList.contains('on');
+  if (!state.running && !resultOn) {
+    g.fillStyle = 'rgba(255,255,255,0.9)';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = 'bold ' + Math.round(cell * 0.5) + 'px sans-serif';
+    g.fillText('選擇玩法開始', W / 2, H / 2);
+    g.font = Math.round(cell * 0.32) + 'px sans-serif';
+    g.fillStyle = 'rgba(203,213,225,0.9)';
+    g.fillText('可用下方按鈕或鍵盤操作', W / 2, H / 2 + cell * 0.9);
+  }
+}
+
+function drawPet(now) {
     var cv = state.ui && state.ui.petCanvas; if (!cv) return;
     var w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return;
     var dpr = state.dpr;
